@@ -1,0 +1,364 @@
+/* Article View Styles */
+.articleContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+}
+
+.articleHeader {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.articleHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+}
+
+.articleTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.articleMeta {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.articleAuthor {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.authorAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.articleImageContainer {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+}
+
+.articleImage {
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.articleContentContainer {
+  background: white;
+  border-radius: 16px;
+  padding: 3rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.articleContent {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #334155;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.articleContent * {
+  max-width: 100%;
+}
+
+.articleContent h1,
+.articleContent h2,
+.articleContent h3,
+.articleContent h4,
+.articleContent h5,
+.articleContent h6 {
+  color: #1e3a8a;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.articleContent h1 { font-size: 2rem; }
+.articleContent h2 { font-size: 1.5rem; }
+.articleContent h3 { font-size: 1.25rem; }
+.articleContent h4 { font-size: 1.1rem; }
+.articleContent h5 { font-size: 1rem; }
+.articleContent h6 { font-size: 0.9rem; }
+
+.articleContent p {
+  margin-bottom: 1.5rem;
+  text-align: left;
+  line-height: 1.8;
+  orphans: 3;
+  widows: 3;
+}
+
+.articleContent p:first-child {
+  margin-top: 0;
+}
+
+.articleContent p:last-child {
+  margin-bottom: 0;
+}
+
+.articleContent ul,
+.articleContent ol {
+  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+  padding-left: 2rem;
+  text-align: left;
+}
+
+.articleContent li {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.articleContent li:last-child {
+  margin-bottom: 0;
+}
+
+.articleContent blockquote {
+  border-left: 4px solid #fbbf24;
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #64748b;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.articleContent code {
+  background: #f1f5f9;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.articleContent pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1.5rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 2rem 0;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.articleContent pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.articleContent img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 2rem 0;
+  display: block;
+}
+
+.articleContent a {
+  color: #3b82f6;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.articleContent a:hover {
+  color: #1d4ed8;
+}
+
+.articleContent strong {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.articleContent em {
+  font-style: italic;
+}
+
+.articleContent table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.articleContent th,
+.articleContent td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.articleContent th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.articleContent hr {
+  border: none;
+  height: 1px;
+  background-color: #e5e7eb;
+  margin: 2rem 0;
+}
+
+.articleContent div {
+  margin-bottom: 1rem;
+}
+
+.articleContent br {
+  line-height: 1.8;
+}
+
+.articleActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.actionButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(251, 191, 36, 0.4);
+}
+
+.secondaryButton {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.secondaryButton:hover {
+  background: #e2e8f0;
+}
+
+.articleTags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 0.25rem 0.75rem;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .articleContainer {
+    padding: 1rem;
+  }
+
+  .articleHeader {
+    padding: 1.5rem;
+  }
+
+  .articleTitle {
+    font-size: 2rem;
+  }
+
+  .articleMeta {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .articleImageContainer {
+    padding: 0.75rem;
+  }
+
+  .articleContentContainer {
+    padding: 2rem;
+  }
+
+  .articleActions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .actionButtons {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .articleTitle {
+    font-size: 1.75rem;
+  }
+
+  .articleImageContainer {
+    padding: 0.5rem;
+  }
+
+  .articleContentContainer {
+    padding: 1.5rem;
+  }
+
+  .articleContent {
+    font-size: 1rem;
+  }
+}

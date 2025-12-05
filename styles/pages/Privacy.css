@@ -1,0 +1,114 @@
+/* Privacy Policy Page Styles */
+.privacy-policy {
+  @apply min-h-screen bg-gray-50;
+}
+
+.privacy-policy .container {
+  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.privacy-policy .content-wrapper {
+  @apply bg-white rounded-lg shadow-md p-8;
+}
+
+.privacy-policy h1 {
+  @apply text-3xl font-bold text-navy mb-6;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.privacy-policy h2 {
+  @apply text-2xl font-semibold text-navy mb-4;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.privacy-policy h3 {
+  @apply text-xl font-medium text-navy mb-3;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.privacy-policy p {
+  @apply text-gray-700 mb-4 leading-relaxed;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.privacy-policy ul {
+  @apply list-disc pl-6 text-gray-700 mb-6 space-y-2;
+}
+
+.privacy-policy li {
+  @apply leading-relaxed;
+}
+
+.privacy-policy .update-date {
+  @apply text-gray-600 mb-6 italic;
+}
+
+.privacy-policy .contact-info {
+  @apply bg-gray-50 p-4 rounded-lg;
+}
+
+.privacy-policy .contact-info p {
+  @apply text-gray-700 mb-0;
+}
+
+.privacy-policy .section {
+  @apply mb-8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .privacy-policy .container {
+    @apply px-4 py-6;
+  }
+  
+  .privacy-policy .content-wrapper {
+    @apply p-6;
+  }
+  
+  .privacy-policy h1 {
+    @apply text-2xl;
+  }
+  
+  .privacy-policy h2 {
+    @apply text-xl;
+  }
+  
+  .privacy-policy h3 {
+    @apply text-lg;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .privacy-policy {
+    @apply bg-gray-900;
+  }
+  
+  .privacy-policy .content-wrapper {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .privacy-policy h1,
+  .privacy-policy h2,
+  .privacy-policy h3 {
+    @apply text-golden;
+  }
+  
+  .privacy-policy p,
+  .privacy-policy ul,
+  .privacy-policy li {
+    @apply text-gray-300;
+  }
+  
+  .privacy-policy .update-date {
+    @apply text-gray-400;
+  }
+  
+  .privacy-policy .contact-info {
+    @apply bg-gray-700;
+  }
+  
+  .privacy-policy .contact-info p {
+    @apply text-gray-300;
+  }
+}

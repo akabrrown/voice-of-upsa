@@ -1,0 +1,50 @@
+# Voice of UPSA - Robots.txt
+# This file tells search engines which pages to crawl and which to ignore
+
+User-agent: *
+Allow: /
+
+# Allow crawling of all important content
+Allow: /articles/
+Allow: /about
+Allow: /contact
+Allow: /search
+
+# Disallow crawling of admin and private areas
+Disallow: /admin/
+Disallow: /editor/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Disallow crawling of authentication pages
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /callback/
+
+# Sitemap location
+Sitemap: https://voiceofupsa.com/sitemap.xml
+
+# Crawl delay (optional, be considerate to server resources)
+Crawl-delay: 1
+
+# Specific instructions for major search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Block unwanted bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /

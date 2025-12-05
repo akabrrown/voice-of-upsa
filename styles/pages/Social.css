@@ -1,0 +1,237 @@
+/* Social Media Page Styles */
+.social-page {
+  @apply min-h-screen bg-gray-50;
+}
+
+.social-page .container {
+  @apply max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.social-page .header-section {
+  @apply text-center mb-8;
+}
+
+.social-page h1 {
+  @apply text-4xl font-bold text-navy mb-4;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.social-page .subtitle {
+  @apply text-xl text-gray-600 max-w-3xl mx-auto;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.social-page .social-grid {
+  @apply grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8;
+}
+
+.social-page .social-card {
+  @apply bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200;
+  @apply motion-safe:transition-all motion-safe:duration-200;
+}
+
+.social-page .social-header {
+  @apply p-6 text-white;
+}
+
+.social-page .social-header.facebook {
+  @apply bg-blue-600;
+}
+
+.social-page .social-header.twitter {
+  @apply bg-sky-500;
+}
+
+.social-page .social-header.instagram {
+  @apply bg-gradient-to-r from-purple-500 to-pink-500;
+}
+
+.social-page .social-header.linkedin {
+  @apply bg-blue-700;
+}
+
+.social-page .social-header.youtube {
+  @apply bg-red-600;
+}
+
+.social-page .social-info {
+  @apply flex items-center justify-between mb-4;
+}
+
+.social-page .social-icon {
+  @apply w-8 h-8;
+}
+
+.social-page .followers-count {
+  @apply text-sm font-medium;
+}
+
+.social-page .social-name {
+  @apply text-xl font-bold;
+}
+
+.social-page .social-body {
+  @apply p-6;
+}
+
+.social-page .social-description {
+  @apply text-gray-600 mb-4;
+}
+
+.social-page .social-actions {
+  @apply flex space-x-3;
+}
+
+.social-page .visit-button {
+  @apply flex-1 text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition-opacity duration-200 flex items-center justify-center;
+}
+
+.social-page .share-button {
+  @apply flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center;
+}
+
+.social-page .share-button svg {
+  @apply w-4 h-4 mr-2;
+}
+
+.social-page .guidelines-section {
+  @apply bg-white rounded-lg shadow-md p-8 mb-8;
+}
+
+.social-page .section-title {
+  @apply text-2xl font-semibold text-navy mb-6;
+}
+
+.social-page .guidelines-grid {
+  @apply grid md:grid-cols-2 gap-8;
+}
+
+.social-page .guidelines-column h3 {
+  @apply text-lg font-medium text-navy mb-4;
+}
+
+.social-page .guidelines-list {
+  @apply space-y-2 text-gray-600;
+}
+
+.social-page .guidelines-list li {
+  @apply flex items-start;
+}
+
+.social-page .guidelines-list .check {
+  @apply text-green-500 mr-2;
+}
+
+.social-page .guidelines-list .cross {
+  @apply text-red-500 mr-2;
+}
+
+.social-page .hashtag-section {
+  @apply bg-gradient-to-r from-navy to-navy-dark rounded-lg p-8 text-white mb-8;
+}
+
+.social-page .hashtag-title {
+  @apply text-2xl font-bold mb-4;
+}
+
+.social-page .hashtag-description {
+  @apply text-gray-200 mb-6;
+}
+
+.social-page .hashtag-list {
+  @apply flex flex-wrap gap-3;
+}
+
+.social-page .hashtag {
+  @apply bg-white/20 backdrop-blur px-4 py-2 rounded-full font-medium;
+}
+
+.social-page .contact-section {
+  @apply bg-white rounded-lg shadow-md p-8;
+}
+
+.social-page .contact-grid {
+  @apply grid md:grid-cols-2 gap-8;
+}
+
+.social-page .contact-column h3 {
+  @apply text-lg font-medium text-navy mb-4;
+}
+
+.social-page .contact-description {
+  @apply text-gray-600 mb-2;
+}
+
+.social-page .contact-email {
+  @apply text-navy font-medium;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .social-page .container {
+    @apply px-4 py-6;
+  }
+  
+  .social-page h1 {
+    @apply text-3xl;
+  }
+  
+  .social-page .subtitle {
+    @apply text-lg;
+  }
+  
+  .social-page .social-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .social-page .guidelines-grid,
+  .social-page .contact-grid {
+    @apply grid-cols-1 gap-6;
+  }
+  
+  .social-page .guidelines-section,
+  .social-page .hashtag-section,
+  .social-page .contact-section {
+    @apply p-6;
+  }
+  
+  .social-page .hashtag-section {
+    @apply p-6;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .social-page {
+    @apply bg-gray-900;
+  }
+  
+  .social-page .social-card,
+  .social-page .guidelines-section,
+  .social-page .contact-section {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .social-page h1,
+  .social-page .section-title,
+  .social-page .guidelines-column h3,
+  .social-page .contact-column h3,
+  .social-page .hashtag-title {
+    @apply text-golden;
+  }
+  
+  .social-page .subtitle,
+  .social-page .social-description,
+  .social-page .guidelines-list,
+  .social-page .contact-description {
+    @apply text-gray-300;
+  }
+  
+  .social-page .share-button {
+    @apply border-gray-600 text-gray-300 hover:bg-gray-700;
+  }
+  
+  .social-page .contact-email {
+    @apply text-golden;
+  }
+}

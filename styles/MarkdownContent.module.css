@@ -1,0 +1,356 @@
+.markdownContent {
+  line-height: 1.8;
+  color: #1f2937 !important;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+/* Force light mode text for all elements */
+.markdownContent p,
+.markdownContent div,
+.markdownContent span {
+  color: #1f2937 !important;
+}
+
+.markdownContent h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 2.5rem 0 1.5rem 0;
+  line-height: 1.2;
+  color: #111827;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.markdownContent h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 2rem 0 1rem 0;
+  line-height: 1.3;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.3rem;
+}
+
+.markdownContent h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5rem 0 1rem 0;
+  line-height: 1.4;
+  color: #111827;
+}
+
+.markdownContent p {
+  margin-bottom: 1.5rem;
+  text-align: left;
+  line-height: 1.8;
+}
+
+.markdownContent ul,
+.markdownContent ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.markdownContent li {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.markdownContent blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.markdownContent code {
+  background: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  color: #dc2626;
+}
+
+.markdownContent pre {
+  background: #f3f4f6;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+}
+
+.markdownContent pre code {
+  background: none;
+  padding: 0;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.markdownContent a {
+  color: #2563eb;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.markdownContent a:hover {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.markdownContent img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+/* Image container */
+.imageContainer {
+  position: relative;
+  margin: 1rem 0;
+}
+
+/* Image size classes */
+.imgSizeSmall img {
+  max-width: 25%;
+  height: auto;
+}
+
+.imgSizeMedium img {
+  max-width: 50%;
+  height: auto;
+}
+
+.imgSizeLarge img {
+  max-width: 75%;
+  height: auto;
+}
+
+.imgSizeFull img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Image size controls */
+.imageSizeControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.imageContainer:hover .imageSizeControls {
+  opacity: 1;
+}
+
+.presetButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.manualControl {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sizeLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.sizeButton {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sizeButton:hover {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #9ca3af;
+}
+
+.sizeButtonActive {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.sizeButtonActive:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.sizeSlider {
+  flex: 1;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.sizeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sizeSlider::-webkit-slider-thumb:hover {
+  background: #2563eb;
+}
+
+.sizeSlider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s ease;
+}
+
+.sizeSlider::-moz-range-thumb:hover {
+  background: #2563eb;
+}
+
+.sizeValue {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  min-width: 40px;
+  text-align: right;
+}
+
+.markdownContent table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.markdownContent th,
+.markdownContent td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.markdownContent th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.markdownContent hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 2rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .markdownContent h1 {
+    font-size: 2rem;
+  }
+  
+  .markdownContent h2 {
+    font-size: 1.5rem;
+  }
+  
+  .markdownContent {
+    font-size: 0.875rem;
+  }
+  
+  .markdownContent img {
+    margin: 0.75rem 0;
+  }
+}
+
+/* Dark mode support - only applies when OS/browser is in dark mode */
+@media (prefers-color-scheme: dark) {
+  .markdownContent {
+    color: #f3f4f6;
+  }
+  
+  .markdownContent h1,
+  .markdownContent h2,
+  .markdownContent h3 {
+    color: #f9fafb;
+  }
+  
+  .markdownContent blockquote {
+    background-color: #374151;
+    border-left-color: #6b7280;
+    color: #d1d5db;
+  }
+  
+  .markdownContent code {
+    background: #374151;
+    color: #fbbf24;
+  }
+  
+  .markdownContent pre {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .markdownContent pre code {
+    color: #e5e7eb;
+  }
+  
+  .markdownContent a {
+    color: #60a5fa;
+  }
+  
+  .markdownContent a:hover {
+    color: #3b82f6;
+  }
+  
+  .markdownContent th,
+  .markdownContent td {
+    border-color: #4b5563;
+  }
+  
+  .markdownContent th {
+    background-color: #374151;
+  }
+  
+  .markdownContent hr {
+    border-top-color: #4b5563;
+  }
+}

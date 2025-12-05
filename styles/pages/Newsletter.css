@@ -1,0 +1,239 @@
+/* Newsletter Page Styles */
+.newsletter-page {
+  @apply min-h-screen bg-gray-50;
+}
+
+.newsletter-page .container {
+  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.newsletter-page .header-section {
+  @apply text-center mb-8;
+}
+
+.newsletter-page h1 {
+  @apply text-4xl font-bold text-navy mb-4;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.newsletter-page .subtitle {
+  @apply text-xl text-gray-600 max-w-2xl mx-auto;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.newsletter-page .subscription-form {
+  @apply bg-white rounded-lg shadow-md p-8 mb-8;
+}
+
+.newsletter-page .form-header {
+  @apply text-center mb-6;
+}
+
+.newsletter-page .icon-wrapper {
+  @apply inline-flex items-center justify-center w-16 h-16 bg-golden rounded-full mb-4;
+}
+
+.newsletter-page .icon-wrapper svg {
+  @apply w-8 h-8 text-navy;
+}
+
+.newsletter-page .form-title {
+  @apply text-2xl font-semibold text-navy mb-2;
+}
+
+.newsletter-page .form-description {
+  @apply text-gray-600;
+}
+
+.newsletter-page .form-container {
+  @apply max-w-md mx-auto;
+}
+
+.newsletter-page .form-group {
+  @apply mb-4;
+}
+
+.newsletter-page .form-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.newsletter-page .form-input {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent;
+  @apply motion-safe:transition-all motion-safe:duration-200;
+}
+
+.newsletter-page .form-input:focus {
+  @apply border-golden;
+}
+
+.newsletter-page .submit-button {
+  @apply w-full bg-navy text-white py-3 px-6 rounded-lg font-medium hover:bg-navy-dark transition-colors duration-200;
+  @apply motion-safe:transition-all motion-safe:duration-200;
+}
+
+.newsletter-page .submit-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.newsletter-page .success-message {
+  @apply text-center;
+}
+
+.newsletter-page .success-icon {
+  @apply inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4;
+}
+
+.newsletter-page .success-icon svg {
+  @apply w-8 h-8 text-green-600;
+}
+
+.newsletter-page .success-title {
+  @apply text-2xl font-semibold text-navy mb-2;
+}
+
+.newsletter-page .success-description {
+  @apply text-gray-600 mb-6;
+}
+
+.newsletter-page .subscribe-another {
+  @apply text-golden hover:text-golden-dark font-medium;
+  @apply motion-safe:transition-all motion-safe:duration-200;
+}
+
+.newsletter-page .features-grid {
+  @apply grid md:grid-cols-3 gap-6 mb-8;
+}
+
+.newsletter-page .feature-card {
+  @apply bg-white rounded-lg shadow-md p-6;
+  @apply motion-safe:transition-all motion-safe:duration-200;
+}
+
+.newsletter-page .feature-card:hover {
+  @apply shadow-lg;
+}
+
+.newsletter-page .feature-icon {
+  @apply w-12 h-12 bg-navy rounded-lg flex items-center justify-center mb-4;
+}
+
+.newsletter-page .feature-icon svg {
+  @apply w-6 h-6 text-white;
+}
+
+.newsletter-page .feature-title {
+  @apply text-lg font-semibold text-navy mb-2;
+}
+
+.newsletter-page .feature-description {
+  @apply text-gray-600;
+}
+
+.newsletter-page .faq-section {
+  @apply bg-white rounded-lg shadow-md p-8;
+}
+
+.newsletter-page .faq-title {
+  @apply text-2xl font-semibold text-navy mb-6;
+}
+
+.newsletter-page .faq-item {
+  @apply mb-6;
+}
+
+.newsletter-page .faq-question {
+  @apply text-lg font-medium text-navy mb-2;
+}
+
+.newsletter-page .faq-answer {
+  @apply text-gray-600;
+}
+
+.newsletter-page .cta-section {
+  @apply bg-gradient-to-r from-navy to-navy-dark rounded-lg p-8 text-white mb-8;
+}
+
+.newsletter-page .cta-title {
+  @apply text-2xl font-bold mb-4;
+}
+
+.newsletter-page .cta-description {
+  @apply text-gray-200 mb-6;
+}
+
+.newsletter-page .hashtag {
+  @apply bg-white/20 backdrop-blur px-4 py-2 rounded-full font-medium;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .newsletter-page .container {
+    @apply px-4 py-6;
+  }
+  
+  .newsletter-page h1 {
+    @apply text-3xl;
+  }
+  
+  .newsletter-page .subtitle {
+    @apply text-lg;
+  }
+  
+  .newsletter-page .subscription-form {
+    @apply p-6;
+  }
+  
+  .newsletter-page .features-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .newsletter-page .faq-section {
+    @apply p-6;
+  }
+  
+  .newsletter-page .cta-section {
+    @apply p-6;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .newsletter-page {
+    @apply bg-gray-900;
+  }
+  
+  .newsletter-page .subscription-form,
+  .newsletter-page .feature-card,
+  .newsletter-page .faq-section {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .newsletter-page h1,
+  .newsletter-page .form-title,
+  .newsletter-page .success-title,
+  .newsletter-page .feature-title,
+  .newsletter-page .faq-question,
+  .newsletter-page .cta-title {
+    @apply text-golden;
+  }
+  
+  .newsletter-page .subtitle,
+  .newsletter-page .form-description,
+  .newsletter-page .success-description,
+  .newsletter-page .feature-description,
+  .newsletter-page .faq-answer {
+    @apply text-gray-300;
+  }
+  
+  .newsletter-page .form-label {
+    @apply text-gray-300;
+  }
+  
+  .newsletter-page .form-input {
+    @apply bg-gray-700 border-gray-600 text-white;
+  }
+  
+  .newsletter-page .form-input:focus {
+    @apply border-golden;
+  }
+}

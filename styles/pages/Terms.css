@@ -1,0 +1,114 @@
+/* Terms of Service Page Styles */
+.terms-of-service {
+  @apply min-h-screen bg-gray-50;
+}
+
+.terms-of-service .container {
+  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.terms-of-service .content-wrapper {
+  @apply bg-white rounded-lg shadow-md p-8;
+}
+
+.terms-of-service h1 {
+  @apply text-3xl font-bold text-navy mb-6;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.terms-of-service h2 {
+  @apply text-2xl font-semibold text-navy mb-4;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.terms-of-service h3 {
+  @apply text-xl font-medium text-navy mb-3;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.terms-of-service p {
+  @apply text-gray-700 mb-4 leading-relaxed;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.terms-of-service ul {
+  @apply list-disc pl-6 text-gray-700 mb-6 space-y-2;
+}
+
+.terms-of-service li {
+  @apply leading-relaxed;
+}
+
+.terms-of-service .update-date {
+  @apply text-gray-600 mb-6 italic;
+}
+
+.terms-of-service .contact-info {
+  @apply bg-gray-50 p-4 rounded-lg;
+}
+
+.terms-of-service .contact-info p {
+  @apply text-gray-700 mb-0;
+}
+
+.terms-of-service .section {
+  @apply mb-8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .terms-of-service .container {
+    @apply px-4 py-6;
+  }
+  
+  .terms-of-service .content-wrapper {
+    @apply p-6;
+  }
+  
+  .terms-of-service h1 {
+    @apply text-2xl;
+  }
+  
+  .terms-of-service h2 {
+    @apply text-xl;
+  }
+  
+  .terms-of-service h3 {
+    @apply text-lg;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .terms-of-service {
+    @apply bg-gray-900;
+  }
+  
+  .terms-of-service .content-wrapper {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .terms-of-service h1,
+  .terms-of-service h2,
+  .terms-of-service h3 {
+    @apply text-golden;
+  }
+  
+  .terms-of-service p,
+  .terms-of-service ul,
+  .terms-of-service li {
+    @apply text-gray-300;
+  }
+  
+  .terms-of-service .update-date {
+    @apply text-gray-400;
+  }
+  
+  .terms-of-service .contact-info {
+    @apply bg-gray-700;
+  }
+  
+  .terms-of-service .contact-info p {
+    @apply text-gray-300;
+  }
+}

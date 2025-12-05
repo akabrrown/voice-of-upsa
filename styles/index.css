@@ -1,0 +1,42 @@
+/* Voice of UPSA - Main CSS Import File */
+/* This file imports all CSS modules for the application */
+
+/* Tailwind CSS Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Component Styles */
+@import './components/Layout.css';
+@import './components/ArticleCard.css';
+@import './components/Buttons.css';
+@import './components/Forms.css';
+@import './components/Modal.css';
+@import './components/LoadingSkeletons.css';
+@import './components/ImageUpload.css';
+@import './components/ErrorBoundary.css';
+
+/* Utility Styles */
+@import './utilities/Animations.css';
+@import './utilities/Typography.css';
+@import './utilities/Spacing.css';
+@import './utilities/Responsive.css';
+
+/* Page Styles */
+@import './pages/Home.css';
+@import './pages/Articles.css';
+@import './pages/ArticleDetail.css';
+@import './pages/Admin.css';
+@import './pages/Auth.css';
+@import './pages/About.css';
+@import './pages/Contact.css';
+@import './pages/Profile.css';
+@import './pages/Search.css';
+@import './pages/Unauthorized.css';
+@import './pages/EditorArticles.css';
+@import './pages/Dashboard.css';
+
+/* Additional imports can be added here as needed */
+/* @import './components/[ComponentName].css'; */
+/* @import './utilities/[UtilityName].css'; */
+/* @import './pages/[PageName].css'; */

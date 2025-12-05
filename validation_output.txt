@@ -1,0 +1,64 @@
+[dotenv@17.2.3] injecting env (10) from .env.local -- tip: ÔÜÖ´©Å  enable debug logging with { debug: true }
+­ƒöì Validating Voice of UPSA Database Setup...
+
+­ƒôï Checking tables...
+Error checking table users: Could not find the table 'public.information_schema.tables' in the schema cache
+Error checking table articles: Could not find the table 'public.information_schema.tables' in the schema cache
+Error checking table comments: Could not find the table 'public.information_schema.tables' in the schema cache
+Error checking table likes: Could not find the table 'public.information_schema.tables' in the schema cache
+Error checking table reactions: Could not find the table 'public.information_schema.tables' in the schema cache
+Error checking table cloudinary_uploads: Could not find the table 'public.information_schema.tables' in the schema cache
+Error checking table article_views: Could not find the table 'public.information_schema.tables' in the schema cache
+Error checking table bookmarks: Could not find the table 'public.information_schema.tables' in the schema cache
+
+­ƒöÆ Checking RLS policies...
+Error checking RLS for users: Could not find the table 'public.pg_policies' in the schema cache
+Error checking RLS for articles: Could not find the table 'public.pg_policies' in the schema cache
+Error checking RLS for comments: Could not find the table 'public.pg_policies' in the schema cache
+Error checking RLS for likes: Could not find the table 'public.pg_policies' in the schema cache
+Error checking RLS for reactions: Could not find the table 'public.pg_policies' in the schema cache
+Error checking RLS for cloudinary_uploads: Could not find the table 'public.pg_policies' in the schema cache
+Error checking RLS for article_views: Could not find the table 'public.pg_policies' in the schema cache
+Error checking RLS for bookmarks: Could not find the table 'public.pg_policies' in the schema cache
+
+­ƒôè Checking indexes...
+Error checking indexes for users: Could not find the table 'public.pg_indexes' in the schema cache
+Error checking indexes for articles: Could not find the table 'public.pg_indexes' in the schema cache
+Error checking indexes for comments: Could not find the table 'public.pg_indexes' in the schema cache
+Error checking indexes for likes: Could not find the table 'public.pg_indexes' in the schema cache
+Error checking indexes for reactions: Could not find the table 'public.pg_indexes' in the schema cache
+Error checking indexes for cloudinary_uploads: Could not find the table 'public.pg_indexes' in the schema cache
+Error checking indexes for article_views: Could not find the table 'public.pg_indexes' in the schema cache
+Error checking indexes for bookmarks: Could not find the table 'public.pg_indexes' in the schema cache
+
+­ƒº¬ Testing basic operations...
+Ô£à Basic database operations working
+
+==================================================
+ÔØî 24 validation(s) failed:
+  - Error checking table users: Could not find the table 'public.information_schema.tables' in the schema cache
+  - Error checking table articles: Could not find the table 'public.information_schema.tables' in the schema cache
+  - Error checking table comments: Could not find the table 'public.information_schema.tables' in the schema cache
+  - Error checking table likes: Could not find the table 'public.information_schema.tables' in the schema cache
+  - Error checking table reactions: Could not find the table 'public.information_schema.tables' in the schema cache
+  - Error checking table cloudinary_uploads: Could not find the table 'public.information_schema.tables' in the schema cache
+  - Error checking table article_views: Could not find the table 'public.information_schema.tables' in the schema cache
+  - Error checking table bookmarks: Could not find the table 'public.information_schema.tables' in the schema cache
+  - Error checking RLS for users: Could not find the table 'public.pg_policies' in the schema cache
+  - Error checking RLS for articles: Could not find the table 'public.pg_policies' in the schema cache
+  - Error checking RLS for comments: Could not find the table 'public.pg_policies' in the schema cache
+  - Error checking RLS for likes: Could not find the table 'public.pg_policies' in the schema cache
+  - Error checking RLS for reactions: Could not find the table 'public.pg_policies' in the schema cache
+  - Error checking RLS for cloudinary_uploads: Could not find the table 'public.pg_policies' in the schema cache
+  - Error checking RLS for article_views: Could not find the table 'public.pg_policies' in the schema cache
+  - Error checking RLS for bookmarks: Could not find the table 'public.pg_policies' in the schema cache
+  - Error checking indexes for users: Could not find the table 'public.pg_indexes' in the schema cache
+  - Error checking indexes for articles: Could not find the table 'public.pg_indexes' in the schema cache
+  - Error checking indexes for comments: Could not find the table 'public.pg_indexes' in the schema cache
+  - Error checking indexes for likes: Could not find the table 'public.pg_indexes' in the schema cache
+  - Error checking indexes for reactions: Could not find the table 'public.pg_indexes' in the schema cache
+  - Error checking indexes for cloudinary_uploads: Could not find the table 'public.pg_indexes' in the schema cache
+  - Error checking indexes for article_views: Could not find the table 'public.pg_indexes' in the schema cache
+  - Error checking indexes for bookmarks: Could not find the table 'public.pg_indexes' in the schema cache
+
+Please check your database setup and try again.

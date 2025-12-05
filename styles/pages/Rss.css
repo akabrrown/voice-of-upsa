@@ -1,0 +1,240 @@
+/* RSS Feed Page Styles */
+.rss-page {
+  @apply min-h-screen bg-gray-50;
+}
+
+.rss-page .container {
+  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.rss-page .header-section {
+  @apply text-center mb-8;
+}
+
+.rss-page .icon-wrapper {
+  @apply inline-flex items-center justify-center w-16 h-16 bg-golden rounded-full mb-4;
+}
+
+.rss-page .icon-wrapper svg {
+  @apply w-8 h-8 text-navy;
+}
+
+.rss-page h1 {
+  @apply text-4xl font-bold text-navy mb-4;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.rss-page .subtitle {
+  @apply text-xl text-gray-600 max-w-2xl mx-auto;
+  @apply motion-safe:transition-all motion-safe:duration-300;
+}
+
+.rss-page .rss-url-section {
+  @apply bg-white rounded-lg shadow-md p-8 mb-8;
+}
+
+.rss-page .section-title {
+  @apply text-2xl font-semibold text-navy mb-6;
+}
+
+.rss-page .url-container {
+  @apply flex items-center space-x-4 mb-6;
+}
+
+.rss-page .url-display {
+  @apply flex-1 bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 font-mono text-sm;
+}
+
+.rss-page .url-actions {
+  @apply flex space-x-3;
+}
+
+.rss-page .copy-button {
+  @apply bg-navy text-white px-6 py-3 rounded-lg font-medium hover:bg-navy-dark transition-colors duration-200 flex items-center;
+}
+
+.rss-page .copy-button svg {
+  @apply w-5 h-5 mr-2;
+}
+
+.rss-page .view-button {
+  @apply bg-golden text-navy px-6 py-3 rounded-lg font-medium hover:bg-golden-dark transition-colors duration-200 flex items-center;
+}
+
+.rss-page .view-button svg {
+  @apply w-5 h-5 mr-2;
+}
+
+.rss-page .info-box {
+  @apply bg-blue-50 border border-blue-200 rounded-lg p-4;
+}
+
+.rss-page .info-box p {
+  @apply text-blue-800 text-sm;
+}
+
+.rss-page .readers-section {
+  @apply bg-white rounded-lg shadow-md p-8 mb-8;
+}
+
+.rss-page .readers-grid {
+  @apply grid md:grid-cols-2 gap-6;
+}
+
+.rss-page .reader-card {
+  @apply border border-gray-200 rounded-lg p-6 hover:border-golden transition-colors duration-200;
+  @apply motion-safe:transition-all motion-safe:duration-200;
+}
+
+.rss-page .reader-name {
+  @apply text-lg font-semibold text-navy mb-2;
+}
+
+.rss-page .reader-description {
+  @apply text-gray-600 text-sm mb-4;
+}
+
+.rss-page .subscribe-link {
+  @apply text-golden hover:text-golden-dark font-medium text-sm flex items-center;
+}
+
+.rss-page .subscribe-link svg {
+  @apply w-4 h-4 ml-1;
+}
+
+.rss-page .features-grid {
+  @apply grid md:grid-cols-3 gap-6 mb-8;
+}
+
+.rss-page .feature-card {
+  @apply bg-white rounded-lg shadow-md p-6;
+  @apply motion-safe:transition-all motion-safe:duration-200;
+}
+
+.rss-page .feature-icon {
+  @apply w-12 h-12 bg-navy rounded-lg flex items-center justify-center mb-4;
+}
+
+.rss-page .feature-icon svg {
+  @apply w-6 h-6 text-white;
+}
+
+.rss-page .feature-title {
+  @apply text-lg font-semibold text-navy mb-2;
+}
+
+.rss-page .feature-description {
+  @apply text-gray-600;
+}
+
+.rss-page .faq-section {
+  @apply bg-white rounded-lg shadow-md p-8;
+}
+
+.rss-page .faq-list {
+  @apply space-y-6;
+}
+
+.rss-page .faq-item {
+  @apply border-b border-gray-200 pb-6 last:border-0;
+}
+
+.rss-page .faq-question {
+  @apply text-lg font-medium text-navy mb-2;
+}
+
+.rss-page .faq-answer {
+  @apply text-gray-600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .rss-page .container {
+    @apply px-4 py-6;
+  }
+  
+  .rss-page h1 {
+    @apply text-3xl;
+  }
+  
+  .rss-page .subtitle {
+    @apply text-lg;
+  }
+  
+  .rss-page .rss-url-section,
+  .rss-page .readers-section,
+  .rss-page .faq-section {
+    @apply p-6;
+  }
+  
+  .rss-page .url-container {
+    @apply flex-col space-x-0 space-y-3;
+  }
+  
+  .rss-page .url-actions {
+    @apply w-full;
+  }
+  
+  .rss-page .copy-button,
+  .rss-page .view-button {
+    @apply flex-1 justify-center;
+  }
+  
+  .rss-page .readers-grid,
+  .rss-page .features-grid {
+    @apply grid-cols-1 gap-4;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .rss-page {
+    @apply bg-gray-900;
+  }
+  
+  .rss-page .rss-url-section,
+  .rss-page .reader-card,
+  .rss-page .feature-card,
+  .rss-page .faq-section {
+    @apply bg-gray-800 text-white;
+  }
+  
+  .rss-page h1,
+  .rss-page .section-title,
+  .rss-page .reader-name,
+  .rss-page .feature-title,
+  .rss-page .faq-question {
+    @apply text-golden;
+  }
+  
+  .rss-page .subtitle,
+  .rss-page .reader-description,
+  .rss-page .feature-description,
+  .rss-page .faq-answer {
+    @apply text-gray-300;
+  }
+  
+  .rss-page .url-display {
+    @apply bg-gray-700 border-gray-600 text-gray-300;
+  }
+  
+  .rss-page .info-box {
+    @apply bg-blue-900/30 border-blue-700;
+  }
+  
+  .rss-page .info-box p {
+    @apply text-blue-300;
+  }
+  
+  .rss-page .reader-card {
+    @apply border-gray-600;
+  }
+  
+  .rss-page .reader-card:hover {
+    @apply border-golden;
+  }
+  
+  .rss-page .faq-item {
+    @apply border-gray-700;
+  }
+}

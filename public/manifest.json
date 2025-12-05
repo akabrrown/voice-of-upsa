@@ -1,0 +1,32 @@
+{
+  "name": "Voice of UPSA",
+  "short_name": "VOU",
+  "description": "Latest news and updates from UPSA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#001F3F",
+  "theme_color": "#FFD700",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["news", "education"],
+  "lang": "en-US",
+  "dir": "ltr"
+}

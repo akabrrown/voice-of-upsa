@@ -1,0 +1,6 @@
+.vercel
+.env*.local
+
+# Uploads directory
+public/uploads/*
+node_modules
