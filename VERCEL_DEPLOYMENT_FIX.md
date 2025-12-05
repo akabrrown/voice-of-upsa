@@ -12,11 +12,11 @@
 Go to your Vercel dashboard → Project → Settings → Environment Variables and ensure these are set:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://hewrjnconmykfzggwhzg.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhld3JqbmNvbm15a2Z6Z2d3aHpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5NzU3NjYsImV4cCI6MjA3OTU1MTc2Nn0.IcoA_im1yvaoX3xistSjpn6zEedsq9FPZyAA4B8Q5b8
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhld3JqbmNvbm15a2Z6Z2d3aHpnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mzk3NTc2NiwiZXhwIjoyMDc5NTUxNzY2fQ.V-yFXzIVK68OyOHG1AKfKFKzgiQZj34r63EmgMUuWOE
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_APP_URL=https://your-vercel-app.vercel.app
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=diefv4fp8
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
 ```
 
 ### Step 2: Test Debug Endpoint
