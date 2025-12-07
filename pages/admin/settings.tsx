@@ -75,7 +75,9 @@ const AdminSettingsPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch settings');
+        const errorData = await response.json();
+        console.error('API Error details:', errorData);
+        throw new Error(errorData.error || errorData.details?.message || 'Failed to fetch settings');
       }
 
       const data = await response.json();
@@ -160,7 +162,9 @@ const AdminSettingsPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save settings');
+        const errorData = await response.json();
+        console.error('API Error details:', errorData);
+        throw new Error(errorData.error || errorData.details?.message || 'Failed to save settings');
       }
 
       toast.success('Settings saved successfully', {

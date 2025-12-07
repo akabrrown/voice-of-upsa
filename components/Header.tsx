@@ -4,10 +4,26 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useSupabase } from './SupabaseProvider';
 import { useSiteSettings } from '../hooks/useSiteSettings';
-import { FiMenu, FiX, FiHome, FiFileText, FiInfo, FiMail, FiUser, FiSettings, FiEdit, FiUsers, FiBookmark } from 'react-icons/fi';
+import { FiMenu, FiX, FiHome, FiFileText, FiInfo, FiMail, FiUser, FiSettings, FiEdit, FiUsers, FiBookmark, FiDollarSign, FiMessageCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
+interface NavLink {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
 const Header: React.FC = () => {
+  // Base navigation links
+  const baseLinks: NavLink[] = [
+    { href: '/', label: 'Home', icon: FiHome },
+    { href: '/articles', label: 'Categories', icon: FiFileText },
+    { href: '/ads', label: 'Advertise', icon: FiDollarSign },
+    { href: '/anonymous', label: 'Anonymous', icon: FiMessageCircle },
+    { href: '/about', label: 'About', icon: FiInfo },
+    { href: '/contact', label: 'Contact', icon: FiMail },
+  ];
+
   const { user, userRole, supabase } = useSupabase();
   const { settings: siteSettings } = useSiteSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -31,13 +47,6 @@ const Header: React.FC = () => {
 
   // Navigation links based on user role
   const getNavigationLinks = () => {
-    const baseLinks = [
-      { href: '/', label: 'Home', icon: FiHome },
-      { href: '/articles', label: 'Articles', icon: FiFileText },
-      { href: '/about', label: 'About', icon: FiInfo },
-      { href: '/contact', label: 'Contact', icon: FiMail },
-    ];
-
     if (!user) return baseLinks;
 
     const userLinks = [
@@ -56,6 +65,7 @@ const Header: React.FC = () => {
     if (userRole === 'admin') {
       userLinks.push(
         { href: '/admin', label: 'Admin Panel', icon: FiUsers },
+        { href: '/admin/ads', label: 'Manage Ads', icon: FiDollarSign },
         { href: '/admin/users', label: 'Manage Users', icon: FiUsers },
         { href: '/admin/settings', label: 'Site Settings', icon: FiSettings }
       );
@@ -101,7 +111,8 @@ const Header: React.FC = () => {
           </nav>
           
           {/* Right side - Auth buttons */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center space-x-4">
+            
             {/* Dropdown for authenticated users */}
             {user && (
               <div className="relative group">
@@ -171,47 +182,109 @@ const Header: React.FC = () => {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-navy-dark border-t border-navy-light">
-          <nav className="px-4 py-4 space-y-2">
-            {navigationLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={closeMobileMenu}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-navy-light transition-colors ${
-                  router.pathname === link.href ? 'bg-navy-light text-golden' : ''
-                }`}
-              >
-                <link.icon className="w-5 h-5" />
-                <span>{link.label}</span>
-              </Link>
-            ))}
-            
-            {user ? (
-              <div className="border-t border-navy-light pt-4 mt-4">
-                <div className="px-4 py-2 mb-2">
-                  <p className="text-sm font-semibold truncate">{user.email}</p>
-                  {userRole && (
-                    <p className="text-xs text-gray-400 capitalize">{userRole}</p>
-                  )}
+          <div className="max-h-[70vh] overflow-y-auto">
+            <nav className="px-4 py-4 space-y-2">
+              {/* Main Navigation */}
+              <div className="space-y-1">
+                <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
+                  Main
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full flex items-center space-x-3 px-4 py-3 text-red-400 hover:bg-navy-light rounded-lg transition-colors"
-                >
-                  <FiX className="w-5 h-5" />
-                  <span>Sign Out</span>
-                </button>
+                {baseLinks.slice(0, 5).map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={closeMobileMenu}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-navy-light transition-colors ${
+                      router.pathname === link.href ? 'bg-navy-light text-golden' : ''
+                    }`}
+                  >
+                    <link.icon className="w-5 h-5" />
+                    <span>{link.label}</span>
+                  </Link>
+                ))}
               </div>
-            ) : (
-              <Link
-                href="/auth/sign-in"
-                onClick={closeMobileMenu}
-                className="block bg-golden text-navy px-4 py-3 rounded-lg font-semibold text-center hover:bg-yellow-400 transition-colors mt-4"
-              >
-                Sign In
-              </Link>
-            )}
-          </nav>
+
+              {/* Editor Tools */}
+              {userRole === 'editor' || userRole === 'admin' ? (
+                <div className="space-y-1 border-t border-navy-light pt-4 mt-4">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
+                    Editor Tools
+                  </div>
+                  {[
+                    { href: '/editor/create', label: 'Create Article', icon: FiEdit },
+                    { href: '/editor/articles', label: 'Manage Articles', icon: FiFileText }
+                  ].map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={closeMobileMenu}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-navy-light transition-colors"
+                    >
+                      <link.icon className="w-5 h-5" />
+                      <span>{link.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Admin Tools */}
+              {userRole === 'admin' ? (
+                <div className="space-y-1 border-t border-navy-light pt-4 mt-4">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
+                    Admin Tools
+                  </div>
+                  {[
+                    { href: '/admin', label: 'Admin Panel', icon: FiUsers },
+                    { href: '/admin/ads', label: 'Manage Ads', icon: FiDollarSign },
+                    { href: '/admin/users', label: 'Manage Users', icon: FiUsers },
+                    { href: '/admin/settings', label: 'Site Settings', icon: FiSettings }
+                  ].map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={closeMobileMenu}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-navy-light transition-colors"
+                    >
+                      <link.icon className="w-5 h-5" />
+                      <span>{link.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* User Section */}
+              {user ? (
+                <div className="space-y-1 border-t border-navy-light pt-4 mt-4">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
+                    Account
+                  </div>
+                  <div className="px-4 py-2 mb-2">
+                    <p className="text-sm font-semibold truncate">{user.email}</p>
+                    {userRole && (
+                      <p className="text-xs text-gray-400 capitalize">{userRole}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center space-x-3 px-4 py-3 text-left text-red-400 hover:bg-red-900/20 transition-colors"
+                  >
+                    <FiX className="w-5 h-5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="border-t border-navy-light pt-4 mt-4">
+                  <Link
+                    href="/auth/sign-in"
+                    onClick={closeMobileMenu}
+                    className="block w-full bg-golden text-navy px-4 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors text-center"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              )}
+            </nav>
+          </div>
         </div>
       )}
     </header>

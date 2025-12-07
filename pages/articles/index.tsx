@@ -6,6 +6,7 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { FiSearch, FiFilter, FiCalendar, FiUser, FiEye, FiMessageCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useSupabase } from '@/components/SupabaseProvider';
+import AdDisplay from '@/components/AdDisplay';
 
 
 // Type assertions for Next.js components
@@ -15,6 +16,18 @@ const NextLink = Link as any;
 const NextImage = Image as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MotionDiv = motion.div as any;
+
+interface AnonymousStory {
+  id: string;
+  title?: string;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  likes_count?: number;
+  views_count?: number;
+  status?: string;
+  featured?: boolean;
+}
 
 interface Article {
   id: string;
@@ -33,6 +46,8 @@ interface Article {
   comments_count: number;
   published_at: string;
   updated_at: string;
+  isAnonymous?: boolean;
+  originalMessage?: AnonymousStory;
 }
 
 interface PaginationInfo {
@@ -85,13 +100,20 @@ const ArticlesPage: React.FC = () => {
 
       if (response.ok) {
         const fetchedCategories = data.categories || data.data?.categories || [];
-        setCategories([{ id: 'all', name: 'All Articles', slug: 'all' }, ...fetchedCategories]);
+        // Always add Anonymous category
+        const allCategories = [
+          { id: 'all', name: 'All Articles', slug: 'all' }, 
+          { id: 'anonymous', name: 'Anonymous', slug: 'anonymous' },
+          ...fetchedCategories
+        ];
+        setCategories(allCategories);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
       // Fallback to hardcoded categories if API fails
       setCategories([
         { id: 'all', name: 'All Articles', slug: 'all' },
+        { id: 'anonymous', name: 'Anonymous', slug: 'anonymous' },
         { id: 'news', name: 'News', slug: 'news' },
         { id: 'announcements', name: 'Announcements', slug: 'announcements' },
         { id: 'events', name: 'Events', slug: 'events' },
@@ -105,6 +127,58 @@ const ArticlesPage: React.FC = () => {
   const fetchArticles = useCallback(async () => {
     try {
       setLoading(true);
+
+      // If anonymous category is selected, fetch anonymous stories instead
+      if (selectedCategory === 'anonymous') {
+        const response = await fetch('/api/anonymous-stories/get-approved');
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch anonymous stories');
+        }
+
+        // Transform anonymous stories to article format
+        console.log('Raw anonymous stories data:', data.data);
+        const anonymousArticles = (data.data || [])
+          .filter((story: AnonymousStory) => {
+            const isValid = story.id && typeof story.id === 'string' && story.id.trim() !== '';
+            console.log('Story ID validation: "' + story.id + '" -> Valid: ' + isValid, story);
+            return isValid;
+          }) // Only include stories with valid IDs
+          .map((story: AnonymousStory) => {
+            const safeId = String(story.id).trim();
+            console.log('Creating article with safe ID:', safeId);
+            return {
+          id: safeId,
+          title: story.title || story.content.substring(0, 100) + (story.content.length > 100 ? '...' : ''),
+          slug: 'anonymous-' + safeId,
+          excerpt: story.content,
+          contributor_name: 'Anonymous',
+          author: {
+            id: 'anonymous',
+            name: 'Anonymous',
+            avatar_url: '/images/anonymous-avatar.jpg'
+          },
+          views_count: story.views_count || 0,
+          likes_count: story.likes_count || 0,
+          comments_count: 0,
+          published_at: story.created_at,
+          updated_at: story.updated_at || story.created_at,
+          isAnonymous: true,
+          originalMessage: story
+        };
+          });
+
+        setArticles(anonymousArticles);
+        setPagination({
+          currentPage: 1,
+          totalPages: 1,
+          totalArticles: anonymousArticles.length,
+          hasNextPage: false,
+          hasPreviousPage: false
+        });
+        return;
+      }
 
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -212,7 +286,9 @@ const ArticlesPage: React.FC = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -236,11 +312,17 @@ const ArticlesPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    try {
+      if (!dateString) return 'Unknown date';
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid date';
+    }
   };
 
   const containerVariants = {
@@ -339,32 +421,111 @@ const ArticlesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Articles Grid */}
+        {/* Articles Grid with Sidebar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {articles.length > 0 ? (
-            <>
-              <MotionDiv
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              >
-                {articles.map((article, index) => (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Main Content - 3 columns */}
+            <div className="lg:col-span-3">
+              {articles.length > 0 ? (
+                <div>
                   <MotionDiv
-                    key={article.id}
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                  >
+                {articles.map((article, index) => {
+                  // Add safety check for article data
+                  if (!article) {
+                    console.warn('Article is null/undefined:', article);
+                    return null;
+                  }
+                  
+                  console.log('Rendering article:', { 
+                    id: article.id, 
+                    title: article.title, 
+                    isAnonymous: article.isAnonymous,
+                    slug: article.slug,
+                    href: article.isAnonymous ? ('/anonymous/' + String(article.id)) : ('/articles/' + String(article.slug))
+                  });
+                  
+                  if (!article.id) {
+                    console.warn('Article missing ID:', article);
+                    return null;
+                  }
+                  
+                  return (
+                  <MotionDiv
+                    key={article.id || ('article-' + index)}
                     variants={itemVariants}
                     transition={{ delay: index * 0.1 }}
                   >
-                    {article.slug && article.slug.trim() ? (
-                      <NextLink href={`/articles/${article.slug}`} className="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer group">
-                        {/* Featured Image */}
-                        {(() => {
+                    {/* Debug logging for anonymous articles */}
+                    {article.isAnonymous && console.log('Anonymous article data:', { 
+                      id: article.id, 
+                      title: article.title, 
+                      slug: article.slug,
+                      hasValidId: article.id && article.id.trim() !== ''
+                    })}
+                    
+                    {(() => {
+                    // Most defensive validation possible
+                    if (!article) {
+                      console.error('Article is null/undefined');
+                      return false;
+                    }
+                    
+                    if (article.isAnonymous) {
+                      if (!article.id || typeof article.id !== 'string' || article.id.trim() === '') {
+                        console.error('Anonymous article missing valid ID:', article);
+                        return false;
+                      }
+                      const safeId = String(article.id).trim();
+                      const href = '/anonymous/' + safeId;
+                      console.log('Anonymous article NextLink:', { safeId, href });
+                      
+                      // Additional safety check
+                      if (safeId === '[id]' || safeId.includes('[') || safeId.includes(']')) {
+                        console.error('Invalid ID detected:', safeId);
+                        return false;
+                      }
+                      
+                      return true;
+                    } else {
+                      if (!article.slug || typeof article.slug !== 'string' || article.slug.trim() === '') {
+                        console.error('Regular article missing valid slug:', article);
+                        return false;
+                      }
+                      const safeSlug = String(article.slug).trim();
+                      const href = '/articles/' + safeSlug;
+                      console.log('Regular article NextLink:', { safeSlug, href });
+                      return true;
+                    }
+                  })() ? (
+                      <NextLink 
+                        href={(() => {
+                          if (article.isAnonymous) {
+                            const safeId = String(article.id).trim();
+                            // Final safety check
+                            if (safeId === '[id]' || safeId.includes('[') || safeId.includes(']')) {
+                              console.error('CRITICAL: Invalid ID in NextLink:', safeId);
+                              return '/anonymous';
+                            }
+                            return '/anonymous/' + safeId;
+                          } else {
+                            return '/articles/' + String(article.slug || '').trim();
+                          }
+                        })()} 
+                        className="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer group"
+                      >
+                        {/* Featured Image - Only for non-anonymous articles */}
+                        {!article.isAnonymous && (() => {
                           console.log('Rendering article:', article.title, 'featured_image:', article.featured_image);
                           return article.featured_image ? (
                             <div className="relative h-48 overflow-hidden">
                               <NextImage
                                 src={article.featured_image}
-                                alt={article.title}
+                                alt={article.title || 'Article image'}
                                 width={400}
                                 height={192}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -381,42 +542,58 @@ const ArticlesPage: React.FC = () => {
                         })()}
 
                         {/* Content */}
-                        <div className="p-6">
+                        <div className={article.isAnonymous ? 'p-6' : 'p-6'}>
                           <div className="flex items-center text-gray-500 text-sm mb-3">
                             <FiCalendar className="mr-1" />
                             <span>{formatDate(article.published_at)}</span>
+                            {article.isAnonymous && (
+                              <span className="ml-2 bg-golden/10 text-golden px-2 py-1 rounded-full text-xs">
+                                Anonymous Message
+                              </span>
+                            )}
                           </div>
 
-                          <h3 className="text-xl font-bold text-navy mb-3 hover:text-golden transition-colors duration-200 line-clamp-2 group-hover:text-golden">
-                            {article.title}
+                          <h3 className="text-xl font-bold text-navy mb-3 hover:text-golden transition-colors duration-200 line-clamp-2 group-hover:text-golden text-justify md:text-left">
+                            {article.isAnonymous ? ('Anonymous: ' + (article.title || 'Untitled')) : (article.title || 'Untitled')}
                           </h3>
 
                           <p className="text-gray-600 mb-4 line-clamp-3">
-                            {article.excerpt}
+                            {article.excerpt || 'No excerpt available'}
                           </p>
 
                           {/* Author and Stats */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                              {article.author.avatar_url ? (
-                                <NextImage
-                                  src={article.author.avatar_url}
-                                  alt={article.contributor_name && article.contributor_name.trim() ? article.contributor_name : article.author.name}
-                                  width={24}
-                                  height={24}
-                                  className="w-6 h-6 rounded-full"
-                                  unoptimized
-                                />
-                              ) : (
-                                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                                  <FiUser className="w-3 h-3 text-gray-600" />
+                              {article.isAnonymous ? (
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-6 h-6 bg-golden/10 rounded-full flex items-center justify-center">
+                                    <FiMessageCircle className="w-3 h-3 text-golden" />
+                                  </div>
+                                  <span className="text-sm text-gray-600">Anonymous</span>
                                 </div>
+                              ) : (
+                                <>
+                                  {article.author?.avatar_url ? (
+                                    <NextImage
+                                      src={article.author.avatar_url}
+                                      alt={article.contributor_name && article.contributor_name.trim() ? article.contributor_name : (article.author?.name || 'Unknown')}
+                                      width={24}
+                                      height={24}
+                                      className="w-6 h-6 rounded-full"
+                                      unoptimized
+                                    />
+                                  ) : (
+                                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                                      <FiUser className="w-3 h-3 text-gray-600" />
+                                    </div>
+                                  )}
+                                  <span className="text-sm text-gray-600">
+                                    {article.contributor_name && article.contributor_name.trim() 
+                                      ? article.contributor_name 
+                                      : (article.author?.name || 'Unknown')}
+                                  </span>
+                                </>
                               )}
-                              <span className="text-sm text-gray-600">
-                                {article.contributor_name && article.contributor_name.trim() 
-                                  ? article.contributor_name 
-                                  : article.author.name}
-                              </span>
                             </div>
 
                             <div className="flex items-center space-x-3 text-gray-500 text-sm">
@@ -439,103 +616,104 @@ const ArticlesPage: React.FC = () => {
                       <div className="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer group opacity-75">
                         <div className="p-6">
                           <div className="text-center">
-                            <h3 className="text-xl font-bold text-navy mb-2">{article.title}</h3>
-                            <p className="text-gray-500 text-sm">Article not available</p>
+                            <h3 className="text-xl font-bold text-navy mb-2">{article.title || 'Untitled'}</h3>
+                            <p className="text-gray-600">
+                              {article.isAnonymous ? 'Story ID not available' : 'Article not available'}
+                            </p>
                           </div>
                         </div>
                       </div>
                     )}
                   </MotionDiv>
-                ))}
-              </MotionDiv>
+                  );
+                })}
+                  </MotionDiv>
 
-              {/* Pagination */}
-              {pagination && pagination.totalPages > 1 && (
-                <MotionDiv
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="mt-12 flex justify-center"
-                >
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={!pagination.hasPreviousPage}
-                      className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  {/* Pagination */}
+                  {pagination && pagination.totalPages > 1 && (
+                    <MotionDiv
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: 0.4 }}
+                      className="mt-12 flex justify-center"
                     >
-                      <FiChevronLeft className="w-5 h-5" />
-                    </button>
-
-                    <div className="flex items-center space-x-1">
-                      {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                      <div className="flex items-center space-x-2">
                         <button
-                          key={page}
-                          onClick={() => handlePageChange(page)}
-                          className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${page === currentPage
-                              ? 'bg-golden text-navy'
-                              : 'bg-white border border-gray-300 hover:bg-gray-50'
-                            }`}
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={!pagination.hasPreviousPage}
+                          className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                         >
-                          {page}
+                          <FiChevronLeft className="w-5 h-5" />
                         </button>
-                      ))}
-                    </div>
 
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={!pagination.hasNextPage}
-                      className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        <div className="flex items-center space-x-1">
+                          {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                              key={page}
+                              onClick={() => handlePageChange(page)}
+                              className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${page === currentPage
+                                  ? 'bg-golden text-navy'
+                                  : 'bg-white border border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={!pagination.hasNextPage}
+                          className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        >
+                          <FiChevronRight className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </MotionDiv>
+                  )}
+
+                  {/* Results Info */}
+                  {pagination && (
+                    <MotionDiv
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.6, delay: 0.2 }}
+                      className="mt-8 text-center text-gray-600"
                     >
-                      <FiChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                </MotionDiv>
-              )}
-
-              {/* Results Info */}
-              {pagination && (
+                      <p>
+                        Showing {articles.length} of {pagination.totalArticles} articles
+                        {searchTerm && (' for "' + searchTerm + '"')}
+                        {selectedCategory !== 'all' && (' in ' + (categories.find(c => c.id === selectedCategory)?.name || ''))}
+                      </p>
+                    </MotionDiv>
+                  )}
+                </div>
+              ) : (
                 <MotionDiv
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  className="mt-8 text-center text-gray-600"
+                  transition={{ duration: 0.6 }}
+                  className="text-center py-12"
                 >
-                  <p>
-                    Showing {articles.length} of {pagination.totalArticles} articles
-                    {searchTerm && ` for "${searchTerm}"`}
-                    {selectedCategory !== 'all' && ` in ${categories.find(c => c.id === selectedCategory)?.name}`}
-                  </p>
+                  <div className="text-gray-500">
+                    <FiMessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-xl font-semibold mb-2">No articles found</h3>
+                    <p>Try adjusting your search or filters to find what you&apos;re looking for.</p>
+                  </div>
                 </MotionDiv>
               )}
-            </>
-          ) : (
-            <MotionDiv
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center py-16"
-            >
-              <FiSearch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No articles found</h3>
-              <p className="text-gray-500 mb-6">
-                {searchTerm || selectedCategory !== 'all'
-                  ? 'Try adjusting your search or filters'
-                  : 'Check back soon for the latest UPSA news!'}
-              </p>
-              {(searchTerm || selectedCategory !== 'all') && (
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedCategory('all');
-                    setCurrentPage(1);
-                  }}
-                  className="bg-golden text-navy px-6 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors duration-200"
-                >
-                  Clear Filters
-                </button>
-              )}
-            </MotionDiv>
-          )}
+            </div>
+
+            {/* Sidebar - 1 column */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 space-y-6">
+                {/* Sidebar Ad */}
+                <AdDisplay adType="sidebar" className="w-full" />
+                
+                {/* Additional sidebar content can go here */}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </Layout>
@@ -543,3 +721,7 @@ const ArticlesPage: React.FC = () => {
 };
 
 export default ArticlesPage;
+
+
+
+

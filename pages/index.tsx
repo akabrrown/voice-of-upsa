@@ -8,6 +8,7 @@ import { FiCalendar, FiUser, FiEye } from 'react-icons/fi';
 import { useApi } from '@/lib/api-client';
 import { ArticlesApi, Article } from '@/lib/api/articles-api';
 import { useSupabase } from '@/components/SupabaseProvider';
+import AdDisplay from '@/components/AdDisplay';
 
 // Type that matches the data payload structure from the API
 type ArticlesListData = {
@@ -290,6 +291,24 @@ const HomePage: React.FC = () => {
             </div>
           </section>
         )}
+
+        {/* Banner Ad */}
+        <section className="py-8 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <AdDisplay adType="banner" className="w-full" />
+          </div>
+        </section>
+
+        {/* Sponsored Content Section */}
+        <section className="py-8 bg-blue-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-navy mb-2">Sponsored Content</h2>
+              <p className="text-gray-600">Support our partners who make this platform possible</p>
+            </div>
+            <AdDisplay adType="sponsored-content" className="w-full" />
+          </div>
+        </section>
 
         {/* Latest News */}
         <section className="py-12 bg-gray-50">

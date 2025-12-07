@@ -153,7 +153,7 @@ const PrivacyPolicy: React.FC = () => {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-700">
                     Email: privacy@voiceofupsa.com<br />
-                    Address: UPSA Headquarters, Ghana
+                    Address: Voice of upsa Office, Ghana
                   </p>
                 </div>
               </section>

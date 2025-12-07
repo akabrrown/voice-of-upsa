@@ -1,0 +1,435 @@
+/* Payment Component Styles */
+
+/* Payment Verification Page */
+.paymentVerificationContainer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.paymentVerificationCard {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 2rem;
+  max-width: 28rem;
+  width: 100%;
+  text-align: center;
+}
+
+/* Loading States */
+.paymentLoadingSpinner {
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #fbbf24;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Success State */
+.paymentSuccessIcon {
+  width: 4rem;
+  height: 4rem;
+  background: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.paymentSuccessIcon svg {
+  width: 2rem;
+  height: 2rem;
+  color: white;
+}
+
+/* Error State */
+.paymentErrorIcon {
+  width: 4rem;
+  height: 4rem;
+  background: #ef4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.paymentErrorIcon svg {
+  width: 2rem;
+  height: 2rem;
+  color: white;
+}
+
+/* Payment Form Styles */
+.paymentFormSection {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.paymentFormTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paymentFormTitle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #fbbf24;
+}
+
+/* Pricing Display */
+.pricingDisplay {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.pricingAmount {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.pricingDescription {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* Payment Button States */
+.paymentButton {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.paymentButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.paymentButton:hover::before {
+  left: 100%;
+}
+
+.paymentButton.processing {
+  background: #6b7280;
+  cursor: not-allowed;
+}
+
+.paymentButton.success {
+  background: #10b981;
+}
+
+/* Payment Method Icons */
+.paymentMethods {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.paymentMethodIcon {
+  width: 3rem;
+  height: 2rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.paymentMethodIcon:hover {
+  border-color: #fbbf24;
+  transform: translateY(-2px);
+}
+
+/* Security Badge */
+.securityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f0fdf4;
+  color: #166534;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin: 1rem 0;
+}
+
+.securityBadge svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Progress Steps */
+.paymentProgress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.paymentProgress::before {
+  content: '';
+  position: absolute;
+  top: 1rem;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #e5e7eb;
+  z-index: 0;
+}
+
+.paymentProgressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.paymentProgressStepIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.paymentProgressStep.active .paymentProgressStepIcon {
+  background: #fbbf24;
+  color: white;
+}
+
+.paymentProgressStep.completed .paymentProgressStepIcon {
+  background: #10b981;
+  color: white;
+}
+
+.paymentProgressStepLabel {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.paymentProgressStep.active .paymentProgressStepLabel,
+.paymentProgressStep.completed .paymentProgressStepLabel {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .paymentVerificationContainer {
+    padding: 1rem;
+  }
+  
+  .paymentVerificationCard {
+    padding: 1.5rem;
+  }
+  
+  .pricingAmount {
+    font-size: 1.5rem;
+  }
+  
+  .paymentProgress {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .paymentProgress::before {
+    display: none;
+  }
+  
+  .paymentMethods {
+    flex-wrap: wrap;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .paymentVerificationCard {
+    background: #1f2937;
+    color: white;
+  }
+  
+  .paymentFormSection {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .paymentFormTitle {
+    color: white;
+  }
+  
+  .paymentMethodIcon {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .securityBadge {
+    background: #064e3b;
+    color: #34d399;
+  }
+}
+
+/* Animation Classes */
+.fadeIn {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Payment Status Messages */
+.paymentStatusMessage {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.paymentStatusMessage.info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.paymentStatusMessage.success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.paymentStatusMessage.warning {
+  background: #fed7aa;
+  color: #92400e;
+  border: 1px solid #fdba74;
+}
+
+.paymentStatusMessage.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Payment Form Enhancements */
+.paymentFieldGroup {
+  margin-bottom: 1.5rem;
+}
+
+.paymentFieldLabel {
+  display: block;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.paymentFieldInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.paymentFieldInput:focus {
+  outline: none;
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+.paymentFieldInput.error {
+  border-color: #ef4444;
+}
+
+.paymentFieldError {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Loading Overlay */
+.paymentLoadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.paymentLoadingContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}

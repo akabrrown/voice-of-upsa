@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import BreadcrumbNavigation from '../components/BreadcrumbNavigation';
+import Link from 'next/link';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const TermsOfService: React.FC = () => {
   const breadcrumbs = [
@@ -23,6 +25,17 @@ const TermsOfService: React.FC = () => {
         
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <BreadcrumbNavigation items={breadcrumbs} className="mb-6" />
+          
+          {/* Back to Ads Button */}
+          <div className="mb-6">
+            <Link
+              href="/ads"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-golden text-navy rounded-lg hover:bg-yellow-400 transition-colors font-medium"
+            >
+              <FiArrowLeft className="w-4 h-4" />
+              <span>Back to Ads</span>
+            </Link>
+          </div>
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -172,8 +185,8 @@ const TermsOfService: React.FC = () => {
                 </p>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-700">
-                    Email: legal@voiceofupsa.com<br />
-                    Address: UPSA Headquarters, Ghana
+                    Email: voice.of.upsa.mail@gmail.com<br />
+                    Address: Voice of upsa Office, Ghana
                   </p>
                 </div>
               </section>

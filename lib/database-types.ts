@@ -1,4 +1,12 @@
 // Database type definitions for Supabase
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
 export interface Database {
   public: {
     Tables: {
@@ -105,13 +113,8 @@ export interface Database {
           site_url: string;
           contact_email: string;
           notification_email: string;
-          social_links: {
-            facebook: string;
-            twitter: string;
-            instagram: string;
-            linkedin: string;
-            tiktok: string;
-          };
+          site_logo: string | null;
+          social_links: Json;
           maintenance_mode: boolean;
           allow_comments: boolean;
           moderate_comments: boolean;
@@ -122,6 +125,92 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['settings']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['settings']['Insert']>;
+      };
+      anonymous_messages: {
+        Row: {
+          id: string;
+          content: string;
+          type: 'question' | 'response';
+          status: 'pending' | 'approved' | 'declined';
+          question_id: string | null;
+          admin_question: boolean;
+          likes_count: number;
+          reports_count: number;
+          decline_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['anonymous_messages']['Row'], 'id' | 'created_at' | 'updated_at' | 'likes_count' | 'reports_count'>;
+        Update: Partial<Database['public']['Tables']['anonymous_messages']['Insert']>;
+      };
+      message_reports: {
+        Row: {
+          id: string;
+          message_id: string;
+          reason: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['message_reports']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['message_reports']['Insert']>;
+      };
+      anonymous_stories: {
+        Row: {
+          id: string;
+          title: string | null;
+          content: string | null;
+          category: string | null;
+          author_type: string | null;
+          status: 'pending' | 'approved' | 'declined';
+          featured: boolean;
+          reports_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['anonymous_stories']['Row'], 'id' | 'created_at' | 'updated_at' | 'reports_count' | 'featured'>;
+        Update: Partial<Database['public']['Tables']['anonymous_stories']['Insert']>;
+      };
+      story_reports: {
+        Row: {
+          id: string;
+          story_id: string;
+          reason: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['story_reports']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['story_reports']['Insert']>;
+      };
+      ad_submissions: {
+        Row: {
+          id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          phone: string;
+          company: string | null;
+          business_type: string;
+          ad_type: string;
+          ad_title: string;
+          ad_description: string;
+          target_audience: string;
+          budget: string;
+          duration: string;
+          custom_duration: string | null;
+          start_date: string;
+          website: string | null;
+          additional_info: string | null;
+          terms_accepted: boolean;
+          attachment_urls: string[] | null;
+          status: string;
+          payment_status: string;
+          payment_reference: string | null;
+          payment_amount: number | null;
+          payment_date: string | null;
+          admin_notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['ad_submissions']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['ad_submissions']['Insert']>;
       };
     };
     Views: {

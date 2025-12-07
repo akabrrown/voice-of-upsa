@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Header from './Header';
 import Footer from './Footer';
+import AnonymousButton from './AnonymousButton';
+import MaintenanceMode from './MaintenanceMode';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +14,18 @@ interface LayoutProps {
   ogDescription?: string;
 }
 
+interface SiteSettings {
+  site_name: string;
+  site_description: string;
+  site_url: string;
+  site_logo: string;
+  contact_email: string;
+  maintenance_mode: boolean;
+  allow_comments: boolean;
+  max_upload_size: number;
+  allowed_image_types: string[];
+}
+
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
   title = 'Voice of UPSA', 
@@ -18,6 +33,48 @@ const Layout: React.FC<LayoutProps> = ({
   ogImage,
   ogDescription = description 
 }) => {
+  const router = useRouter();
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/public/settings');
+        if (response.ok) {
+          const siteSettings = await response.json();
+          setSettings(siteSettings);
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if current page is admin page
+  const isAdminPage = router.pathname.startsWith('/admin');
+
+  // Show maintenance mode if enabled and not on admin page
+  if (settings?.maintenance_mode && !isAdminPage) {
+    return <MaintenanceMode settings={settings} />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Head>
@@ -29,15 +86,27 @@ const Layout: React.FC<LayoutProps> = ({
         <meta property="og:title" content={title} />
         <meta property="og:description" content={ogDescription} />
         <meta property="og:type" content="website" />
-        {ogImage && <meta property="og:image" content={ogImage} />}
+        {ogImage && (
+          <>
+            <meta property="og:image" content={ogImage.startsWith('http') ? ogImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${ogImage}`} />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content={title} />
+          </>
+        )}
         <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
-        <meta property="og:site_name" content="Voice of UPSA" />
+        <meta property="og:site_name" content={settings?.site_name || 'Voice of UPSA'} />
         
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={ogDescription} />
-        {ogImage && <meta name="twitter:image" content={ogImage} />}
+        {ogImage && (
+          <>
+            <meta name="twitter:image" content={ogImage.startsWith('http') ? ogImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${ogImage}`} />
+            <meta name="twitter:image:alt" content={title} />
+          </>
+        )}
       </Head>
 
       <Header />
@@ -48,6 +117,9 @@ const Layout: React.FC<LayoutProps> = ({
       </main>
 
       <Footer />
+      
+      {/* Anonymous Zone Floating Button */}
+      <AnonymousButton variant="floating" />
     </div>
   );
 };

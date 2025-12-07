@@ -77,7 +77,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       
       if (event === 'SIGNED_IN') {
         // Only replace if the current path is valid (has all required parameters)
-        if (router.asPath && !router.asPath.includes('[slug]')) {
+        if (router.asPath && !router.asPath.includes('[slug]') && !router.asPath.includes('[id]')) {
           router.replace(router.asPath);
         }
       }

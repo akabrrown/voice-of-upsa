@@ -9,6 +9,7 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { FiMessageCircle, FiX, FiHeart, FiBookmark, FiShare2 } from 'react-icons/fi';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import AdDisplay from '@/components/AdDisplay';
 
 interface Article {
   id: string;
@@ -775,6 +776,16 @@ const ArticlePage: React.FC = () => {
         isEditable={user?.role === 'admin' || user?.role === 'editor'}
         onEdit={() => router.push(`/editor/articles/${article.id}/edit`)}
       />
+
+      {/* In-Article Ad */}
+      <div className="my-8">
+        <AdDisplay adType="in-article" className="w-full" />
+      </div>
+
+      {/* Popup Ad */}
+      <div className="my-8">
+        <AdDisplay adType="popup" className="w-full" />
+      </div>
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}

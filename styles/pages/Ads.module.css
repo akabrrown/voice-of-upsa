@@ -1,0 +1,462 @@
+/* Ads Page Styles */
+
+/* Main container */
+.adsPage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.dark .adsPage {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+/* Form container */
+.adsFormContainer {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.dark .adsFormContainer {
+  background: #1f2937;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Form sections */
+.formSection {
+  padding: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .formSection {
+  border-bottom-color: #374151;
+}
+
+.formSection:last-child {
+  border-bottom: none;
+}
+
+.formSectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e40af;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #fbbf24;
+}
+
+.dark .formSectionTitle {
+  color: #fbbf24;
+  border-bottom-color: #fbbf24;
+}
+
+/* Form inputs */
+.adsFormInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: white;
+  color: #1f2937;
+}
+
+.adsFormInput:focus {
+  outline: none;
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+.dark .adsFormInput {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.dark .adsFormInput:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+}
+
+.adsFormInput::placeholder {
+  color: #9ca3af;
+}
+
+.dark .adsFormInput::placeholder {
+  color: #6b7280;
+}
+
+/* Form labels */
+.adsFormLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.dark .adsFormLabel {
+  color: #d1d5db;
+}
+
+.requiredStar {
+  color: #ef4444;
+  margin-left: 0.25rem;
+}
+
+/* Form select */
+.adsFormSelect {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.dark .adsFormSelect {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23d1d5db' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Form textarea */
+.adsFormTextarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* File upload */
+.fileUploadArea {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: #f9fafb;
+}
+
+.fileUploadArea:hover {
+  border-color: #fbbf24;
+  background: #fef3c7;
+}
+
+.dark .fileUploadArea {
+  border-color: #4b5563;
+  background: #374151;
+}
+
+.dark .fileUploadArea:hover {
+  border-color: #fbbf24;
+  background: #451a03;
+}
+
+.fileUploadArea.dragover {
+  border-color: #fbbf24;
+  background: #fef3c7;
+}
+
+.dark .fileUploadArea.dragover {
+  background: #451a03;
+}
+
+.fileUploadIcon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  color: #9ca3af;
+}
+
+.dark .fileUploadIcon {
+  color: #6b7280;
+}
+
+.fileUploadText {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.dark .fileUploadText {
+  color: #9ca3af;
+}
+
+.fileUploadHint {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.dark .fileUploadHint {
+  color: #6b7280;
+}
+
+/* File preview */
+.filePreview {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.dark .filePreview {
+  background: #374151;
+}
+
+.filePreviewIcon {
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.75rem;
+  color: #6b7280;
+}
+
+.filePreviewInfo {
+  flex: 1;
+}
+
+.filePreviewName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.dark .filePreviewName {
+  color: #f9fafb;
+}
+
+.filePreviewSize {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.filePreviewRemove {
+  padding: 0.25rem 0.5rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.filePreviewRemove:hover {
+  background: #dc2626;
+}
+
+/* Error messages */
+.formError {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.formErrorIcon {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+/* Submit button */
+.adsSubmitButton {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.adsSubmitButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.3);
+}
+
+.adsSubmitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.adsSubmitButton.loading {
+  color: transparent;
+}
+
+.adsSubmitButton.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1rem;
+  height: 1rem;
+  margin: -0.5rem 0 0 -0.5rem;
+  border: 2px solid white;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Process steps */
+.processSteps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.processStep {
+  text-align: center;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.dark .processStep {
+  background: #1f2937;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.processStep:hover {
+  transform: translateY(-2px);
+}
+
+.processStepNumber {
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 auto 1rem;
+}
+
+.processStepTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+}
+
+.dark .processStepTitle {
+  color: #fbbf24;
+}
+
+.processStepDescription {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.dark .processStepDescription {
+  color: #9ca3af;
+}
+
+/* Terms checkbox */
+.termsCheckbox {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.dark .termsCheckbox {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.termsCheckboxInput {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.125rem;
+  margin-right: 0.75rem;
+  border-color: #d1d5db;
+  border-radius: 4px;
+  background: white;
+}
+
+.dark .termsCheckboxInput {
+  background: #1f2937;
+  border-color: #4b5563;
+}
+
+.termsCheckboxInput:checked {
+  background-color: #fbbf24;
+  border-color: #fbbf24;
+}
+
+.termsCheckboxLabel {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.dark .termsCheckboxLabel {
+  color: #d1d5db;
+}
+
+.termsCheckboxLink {
+  color: #fbbf24;
+  text-decoration: underline;
+}
+
+.termsCheckboxLink:hover {
+  color: #f59e0b;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .formSection {
+    padding: 1.5rem;
+  }
+  
+  .processSteps {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .adsSubmitButton {
+    font-size: 1rem;
+    padding: 0.875rem 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .formSection {
+    padding: 1rem;
+  }
+  
+  .fileUploadArea {
+    padding: 1.5rem;
+  }
+  
+  .processStep {
+    padding: 1rem;
+  }
+}

@@ -68,8 +68,7 @@ INSERT INTO categories (name, slug, description) VALUES
     ('News', 'news', 'Latest news and updates'),
     ('Announcements', 'announcements', 'Official announcements'),
     ('Academics', 'academics', 'Academic programs and updates'),
-    ('Sports', 'sports', 'Sports news and achievements'),
-    ('Student Life', 'student-life', 'Student activities and campus life')
+    ('Sports', 'sports', 'Sports news and achievements')
 ON CONFLICT (name) DO NOTHING;
 
 -- Step 5: Tables created - no sample data included

@@ -597,6 +597,12 @@ const AdminDashboard: React.FC = () => {
                             Contact Messages
                           </button>
                         </NextLink>
+                        <NextLink href="/admin/anonymous-messages">
+                          <button className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors duration-200">
+                            <FiMessageCircle className="inline mr-2" />
+                            Anonymous Messages
+                          </button>
+                        </NextLink>
                       </div>
                     </MotionDiv>
 

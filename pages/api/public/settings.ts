@@ -1,5 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+const SETTINGS_FILE = path.join(process.cwd(), 'data', 'settings.json');
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,53 +13,43 @@ export default async function handler(
   }
 
   try {
-    // Fetch public site settings
-    const { data: settings, error } = await supabaseAdmin
-      .from('site_settings')
-      .select('*')
-      .eq('id', 1)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      throw error;
+    // Try to read settings from file
+    try {
+      const data = await fs.readFile(SETTINGS_FILE, 'utf-8');
+      const settings = JSON.parse(data);
+      
+      // Return public-safe settings (exclude sensitive data)
+      const publicSettings = {
+        site_name: settings.site_name,
+        site_description: settings.site_description,
+        site_url: settings.site_url,
+        site_logo: settings.site_logo,
+        contact_email: settings.contact_email,
+        maintenance_mode: settings.maintenance_mode,
+        allow_comments: settings.allow_comments,
+        max_upload_size: settings.max_upload_size,
+        allowed_image_types: settings.allowed_image_types,
+      };
+      
+      return res.status(200).json(publicSettings);
+    } catch {
+      // File doesn't exist, return default settings
+      const defaultSettings = {
+        site_name: 'Voice of UPSA',
+        site_description: 'Official student publication of UPSA',
+        site_url: 'http://localhost:3000',
+        site_logo: '/logo.jpg',
+        contact_email: 'voice.of.upsa.mail@gmail.com',
+        maintenance_mode: false,
+        allow_comments: true,
+        max_upload_size: 5242880,
+        allowed_image_types: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      };
+      
+      return res.status(200).json(defaultSettings);
     }
-
-    // If no settings found, return default values
-    const defaultSettings = {
-      site_name: 'Voice of UPSA',
-      site_description: 'Empowering the University of Professional Studies community through quality journalism',
-      site_url: 'https://voiceofupsa.com',
-      contact_email: 'voice@upsa.edu.gh',
-      notification_email: 'notifications@upsa.edu.gh',
-      social_links: {
-        facebook: 'https://facebook.com/voiceofupsa',
-        twitter: 'https://twitter.com/voiceofupsa',
-        instagram: 'https://instagram.com/voiceofupsa',
-        youtube: 'https://youtube.com/@voiceofupsa',
-        tiktok: 'https://tiktok.com/@voice_of_upsa',
-        linkedin: 'https://linkedin.com/company/voiceofupsa',
-      },
-      maintenance_mode: false,
-      allow_comments: true,
-      moderate_comments: true,
-      max_upload_size: 5242880,
-      allowed_image_types: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    };
-
-    const finalSettings = settings || defaultSettings;
-
-    res.status(200).json({
-      success: true,
-      data: {
-        settings: finalSettings
-      }
-    });
-
   } catch (error) {
-    console.error('Error fetching public settings:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Failed to fetch settings' 
-    });
+    console.error('Error fetching settings:', error);
+    return res.status(500).json({ error: 'Failed to fetch settings' });
   }
 }

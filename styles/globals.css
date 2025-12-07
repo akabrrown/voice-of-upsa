@@ -2,178 +2,145 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fix Cloudinary widget scroll issues */
+/* Mobile-First Base Typography */
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Set base font size for mobile readability */
+    font-size: 16px; /* 16px base = 1rem */
   }
-  
+
   body {
-    @apply transition-colors duration-300;
     overflow: auto !important;
+    /* Ensure readable text on mobile */
+    font-size: clamp(1rem, 4vw, 1.125rem);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
-  
+
   /* Prevent Cloudinary widget from disabling scroll */
   body[style*="overflow: hidden"] {
     overflow: auto !important;
   }
-  
-  .dark {
-    color-scheme: dark;
+
+  /* Mobile-optimized heading sizes */
+  h1 {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: clamp(1.25rem, 4vw, 2rem);
+    line-height: 1.3;
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: clamp(1.125rem, 3vw, 1.5rem);
+    line-height: 1.4;
+    font-weight: 600;
+  }
+
+  h4 {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  h5,
+  h6 {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  /* Ensure paragraphs are readable on mobile */
+  p {
+    font-size: clamp(1rem, 3vw, 1.125rem);
+    line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  /* Mobile-optimized form inputs */
+  input,
+  textarea,
+  select {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    line-height: 1.5;
+    min-height: 2.5rem; /* Larger touch targets on mobile */
+  }
+
+  /* Mobile-optimized buttons */
+  button {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    line-height: 1.5;
+    min-height: 2.5rem; /* Larger touch targets on mobile */
+  }
+
+  /* Mobile-optimized links */
+  a {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  /* Small text adjustments */
+  small,
+  .text-xs,
+  .text-sm {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+    line-height: 1.4;
+  }
+
+  /* Labels and captions */
+  label,
+  caption {
+    font-size: clamp(0.8125rem, 2.25vw, 0.875rem);
+    line-height: 1.4;
   }
 }
 
-/* Dark mode component styles */
-@layer components {
-  /* Background colors */
-  .dark .bg-white {
-    @apply bg-gray-900;
+/* Tablet and up adjustments */
+@media (min-width: 640px) {
+  html {
+    font-size: 16px;
   }
-  
-  .dark .bg-gray-50 {
-    @apply bg-gray-900;
+
+  body {
+    font-size: 1.0625rem;
   }
-  
-  .dark .bg-gray-100 {
-    @apply bg-gray-800;
+}
+
+/* Desktop and up adjustments */
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
   }
-  
-  .dark .bg-gray-200 {
-    @apply bg-gray-700;
+
+  body {
+    font-size: 1.125rem;
   }
-  
-  .dark .bg-gray-300 {
-    @apply bg-gray-600;
+}
+
+/* Large desktop and up */
+@media (min-width: 1280px) {
+  html {
+    font-size: 16px;
   }
-  
-  /* Text colors */
-  .dark .text-gray-50 {
-    color: rgb(243 244 246);
-  }
-  
-  .dark .text-gray-100 {
-    color: rgb(229 231 235);
-  }
-  
-  .dark .text-gray-200 {
-    color: rgb(156 163 175);
-  }
-  
-  .dark .text-gray-300 {
-    color: rgb(107 114 128);
-  }
-  
-  .dark .text-gray-400 {
-    color: rgb(75 85 99);
-  }
-  
-  .dark .text-gray-500 {
-    color: rgb(55 65 81);
-  }
-  
-  .dark .text-gray-600 {
-    color: rgb(156 163 175);
-  }
-  
-  .dark .text-gray-700 {
-    color: rgb(229 231 235);
-  }
-  
-  .dark .text-gray-800 {
-    color: rgb(243 244 246);
-  }
-  
-  .dark .text-gray-900 {
-    color: rgb(249 250 251);
-  }
-  
-  .dark .text-black {
-    @apply text-white;
-  }
-  
-  /* Border colors */
-  .dark .border-gray-100 {
-    @apply border-gray-800;
-  }
-  
-  .dark .border-gray-200 {
-    @apply border-gray-700;
-  }
-  
-  .dark .border-gray-300 {
-    @apply border-gray-600;
-  }
-  
-  .dark .border-gray-400 {
-    @apply border-gray-500;
-  }
-  
-  /* Hover states */
-  .dark .hover\:bg-gray-50:hover {
-    @apply hover:bg-gray-800;
-  }
-  
-  .dark .hover\:bg-gray-100:hover {
-    @apply hover:bg-gray-700;
-  }
-  
-  .dark .hover\:bg-gray-200:hover {
-    @apply hover:bg-gray-600;
-  }
-  
-  .dark .hover\:bg-white:hover {
-    @apply hover:bg-gray-800;
-  }
-  
-  .dark .hover\:text-gray-600:hover {
-    color: rgb(156 163 175);
-  }
-  
-  .dark .hover\:text-gray-700:hover {
-    color: rgb(229 231 235);
-  }
-  
-  .dark .hover\:text-gray-800:hover {
-    color: rgb(243 244 246);
-  }
-  
-  .dark .hover\:text-gray-900:hover {
-    color: rgb(249 250 251);
-  }
-  
-  /* Form elements */
-  .dark .input-dark {
-    @apply bg-gray-800 border-gray-600 text-white placeholder-gray-400;
-  }
-  
-  .dark .input-dark:focus {
-    @apply border-golden ring-golden ring-opacity-50;
-  }
-  
-  /* Cards and containers */
-  .dark .card-dark {
-    @apply bg-gray-800 border-gray-700;
-  }
-  
-  .dark .shadow-lg {
-    box-shadow: 0 10px 15px -3px rgba(17, 24, 39, 0.5);
-  }
-  
-  .dark .shadow-md {
-    box-shadow: 0 4px 6px -1px rgba(17, 24, 39, 0.3);
-  }
-  
-  .dark .shadow-sm {
-    box-shadow: 0 1px 2px 0px rgba(17, 24, 39, 0.2);
+
+  body {
+    font-size: 1.125rem;
   }
 }
 
 /* Import page styles */
-@import './pages/Admin.css';
-@import './pages/Home.css';
-@import './pages/Articles.css';
-@import './pages/Privacy.css';
-@import './pages/Terms.css';
-@import './pages/Newsletter.css';
-@import './pages/Social.css';
-@import './pages/Rss.css';
+@import "./pages/Admin.css";
+@import "./pages/Home.css";
+@import "./pages/Articles.css";
+@import "./pages/Privacy.css";
+@import "./pages/Terms.css";
+@import "./pages/Newsletter.css";
+@import "./pages/Social.css";
+@import "./pages/Rss.css";

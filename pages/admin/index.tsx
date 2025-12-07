@@ -5,7 +5,8 @@ import { useRouter } from 'next/router';
 import LayoutSupabase from '@/components/LayoutSupabase';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { FiUsers, FiFileText, FiMessageSquare, FiEye, FiSettings, FiActivity, FiCalendar, FiMail } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiMessageSquare, FiMessageCircle, FiEye, FiSettings, FiActivity, FiMail } from 'react-icons/fi';
+import { Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
 
 // Type assertion for Next.js Link component
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -244,6 +245,12 @@ const AdminDashboard: React.FC = () => {
                     <p className="font-semibold">User Messages</p>
                   </div>
                 </NextLink>
+                <NextLink href="/admin/anonymous-messages">
+                  <div className="bg-navy text-white p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer">
+                    <FiMessageCircle className="w-6 h-6 mb-2" />
+                    <p className="font-semibold">Anonymous Messages</p>
+                  </div>
+                </NextLink>
                 <NextLink href="/admin/settings">
                   <div className="bg-navy text-white p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer col-span-2">
                     <FiSettings className="w-6 h-6 mb-2" />
@@ -276,26 +283,64 @@ const AdminDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-white rounded-lg shadow-md p-6"
+            className="bg-white rounded-lg shadow-md p-4 md:p-6"
           >
-            <h2 className="text-xl font-semibold text-navy mb-4">Monthly Statistics</h2>
-            <div className="space-y-4">
-              {stats?.monthlyStats?.slice(0, 6).map((month, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <FiCalendar className="w-5 h-5 text-golden" />
-                    <p className="font-medium text-navy">{month.month}</p>
-                  </div>
-                  <div className="flex space-x-6 text-sm">
-                    <span className="text-gray-600">{month.users} users</span>
-                    <span className="text-gray-600">{month.articles} articles</span>
-                    <span className="text-gray-600">{month.views} views</span>
+            <h2 className="text-lg md:text-xl font-semibold text-navy mb-3 md:mb-4">Monthly Statistics</h2>
+            {stats?.monthlyStats && stats.monthlyStats.length > 0 ? (
+              <div className="space-y-4 md:space-y-6">
+                {/* Combined Chart */}
+                <div>
+                  <h4 className="text-xs md:text-sm font-medium text-gray-700 mb-2 md:mb-3">Overview (Articles, Views, Users)</h4>
+                  <div className="bg-gray-50 rounded-lg p-2 md:p-4 h-[250px] md:h-[350px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={stats.monthlyStats} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                        <YAxis yAxisId="left" tick={{ fontSize: 10 }} width={30} />
+                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} width={35} />
+                        <Tooltip contentStyle={{ fontSize: '12px' }} />
+                        <Legend wrapperStyle={{ fontSize: '10px' }} />
+                        <Bar yAxisId="left" dataKey="articles" fill="#3b82f6" name="Articles" />
+                        <Bar yAxisId="left" dataKey="users" fill="#10b981" name="New Users" />
+                        <Line yAxisId="right" type="monotone" dataKey="views" stroke="#8b5cf6" strokeWidth={2} name="Views" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
-              )) || (
-                <p className="text-gray-500 text-center py-4">No monthly statistics available</p>
-              )}
-            </div>
+
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 pt-3 md:pt-4 border-t border-gray-200">
+                  <div className="bg-blue-50 rounded-lg p-2 md:p-4 text-center">
+                    <div className="text-lg md:text-2xl font-bold text-blue-600">
+                      {stats.monthlyStats.reduce((sum, m) => sum + m.articles, 0)}
+                    </div>
+                    <div className="text-[10px] md:text-xs text-gray-600 mt-0.5 md:mt-1">Total Articles</div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-2 md:p-4 text-center">
+                    <div className="text-lg md:text-2xl font-bold text-purple-600">
+                      {stats.monthlyStats.reduce((sum, m) => sum + m.views, 0).toLocaleString()}
+                    </div>
+                    <div className="text-[10px] md:text-xs text-gray-600 mt-0.5 md:mt-1">Total Views</div>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-2 md:p-4 text-center">
+                    <div className="text-lg md:text-2xl font-bold text-green-600">
+                      {stats.monthlyStats.reduce((sum, m) => sum + m.users, 0)}
+                    </div>
+                    <div className="text-[10px] md:text-xs text-gray-600 mt-0.5 md:mt-1">New Users</div>
+                  </div>
+                  <div className="bg-orange-50 rounded-lg p-2 md:p-4 text-center">
+                    <div className="text-lg md:text-2xl font-bold text-orange-600">
+                      {stats.monthlyStats.length > 0
+                        ? Math.round(stats.monthlyStats.reduce((sum, m) => sum + m.views, 0) / stats.monthlyStats.length).toLocaleString()
+                        : 0}
+                    </div>
+                    <div className="text-[10px] md:text-xs text-gray-600 mt-0.5 md:mt-1">Avg Monthly Views</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4 text-sm md:text-base">No monthly statistics available</p>
+            )}
           </MotionDiv>
         </div>
       </div>

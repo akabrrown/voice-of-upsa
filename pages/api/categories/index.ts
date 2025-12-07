@@ -15,7 +15,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(500).json({ error: 'Failed to fetch categories' });
       }
 
-      return res.status(200).json({ categories: data || [] });
+      // Filter out Anonymous category from articles categories
+      const filteredCategories = (data || []).filter(
+        category => category.slug !== 'anonymous' && category.name !== 'Anonymous'
+      );
+
+      return res.status(200).json({ categories: filteredCategories });
     }
 
     // POST - Create category (admin only)
