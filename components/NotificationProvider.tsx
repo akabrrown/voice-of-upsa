@@ -23,6 +23,7 @@ interface NotificationProviderProps {
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const { user, supabase } = useSupabase();
   const router = useRouter();
+  const userId = user?.id;
   const [enabled, setEnabled] = useState(true);
   const [userArticleIds, setUserArticleIds] = useState<string[]>([]);
   const [userPreferences, setUserPreferences] = useState<{
@@ -43,7 +44,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
   // Fetch user's articles and preferences for notification subscriptions
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!userId || !supabase) return;
 
     const fetchUserData = async () => {
       try {
@@ -51,7 +52,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         const { data: articles, error: articlesError } = await supabase
           .from('articles')
           .select('id')
-          .eq('author_id', user.id);
+          .eq('author_id', userId);
 
         if (!articlesError && articles) {
           const articleIds = articles.map(a => a.id);
@@ -83,6 +84,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
                   security_alerts: data.data.preferences.security_alerts ?? true
                 });
               }
+            } else if (response.status === 401) {
+              console.warn('Session expired or invalid token for notifications. Please sign in again.');
+              // Avoid further retries or error noise
+              return; 
             } else {
               console.log('Notification preferences API returned:', response.status);
             }
@@ -97,11 +102,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     };
 
     fetchUserData();
-  }, [user, supabase]);
+  }, [userId, supabase]);
 
   // Subscribe to notifications for user's articles
   useEffect(() => {
-    if (!user || !supabase || !enabled || userArticleIds.length === 0) return;
+    if (!userId || !supabase || !enabled || userArticleIds.length === 0) return;
 
     const newChannels: RealtimeChannel[] = [];
 
@@ -119,10 +124,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           if (!payload.new || !('article_id' in payload.new)) return;
           
           const articleId = payload.new.article_id as string;
-          const userId = payload.new.user_id as string;
+          const actorId = payload.new.user_id as string;
           
           // Only notify if it's the user's article and not their own reaction
-          if (userArticleIds.includes(articleId) && userId !== user.id) {
+          if (userArticleIds.includes(articleId) && actorId !== userId) {
             // Fetch article and user details
             const { data: article } = await supabase
               .from('articles')
@@ -133,7 +138,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             const { data: reactingUser } = await supabase
               .from('users')
               .select('name')
-              .eq('id', userId)
+              .eq('id', actorId)
               .single();
 
             const reactionType = payload.new.reaction_type as string;
@@ -170,10 +175,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           if (!payload.new || !('article_id' in payload.new)) return;
           
           const articleId = payload.new.article_id as string;
-          const userId = payload.new.user_id as string;
+          const actorId = payload.new.user_id as string;
           
           // Only notify if it's the user's article and not their own bookmark
-          if (userArticleIds.includes(articleId) && userId !== user.id) {
+          if (userArticleIds.includes(articleId) && actorId !== userId) {
             // Fetch article and user details
             const { data: article } = await supabase
               .from('articles')
@@ -184,7 +189,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             const { data: bookmarkingUser } = await supabase
               .from('users')
               .select('name')
-              .eq('id', userId)
+              .eq('id', actorId)
               .single();
 
             // Check if push notifications are enabled
@@ -218,10 +223,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           if (!payload.new || !('article_id' in payload.new)) return;
           
           const articleId = payload.new.article_id as string;
-          const userId = payload.new.user_id as string;
+          const actorId = payload.new.user_id as string;
           
           // Only notify if it's the user's article and not their own comment
-          if (userArticleIds.includes(articleId) && userId !== user.id) {
+          if (userArticleIds.includes(articleId) && actorId !== userId) {
             // Fetch article and user details
             const { data: article } = await supabase
               .from('articles')
@@ -232,7 +237,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             const { data: commentingUser } = await supabase
               .from('users')
               .select('name')
-              .eq('id', userId)
+              .eq('id', actorId)
               .single();
 
             const content = payload.new.content as string;
@@ -261,7 +266,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         supabase.removeChannel(channel);
       });
     };
-  }, [user, supabase, enabled, userArticleIds, router, userPreferences.article_comments, userPreferences.push_notifications]);
+  }, [userId, supabase, enabled, userArticleIds, router.asPath, userPreferences.article_comments, userPreferences.push_notifications]);
 
   const value = {
     enabled,

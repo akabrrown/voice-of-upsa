@@ -19,7 +19,7 @@ const adSubmissionSchema = z.object({
   phone: z.string().min(10, 'Please enter a valid phone number'),
   company: z.string().optional(),
   businessType: z.enum(['individual', 'small-business', 'corporate', 'non-profit', 'other']),
-  adType: z.enum(['banner', 'sidebar', 'in-article', 'popup', 'sponsored-content', 'other']),
+  adLocations: z.array(z.string()).min(1, 'Please select at least one ad location'),
   adTitle: z.string().min(5, 'Ad title must be at least 5 characters'),
   adDescription: z.string().min(20, 'Ad description must be at least 20 characters'),
   targetAudience: z.string().min(10, 'Please describe your target audience'),
@@ -33,6 +33,20 @@ const adSubmissionSchema = z.object({
 
 type AdSubmissionForm = z.infer<typeof adSubmissionSchema>;
 
+interface AdLocation {
+  id: string;
+  name: string;
+  display_name: string;
+  description: string;
+  page_location: string;
+  position_type: string;
+  is_premium: boolean;
+  base_price?: number;
+  dimensions?: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
 const AdsPage: React.FC = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,13 +54,15 @@ const AdsPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
   const [customDuration, setCustomDuration] = useState('');
+  const [adLocations, setAdLocations] = useState<AdLocation[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const { register, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<AdSubmissionForm>({
     resolver: zodResolver(adSubmissionSchema),
     defaultValues: {
       businessType: 'individual',
-      adType: 'banner',
+      adLocations: [],
       duration: '1-week',
       termsAccepted: false,
     },
@@ -64,7 +80,7 @@ const AdsPage: React.FC = () => {
       // Restore form values
       Object.keys(savedData).forEach(key => {
         if (savedData[key] !== undefined && savedData[key] !== null) {
-          setValue(key as keyof AdSubmissionForm, savedData[key] as string | boolean | undefined);
+          setValue(key as keyof AdSubmissionForm, savedData[key] as string | boolean | string[] | undefined);
         }
       });
       
@@ -73,9 +89,34 @@ const AdsPage: React.FC = () => {
         setAttachmentUrls(savedData.attachmentUrls as string[]);
       }
       
+      // Restore selected locations
+      if (savedData.adLocations) {
+        setSelectedLocations(savedData.adLocations as string[]);
+      }
+      
       toast.success('Form data restored from previous session');
     }
   }, [setValue]);
+
+  // Fetch ad locations
+  useEffect(() => {
+    const fetchAdLocations = async () => {
+      try {
+        const response = await fetch('/api/ads/locations');
+        if (response.ok) {
+          const data = await response.json();
+          const locations = data.data?.locations || [];
+          setAdLocations(locations);
+        } else {
+          console.error('Failed to fetch ad locations');
+        }
+      } catch (error) {
+        console.error('Error fetching ad locations:', error);
+      }
+    };
+
+    fetchAdLocations();
+  }, []);
 
   // Auto-save form data when values change
   const formValues = watch();
@@ -85,10 +126,23 @@ const AdsPage: React.FC = () => {
     if (Object.keys(formValues).length > 0) {
       autoSave({
         ...formValues,
-        attachmentUrls
+        attachmentUrls,
+        adLocations: selectedLocations
       });
     }
-  }, [formValues, attachmentUrls, autoSave]);
+  }, [formValues, attachmentUrls, selectedLocations, autoSave]);
+
+  // Handle location selection
+  const handleLocationChange = (locationName: string, isChecked: boolean) => {
+    if (isChecked) {
+      setSelectedLocations(prev => [...prev, locationName]);
+      setValue('adLocations', [...selectedLocations, locationName]);
+    } else {
+      const updated = selectedLocations.filter(loc => loc !== locationName);
+      setSelectedLocations(updated);
+      setValue('adLocations', updated);
+    }
+  };
 
   const triggerFileSelect = () => {
     fileInputRef.current?.click();
@@ -146,10 +200,9 @@ const AdsPage: React.FC = () => {
         ...data,
         customDuration: data.duration === 'custom' ? customDuration : undefined,
         attachmentUrls,
-        status: 'pending', // Set status to pending for admin approval
       };
 
-      const response = await fetch('/api/ads/submit-simple', {
+      const response = await fetch('/api/ads/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -328,30 +381,73 @@ const AdsPage: React.FC = () => {
                   </h2>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Ad Type *
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        Select Ad Locations * <span className="text-xs text-gray-500">(Choose one or more)</span>
                       </label>
-                      <select
-                        {...register('adType')}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      >
-                        <option value="">Select ad type</option>
-                        <option value="banner">Banner Ad (Homepage - Premium)</option>
-                        <option value="sidebar">Sidebar Ad (Articles Page - Standard)</option>
-                        <option value="in-article">In-Article Ad (Article Pages - Premium)</option>
-                        <option value="popup">Popup Ad (Article Pages - Premium)</option>
-                        <option value="sponsored-content">Sponsored Content (Homepage - Premium)</option>
-                        <option value="other">Other (Custom Placement)</option>
-                      </select>
-                      {errors.adType && (
-                        <p className="mt-1 text-sm text-red-600">{errors.adType.message}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {adLocations.map((location) => (
+                          <div key={location.id} className="relative">
+                            <input
+                              type="checkbox"
+                              id={`location-${location.id}`}
+                              value={location.name}
+                              checked={selectedLocations.includes(location.name)}
+                              onChange={(e) => handleLocationChange(location.name, e.target.checked)}
+                              className="sr-only peer"
+                            />
+                            <label
+                              htmlFor={`location-${location.id}`}
+                              className="block p-4 border-2 rounded-lg cursor-pointer transition-all peer-checked:border-golden peer-checked:bg-golden/5 hover:border-gray-300"
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className="mt-1">
+                                  <div className="w-4 h-4 border-2 rounded peer-checked:border-golden peer-checked:bg-golden flex items-center justify-center">
+                                    {selectedLocations.includes(location.name) && (
+                                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 dark:text-white">
+                                    {location.display_name}
+                                  </div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    {location.description}
+                                  </div>
+                                  <div className="flex items-center justify-between mt-2">
+                                    <span className="text-xs text-gray-400">
+                                      {location.page_location} • {location.position_type}
+                                    </span>
+                                    {location.is_premium && (
+                                      <span className="text-xs bg-golden/20 text-golden px-2 py-1 rounded-full">
+                                        Premium
+                                      </span>
+                                    )}
+                                  </div>
+                                  {location.base_price && (
+                                    <div className="text-sm font-medium text-golden dark:text-golden mt-2">
+                                      GHS {location.base_price}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      {errors.adLocations && (
+                        <p className="mt-2 text-sm text-red-600">{errors.adLocations.message}</p>
                       )}
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        See available spaces above for location details
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Select all locations where you&apos;d like your advertisement to appear
                       </p>
                     </div>
+                  </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Campaign Duration *
@@ -448,7 +544,7 @@ const AdsPage: React.FC = () => {
                         {...register('budget')}
                         type="text"
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent dark:bg-gray-700 dark:text-white"
-                        placeholder="e.g., GHS 500, $1000"
+                        placeholder="e.g., GHS 500, GHS 1000"
                       />
                       {errors.budget && (
                         <p className="mt-1 text-sm text-red-600">{errors.budget.message}</p>

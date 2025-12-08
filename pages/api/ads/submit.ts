@@ -17,7 +17,7 @@ type AdSubmissionInput = {
   phone: string;
   company?: string;
   businessType: 'individual' | 'small-business' | 'corporate' | 'non-profit' | 'other';
-  adType: 'banner' | 'sidebar' | 'in-article' | 'popup' | 'sponsored-content' | 'other';
+  adLocations: string[];
   adTitle: string;
   adDescription: string;
   targetAudience: string;
@@ -39,7 +39,6 @@ type AdSubmissionInsert = {
   phone: string;
   company?: string;
   business_type: string;
-  ad_type: string;
   ad_title: string;
   ad_description: string;
   target_audience: string;
@@ -51,14 +50,53 @@ type AdSubmissionInsert = {
   additional_info?: string;
   terms_accepted: boolean;
   attachment_urls?: string[];
-  status: string;
-  payment_status: string;
-  created_at: string;
-  updated_at: string;
+  status?: string;
+  payment_status?: string;
+  created_at?: string;
+  updated_at?: string;
 };
 
 // Type for data without customDuration (for database insertion)
 type DatabaseInsertData = AdSubmissionInsert;
+
+// Function to store ad locations
+async function storeAdLocations(submissionId: string, locationNames: string[]) {
+  try {
+    // Get location IDs from names
+    const { data: locations, error: locationError } = await supabase
+      .from('ad_locations')
+      .select('id')
+      .in('name', locationNames);
+
+    if (locationError) {
+      console.error('Error fetching location IDs:', locationError);
+      return;
+    }
+
+    if (!locations || locations.length === 0) {
+      console.log('No valid locations found');
+      return;
+    }
+
+    // Insert into junction table
+    const locationInserts = locations.map(location => ({
+      ad_submission_id: submissionId,
+      ad_location_id: location.id
+    }));
+
+    const { error: insertError } = await supabase
+      .from('ad_submission_locations')
+      .insert(locationInserts);
+
+    if (insertError) {
+      console.error('Error storing ad locations:', insertError);
+    } else {
+      console.log(`Successfully stored ${locationInserts.length} ad locations`);
+    }
+  } catch (error) {
+    console.error('Error in storeAdLocations:', error);
+  }
+}
 
 // Validation schema
 const adSubmissionSchema = z.object({
@@ -68,7 +106,7 @@ const adSubmissionSchema = z.object({
   phone: z.string().min(10),
   company: z.string().optional(),
   businessType: z.enum(['individual', 'small-business', 'corporate', 'non-profit', 'other']),
-  adType: z.enum(['banner', 'sidebar', 'in-article', 'popup', 'sponsored-content', 'other']),
+  adLocations: z.array(z.string()).min(1),
   adTitle: z.string().min(5),
   adDescription: z.string().min(20),
   targetAudience: z.string().min(10),
@@ -103,7 +141,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       phone: validatedData.phone,
       company: validatedData.company,
       business_type: validatedData.businessType,
-      ad_type: validatedData.adType,
       ad_title: validatedData.adTitle,
       ad_description: validatedData.adDescription,
       target_audience: validatedData.targetAudience,
@@ -164,6 +201,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         console.log('Fallback submission successful:', fallbackSubmission);
         
+        // Store ad locations for fallback submission
+        if (validatedData.adLocations && validatedData.adLocations.length > 0) {
+          await storeAdLocations(fallbackSubmission.id, validatedData.adLocations);
+        }
+        
         // Send emails with fallback submission
         try {
           await Promise.all([
@@ -183,6 +225,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       
       return res.status(500).json({ message: 'Failed to store ad submission', error: error.message });
+    }
+
+    console.log('Submission successful:', submission);
+
+    // Store ad locations
+    if (validatedData.adLocations && validatedData.adLocations.length > 0) {
+      await storeAdLocations(submission.id, validatedData.adLocations);
     }
 
     console.log('Database insertion successful:', submission);
@@ -246,9 +295,9 @@ async function sendAdminNotification(submission: AdSubmissionInput & { id: strin
           <p><strong>Phone:</strong> ${submission.phone}</p>
           <p><strong>Company:</strong> ${submission.company || 'N/A'}</p>
           <p><strong>Business Type:</strong> ${submission.businessType}</p>
-          <p><strong>Ad Type:</strong> ${submission.adType}</p>
+          <p><strong>Ad Locations:</strong> ${Array.isArray(submission.adLocations) ? submission.adLocations.join(', ') : 'N/A'}</p>
           <p><strong>Ad Title:</strong> ${submission.adTitle}</p>
-          <p><strong>Budget:</strong> ${submission.budget}</p>
+          <p><strong>Budget:</strong> GHS ${submission.budget}</p>
           <p><strong>Duration:</strong> ${submission.duration}${submission.custom_duration ? ` (${submission.custom_duration})` : ''}</p>
           <p><strong>Start Date:</strong> ${submission.startDate}</p>
           <p><strong>Website:</strong> ${submission.website || 'N/A'}</p>
@@ -323,7 +372,7 @@ async function sendUserConfirmation(data: AdSubmissionInput) {
           <div style="background: white; padding: 20px; border-radius: 6px; margin: 20px 0;">
             <h3 style="color: #1e40af; margin-top: 0;">Submission Details</h3>
             <p><strong>Ad Title:</strong> ${data.adTitle}</p>
-            <p><strong>Ad Type:</strong> ${data.adType}</p>
+            <p><strong>Ad Locations:</strong> ${Array.isArray(data.adLocations) ? data.adLocations.join(', ') : 'N/A'}</p>
             <p><strong>Budget:</strong> ${data.budget}</p>
             <p><strong>Duration:</strong> ${data.duration}${data.customDuration ? ` (${data.customDuration})` : ''}</p>
             <p><strong>Submitted:</strong> ${new Date().toLocaleDateString()}</p>

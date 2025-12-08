@@ -1,33 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
-
-// Check for required environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+import { supabaseAdmin } from '@/lib/database-server';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Check environment variables
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('[get-approved] Missing environment variables:', {
-      hasUrl: !!supabaseUrl,
-      hasAnonKey: !!supabaseAnonKey,
-    });
-    return res.status(500).json({ error: 'Server configuration error: Missing Supabase credentials' });
-  }
-
-  if (!supabase) {
-    console.error('[get-approved] Supabase client not initialized');
-    return res.status(500).json({ error: 'Server configuration error: Supabase client not initialized' });
+  if (!supabaseAdmin) {
+    console.error('Missing Supabase environment variables');
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
   // Handle GET request - fetch approved stories
   if (req.method === 'GET') {
     try {
-      const { data: stories, error: fetchError } = await supabase
+      const { data: stories, error: fetchError } = await supabaseAdmin
         .from('anonymous_stories')
         .select('*')
         .eq('status', 'approved')

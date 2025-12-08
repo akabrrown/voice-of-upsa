@@ -44,8 +44,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUserRole('user');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching user role:', error);
+      // If we get a 401/403 (likely due to invalid RLS or token), we should probably not default to 'user' quietly.
+      // But for now, just fallback.
+      if (error?.code === 'PGRST301' || error?.message?.includes('JWT')) {
+         // JWT expired or invalid
+         supabase.auth.signOut();
+      }
       setUserRole('user');
     }
   }, [supabase]);

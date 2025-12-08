@@ -37,6 +37,16 @@ const Layout: React.FC<LayoutProps> = ({
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Debug logging for social sharing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      console.log('Layout props:', { title, description, ogImage, ogDescription });
+      const finalOgImage = ogImage || '/images/og-default.jpg';
+      const imageUrl = finalOgImage.startsWith('http') ? finalOgImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${finalOgImage}`;
+      console.log('Final OG image URL:', imageUrl, 'Original ogImage:', ogImage);
+    }
+  }, [title, description, ogImage, ogDescription]);
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -86,14 +96,19 @@ const Layout: React.FC<LayoutProps> = ({
         <meta property="og:title" content={title} />
         <meta property="og:description" content={ogDescription} />
         <meta property="og:type" content="website" />
-        {ogImage && (
-          <>
-            <meta property="og:image" content={ogImage.startsWith('http') ? ogImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${ogImage}`} />
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
-            <meta property="og:image:alt" content={title} />
-          </>
-        )}
+        {(() => {
+          const finalOgImage = ogImage || '/images/og-default.jpg';
+          const imageUrl = finalOgImage.startsWith('http') ? finalOgImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${finalOgImage}`;
+          return (
+            <>
+              <meta property="og:image" content={imageUrl} />
+              <meta property="og:image:width" content="1200" />
+              <meta property="og:image:height" content="630" />
+              <meta property="og:image:alt" content={title} />
+              <meta property="og:image:type" content="image/jpeg" />
+            </>
+          );
+        })()}
         <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
         <meta property="og:site_name" content={settings?.site_name || 'Voice of UPSA'} />
         
@@ -101,12 +116,16 @@ const Layout: React.FC<LayoutProps> = ({
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={ogDescription} />
-        {ogImage && (
-          <>
-            <meta name="twitter:image" content={ogImage.startsWith('http') ? ogImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${ogImage}`} />
-            <meta name="twitter:image:alt" content={title} />
-          </>
-        )}
+        {(() => {
+          const finalOgImage = ogImage || '/images/og-default.jpg';
+          const imageUrl = finalOgImage.startsWith('http') ? finalOgImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${finalOgImage}`;
+          return (
+            <>
+              <meta name="twitter:image" content={imageUrl} />
+              <meta name="twitter:image:alt" content={title} />
+            </>
+          );
+        })()}
       </Head>
 
       <Header />

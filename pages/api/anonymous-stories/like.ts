@@ -1,16 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabaseAdmin } from '@/lib/database-server';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!supabaseAdmin) {
+    console.error('Missing Supabase environment variables');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -22,12 +18,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // Get IP address for rate limiting
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || 
+                      (req.connection.remoteAddress as string) || 
+                      'unknown';
+
     // Check if user already liked this story
     let existingLike = null;
     
     if (userId) {
       // Check for authenticated user
-      const { data } = await supabase
+      const { data } = await supabaseAdmin
         .from('story_likes')
         .select('*')
         .eq('story_id', storyId)
@@ -37,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       existingLike = data;
     } else if (sessionId) {
       // Check for anonymous user by session
-      const { data } = await supabase
+      const { data } = await supabaseAdmin
         .from('story_likes')
         .select('*')
         .eq('story_id', storyId)
@@ -45,15 +46,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .single();
       
       existingLike = data;
+    } else {
+      // Check for anonymous user by IP address
+      const { data } = await supabaseAdmin
+        .from('story_likes')
+        .select('*')
+        .eq('story_id', storyId)
+        .eq('ip_address', ipAddress)
+        .single();
+      
+      existingLike = data;
     }
 
     if (existingLike) {
       // UNLIKE: Remove the like and decrement count
-      const { error: unlikeError } = await supabase
+      const deleteQuery = supabaseAdmin
         .from('story_likes')
         .delete()
-        .eq('story_id', storyId)
-        .eq(userId ? 'user_id' : 'session_id', userId || sessionId);
+        .eq('story_id', storyId);
+
+      if (userId) {
+        deleteQuery.eq('user_id', userId);
+      } else if (sessionId) {
+        deleteQuery.eq('session_id', sessionId);
+      } else {
+        deleteQuery.eq('ip_address', ipAddress);
+      }
+
+      const { error: unlikeError } = await deleteQuery;
 
       if (unlikeError) {
         console.error('Error unliking story:', unlikeError);
@@ -61,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Get current likes count
-      const { data: currentStory, error: fetchError } = await supabase
+      const { data: currentStory, error: fetchError } = await supabaseAdmin
         .from('anonymous_stories')
         .select('likes_count')
         .eq('id', storyId)
@@ -73,7 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Decrement likes count
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('anonymous_stories')
         .update({ 
           likes_count: Math.max(0, (currentStory?.likes_count || 0) - 1),
@@ -96,12 +116,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     } else {
       // LIKE: Add the like and increment count
-      const { error: likeError } = await supabase
+      const { error: likeError } = await supabaseAdmin
         .from('story_likes')
         .insert({
           story_id: storyId,
           user_id: userId || null,
           session_id: sessionId || null,
+          ip_address: (!userId && !sessionId) ? ipAddress : null
         });
 
       if (likeError) {
@@ -110,7 +131,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Get current likes count
-      const { data: currentStory, error: fetchError } = await supabase
+      const { data: currentStory, error: fetchError } = await supabaseAdmin
         .from('anonymous_stories')
         .select('likes_count')
         .eq('id', storyId)
@@ -122,7 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Increment likes count
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('anonymous_stories')
         .update({ 
           likes_count: (currentStory?.likes_count || 0) + 1,

@@ -1,16 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabaseAdmin } from '@/lib/database-server';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Check for environment variables
+  if (!supabaseAdmin) {
+    console.error('Missing Supabase environment variables');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -28,35 +25,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       viewSessionId = 'view_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
     }
 
-    // Record the view - skip the story_views table and go directly to update
-    console.log('Recording view for story:', storyId);
+    // Get IP address for rate limiting
+    const ipAddress = (req.headers['x-forwarded-for'] as string) || 
+                      (req.connection.remoteAddress as string) || 
+                      'unknown';
+
+    // Try to record the view in story_views table
+    // We strive for uniqueness:
+    // 1. By Session ID (for same browser)
+    // 2. By IP Address (for different browsers/incognito on same device)
     
-    // Direct update approach - skip the tracking table for now
-    const { data: currentStory } = await supabase
-      .from('anonymous_stories')
-      .select('views_count')
-      .eq('id', storyId)
-      .single();
+    // Note: The database has unique indexes on (story_id, user_id), (story_id, session_id) AND (story_id, ip_address)
+    // Inserting this will fail if ANY of these constraints are violated, which is exactly what we want (deduplication).
 
-    if (currentStory) {
-      const { error: updateError } = await supabase
+    const { error: insertError } = await supabaseAdmin
+      .from('story_views')
+      .insert({
+        story_id: storyId,
+        session_id: viewSessionId,
+        ip_address: ipAddress
+      });
+
+    // Check if insertion was successful (no duplicate)
+    // Error code 23505 is unique_violation in Postgres
+    if (!insertError) {
+      console.log('New view recorded for story:', storyId);
+      
+      // Increment the counter since it's a new view
+      const { data: currentStory } = await supabaseAdmin
         .from('anonymous_stories')
-        .update({ views_count: (currentStory.views_count || 0) + 1 })
-        .eq('id', storyId);
+        .select('views_count')
+        .eq('id', storyId)
+        .single();
+        
+      if (currentStory) {
+        const { error: updateError } = await supabaseAdmin
+          .from('anonymous_stories')
+          .update({ views_count: (currentStory.views_count || 0) + 1 })
+          .eq('id', storyId);
 
-      if (updateError) {
-        console.error('Error updating view count:', updateError);
-        return res.status(500).json({ error: 'Failed to record view' });
-      } else {
-        console.log('Successfully updated view count to:', (currentStory.views_count || 0) + 1);
+        if (updateError) {
+          console.error('Error updating view count:', updateError);
+          // We logged the view but failed to update count. Partial success.
+        } else {
+          console.log('Successfully updated view count to:', (currentStory.views_count || 0) + 1);
+        }
       }
     } else {
-      return res.status(404).json({ error: 'Story not found' });
+      // If error is unique violation, it means already viewed. Ignore.
+      if (insertError.code === '23505') {
+        console.log('Story already viewed by this session, skipping increment.');
+      } else {
+        console.error('Error recording view:', insertError);
+        // Continue to return success to client to not break flow, but log error
+      }
     }
 
     res.status(200).json({ 
       success: true, 
-      message: 'View recorded successfully',
+      message: 'View processed',
       sessionId: viewSessionId
     });
 

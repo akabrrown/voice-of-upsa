@@ -98,12 +98,25 @@ export interface Database {
         Row: {
           id: string;
           article_id: string;
-          user_id: string;
-          reaction_type: 'thumbsup' | 'heart' | 'smile' | 'star' | 'meh';
+          user_id: string | null;
+          ip_address: string | null;
+          user_agent: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['reactions']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['reactions']['Insert']>;
+        Insert: Omit<Database['public']['Tables']['article_views']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['article_views']['Insert']>;
+      };
+      article_views: {
+        Row: {
+          id: string;
+          article_id: string;
+          user_id: string | null;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['article_views']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['article_views']['Insert']>;
       };
       settings: {
         Row: {
@@ -163,10 +176,12 @@ export interface Database {
           status: 'pending' | 'approved' | 'declined';
           featured: boolean;
           reports_count: number;
+          views_count: number;
+          likes_count: number;
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['anonymous_stories']['Row'], 'id' | 'created_at' | 'updated_at' | 'reports_count' | 'featured'>;
+        Insert: Omit<Database['public']['Tables']['anonymous_stories']['Row'], 'id' | 'created_at' | 'updated_at' | 'reports_count' | 'featured' | 'views_count' | 'likes_count'>;
         Update: Partial<Database['public']['Tables']['anonymous_stories']['Insert']>;
       };
       story_reports: {
@@ -178,6 +193,30 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['story_reports']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['story_reports']['Insert']>;
+      };
+      story_likes: {
+        Row: {
+          id: string;
+          story_id: string;
+          user_id: string | null;
+          session_id: string | null;
+          ip_address: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['story_likes']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['story_likes']['Insert']>;
+      };
+      story_views: {
+        Row: {
+          id: string;
+          story_id: string;
+          user_id: string | null;
+          session_id: string | null;
+          ip_address: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['story_views']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['story_views']['Insert']>;
       };
       ad_submissions: {
         Row: {

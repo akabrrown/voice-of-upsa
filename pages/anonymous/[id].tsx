@@ -51,22 +51,20 @@ const AnonymousStoryPage: React.FC = () => {
 
       const data = await response.json();
       
-      if (response.ok && data.success && !data.alreadyViewed) {
+      if (response.ok && data.success) {
+        console.log('View tracking successful, refreshing story data...');
         // Refresh story data to get updated view count
         setTimeout(() => {
-          // Direct API call to avoid dependency issues
-          fetch('/api/anonymous-stories/get-approved')
+          // Direct API call to get updated story data
+          fetch(`/api/anonymous-stories/${storyId}`)
             .then(res => res.json())
             .then(data => {
-              if (data.success) {
-                const stories = data.data || [];
-                const foundStory = stories.find((s: AnonymousStory) => s.id === storyId);
-                
-                if (foundStory) {
-                  setStory(foundStory);
-                  setLikeCount(foundStory.likes_count || 0);
-                  setViewCount(foundStory.views_count || 0);
-                }
+              if (data.success && data.data) {
+                const updatedStory = data.data;
+                console.log('Updated story data:', { views_count: updatedStory.views_count });
+                setStory(updatedStory);
+                setLikeCount(updatedStory.likes_count || 0);
+                setViewCount(updatedStory.views_count || 0);
               }
             })
             .catch(console.error);

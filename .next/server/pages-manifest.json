@@ -2,15 +2,5 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/admin/ads": "pages/admin/ads.js",
-  "/api/ads-simple": "pages/api/ads-simple.js",
-  "/api/public/settings": "pages/api/public/settings.js",
-  "/api/user/notification-preferences": "pages/api/user/notification-preferences.js",
-  "/ads": "pages/ads.js",
-  "/api/admin/ads": "pages/api/admin/ads.js",
-  "/api/articles": "pages/api/articles.js",
-  "/": "pages/index.js",
-  "/api/users/[id]": "pages/api/users/[id].js",
-  "/api/categories": "pages/api/categories.js",
-  "/articles": "pages/articles.js"
+  "/": "pages/index.js"
 }

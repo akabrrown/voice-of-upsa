@@ -91,28 +91,59 @@ async function handler(
 
   const articleId = article.id;
 
-  // Use a database RPC function to atomically track view and increment count
-  const { error: viewError } = await supabaseAdmin.rpc('track_article_view', {
-    article_uuid: articleId,
-    user_uuid: user?.id || null,
-    ip_address: typeof ipAddress === 'string' ? ipAddress : ipAddress[0],
-    user_agent: userAgent
-  });
-
-  if (viewError) {
-    console.error('Error tracking view:', viewError);
-    // Don't fail the request, just log the error
-  }
-
-  // Get updated view count
-  const { data: updatedArticle, error: fetchError } = await supabaseAdmin
+  // Get current view count
+  const { data: currentArticle, error: fetchError } = await supabaseAdmin
     .from('articles')
     .select('views_count')
     .eq('id', articleId)
     .single();
 
   if (fetchError) {
-    console.error('Error fetching updated view count:', fetchError);
+    console.error('Error fetching current view count:', fetchError);
+  }
+
+  // Track view using article_views table
+  const { error: viewError } = await supabaseAdmin
+    .from('article_views')
+    .insert({
+      article_id: articleId,
+      user_id: user?.id || null,
+      ip_address: typeof ipAddress === 'string' ? ipAddress : ipAddress[0],
+      user_agent: userAgent
+    });
+
+  if (viewError) {
+    if (viewError.code === '23505') {
+      // Unique violation - already viewed by this user/IP
+      console.log('Article already viewed by this user/IP');
+    } else {
+      console.error('Error tracking view:', viewError);
+    }
+  } else {
+    // New view recorded, increment the count
+    const { error: updateError } = await supabaseAdmin
+      .from('articles')
+      .update({ 
+        views_count: (currentArticle?.views_count || 0) + 1 
+      })
+      .eq('id', articleId);
+
+    if (updateError) {
+      console.error('Error updating view count:', updateError);
+    } else {
+      console.log('Successfully incremented view count for article:', articleId);
+    }
+  }
+
+  // Get updated view count for response
+  const { data: updatedArticle, error: updatedFetchError } = await supabaseAdmin
+    .from('articles')
+    .select('views_count')
+    .eq('id', articleId)
+    .single();
+
+  if (updatedFetchError) {
+    console.error('Error fetching updated view count:', updatedFetchError);
   }
 
   res.status(200).json({ 

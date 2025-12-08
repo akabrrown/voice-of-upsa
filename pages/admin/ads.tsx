@@ -178,12 +178,22 @@ const AdminAdsPage: React.FC = () => {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="heading-responsive-1 text-navy dark:text-white mb-2">
-              Ad Submissions Management
-            </h1>
-            <p className="body-responsive-base text-gray-600 dark:text-gray-300">
-              Review and manage advertisement submissions
-            </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="heading-responsive-1 text-navy dark:text-white mb-2">
+                  Ad Submissions Management
+                </h1>
+                <p className="body-responsive-base text-gray-600 dark:text-gray-300">
+                  Review and manage advertisement submissions
+                </p>
+              </div>
+              <Button
+                onClick={() => router.push('/admin/ad-locations')}
+                className="px-4 py-2 bg-golden text-white rounded-lg hover:bg-golden-dark transition-colors"
+              >
+                Manage Ad Locations
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}

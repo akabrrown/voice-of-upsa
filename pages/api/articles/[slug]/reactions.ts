@@ -89,6 +89,11 @@ async function handlePost(
 ) {
   const { reaction_type } = req.body;
   
+  // Get IP address for anonymous users
+  const ipAddress = (req.headers['x-forwarded-for'] as string) || 
+                    (req.connection.remoteAddress as string) || 
+                    'unknown';
+  
   // Validate input
   const validation = reactionCreateSchema.safeParse({ reaction_type });
   if (!validation.success) {
@@ -112,8 +117,13 @@ async function handlePost(
       .eq('article_id', articleId)
       .eq('user_id', userId);
   } else {
-    // For anonymous users, we don't track individual reactions by IP
-    // Just allow them to add reactions (multiple anonymous users can react)
+    // For anonymous users, remove by IP address
+    await supabaseAdmin
+      .from('reactions')
+      .delete()
+      .eq('article_id', articleId)
+      .eq('ip_address', ipAddress)
+      .eq('user_id', null);
   }
 
   // Add new reaction
@@ -123,6 +133,7 @@ async function handlePost(
       article_id: articleId,
       user_id: userId || null, // Use null for anonymous users
       reaction_type,
+      ip_address: userId ? null : ipAddress // Store IP for anonymous users
     });
 
   if (reactionError) {
