@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -8,6 +8,10 @@
     scroll-behavior: smooth;
     /* Set base font size for mobile readability */
     font-size: 16px; /* 16px base = 1rem */
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   body {
@@ -134,13 +138,3 @@
     font-size: 1.125rem;
   }
 }
-
-/* Import page styles */
-@import "./pages/Admin.css";
-@import "./pages/Home.css";
-@import "./pages/Articles.css";
-@import "./pages/Privacy.css";
-@import "./pages/Terms.css";
-@import "./pages/Newsletter.css";
-@import "./pages/Social.css";
-@import "./pages/Rss.css";

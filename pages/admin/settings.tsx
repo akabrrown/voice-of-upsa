@@ -55,48 +55,104 @@ const AdminSettingsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastRefreshRef = useRef<number>(0);
 
   const fetchSettings = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error('No active session');
-        return;
-      }
-      
+    // Clear any existing timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+
+    // Debounce the fetch call
+    fetchTimeoutRef.current = setTimeout(async () => {
+      try {
+        setLoading(true);
+        
+        console.log('Admin settings: Starting fetch...');
+        
+        // Get current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('Admin settings: Session result:', { session: !!session, sessionError });
+        
+        if (sessionError || !session) {
+          console.log('Admin settings: No session, showing error');
+          toast.error('No active session');
+          return;
+        }
+
+        // Only refresh if token is expired or it's been more than 5 minutes since last refresh
+        const now = Date.now();
+        const tokenExpiresAt = session.expires_at ? session.expires_at * 1000 : 0;
+        const shouldRefresh = tokenExpiresAt < now || (now - lastRefreshRef.current) > 300000; // 5 minutes
+
+        let freshSession = session;
+        
+        if (shouldRefresh) {
+          console.log('Admin settings: Token expired or stale, refreshing session...');
+          // Refresh session to get fresh token
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          console.log('Admin settings: Refresh result:', { freshSession: !!refreshedSession, refreshError });
+          
+          if (refreshError || !refreshedSession) {
+            console.error('Admin settings: Session refresh failed:', refreshError);
+            toast.error('Session expired, please sign in again');
+            return;
+          }
+          freshSession = refreshedSession;
+          lastRefreshRef.current = now;
+        } else {
+          console.log('Admin settings: Using existing valid token');
+        }
+        
+        console.log('Admin settings: Making API call with token...');
       const response = await fetch('/api/admin/settings', {
+        credentials: 'include', // Critical for Supabase cookies
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${freshSession.access_token}`,
         },
       });
 
+      console.log('Admin settings: API response status:', response.status);
+      console.log('Admin settings: API response headers:', response.headers);
+      
       if (!response.ok) {
-        const errorData = await response.json();
+        const responseText = await response.text();
+        console.error('API Error response text:', responseText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { error: responseText };
+        }
+        
         console.error('API Error details:', errorData);
-        throw new Error(errorData.error || errorData.details?.message || 'Failed to fetch settings');
+        console.error('Response status:', response.status);
+        console.error('Response headers:', response.headers);
+        const errorMessage = errorData.error?.message || errorData.error || errorData.details?.message || 'Failed to fetch settings';
+        throw new Error(typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage);
       }
 
       const data = await response.json();
-      if (data.data?.settings) {
-        setSettings(data.data.settings);
+      if (data.success && data.data) {
+        setSettings(data.data);
       }
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-      toast.error('Failed to load settings');
-    } finally {
-      setLoading(false);
-    }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+        toast.error('Failed to load settings');
+      } finally {
+        setLoading(false);
+      }
+    }, 300); // 300ms debounce delay
   }, [supabase]);
 
   useEffect(() => {
     if (user) {
       fetchSettings();
     }
-  }, [user, fetchSettings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]); // Remove fetchSettings to prevent infinite loop
 
   // Realtime subscription for settings changes
   useEffect(() => {
@@ -371,6 +427,8 @@ const AdminSettingsPage: React.FC = () => {
                         width={64}
                         height={64}
                         className="h-16 w-16 rounded-lg object-cover border border-gray-300"
+                        loading="eager"
+                        priority
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = '/logo.jpg'; // Fallback to default logo

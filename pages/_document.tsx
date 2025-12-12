@@ -1,11 +1,23 @@
-import { Html, Head, Main, NextScript } from 'next/document';
+import { Html, Head, Main, NextScript, DocumentContext, DocumentInitialProps } from 'next/document';
+import NextDocument from 'next/document';
 
-export default function Document() {
+interface MyDocumentProps extends DocumentInitialProps {
+  nonce?: string;
+}
+
+export default function Document(props: MyDocumentProps) {
+  const { nonce } = props;
+
   return (
-    <Html lang="en">
+    <Html lang="en" data-scroll-behavior="smooth" nonce={nonce}>
       <Head>
         <meta name="description" content="Voice of UPSA - Latest news and updates from UPSA" />
         <link rel="icon" href="/favicon.ico" />
+        
+        {/* Security Headers */}
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+        <meta httpEquiv="Permissions-Policy" content="microphone=(), geolocation=()" />
         
         {/* PWA Meta Tags */}
         <link rel="manifest" href="/manifest.json" />
@@ -23,6 +35,19 @@ export default function Document() {
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
+        
+        {/* Make nonce available to CSS-in-JS libraries */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.__CSP_NONCE__ = "${nonce || ''}";
+              // Make nonce available to Emotion and other CSS-in-JS libraries
+              if (typeof window !== 'undefined') {
+                window.__webpack_nonce__ = window.__CSP_NONCE__;
+              }
+            `,
+          }}
+        />
       </Head>
       <body>
         <Main />
@@ -31,3 +56,15 @@ export default function Document() {
     </Html>
   );
 }
+
+Document.getInitialProps = async (ctx: DocumentContext): Promise<MyDocumentProps> => {
+  // Extract nonce from response headers
+  const nonce = ctx.res?.getHeader('X-CSP-Nonce') as string || '';
+  
+  const initialProps = await NextDocument.getInitialProps(ctx);
+  
+  return {
+    ...initialProps,
+    nonce,
+  };
+};

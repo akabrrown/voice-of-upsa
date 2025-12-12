@@ -40,7 +40,7 @@ interface ArticleFormData {
   content: string;
   excerpt: string;
   featured_image: string | null;
-  status: 'draft' | 'published' | 'pending_review';
+  status: 'draft' | 'scheduled' | 'published';
   category: string;
   tags: string[];
   reading_time: number;
@@ -151,7 +151,11 @@ const CreateArticlePage: React.FC = () => {
         const response = await fetch('/api/categories');
         if (response.ok) {
           const data = await response.json();
-          setCategories(data.categories || []);
+          console.log('Categories API response:', data);
+          // Handle the correct response structure: { success: true, data: { categories: [...] } }
+          setCategories(data.data?.categories || []);
+        } else {
+          console.error('Categories API error:', response.status);
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -161,7 +165,6 @@ const CreateArticlePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Check if user has editor or admin role
     const checkRole = async () => {
       if (user && !authLoading) {
         try {
@@ -171,25 +174,56 @@ const CreateArticlePage: React.FC = () => {
             return;
           }
           
-          // Fetch user role
-          const response = await fetch(`/api/users/${user.id}`, {
+          // Fetch user role with existing session (no refresh to avoid rate limits)
+          const response = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${session.access_token}`,
             },
           });
+          
+          console.log('Profile response status:', response.status);
+          const responseText = await response.text();
+          console.log('Profile response:', responseText);
+          
           if (!response.ok) {
-            throw new Error('Failed to fetch user data');
+            // If token is expired, try refresh once
+            if (response.status === 401) {
+              const { data: { session: freshSession }, error: refreshError } = await supabase.auth.refreshSession();
+              if (refreshError || !freshSession) {
+                console.error('Session refresh failed:', refreshError);
+                router.push('/auth/sign-in');
+                return;
+              }
+              
+              // Retry with fresh token
+              const retryResponse = await fetch('/api/user/profile', {
+                headers: {
+                  'Authorization': `Bearer ${freshSession.access_token}`,
+                },
+              });
+              
+              if (retryResponse.ok) {
+                const retryData = await retryResponse.json();
+                setUserData(retryData.data?.profile || retryData.profile);
+                return;
+              }
+            }
+            throw new Error(`Failed to fetch user data: ${response.status} - ${responseText}`);
           }
-          const userDataResponse = await response.json();
-          setUserData(userDataResponse);
+          
+          const userDataResponse = JSON.parse(responseText);
+          setUserData(userDataResponse.data?.profile || userDataResponse.profile);
         } catch (error) {
           console.error('Error fetching data:', error);
-          toast.error('Failed to load data');
+          toast.error('Failed to load user data. Please try signing in again.');
+          router.push('/auth/sign-in');
         }
       }
     };
 
-    checkRole();
+    // Add debouncing to prevent excessive calls
+    const timeoutId = setTimeout(checkRole, 1000);
+    return () => clearTimeout(timeoutId);
   }, [user, authLoading, router, supabase.auth]);
 
   useEffect(() => {
@@ -208,16 +242,22 @@ const CreateArticlePage: React.FC = () => {
   }, [formData.content, setFormData]);
 
   const handleAutoSave = useCallback(async () => {
+    // Temporarily disabled auto-save due to schema issues
+    console.log('Auto-save temporarily disabled');
+    return;
+    
     if (!user || !formData.title.trim()) return;
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        return;
+      }
 
       const response = await fetch('/api/articles/auto-save', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${session?.access_token || ''}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
@@ -501,7 +541,7 @@ const CreateArticlePage: React.FC = () => {
         return;
       }
 
-      const response = await fetch('/api/articles', {
+      const response = await fetch('/api/editor/articles', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -518,8 +558,8 @@ const CreateArticlePage: React.FC = () => {
 
       await response.json();
       
-      if (formData.status === 'pending_review') {
-        toast.success('Article submitted for approval! Admin will review it soon.');
+      if (formData.status === 'scheduled') {
+        toast.success('Article scheduled successfully!');
       } else if (formData.status === 'published') {
         toast.success('Article published successfully!');
       } else {
@@ -1226,12 +1266,12 @@ const CreateArticlePage: React.FC = () => {
                         <input
                           type="radio"
                           name="status"
-                          value="pending_review"
-                          checked={formData.status === 'pending_review'}
+                          value="scheduled"
+                          checked={formData.status === 'scheduled'}
                           onChange={handleInputChange}
                           className="mr-2"
                         />
-                        <span className="text-blue-700 font-medium">Submit for Approval</span>
+                        <span className="text-blue-700 font-medium">Schedule for Later</span>
                       </label>
                       <label className="flex items-center">
                         <input
@@ -1241,10 +1281,14 @@ const CreateArticlePage: React.FC = () => {
                           checked={formData.status === 'published'}
                           onChange={handleInputChange}
                           className="mr-2"
-                          disabled={userData?.role !== 'admin'} // Only admins can publish directly
+                          disabled={userData?.role !== 'admin' && userData?.role !== 'editor'} // Only admins and editors can publish
                         />
-                        <span className="text-gray-700">Publish</span>
+                        <span className="text-green-700 font-medium">Publish Now</span>
                       </label>
+                      {/* Debug info - remove in production */}
+                      <div className="text-xs text-gray-500 mt-2">
+                        Debug: User role = {userData?.role}, Can publish = {userData?.role === 'admin' || userData?.role === 'editor'}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1260,14 +1304,14 @@ const CreateArticlePage: React.FC = () => {
                     Cancel
                   </button>
                   
-                  {formData.status === 'pending_review' ? (
+                  {formData.status === 'scheduled' ? (
                     <button
                       type="submit"
                       className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
                       disabled={isSubmitting}
                     >
                       <FiSend />
-                      <span>{isSubmitting ? 'Submitting...' : 'Submit for Approval'}</span>
+                      <span>{isSubmitting ? 'Scheduling...' : 'Schedule Article'}</span>
                     </button>
                   ) : (
                     <button
@@ -1275,8 +1319,8 @@ const CreateArticlePage: React.FC = () => {
                       className="px-6 py-3 bg-golden text-navy rounded-lg hover:bg-yellow-400 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
                       disabled={isSubmitting}
                     >
-                      <FiSave />
-                      <span>{isSubmitting ? 'Saving...' : 'Save Draft'}</span>
+                      {formData.status === 'published' ? <FiSend /> : <FiSave />}
+                      <span>{isSubmitting ? 'Publishing...' : (formData.status === 'published' ? 'Publish Now' : 'Save Draft')}</span>
                     </button>
                   )}
                 </div>

@@ -1,10 +1,5 @@
-import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { useEffect, useState } from 'react';
+import { getSupabaseClient } from '@/lib/supabaseClient';
 
 interface AuthUser {
   id: string;
@@ -20,20 +15,31 @@ export function useAuth() {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        const supabase = getSupabaseClient();
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Get user role from database
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
+          // Get user role via API to avoid RLS issues
+          let userRole = 'user';
+          try {
+            const response = await fetch('/api/auth/user', {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              userRole = data.data?.user?.role || 'user';
+            }
+          } catch (error) {
+            console.warn('Failed to fetch user role:', error);
+          }
 
           setUser({
             id: session.user.id,
             email: session.user.email,
-            role: userData?.role || 'user'
+            role: userRole
           });
         }
       } catch (error) {
@@ -46,20 +52,31 @@ export function useAuth() {
     getInitialSession();
 
     // Listen for auth changes
+    const supabase = getSupabaseClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
-          // Get user role from database
-          const { data: userData } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
+          // Get user role via API to avoid RLS issues
+          let userRole = 'user';
+          try {
+            const response = await fetch('/api/auth/user', {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              userRole = data.data?.user?.role || 'user';
+            }
+          } catch (error) {
+            console.warn('Failed to fetch user role:', error);
+          }
 
           setUser({
             id: session.user.id,
             email: session.user.email,
-            role: userData?.role || 'user'
+            role: userRole
           });
         } else {
           setUser(null);

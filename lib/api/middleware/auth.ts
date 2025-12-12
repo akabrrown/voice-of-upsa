@@ -37,6 +37,13 @@ export function withRateLimit(
 }
 
 export async function authenticate(req: NextApiRequest): Promise<AuthenticatedUser> {
+  if (!supabaseAdmin) {
+    const error = new Error('Supabase admin client not initialized') as Error & { statusCode?: number; code?: string };
+    error.statusCode = 500;
+    error.code = 'INTERNAL_ERROR';
+    throw error;
+  }
+  
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

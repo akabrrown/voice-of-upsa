@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { createClient } from '@supabase/supabase-js';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -32,8 +33,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const token = authHeader.replace('Bearer ', '');
     
-    // Verify token and get user
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    // Verify token and get user using regular Supabase client
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !authUser) {
       return res.status(401).json({
@@ -47,12 +53,34 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Get user profile from database
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from('users')
-      .select('*')
-      .eq('id', authUser.id)
-      .single();
+    // Get user profile from database using SQL function to bypass RLS
+    let profile = null;
+    let profileError = null;
+    
+    try {
+      // Try SQL function first (most reliable)
+      const { data: role, error: roleError } = await supabaseAdmin
+        .rpc('get_user_role', { user_id: authUser.id });
+        
+      if (!roleError) {
+        // Get full user profile using admin client (bypasses RLS)
+        const { data: fullProfile, error: fullProfileError } = await supabaseAdmin
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+          
+        if (fullProfileError) {
+          profileError = fullProfileError;
+        } else {
+          profile = { ...fullProfile, role };
+        }
+      } else {
+        profileError = roleError;
+      }
+    } catch (error) {
+      profileError = error;
+    }
 
     if (profileError) {
       return res.status(404).json({
@@ -60,7 +88,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         error: {
           code: 'USER_PROFILE_NOT_FOUND',
           message: 'User profile not found',
-          details: profileError.message
+          details: (profileError as Error).message
         },
         timestamp: new Date().toISOString()
       });

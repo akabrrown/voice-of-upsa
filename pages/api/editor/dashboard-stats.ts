@@ -1,52 +1,41 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
   try {
-    console.log('=== EDITOR DASHBOARD STATS API ===');
-    
+    // Apply rate limiting for dashboard stats
+    const rateLimit = getCMSRateLimit('GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req) => 
+      getClientIP(req)
+    );
+    rateLimitMiddleware(req);
+
+    // Log editor dashboard access
+    console.log(`Editor dashboard stats accessed by user: ${user.email} (${user.id})`, {
+      timestamp: new Date().toISOString(),
+      securityLevel: user.securityLevel
+    });
+
     // Only allow GET
     if (req.method !== 'GET') {
       return res.status(405).json({
         success: false,
-        error: 'Method not allowed'
+        error: {
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only GET method is allowed',
+          details: null
+        },
+        timestamp: new Date().toISOString()
       });
     }
-
-    // Get authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: 'No authorization token provided'
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-
-    // Verify token and get user
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid token'
-      });
-    }
-
-    // Check if user is an editor
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || !userData || (userData.role !== 'editor' && userData.role !== 'admin')) {
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied. Editor role required.'
-      });
-    }
+      // Add cache control headers to prevent caching
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
     // Initialize stats with default values
     const stats = {
@@ -58,11 +47,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       totalComments: 0,
       recentArticles: 0
     };
-
-    // Add cache control headers to prevent caching
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
 
     // Get user's articles stats
     try {
@@ -92,6 +76,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       if (!draftError) stats.draftArticles = draftCount || 0;
 
+      // Total views (sum of all article views)
+      const { data: viewData, error: viewError } = await supabaseAdmin
+        .from('articles')
+        .select('view_count')
+        .eq('author_id', user.id)
+        .eq('status', 'published');
+      
+      if (!viewError && viewData) {
+        stats.totalViews = viewData.reduce((sum, article) => sum + (article.view_count || 0), 0);
+      }
+
       // Recent articles (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -104,37 +99,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       if (!recentError) stats.recentArticles = recentCount || 0;
 
-      // Total views, likes, comments (sum)
-      const { data: aggregateData, error: aggregateError } = await supabaseAdmin
-        .from('articles')
-        .select('views_count, likes_count, comments_count')
-        .eq('author_id', user.id);
-      
-      if (!aggregateError && aggregateData) {
-        stats.totalViews = aggregateData.reduce((sum, a) => sum + (a.views_count || 0), 0);
-        stats.totalLikes = aggregateData.reduce((sum, a) => sum + (a.likes_count || 0), 0);
-        stats.totalComments = aggregateData.reduce((sum, a) => sum + (a.comments_count || 0), 0);
-      }
-
-    } catch (error) {
-      console.error('Editor stats failed:', error);
+    } catch (statsError) {
+      console.error(`Stats calculation failed for editor ${user.email}:`, statsError);
     }
 
-    console.log('Final editor stats:', stats);
+    console.log(`Dashboard stats returned to editor ${user.email}:`, {
+      totalArticles: stats.totalArticles,
+      publishedArticles: stats.publishedArticles,
+      timestamp: new Date().toISOString()
+    });
 
     return res.status(200).json({
       success: true,
-      stats,
+      data: { stats },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Editor dashboard stats error:', error);
+    console.error(`Editor dashboard stats API error for user ${user.email}:`, error);
     return res.status(500).json({
       success: false,
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while fetching dashboard stats',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
+      },
+      timestamp: new Date().toISOString()
     });
   }
 }
 
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'view:analytics',
+  auditAction: 'editor_dashboard_accessed'
+}));
+            
+      
+        

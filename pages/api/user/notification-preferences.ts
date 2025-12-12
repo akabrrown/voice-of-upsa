@@ -1,190 +1,153 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { authenticate } from '@/lib/api/middleware/auth';
+import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
+import { z } from 'zod';
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Only allow GET and PUT methods
-  if (req.method !== 'GET' && req.method !== 'PUT') {
-    return res.status(405).json({
-      success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only GET and PUT methods are allowed',
-        details: null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
+// Enhanced validation schema for notification preferences
+const notificationPreferencesSchema = z.object({
+  email_notifications: z.boolean().optional(),
+  push_notifications: z.boolean().optional(),
+  article_comments: z.boolean().optional(),
+  article_likes: z.boolean().optional(),
+  new_articles: z.boolean().optional(),
+  weekly_digest: z.boolean().optional(),
+  marketing_emails: z.boolean().optional(),
+  security_alerts: z.boolean().optional()
+});
 
-  // Authenticate user
-  const user = await authenticate(req);
-
-  // Check if user is editor or admin
-  const { data: userData, error: userError } = await supabaseAdmin
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (userError || !userData) {
-    return res.status(403).json({
-      success: false,
-      error: {
-        code: 'FORBIDDEN',
-        message: 'Unable to verify user role',
-        details: null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Only editors and admins can access notification preferences
-  if (userData.role !== 'editor' && userData.role !== 'admin') {
-    return res.status(403).json({
-      success: false,
-      error: {
-        code: 'FORBIDDEN',
-        message: 'Notification preferences are only available for editors and administrators',
-        details: null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  if (req.method === 'GET') {
-    return await handleGet(req, res, user.id);
-  } else if (req.method === 'PUT') {
-    return await handlePut(req, res, user.id);
-  }
-}
-
-async function handleGet(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  userId: string
-) {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
   try {
-    // Get user's notification preferences
-    const { data: preferences, error } = await supabaseAdmin
-      .from('notification_preferences')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    // Apply rate limiting based on method
+    const rateLimit = getCMSRateLimit(req.method || 'GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
+    rateLimitMiddleware(req);
 
-    if (error) {
-      // If no preferences exist, create default ones
-      if (error.code === 'PGRST116') {
-        const { data: newPreferences, error: createError } = await supabaseAdmin
-          .from('notification_preferences')
-          .insert({
-            user_id: userId,
-            email_notifications: true,
-            push_notifications: true,
-            article_comments: true,
-            new_followers: true,
-            weekly_digest: false,
-            security_alerts: true
-          })
-          .select()
-          .single();
+    // Log notification preferences access
+    console.log(`Notification preferences accessed by user: ${user.email} (${user.id})`, {
+      method: req.method,
+      timestamp: new Date().toISOString(),
+      securityLevel: user.securityLevel
+    });
 
-        if (createError) {
-          throw createError;
-        }
-
-        return res.status(200).json({
-          success: true,
-          data: { preferences: newPreferences },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      throw error;
+    // Only allow GET and PUT
+    if (req.method !== 'GET' && req.method !== 'PUT') {
+      return res.status(405).json({
+        success: false,
+        error: {
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only GET and PUT methods are allowed',
+          details: null
+        },
+        timestamp: new Date().toISOString()
+      });
     }
+      if (req.method === 'GET') {
+      // Get current notification preferences
+      const { data: profile, error: profileError } = await supabaseAdmin
+        .from('users')
+        .select('preferences')
+        .eq('id', user.id)
+        .single();
 
-    return res.status(200).json({
-      success: true,
-      data: { preferences },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Error fetching notification preferences:', error);
-    throw error;
-  }
-}
-
-async function handlePut(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  userId: string
-) {
-  try {
-    const {
-      email_notifications,
-      push_notifications,
-      article_comments,
-      new_followers,
-      weekly_digest,
-      security_alerts
-    } = req.body;
-
-    // Validate input - all fields should be boolean
-    const validations = {
-      email_notifications,
-      push_notifications,
-      article_comments,
-      new_followers,
-      weekly_digest,
-      security_alerts
-    };
-
-    for (const [key, value] of Object.entries(validations)) {
-      if (typeof value !== 'boolean') {
-        return res.status(400).json({
+      if (profileError) {
+        console.error(`Profile fetch failed for user ${user.email}:`, profileError);
+        return res.status(500).json({
           success: false,
           error: {
-            code: 'VALIDATION_ERROR',
-            message: `${key} must be a boolean value`,
-            details: null
+            code: 'PROFILE_FETCH_FAILED',
+            message: 'Failed to fetch notification preferences',
+            details: process.env.NODE_ENV === 'development' ? profileError.message : null
           },
           timestamp: new Date().toISOString()
         });
       }
+
+      // Default preferences if none exist
+      const defaultPreferences = {
+        email_notifications: true,
+        push_notifications: false,
+        article_comments: true,
+        article_likes: true,
+        new_articles: false,
+        weekly_digest: false,
+        marketing_emails: false,
+        security_alerts: true
+      };
+
+      const preferences = profile?.preferences || defaultPreferences;
+
+      console.log(`Notification preferences returned to user ${user.email}:`, {
+        preferencesCount: Object.keys(preferences).length,
+        timestamp: new Date().toISOString()
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: { preferences },
+        timestamp: new Date().toISOString()
+      });
+
+    } else if (req.method === 'PUT') {
+      // Validate and update notification preferences
+      const validatedData = notificationPreferencesSchema.parse(req.body);
+
+      const { data: updatedProfile, error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({ 
+          preferences: validatedData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+        .select('preferences')
+        .single();
+
+      if (updateError) {
+        console.error(`Preferences update failed for user ${user.email}:`, updateError);
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'PREFERENCES_UPDATE_FAILED',
+            message: 'Failed to update notification preferences',
+            details: process.env.NODE_ENV === 'development' ? updateError.message : null
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      console.log(`Notification preferences updated for user ${user.email}:`, {
+        updatedFields: Object.keys(validatedData),
+        timestamp: new Date().toISOString()
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: { preferences: updatedProfile.preferences },
+        timestamp: new Date().toISOString()
+      });
     }
 
-    // Update preferences (upsert)
-    const { data: preferences, error } = await supabaseAdmin
-      .from('notification_preferences')
-      .upsert({
-        user_id: userId,
-        email_notifications,
-        push_notifications,
-        article_comments,
-        new_followers,
-        weekly_digest,
-        security_alerts,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id'
-      })
-      .select()
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: { preferences },
-      message: 'Notification preferences updated successfully',
+  } catch (error) {
+    console.error(`Notification preferences API error for user ${user.email}:`, error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while managing notification preferences',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
+      },
       timestamp: new Date().toISOString()
     });
-  } catch (error) {
-    console.error('Error updating notification preferences:', error);
-    throw error;
   }
 }
 
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:notifications',
+  auditAction: 'user_notification_preferences_accessed'
+}));
+                                

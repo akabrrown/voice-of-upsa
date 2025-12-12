@@ -1,66 +1,50 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
 import { z } from 'zod';
 
-// Validation schemas
+// Enhanced validation schemas with security constraints
 const messagesQuerySchema = z.object({
   search: z.string().max(100, 'Search term too long').optional(),
   status: z.enum(['all', 'new', 'read', 'replied', 'in_progress', 'resolved', 'closed', 'archived']).default('all'),
   priority: z.enum(['all', 'low', 'normal', 'high', 'urgent']).default('all'),
-  page: z.coerce.number().min(1).default(1)
+  page: z.coerce.number().min(1).max(100, 'Page number too high').default(1)
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+// Define message interface for better type safety
+interface MessageData {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: string;
+  priority: string;
+  created_at: string;
+  updated_at?: string;
+  assigned_to?: string;
+  admin_notes?: string;
+  [key: string]: unknown;
+}
+
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
   try {
-    // Authenticate user using admin client
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authentication required',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Apply rate limiting for message access
+    const rateLimit = getCMSRateLimit('GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
+    rateLimitMiddleware(req);
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !authUser) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid authentication token',
-          details: authError?.message
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Check if user is admin
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: userData, error: userError } = await (supabaseAdmin as any)
-      .from('users')
-      .select('role')
-      .eq('id', authUser.id)
-      .single();
-
-    if (userError || !userData || userData.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'INSUFFICIENT_PERMISSIONS',
-          message: 'Admin access required',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Log messages access
+    console.log(`Admin messages accessed by user: ${user.email} (${user.id})`, {
+      method: req.method,
+      timestamp: new Date().toISOString(),
+      securityLevel: user.securityLevel
+    });
 
     // GET - List messages
     if (req.method === 'GET') {
@@ -77,9 +61,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
-      // Add search filter
+      // Add search filter with SQL injection protection
       if (search && typeof search === 'string') {
-        query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,subject.ilike.%${search}%,message.ilike.%${search}%`);
+        // Sanitize search term
+        const sanitizedSearch = search.replace(/[%_]/g, '\\$&');
+        query = query.or(`name.ilike.%${sanitizedSearch}%,email.ilike.%${sanitizedSearch}%,subject.ilike.%${sanitizedSearch}%,message.ilike.%${sanitizedSearch}%`);
       }
 
       // Add status filter
@@ -95,26 +81,46 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       // Apply pagination
       query = query.range(offset, offset + limit - 1);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error, count } = await (query as any);
+      const { data, error, count } = await query;
 
       if (error) {
-        console.error('Error fetching messages:', error);
+        console.error(`Messages fetch failed for admin ${user.email}:`, error);
         return res.status(500).json({
           success: false,
           error: {
             code: 'MESSAGES_FETCH_FAILED',
             message: 'Failed to fetch messages',
-            details: error.message
+            details: process.env.NODE_ENV === 'development' ? error.message : null
           },
           timestamp: new Date().toISOString()
         });
       }
 
+      // Sanitize message data before returning
+      const sanitizedMessages = (data || []).map((message: MessageData) => ({
+        id: message.id,
+        name: message.name,
+        email: message.email,
+        subject: message.subject,
+        message: message.message,
+        status: message.status,
+        priority: message.priority,
+        created_at: message.created_at,
+        updated_at: message.updated_at,
+        // Remove any sensitive fields if they exist
+        ip_address: undefined,
+        user_agent: undefined
+      }));
+
+      console.log(`Messages list returned to admin: ${user.email}`, {
+        messageCount: sanitizedMessages.length,
+        timestamp: new Date().toISOString()
+      });
+
       return res.status(200).json({
         success: true,
         data: {
-          messages: data || [],
+          messages: sanitizedMessages,
           pagination: {
             page: pageNum,
             limit,
@@ -137,17 +143,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
   } catch (error) {
-    console.error('Messages API error:', error);
+    console.error(`Messages API error for admin ${user.email}:`, error);
     return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
     });
   }
 }
 
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:messages',
+  auditAction: 'messages_accessed'
+}));

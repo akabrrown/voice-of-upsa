@@ -3,7 +3,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Header from './Header';
 import Footer from './Footer';
-import AnonymousButton from './AnonymousButton';
 import MaintenanceMode from './MaintenanceMode';
 
 interface LayoutProps {
@@ -136,9 +135,6 @@ const Layout: React.FC<LayoutProps> = ({
       </main>
 
       <Footer />
-      
-      {/* Anonymous Zone Floating Button */}
-      <AnonymousButton variant="floating" />
     </div>
   );
 };

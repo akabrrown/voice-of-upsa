@@ -1,58 +1,41 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { authenticate } from '@/lib/api/middleware/auth';
+import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { z } from 'zod';
 
-// Validation schema for account deletion confirmation
+// Enhanced validation schema for account deletion confirmation
 const deleteAccountSchema = z.object({
-  confirmation: z.string().min(1, 'Confirmation is required'),
+  confirmation: z.string().regex(/^DELETE MY ACCOUNT$/, 'Confirmation must be exactly "DELETE MY ACCOUNT"'),
   password: z.string().min(1, 'Password confirmation is required')
 });
 
-// Rate limiting: 1 deletion attempt per hour per user
-const rateLimitMiddleware = withRateLimit(1, 60 * 60 * 1000, (req) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  return token || req.socket.remoteAddress || 'unknown';
-});
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'DELETE') {
-    return res.status(405).json({
-      success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only DELETE method is allowed',
-        details: null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-
+async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
   try {
-    // Apply rate limiting
+    // Apply strict rate limiting for account deletion
+    const rateLimit = getCMSRateLimit('DELETE');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
     rateLimitMiddleware(req);
 
-    // Authenticate user
-    const user = await authenticate(req);
-
-    // Validate deletion confirmation
-    const validatedData = deleteAccountSchema.parse(req.body);
-    const { confirmation, password } = validatedData;
-
-    // Require explicit confirmation text
-    if (confirmation.toLowerCase() !== 'delete my account') {
-      return res.status(400).json({
+    // Only allow DELETE
+    if (req.method !== 'DELETE') {
+      return res.status(405).json({
         success: false,
         error: {
-          code: 'INVALID_CONFIRMATION',
-          message: 'You must type "delete my account" exactly to confirm account deletion',
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only DELETE method is allowed',
           details: null
         },
         timestamp: new Date().toISOString()
       });
     }
+  // Validate deletion confirmation
+    const validatedData = deleteAccountSchema.parse(req.body);
+    const { password } = validatedData;
 
     // Verify password before deletion (additional security)
     const { error: passwordError } = await supabaseAdmin.auth.signInWithPassword({
@@ -61,6 +44,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     if (passwordError) {
+      console.error(`Password verification failed for account deletion by user ${user.email}:`, passwordError);
       return res.status(400).json({
         success: false,
         error: {
@@ -72,126 +56,102 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Log account deletion attempt
+    // Log account deletion initiation
     console.info(`Account deletion initiated for user: ${user.id}`, {
       email: user.email,
       timestamp: new Date().toISOString()
     });
 
-    // Delete user's data in order to respect foreign key constraints
-    const deletionResults = {
-      profile: false,
-      articles: false,
-      comments: false,
-      reactions: false,
-      bookmarks: false,
-      authUser: false
-    };
+    // Start transaction-like deletion process
+    const deletionErrors = [];
 
-    // Delete user's profile from database first
-    const { error: profileError } = await supabaseAdmin
-      .from('users')
-      .delete()
-      .eq('id', user.id);
+    try {
+      // Delete user's articles
+      const { error: articlesError } = await supabaseAdmin
+        .from('articles')
+        .delete()
+        .eq('author_id', user.id);
+      
+      if (articlesError) {
+        deletionErrors.push(`Articles: ${articlesError.message}`);
+      }
 
-    if (profileError) {
-      console.error('Error deleting user profile:', profileError);
-    } else {
-      deletionResults.profile = true;
+      // Delete user's comments
+      const { error: commentsError } = await supabaseAdmin
+        .from('comments')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (commentsError) {
+        deletionErrors.push(`Comments: ${commentsError.message}`);
+      }
+
+      // Delete user's bookmarks
+      const { error: bookmarksError } = await supabaseAdmin
+        .from('article_bookmarks')
+        .delete()
+        .eq('user_id', user.id);
+      
+      if (bookmarksError) {
+        deletionErrors.push(`Bookmarks: ${bookmarksError.message}`);
+      }
+
+      // Delete user profile from users table
+      const { error: profileError } = await supabaseAdmin
+        .from('users')
+        .delete()
+        .eq('id', user.id);
+      
+      if (profileError) {
+        deletionErrors.push(`Profile: ${profileError.message}`);
+      }
+
+    } catch (cleanupError) {
+      deletionErrors.push(`Cleanup: ${(cleanupError as Error).message}`);
     }
 
-    // Delete user's articles
-    const { error: articlesError } = await supabaseAdmin
-      .from('articles')
-      .delete()
-      .eq('author_id', user.id);
+    // Finally, delete the auth user
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
 
-    if (articlesError) {
-      console.error('Error deleting user articles:', articlesError);
-    } else {
-      deletionResults.articles = true;
+    if (authDeleteError) {
+      deletionErrors.push(`Auth: ${authDeleteError.message}`);
     }
 
-    // Delete user's comments
-    const { error: commentsError } = await supabaseAdmin
-      .from('comments')
-      .delete()
-      .eq('user_id', user.id);
-
-    if (commentsError) {
-      console.error('Error deleting user comments:', commentsError);
-    } else {
-      deletionResults.comments = true;
-    }
-
-    // Delete user's reactions
-    const { error: reactionsError } = await supabaseAdmin
-      .from('reactions')
-      .delete()
-      .eq('user_id', user.id);
-
-    if (reactionsError) {
-      console.error('Error deleting user reactions:', reactionsError);
-    } else {
-      deletionResults.reactions = true;
-    }
-
-    // Delete user's bookmarks
-    const { error: bookmarksError } = await supabaseAdmin
-      .from('article_bookmarks')
-      .delete()
-      .eq('user_id', user.id);
-
-    if (bookmarksError) {
-      console.error('Error deleting user bookmarks:', bookmarksError);
-    } else {
-      deletionResults.bookmarks = true;
-    }
-
-    // Delete the auth user (this will also invalidate all sessions)
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-      user.id,
-      true // Should delete user completely
-    );
-
-    if (deleteError) {
-      console.error('Error deleting auth user:', deleteError);
+    // Check if any errors occurred
+    if (deletionErrors.length > 0) {
+      console.error(`Account deletion partially failed for user ${user.email}:`, deletionErrors);
       return res.status(500).json({
         success: false,
         error: {
-          code: 'ACCOUNT_DELETION_FAILED',
-          message: 'Failed to delete account',
-          details: deleteError.message
+          code: 'DELETION_PARTIAL_FAILURE',
+          message: 'Account deletion encountered errors',
+          details: process.env.NODE_ENV === 'development' ? deletionErrors : null
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    deletionResults.authUser = true;
-
     // Log successful account deletion
-    console.info(`Account deleted successfully for user: ${user.id}`, {
-      email: user.email,
-      deletionResults,
+    console.info(`Account successfully deleted for user: ${user.email}`, {
+      userId: user.id,
       timestamp: new Date().toISOString()
     });
 
     return res.status(200).json({
       success: true,
       data: {
-        message: 'Account deleted successfully',
-        deletionResults
+        message: 'Account successfully deleted'
       },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Account deletion error:', error);
+    console.error(`Account deletion API error for user ${user.email}:`, error);
     return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred while deleting account',
+        message: 'An unexpected error occurred during account deletion',
         details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
@@ -199,6 +159,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'delete:account',
+  auditAction: 'user_account_deleted'
+}));
 
+                      

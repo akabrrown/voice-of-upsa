@@ -33,6 +33,87 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
+    // Handle self-sync for authenticated users
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '');
+      
+      // Verify the token and get user
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+      
+      if (!authError && user) {
+        // Check if user exists in database
+        const { data: existingUser, error: fetchError } = await supabaseAdmin
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (fetchError && fetchError.code === 'PGRST116') {
+          // User doesn't exist, create them
+          const { data: newUser, error: createError } = await supabaseAdmin
+            .from('users')
+            .insert({
+              id: user.id,
+              email: user.email,
+              name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+              role: 'user',
+              avatar_url: user.user_metadata?.avatar_url || null,
+              bio: null,
+              website: null,
+              location: null,
+              social_links: {},
+              preferences: {},
+              email_verified: user.email_confirmed_at ? true : false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating user profile:', createError);
+            return res.status(500).json({
+              success: false,
+              error: {
+                code: 'USER_CREATION_FAILED',
+                message: 'Failed to create user profile',
+                details: createError.message
+              },
+              timestamp: new Date().toISOString()
+            });
+          }
+
+          return res.status(200).json({
+            success: true,
+            message: 'User profile created successfully',
+            data: { user: newUser },
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        if (fetchError) {
+          console.error('Error checking user existence:', fetchError);
+          return res.status(500).json({
+            success: false,
+            error: {
+              code: 'DATABASE_ERROR',
+              message: 'Failed to check user profile',
+              details: fetchError.message
+            },
+            timestamp: new Date().toISOString()
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: 'User profile already exists',
+          data: { user: existingUser },
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
     // Validate webhook payload
     const validatedData = syncUserSchema.parse(req.body);
     const { event, user: authUser, userId, emailVerified } = validatedData;

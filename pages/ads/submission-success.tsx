@@ -83,7 +83,7 @@ const SubmissionSuccess: React.FC = () => {
                   Email: <a href="mailto:voice.of.upsa.mail@gmail.com" className="text-golden hover:text-golden-dark">voice.of.upsa.mail@gmail.com</a>
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Phone: <a href="tel:+233553108760" className="text-golden hover:text-golden-dark">+233 XXX XXX XXX</a>
+                  Phone: <a href="tel:+233553108760" className="text-golden hover:text-golden-dark">+233 553 108 760</a>
                 </p>
               </div>
 

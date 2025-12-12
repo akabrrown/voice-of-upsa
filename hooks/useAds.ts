@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getSupabaseClient } from '@/lib/supabaseClient';
 
 interface Ad {
   id: string;
@@ -53,6 +48,7 @@ export const useAds = (adType?: string): UseAdsResult => {
         setLoading(true);
         setError(null);
 
+        const supabase = getSupabaseClient();
         let query = supabase
           .from('ad_submissions')
           .select('*')

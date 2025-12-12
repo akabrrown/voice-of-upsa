@@ -65,7 +65,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           
           // Only make API call if we have a valid session
           if (session?.access_token) {
-            const response = await fetch('/api/user/notification-preferences', {
+            const response = await fetch('/api/user/notification-preferences-simple', {
               headers: {
                 'Authorization': `Bearer ${session.access_token}`,
                 'Content-Type': 'application/json',
@@ -135,11 +135,24 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
               .eq('id', articleId)
               .single();
 
-            const { data: reactingUser } = await supabase
-              .from('users')
-              .select('name')
-              .eq('id', actorId)
-              .single();
+            // Fetch user data via API to avoid RLS issues
+            let reactingUser = null;
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session?.access_token) {
+                const userResponse = await fetch(`/api/users/${actorId}`, {
+                  headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                  },
+                });
+                if (userResponse.ok) {
+                  const userData = await userResponse.json();
+                  reactingUser = userData.data;
+                }
+              }
+            } catch (userError) {
+              console.warn('Failed to fetch reacting user:', userError);
+            }
 
             const reactionType = payload.new.reaction_type as string;
             const emoji = getReactionEmoji(reactionType);
@@ -186,11 +199,24 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
               .eq('id', articleId)
               .single();
 
-            const { data: bookmarkingUser } = await supabase
-              .from('users')
-              .select('name')
-              .eq('id', actorId)
-              .single();
+            // Fetch user data via API to avoid RLS issues
+            let bookmarkingUser = null;
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session?.access_token) {
+                const userResponse = await fetch(`/api/users/${actorId}`, {
+                  headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                  },
+                });
+                if (userResponse.ok) {
+                  const userData = await userResponse.json();
+                  bookmarkingUser = userData.data;
+                }
+              }
+            } catch (userError) {
+              console.warn('Failed to fetch bookmarking user:', userError);
+            }
 
             // Check if push notifications are enabled
             if (userPreferences.push_notifications) {
@@ -234,11 +260,24 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
               .eq('id', articleId)
               .single();
 
-            const { data: commentingUser } = await supabase
-              .from('users')
-              .select('name')
-              .eq('id', actorId)
-              .single();
+            // Fetch user data via API to avoid RLS issues
+            let commentingUser = null;
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session?.access_token) {
+                const userResponse = await fetch(`/api/users/${actorId}`, {
+                  headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                  },
+                });
+                if (userResponse.ok) {
+                  const userData = await userResponse.json();
+                  commentingUser = userData.data;
+                }
+              }
+            } catch (userError) {
+              console.warn('Failed to fetch commenting user:', userError);
+            }
 
             const content = payload.new.content as string;
             const preview = content.length > 50 ? content.substring(0, 50) + '...' : content;

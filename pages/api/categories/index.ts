@@ -1,94 +1,92 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // GET - List categories
+    // Apply public-friendly rate limiting
+    const rateLimit = getCMSRateLimit(req.method || 'GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
+    rateLimitMiddleware(req);
+
+    // Log public categories access
+    console.log(`Public categories API accessed`, {
+      method: req.method,
+      ip: getClientIP(req),
+      timestamp: new Date().toISOString()
+    });
+
+    // GET - List categories (public access)
     if (req.method === 'GET') {
       const { data, error } = await supabaseAdmin
         .from('categories')
-        .select('*')
+        .select('id, name, slug, description, color')
         .order('name', { ascending: true });
 
       if (error) {
-        console.error('Error fetching categories:', error);
-        return res.status(500).json({ error: 'Failed to fetch categories' });
+        console.error('Public categories query error:', error);
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'QUERY_ERROR',
+            message: 'Failed to fetch categories',
+            details: process.env.NODE_ENV === 'development' ? error.message : null
+          },
+          timestamp: new Date().toISOString()
+        });
       }
 
-      // Filter out Anonymous category from articles categories
+      // Filter out Anonymous category from public view
       const filteredCategories = (data || []).filter(
         category => category.slug !== 'anonymous' && category.name !== 'Anonymous'
       );
 
-      return res.status(200).json({ categories: filteredCategories });
+      // Log successful fetch
+      console.log(`Public categories fetched successfully`, {
+        categoriesCount: filteredCategories.length,
+        timestamp: new Date().toISOString()
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          categories: filteredCategories
+        },
+        timestamp: new Date().toISOString()
+      });
     }
 
-    // POST - Create category (admin only)
-    if (req.method === 'POST') {
-      const token = req.headers.authorization?.replace('Bearer ', '');
+    // Only allow GET for public access
+    return res.status(405).json({
+      success: false,
+      error: {
+        code: 'METHOD_NOT_ALLOWED',
+        message: 'Only GET method is allowed for public access',
+        details: null
+      },
+      timestamp: new Date().toISOString()
+    });
 
-      if (!token) {
-        return res.status(401).json({ error: 'Unauthorized - No token provided' });
-      }
-
-      // Verify the token and get user
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: { user }, error: authError } = await (supabaseAdmin as any).auth.getUser(token);
-
-      if (authError || !user) {
-        return res.status(401).json({ error: 'Unauthorized - Invalid token' });
-      }
-
-      // Check if user is admin
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: userData, error: userError } = await (supabaseAdmin as any)
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (userError || !userData || userData.role !== 'admin') {
-        return res.status(403).json({ error: 'Insufficient permissions - Admin access required' });
-      }
-
-      const { name, description } = req.body;
-
-      if (!name) {
-        return res.status(400).json({ 
-          error: 'Missing required fields',
-          details: 'Category name is required'
-        });
-      }
-
-      // Generate slug from name
-      const slug = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: category, error } = await (supabaseAdmin as any)
-        .from('categories')
-        .insert({
-          name,
-          slug,
-          description: description || null,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating category:', error);
-        return res.status(500).json({ error: 'Failed to create category' });
-      }
-
-      return res.status(201).json({ category });
-    }
-
-    return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('Categories API error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Public categories API error:', error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while fetching categories',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
+      },
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
+// Apply enhanced error handler
+export default withErrorHandler(handler);
+                
+    

@@ -160,7 +160,10 @@ const AccountSettings: React.FC = () => {
         } else if (response.status >= 500) {
           throw new Error('Server error - please try again later');
         } else {
-          throw new Error(data.error || 'Failed to fetch settings');
+          const errorMessage = typeof data.error === 'string' 
+            ? data.error 
+            : data.error?.message || 'Failed to fetch settings';
+          throw new Error(errorMessage);
         }
       }
 
@@ -197,7 +200,7 @@ const AccountSettings: React.FC = () => {
 
       // Load notification preferences from dedicated API
       try {
-        const prefsResponse = await fetch('/api/user/notification-preferences', {
+        const prefsResponse = await fetch('/api/user/notification-preferences-simple', {
           headers: {
             'Authorization': `Bearer ${session.access_token || ''}`,
             'Content-Type': 'application/json',

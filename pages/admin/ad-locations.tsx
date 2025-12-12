@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import Button from '@/components/Button';
 import toast from 'react-hot-toast';
-import '@/styles/pages/AdminAdLocations.css';
+import { useAuth } from '@/hooks/useAuth';
+import { useSupabase } from '@/components/SupabaseProvider';
 
 interface AdLocation {
   id: string;
@@ -21,52 +22,163 @@ interface AdLocation {
 
 const AdLocationsManager: React.FC = () => {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const { session, refreshUserRole, supabase } = useSupabase();
   const [locations, setLocations] = useState<AdLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingLocation, setEditingLocation] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchLocations();
-  }, []);
-
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/ad-locations');
-      if (response.ok) {
-        const data = await response.json();
-        setLocations(data.locations || []);
-      } else {
-        toast.error('Failed to fetch ad locations');
+      setLoading(true);
+      
+      if (!user) {
+        toast.error('No active session');
+        return;
       }
-    } catch {
-      toast.error('Error fetching ad locations');
+      
+      // Get fresh session directly from Supabase
+      console.log('Ad-locations: Calling supabase.auth.getSession()...');
+      const { data: { session: freshSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('Ad-locations: getSession result:', {
+        sessionError: !!sessionError,
+        sessionErrorMessage: sessionError?.message,
+        freshSession: !!freshSession,
+        sessionKeys: freshSession ? Object.keys(freshSession) : 'none',
+        hasAccessToken: !!freshSession?.access_token,
+        tokenLength: freshSession?.access_token?.length || 0
+      });
+      
+      if (sessionError) {
+        console.error('Ad-locations: Session error:', sessionError);
+        toast.error('Failed to get authentication session');
+        return;
+      }
+      
+      if (!freshSession || !freshSession.access_token) {
+        toast.error('No valid authentication token');
+        console.error('Ad-locations: Missing session or token', {
+          hasSession: !!freshSession,
+          hasAccessToken: !!freshSession?.access_token
+        });
+        return;
+      }
+      
+      console.log('Ad-locations: User:', user);
+      console.log('Ad-locations: Fresh session exists:', !!freshSession);
+      console.log('Ad-locations: Fresh session object:', freshSession);
+      console.log('Ad-locations: Fresh session keys:', freshSession ? Object.keys(freshSession) : 'none');
+      console.log('Ad-locations: Token length:', freshSession?.access_token?.length || 0);
+      console.log('Ad-locations: Token preview:', freshSession?.access_token?.substring(0, 20) + '...' || 'none');
+      console.log('Ad-locations: Authorization header will be:', `Bearer ${freshSession?.access_token}`);
+      
+      // Debug token validation first
+      try {
+        console.log('Ad-locations: Testing token with debug endpoint...');
+        const debugResponse = await fetch('/api/admin/debug-token', {
+          headers: {
+            'Authorization': `Bearer ${freshSession?.access_token}`,
+          },
+        });
+        const debugResult = await debugResponse.json();
+        console.log('Ad-locations: Debug token result:', debugResult);
+      } catch (debugError) {
+        console.error('Ad-locations: Debug token error:', debugError);
+      }
+      
+      const response = await fetch('/api/admin/ad-locations', {
+        headers: {
+          'Authorization': `Bearer ${freshSession?.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Ad-locations: API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Failed to fetch locations: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setLocations(data.data?.locations || []);
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+      toast.error('Failed to load ad locations');
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, supabase]);
 
+  useEffect(() => {
+    console.log('Ad-locations: useEffect triggered', { authLoading, user: !!user, session: !!session });
+    
+    if (authLoading) return;
+    
+    if (!user) {
+      console.log('Ad-locations: No user, redirecting to login');
+      router.push('/admin/login');
+      return;
+    }
+    
+    if (user.role !== 'admin') {
+      console.log('Ad-locations: User not admin, refreshing role');
+      refreshUserRole().then(() => {
+        setTimeout(() => {
+          if (user.role !== 'admin') {
+            router.push('/admin/login');
+          }
+        }, 1000);
+      });
+      return;
+    }
+
+    // Add a small delay to ensure session is loaded
+    setTimeout(() => {
+      console.log('Ad-locations: About to fetch locations');
+      fetchLocations();
+    }, 500);
+  }, [user, authLoading, refreshUserRole, fetchLocations, router, session]);
+
+  
   const updateLocationPrice = async (locationId: string, price: string) => {
     setSaving(true);
     try {
+      // Get fresh session directly from Supabase
+      const { data: { session: freshSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !freshSession || !freshSession.access_token) {
+        toast.error('No valid authentication token');
+        return;
+      }
+
       const response = await fetch('/api/admin/ad-locations', {
         method: 'PUT',
         headers: {
+          'Authorization': `Bearer ${freshSession?.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           locationId,
-          base_price: price ? parseFloat(price) : null,
+          base_price: parseFloat(price),
         }),
       });
 
-      if (response.ok) {
-        toast.success('Price updated successfully');
-        setEditingLocation(null);
-        fetchLocations();
-      } else {
-        toast.error('Failed to update price');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Ad-locations: Update API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Failed to update location: ${response.status} - ${response.statusText}`);
       }
+      setEditingLocation(null);
+      fetchLocations();
     } catch {
       toast.error('Error updating price');
     } finally {
@@ -77,9 +189,18 @@ const AdLocationsManager: React.FC = () => {
   const toggleLocationStatus = async (locationId: string, isActive: boolean) => {
     setSaving(true);
     try {
+      // Get fresh session directly from Supabase
+      const { data: { session: freshSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !freshSession || !freshSession.access_token) {
+        toast.error('No valid authentication token');
+        return;
+      }
+
       const response = await fetch('/api/admin/ad-locations', {
         method: 'PUT',
         headers: {
+          'Authorization': `Bearer ${freshSession?.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

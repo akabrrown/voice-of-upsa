@@ -1,149 +1,150 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { z } from 'zod';
 
-// Validation schema
+// Enhanced validation schema for article settings
 const updateSettingsSchema = z.object({
   allow_comments: z.boolean(),
   moderate_comments: z.boolean(),
   notify_on_publish: z.boolean(),
   content_warning: z.boolean(),
   age_restriction: z.boolean(),
-  is_premium: z.boolean(),
+  is_premium: z.boolean()
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'PUT') {
-    return res.status(405).json({
-      success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only PUT method is allowed',
-        details: null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-
+async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
   try {
+    // Only allow PUT for settings updates
+    if (req.method !== 'PUT') {
+      return res.status(405).json({
+        success: false,
+        error: {
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only PUT method is allowed for settings updates',
+          details: null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Validate article ID
     const { id } = req.query;
-    
     if (!id || typeof id !== 'string') {
       return res.status(400).json({
         success: false,
         error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Article ID is required',
+          code: 'INVALID_ARTICLE_ID',
+          message: 'Valid article ID is required',
           details: null
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    // Authenticate user
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authentication required',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid authentication token',
-          details: authError?.message
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Check if user is admin
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || !userData || userData.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'INSUFFICIENT_PERMISSIONS',
-          message: 'Admin access required',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Validate input
+    // Validate input with enhanced schema
     const validatedData = updateSettingsSchema.parse(req.body);
 
+    // Log admin settings update action
+    console.log(`Admin article settings update initiated`, {
+      adminId: user.id,
+      adminEmail: user.email,
+      articleId: id,
+      settings: validatedData,
+      timestamp: new Date().toISOString()
+    });
+
+    // Verify article exists
+    const { data: article, error: articleError } = await supabaseAdmin
+      .from('articles')
+      .select('id, title, allow_comments, moderate_comments, notify_on_publish, content_warning, age_restriction, is_premium')
+      .eq('id', id)
+      .single();
+
+    if (articleError) {
+      console.error('Admin settings update - article fetch error:', articleError);
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'ARTICLE_NOT_FOUND',
+          message: 'Article not found',
+          details: process.env.NODE_ENV === 'development' ? articleError.message : null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
     // Update article settings
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: article, error: updateError } = await (supabaseAdmin as any)
+    const { data: updatedArticle, error: updateError } = await supabaseAdmin
       .from('articles')
       .update({
-        allow_comments: validatedData.allow_comments,
-        moderate_comments: validatedData.moderate_comments,
-        notify_on_publish: validatedData.notify_on_publish,
-        content_warning: validatedData.content_warning,
-        age_restriction: validatedData.age_restriction,
-        is_premium: validatedData.is_premium,
+        ...validatedData,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
       .select(`
-        *,
-        category:categories(id, name, slug)
+        id, title, allow_comments, moderate_comments, notify_on_publish, 
+        content_warning, age_restriction, is_premium, updated_at
       `)
       .single();
 
     if (updateError) {
-      console.error('Error updating article settings:', updateError);
+      console.error('Admin settings update error:', updateError);
       return res.status(500).json({
         success: false,
         error: {
-          code: 'DATABASE_ERROR',
+          code: 'UPDATE_ERROR',
           message: 'Failed to update article settings',
-          details: updateError.message
+          details: process.env.NODE_ENV === 'development' ? updateError.message : null
         },
         timestamp: new Date().toISOString()
       });
     }
 
+    // Log successful settings update
+    console.log(`Admin article settings updated successfully`, {
+      adminId: user.id,
+      articleId: id,
+      articleTitle: article.title,
+      oldSettings: {
+        allow_comments: article.allow_comments,
+        moderate_comments: article.moderate_comments,
+        notify_on_publish: article.notify_on_publish,
+        content_warning: article.content_warning,
+        age_restriction: article.age_restriction,
+        is_premium: article.is_premium
+      },
+      newSettings: validatedData,
+      timestamp: new Date().toISOString()
+    });
+
     return res.status(200).json({
       success: true,
-      article,
       message: 'Article settings updated successfully',
+      data: {
+        article: updatedArticle,
+        updated_by: user.id,
+        updated_at: updatedArticle.updated_at
+      },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Article settings API error:', error);
+    console.error('Admin article settings API error:', error);
     return res.status(500).json({
       success: false,
       error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while updating article settings',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
     });
   }
 }
 
-export default withErrorHandler(handler);
+// Apply CMS security middleware and enhanced error handler
+export default withErrorHandler(withCMSSecurity(handler));
+    
+                              

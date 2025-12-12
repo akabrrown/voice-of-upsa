@@ -1,53 +1,57 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
+import { z } from 'zod';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+// Enhanced validation schema with security constraints
+const articleUpdateSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long').optional(),
+  content: z.string().min(1, 'Content is required').optional(),
+  excerpt: z.string().max(500, 'Excerpt too long').optional(),
+  featured_image: z.string().url('Invalid featured image URL').optional().nullable(),
+  category_id: z.string().uuid('Invalid category ID').optional().nullable(),
+  status: z.enum(['draft', 'published', 'archived']).optional()
+});
+
+// Interface for update data that includes slug
+interface ArticleUpdateData extends z.infer<typeof articleUpdateSchema> {
+  updated_at: string;
+  slug?: string;
+}
+
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
   try {
-    // Get authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: 'No authorization token provided'
-      });
-    }
+    // Apply rate limiting based on method
+    const rateLimit = getCMSRateLimit(req.method || 'GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, () => 
+      getClientIP(req));
+    rateLimitMiddleware(req);
 
-    const token = authHeader.replace('Bearer ', '');
+    // Log editor article access
+    console.log(`Editor article [${req.query.id}] accessed by user: ${user.email} (${user.id})`, {
+      method: req.method,
+      timestamp: new Date().toISOString(),
+      securityLevel: user.securityLevel
+    });
+
+    // Validate article ID
     const { id } = req.query;
-
     if (!id || typeof id !== 'string') {
       return res.status(400).json({
         success: false,
-        error: 'Article ID is required'
+        error: {
+          code: 'INVALID_ARTICLE_ID',
+          message: 'Valid article ID is required',
+          details: null
+        },
+        timestamp: new Date().toISOString()
       });
     }
-
-    // Verify token and get user
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid token'
-      });
-    }
-
-    // Check if user is an editor
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || !userData || (userData.role !== 'editor' && userData.role !== 'admin')) {
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied. Editor role required.'
-      });
-    }
-
+        // GET - Fetch single article
     if (req.method === 'GET') {
-      // Get single article
       const { data: article, error: fetchError } = await supabaseAdmin
         .from('articles')
         .select('*')
@@ -56,103 +60,128 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .single();
 
       if (fetchError) {
-        console.error('Article fetch error:', fetchError);
+        console.error(`Article fetch failed for editor ${user.email}:`, fetchError);
         return res.status(404).json({
           success: false,
-          error: 'Article not found'
+          error: {
+            code: 'ARTICLE_NOT_FOUND',
+            message: 'Article not found',
+            details: process.env.NODE_ENV === 'development' ? fetchError.message : null
+          },
+          timestamp: new Date().toISOString()
         });
       }
+
+      console.log(`Article [${id}] returned to editor ${user.email}:`, {
+        title: article.title,
+        status: article.status,
+        timestamp: new Date().toISOString()
+      });
 
       return res.status(200).json({
         success: true,
-        article
+        data: { article },
+        timestamp: new Date().toISOString()
       });
+    }
 
-    } else if (req.method === 'PUT') {
-      // Update article
-      const { title, content, excerpt, featured_image, status } = req.body;
+    // PUT - Update article
+    if (req.method === 'PUT') {
+      // Validate input
+      const validatedData = articleUpdateSchema.parse(req.body);
 
-      if (!title || !content) {
-        return res.status(400).json({
-          success: false,
-          error: 'Title and content are required'
-        });
-      }
-
-      // First verify the article belongs to this editor
-      const { data: existingArticle, error: checkError } = await supabaseAdmin
+      // Check if article exists and belongs to user
+      const { data: existingArticle, error: fetchError } = await supabaseAdmin
         .from('articles')
-        .select('id')
+        .select('*')
         .eq('id', id)
         .eq('author_id', user.id)
         .single();
 
-      if (checkError || !existingArticle) {
+      if (fetchError || !existingArticle) {
         return res.status(404).json({
           success: false,
-          error: 'Article not found or access denied'
+          error: {
+            code: 'ARTICLE_NOT_FOUND',
+            message: 'Article not found',
+            details: process.env.NODE_ENV === 'development' && fetchError ? fetchError.message : null
+          },
+          timestamp: new Date().toISOString()
         });
       }
 
-      const updateData: {
-        title: string;
-        content: string;
-        excerpt: string;
-        featured_image: string | null;
-        status: 'draft' | 'published';
-        updated_at: string;
-        published_at?: string;
-      } = {
-        title,
-        content,
-        excerpt,
-        featured_image,
-        status,
+      // Update article
+      const updateData: ArticleUpdateData = {
+        ...validatedData,
         updated_at: new Date().toISOString()
       };
 
-      // Set published_at if status is being changed to published
-      if (status === 'published') {
-        updateData.published_at = new Date().toISOString();
+      // Update slug if title changed
+      if (validatedData.title && validatedData.title !== existingArticle.title) {
+        updateData.slug = validatedData.title.toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^[-]+|[-]+$/g, '');
       }
 
-      const { data: updatedArticle, error: updateError } = await supabaseAdmin
+      const { data: updatedArticle, error } = await supabaseAdmin
         .from('articles')
         .update(updateData)
         .eq('id', id)
-        .eq('author_id', user.id)
-        .select()
+        .select('*')
         .single();
 
-      if (updateError) {
-        console.error('Article update error:', updateError);
+      if (error) {
+        console.error(`Article update failed for editor ${user.email}:`, error);
         return res.status(500).json({
           success: false,
-          error: 'Failed to update article'
+          error: {
+            code: 'ARTICLE_UPDATE_FAILED',
+            message: 'Failed to update article',
+            details: process.env.NODE_ENV === 'development' ? error.message : null
+          },
+          timestamp: new Date().toISOString()
         });
       }
 
-      return res.status(200).json({
-        success: true,
-        article: updatedArticle
+      // Log article update
+      console.info(`Article updated by editor: ${user.email}`, {
+        articleId: id,
+        title: updatedArticle.title,
+        changes: validatedData,
+        timestamp: new Date().toISOString()
       });
 
-    } else if (req.method === 'DELETE') {
-      // Delete article
-      const { data: existingArticle, error: checkError } = await supabaseAdmin
+      return res.status(200).json({
+        success: true,
+        data: { article: updatedArticle },
+        timestamp: new Date().toISOString()
+      });
+    }
+          // DELETE - Delete article
+    if (req.method === 'DELETE') {
+      // Check if article exists and belongs to user
+      const { data: existingArticle, error: fetchError } = await supabaseAdmin
         .from('articles')
-        .select('id')
+        .select('id, title')
         .eq('id', id)
         .eq('author_id', user.id)
         .single();
 
-      if (checkError || !existingArticle) {
+      if (fetchError || !existingArticle) {
         return res.status(404).json({
           success: false,
-          error: 'Article not found or access denied'
+          error: {
+            code: 'ARTICLE_NOT_FOUND',
+            message: 'Article not found',
+            details: process.env.NODE_ENV === 'development' && fetchError ? fetchError.message : null
+          },
+          timestamp: new Date().toISOString()
         });
       }
 
+      // Delete the article
       const { error: deleteError } = await supabaseAdmin
         .from('articles')
         .delete()
@@ -160,31 +189,61 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq('author_id', user.id);
 
       if (deleteError) {
-        console.error('Article delete error:', deleteError);
+        console.error(`Article deletion failed for editor ${user.email}:`, deleteError);
         return res.status(500).json({
           success: false,
-          error: 'Failed to delete article'
+          error: {
+            code: 'ARTICLE_DELETION_FAILED',
+            message: 'Failed to delete article',
+            details: process.env.NODE_ENV === 'development' ? deleteError.message : null
+          },
+          timestamp: new Date().toISOString()
         });
       }
 
-      return res.status(200).json({
-        success: true,
-        message: 'Article deleted successfully'
+      // Log article deletion
+      console.info(`Article deleted by editor: ${user.email}`, {
+        articleId: id,
+        title: existingArticle.title,
+        timestamp: new Date().toISOString()
       });
 
-    } else {
-      return res.status(405).json({
-        success: false,
-        error: 'Method not allowed'
+      return res.status(200).json({
+        success: true,
+        data: { message: 'Article deleted successfully' },
+        timestamp: new Date().toISOString()
       });
     }
 
+    return res.status(405).json({
+      success: false,
+      error: {
+        code: 'METHOD_NOT_ALLOWED',
+        message: 'Only GET, PUT, and DELETE methods are allowed',
+        details: null
+      },
+      timestamp: new Date().toISOString()
+    });
+
   } catch (error) {
-    console.error('Editor article API error:', error);
+    console.error(`Editor article API error for user ${user.email}:`, error);
     return res.status(500).json({
       success: false,
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while processing article request',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
+      },
+      timestamp: new Date().toISOString()
     });
   }
 }
+
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'edit:articles',
+  auditAction: 'editor_article_accessed'
+}));
+
+                      
+          

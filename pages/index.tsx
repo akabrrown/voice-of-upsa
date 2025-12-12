@@ -36,14 +36,14 @@ const HomePage: React.FC = () => {
     const checkUserRole = async () => {
       if (session?.user) {
         try {
-          const response = await fetch(`/api/users/${session.user.id}`, {
+          const response = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${session.access_token}`,
             },
           });
           if (response.ok) {
             const data = await response.json();
-            const userRole = data.data?.role || data.role;
+            const userRole = data.data?.profile?.role || data.role;
             setIsAdmin(userRole === 'admin' || userRole === 'editor');
           }
         } catch (error) {
@@ -181,31 +181,23 @@ const HomePage: React.FC = () => {
     },
   };
 
-  if (loading) {
-    return (
-      <LayoutSupabase>
-        <div className="min-h-screen bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-300 rounded w-1/4 mb-8"></div>
-              <div className="h-64 bg-gray-300 rounded mb-8"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="h-64 bg-gray-300 rounded"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </LayoutSupabase>
-    );
-  }
-
+  
   return (
     <LayoutSupabase>
       <div className="min-h-screen bg-gray-50">
         {/* Featured Articles */}
-        {featuredArticles.length > 0 && (
+        {loading && featuredArticles.length === 0 ? (
+          <section className="py-12 bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="animate-pulse">
+                <div className="h-8 bg-gray-300 rounded w-1/4 mb-8"></div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="h-64 bg-gray-300 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : featuredArticles.length > 0 && (
           <section className="py-12 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <motion.div
@@ -328,7 +320,22 @@ const HomePage: React.FC = () => {
               </Link>
             </motion.div>
 
-            {latestNews.length > 0 ? (
+            {loading && latestNews.length === 0 ? (
+              <div className="animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                      <div className="h-48 bg-gray-300"></div>
+                      <div className="p-6">
+                        <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                        <div className="h-4 bg-gray-300 rounded w-3/4 mb-4"></div>
+                        <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : latestNews.length > 0 ? (
               <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -404,6 +411,21 @@ const HomePage: React.FC = () => {
                   </motion.div>
                 ))}
               </motion.div>
+            ) : loading ? (
+              <div className="animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                      <div className="h-48 bg-gray-300"></div>
+                      <div className="p-6">
+                        <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                        <div className="h-4 bg-gray-300 rounded w-3/4 mb-4"></div>
+                        <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg">No articles available yet.</p>

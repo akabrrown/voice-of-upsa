@@ -67,6 +67,8 @@ interface Bookmark {
 }
 
 const ArticlePage: React.FC = () => {
+  console.log('ArticlePage component rendering');
+  
   const router = useRouter();
   const { slug } = router.query;
   const { user, supabase } = useSupabase();
@@ -102,19 +104,50 @@ const ArticlePage: React.FC = () => {
 
       if (!response.ok) {
         const errorMessage = data.error?.message || data.error || 'Failed to fetch article';
-        throw new Error(typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage);
+        const errorString = typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : String(errorMessage);
+        
+        console.log('Response status:', response.status);
+        console.log('Error data:', data);
+        console.log('Error message:', errorString);
+        
+        // Handle "not found" errors without throwing
+        if (errorString.includes('not found')) {
+          console.log('Article not found, will redirect');
+          setLoading(false);
+          // Use setTimeout to ensure redirect happens after render cycle
+          setTimeout(() => router.push('/articles'), 0);
+          return;
+        }
+        
+        throw new Error(errorString);
       }
 
       // API returns { success: true, data: { article } }
-      setArticle(data.data?.article || data.article);
+      console.log('API Response Data:', data);
+      const articleData = data.data?.article || data.data?.data?.article || data.article || data.data;
+      console.log('Extracted Article Data:', articleData);
+      console.log('Setting article data, loading was:', loading);
+      setArticle(articleData);
+      console.log('Article data set');
     } catch (error) {
       console.error('Error fetching article:', error);
-      toast.error('Failed to load article');
-      router.push('/');
+      // Ensure loading is always turned off on error
+      setLoading(false);
+      
+      // Don't show toast for "not found" errors, just redirect
+      if (error instanceof Error && error.message.includes('not found')) {
+        console.log('Article not found in catch, redirecting to /articles');
+        setTimeout(() => router.push('/articles'), 0);
+      } else {
+        console.log('Other error occurred, redirecting to home');
+        toast.error('Failed to load article');
+        setTimeout(() => router.push('/'), 0);
+      }
     } finally {
+      // Always ensure loading is turned off
       setLoading(false);
     }
-  }, [slug, router]);
+  }, [slug, router, loading]);
 
   const fetchComments = useCallback(async () => {
     if (!slug) return;
@@ -124,13 +157,14 @@ const ArticlePage: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch comments');
+        console.log('Comments endpoint not available, skipping');
+        return;
       }
 
       setComments(data.data?.comments || []);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
-      toast.error('Failed to load comments');
+    } catch {
+      console.log('Comments fetch failed, continuing without comments');
+      // Don't show error toast for missing comments endpoint
     }
   }, [slug]);
 
@@ -142,7 +176,8 @@ const ArticlePage: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch reactions');
+        console.log('Reactions endpoint not available, skipping');
+        return;
       }
 
       const fetchedReactions: Reaction[] = data.data?.reactions || [];
@@ -151,8 +186,9 @@ const ArticlePage: React.FC = () => {
       // Check if current user has reacted
       const userReact = fetchedReactions.find(r => r.userReacted);
       setUserReaction(userReact ? userReact.type : null);
-    } catch (error) {
-      console.error('Error fetching reactions:', error);
+    } catch {
+      console.log('Reactions fetch failed, continuing without reactions');
+      // Don't show error toast for missing reactions endpoint
     }
   }, [slug]);
 
@@ -219,10 +255,14 @@ const ArticlePage: React.FC = () => {
   }, [article, user, supabase]);
 
   useEffect(() => {
+    console.log('useEffect triggered, slug:', slug);
     if (slug) {
+      console.log('Calling fetch functions');
       fetchArticle();
       fetchComments();
       fetchReactions();
+    } else {
+      console.log('No slug available, skipping fetch');
     }
   }, [slug, fetchArticle, fetchComments, fetchReactions]);
 
@@ -740,6 +780,7 @@ const ArticlePage: React.FC = () => {
   };
 
   if (loading) {
+    console.log('Still loading, article state:', article);
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">

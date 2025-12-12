@@ -2,7 +2,7 @@ import { NextApiRequest } from 'next';
 import { supabaseAdmin } from './database-server';
 
 export async function verifySupabaseToken(token: string): Promise<string | null> {
-  if (!token) {
+  if (!token || !supabaseAdmin) {
     return null;
   }
 
@@ -21,7 +21,7 @@ export async function verifySupabaseToken(token: string): Promise<string | null>
 }
 
 export async function getUserFromToken(token: string): Promise<{ id: string; email?: string } | null> {
-  if (!token) {
+  if (!token || !supabaseAdmin) {
     return null;
   }
 
@@ -43,6 +43,10 @@ export async function getUserFromToken(token: string): Promise<{ id: string; ema
 }
 
 export async function requireRole(req: NextApiRequest, allowedRoles: string[]): Promise<{ id: string; email?: string; role: string }> {
+  if (!supabaseAdmin) {
+    throw new Error('Supabase admin client not initialized');
+  }
+  
   const token = req.headers.authorization?.replace('Bearer ', '');
   
   if (!token) {

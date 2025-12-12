@@ -1,112 +1,71 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { AuthenticationError } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
+import { requireAdminOrEditor } from '@/lib/auth-helpers';
 import { z } from 'zod';
 
-// Validation schemas
+// Simple HTML sanitization function (fallback if DOMPurify not available)
+const sanitizeHTML = (html: string): string => {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<video\b[^<]*(?:(?!<\/video>)<[^<]*)*<\/video>/gi, '')
+    .replace(/<audio\b[^<]*(?:(?!<\/audio>)<[^<]*)*<\/audio>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers
+    .replace(/javascript:/gi, '') // Remove javascript: URLs
+    .replace(/data:/gi, ''); // Remove data: URLs
+};
+
+// Enhanced validation schemas with security constraints
 const articlesQuerySchema = z.object({
   search: z.string().max(100, 'Search term too long').optional(),
   status: z.enum(['all', 'draft', 'pending_review', 'published', 'archived']).default('all'),
-  page: z.coerce.number().min(1).default(1)
+  page: z.coerce.number().min(1).max(100, 'Page number too high').default(1)
 });
 
 const articleCreateSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(255, 'Title must not exceed 255 characters'),
-  content: z.string().min(1, 'Content is required'),
+  title: z.string().min(1, 'Title is required').max(255, 'Title must not exceed 255 characters')
+    .regex(/^[^<>]*$/, 'Title cannot contain HTML tags'),
+  content: z.string().min(1, 'Content is required').max(100000, 'Content too long'),
   excerpt: z.string().max(500, 'Excerpt must not exceed 500 characters').optional(),
   featured_image: z.string().url('Invalid featured image URL').optional().nullable(),
   status: z.enum(['draft', 'pending_review', 'published']).default('draft'),
   is_featured: z.boolean().default(false),
-  featured_order: z.number().min(0).default(0),
+  featured_order: z.number().min(0).max(1000, 'Featured order too high').default(0),
   display_location: z.enum(['homepage', 'category_page', 'both', 'none']).default('both')
 });
 
-// Rate limiting: 30 requests per minute per admin
-const rateLimitMiddleware = withRateLimit(30, 60 * 1000, (req) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  return token || req.socket.remoteAddress || 'unknown';
-});
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
   try {
-    console.log('=== ADMIN ARTICLES API DEBUG ===');
-    console.log('Method:', req.method);
-    console.log('Headers:', req.headers);
-    console.log('Query:', req.query);
-    console.log('Body:', req.body);
-    
-    // Apply rate limiting
-    console.log('Applying rate limiting...');
+    // Server-side role check - double security
+    await requireAdminOrEditor(req);
+
+    // Get supabase admin client
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new Error('Database connection failed');
+    }
+
+    // Apply rate limiting based on method
+    const rateLimit = getCMSRateLimit(req.method || 'GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
     rateLimitMiddleware(req);
-    console.log('Rate limiting passed');
 
-    // Authenticate user using admin client directly
-    console.log('Authenticating user...');
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'No authorization token provided',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verify token and get user
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !authUser) {
-      console.log('Auth failed:', authError?.message);
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or expired token',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Get user role from database
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', authUser.id)
-      .single();
-
-    if (userError || !userData) {
-      console.log('User role fetch failed:', userError?.message);
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'User not found',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const user = {
-      id: authUser.id,
-      email: authUser.email,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      role: (userData as any).role
-    };
-    console.log('User authenticated:', { userId: user.id, role: user.role });
+    console.log(`Admin articles API accessed by user: ${user.email} (${user.id})`, {
+      method: req.method,
+      timestamp: new Date().toISOString(),
+      securityLevel: user.securityLevel
+    });
 
     // GET - List articles
     if (req.method === 'GET') {
-      console.log('Processing GET request for articles...');
-      
       // Authorize admin or editor access
       if (!['admin', 'editor'].includes(user.role)) {
         console.log('Access denied - insufficient permissions:', user.role);
@@ -142,10 +101,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
-      // Add search filter
+      // Add search filter with SQL injection protection
       if (search && typeof search === 'string') {
         console.log('Adding search filter:', search);
-        query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%,excerpt.ilike.%${search}%`);
+        // Sanitize search term
+        const sanitizedSearch = search.replace(/[%_]/g, '\\$&');
+        query = query.or(`title.ilike.%${sanitizedSearch}%,content.ilike.%${sanitizedSearch}%,excerpt.ilike.%${sanitizedSearch}%`);
       }
 
       // Add status filter
@@ -225,7 +186,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const articleData = {
         title,
         slug,
-        content,
+        content: sanitizeHTML(content),
         excerpt: excerpt || '',
         featured_image: featured_image || null,
         status,
@@ -288,19 +249,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   } catch (error) {
     console.error('Admin articles API error:', error);
     
-    // Handle specific error types
-    if (error instanceof AuthenticationError) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: error.message,
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-    
     // Handle validation errors
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -322,18 +270,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         error: {
           code: 'DATABASE_ERROR',
           message: 'Database operation failed',
-          details: dbError.message
+          details: process.env.NODE_ENV === 'development' ? dbError.message : null
         },
         timestamp: new Date().toISOString()
       });
     }
     
-    // Generic error
-    res.status(500).json({
+    // Generic error handling
+    return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred while processing article request',
+        message: 'An unexpected error occurred while processing articles',
         details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
@@ -341,6 +289,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
-export default withErrorHandler(handler);
+// Wrap with enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:content',
+  auditAction: 'articles_accessed'
+}));
 

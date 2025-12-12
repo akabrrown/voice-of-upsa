@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { Session, User, SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/router';
+import { getSupabaseClient } from '@/lib/supabaseClient';
 
 type SupabaseContextType = {
   supabase: SupabaseClient;
@@ -9,52 +9,63 @@ type SupabaseContextType = {
   user: User | null;
   userRole: string | null;
   loading: boolean;
+  refreshUserRole: () => Promise<void>;
 };
 
 const Context = createContext<SupabaseContextType | undefined>(undefined);
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
-  const [supabase] = useState(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-    
-    return createClient(supabaseUrl, supabaseAnonKey);
-  });
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const supabase = getSupabaseClient();
 
-  // Fetch user role from database
-  const fetchUserRole = useCallback(async (userId: string) => {
+  // Fetch user role via API to avoid RLS issues
+  const fetchUserRole = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', userId)
-        .single();
+      // Get current session to get access token
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!error && data) {
-        setUserRole(data.role || 'user');
+      if (session?.access_token) {
+        const response = await fetch('/api/auth/user', {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUserRole(data.data?.user?.role || 'user');
+        } else {
+          setUserRole('user');
+        }
       } else {
         setUserRole('user');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching user role:', error);
       // If we get a 401/403 (likely due to invalid RLS or token), we should probably not default to 'user' quietly.
       // But for now, just fallback.
-      if (error?.code === 'PGRST301' || error?.message?.includes('JWT')) {
-         // JWT expired or invalid
-         supabase.auth.signOut();
+      if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
+        const err = error as { code?: string; message?: string };
+        if (err.code === 'PGRST301' || err.message?.includes('JWT')) {
+           // JWT expired or invalid
+           supabase.auth.signOut();
+        }
       }
       setUserRole('user');
     }
-  }, [supabase]);
+  }, [supabase.auth]);
+
+  // Function to force refresh user role
+  const refreshUserRole = useCallback(async () => {
+    if (user) {
+      await fetchUserRole();
+    }
+  }, [user, fetchUserRole]);
 
   useEffect(() => {
     // Get initial session
@@ -62,7 +73,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserRole();
       }
       setLoading(false);
     });
@@ -74,7 +85,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserRole();
       } else {
         setUserRole(null);
       }
@@ -92,10 +103,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [router, supabase, fetchUserRole]);
+  }, [router, fetchUserRole, supabase.auth]);
 
   return (
-    <Context.Provider value={{ supabase, session, user, userRole, loading }}>
+    <Context.Provider value={{ supabase, session, user, userRole, loading, refreshUserRole }}>
       {children}
     </Context.Provider>
   );

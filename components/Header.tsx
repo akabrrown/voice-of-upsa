@@ -88,6 +88,8 @@ const Header: React.FC = () => {
               width={48}
               height={48}
               className="h-12 w-12 rounded-full object-cover"
+              loading="eager"
+              priority
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = '/logo.jpg'; // Fallback to default logo
@@ -189,7 +191,7 @@ const Header: React.FC = () => {
                 <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
                   Main
                 </div>
-                {baseLinks.slice(0, 5).map((link) => (
+                {baseLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
@@ -203,6 +205,29 @@ const Header: React.FC = () => {
                   </Link>
                 ))}
               </div>
+
+              {/* User Links */}
+              {user && (
+                <div className="space-y-1 border-t border-navy-light pt-4 mt-4">
+                  <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
+                    User
+                  </div>
+                  {[
+                    { href: '/bookmarks', label: 'Bookmarks', icon: FiBookmark },
+                    { href: '/account-settings', label: 'Settings', icon: FiSettings },
+                  ].map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={closeMobileMenu}
+                      className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-navy-light transition-colors"
+                    >
+                      <link.icon className="w-5 h-5" />
+                      <span>{link.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               {/* Editor Tools */}
               {userRole === 'editor' || userRole === 'admin' ? (

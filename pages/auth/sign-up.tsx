@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { FiArrowLeft, FiUser, FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
-import { createSupabaseClient, signUpWithEmail } from '@/lib/supabase-client';
+import { signUpWithEmail } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabaseClient';
 
 const SignUpPage: React.FC = () => {
   const router = useRouter();
@@ -16,6 +17,9 @@ const SignUpPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordStrengthText, setPasswordStrengthText] = useState('');
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -25,7 +29,7 @@ const SignUpPage: React.FC = () => {
   useEffect(() => {
     // Check if user is already signed in
     const checkSession = async () => {
-      const supabase = createSupabaseClient();
+      const supabase = getSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
@@ -38,28 +42,61 @@ const SignUpPage: React.FC = () => {
     }
   }, [router, mounted]);
 
+  const calculatePasswordStrength = (password: string) => {
+    let strength = 0;
+    const feedback = [];
+
+    if (password.length >= 8) strength += 1;
+    else feedback.push('at least 8 characters');
+
+    if (password.length >= 12) strength += 1;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+    else feedback.push('uppercase and lowercase letters');
+
+    if (/\d/.test(password)) strength += 1;
+    else feedback.push('numbers');
+
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1;
+    else feedback.push('special characters');
+
+    const strengthTexts = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+    const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
+    
+    const strengthColor = strengthColors[strength] || 'bg-red-500';
+    setPasswordStrength(strength);
+    setPasswordStrengthText(strengthTexts[strength] || 'Very Weak');
+    
+    return { strength, strengthColor, feedback };
+  };
+
   const validateForm = () => {
-    if (!email || !password || !confirmPassword || !fullName) {
-      toast.error('Please fill in all fields');
-      return false;
+    const newErrors: {[key: string]: string} = {};
+
+    if (!fullName || fullName.trim().length < 2) {
+      newErrors.fullName = 'Name must be at least 2 characters long';
     }
 
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
-      return false;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
 
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return false;
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else {
+      const { feedback } = calculatePasswordStrength(password);
+      if (password.length < 8) {
+        newErrors.password = `Password must have ${feedback.join(', ')}`;
+      }
     }
 
-    if (!email.includes('@')) {
-      toast.error('Please enter a valid email address');
-      return false;
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    return true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,6 +159,8 @@ const SignUpPage: React.FC = () => {
                   width={64}
                   height={64}
                   className="w-16 h-16 rounded-full"
+                  loading="eager"
+                  priority
                   unoptimized
                 />
               </div>
@@ -152,6 +191,9 @@ const SignUpPage: React.FC = () => {
                       placeholder="Enter your full name"
                     />
                   </div>
+                  {errors.fullName && (
+                    <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>
+                  )}
                 </div>
 
                 <div>
@@ -174,6 +216,9 @@ const SignUpPage: React.FC = () => {
                       placeholder="Enter your email"
                     />
                   </div>
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                  )}
                 </div>
 
                 <div>
@@ -191,7 +236,10 @@ const SignUpPage: React.FC = () => {
                       autoComplete="new-password"
                       required
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        calculatePasswordStrength(e.target.value);
+                      }}
                       className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-golden focus:border-transparent"
                       placeholder="Create a password"
                     />
@@ -207,7 +255,32 @@ const SignUpPage: React.FC = () => {
                       )}
                     </button>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters long</p>
+                  {password && (
+                    <div className="mt-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-gray-600">Password Strength</span>
+                        <span className={`text-xs font-medium ${
+                          passwordStrength <= 2 ? 'text-red-500' : 
+                          passwordStrength === 3 ? 'text-yellow-500' : 'text-green-500'
+                        }`}>
+                          {passwordStrengthText}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            passwordStrength <= 2 ? 'bg-red-500' : 
+                            passwordStrength === 3 ? 'bg-yellow-500' : 'bg-green-500'
+                          }`}
+                          style={{ width: `${(passwordStrength / 4) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {errors.password && (
+                    <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters long</p>
                 </div>
 
                 <div>
@@ -241,6 +314,9 @@ const SignUpPage: React.FC = () => {
                       )}
                     </button>
                   </div>
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>
+                  )}
                 </div>
 
                 <div>

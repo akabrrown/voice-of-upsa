@@ -1,73 +1,69 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/database-server';
-import { Database } from '@/lib/database-types';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
 
-type User = Database['public']['Tables']['users']['Row'];
-type Article = Database['public']['Tables']['articles']['Row'];
-type Comment = Database['public']['Tables']['comments']['Row'];
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
   try {
-    // Only allow GET requests
-    if (req.method !== 'GET') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    // Extract and validate token
-    const token = req.headers.authorization?.split(' ')[1] || '';
-    
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized - No token provided' });
-    }
-
-    // Create Supabase client with service role key
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      }
+    // Apply rate limiting for data export
+    const rateLimit = getCMSRateLimit('GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
     );
+    rateLimitMiddleware(req);
 
-    // Get user from token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+    // Only allow GET
+    if (req.method !== 'GET') {
+      return res.status(405).json({
+        success: false,
+        error: {
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only GET method is allowed',
+          details: null
+        },
+        timestamp: new Date().toISOString()
+      });
     }
-
-    const userId = user.id;
-
-    // Fetch all user data
+            // Fetch all user data
     const [profile, articles, comments] = await Promise.all([
       // User profile
-      (supabaseAdmin
+      supabaseAdmin
         .from('users')
         .select('*')
-        .eq('id', userId)
-        .single()) as unknown as Promise<{ data: User | null; error: unknown }>,
+        .eq('id', user.id)
+        .single(),
       
       // User's articles
-      (supabaseAdmin
+      supabaseAdmin
         .from('articles')
         .select('*')
-        .eq('author_id', userId)
-        .order('created_at', { ascending: false })) as unknown as Promise<{ data: Article[] | null; error: unknown }>,
+        .eq('author_id', user.id)
+        .order('created_at', { ascending: false }),
       
       // User's comments
-      (supabaseAdmin
+      supabaseAdmin
         .from('comments')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })) as unknown as Promise<{ data: Comment[] | null; error: unknown }>
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
     ]);
 
-    // Compile user data
+    // Handle any errors
+    if (profile.error) {
+      console.error(`Profile fetch failed for user ${user.email}:`, profile.error);
+    }
+
+    if (articles.error) {
+      console.error(`Articles fetch failed for user ${user.email}:`, articles.error);
+    }
+
+    if (comments.error) {
+      console.error(`Comments fetch failed for user ${user.email}:`, comments.error);
+    }
+
+    // Sanitize and compile user data
     const userData = {
       export_date: new Date().toISOString(),
       user: {
@@ -77,24 +73,70 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         role: profile.data?.role,
         bio: profile.data?.bio,
         avatar_url: profile.data?.avatar_url,
-        status: profile.data?.status,
+        website: profile.data?.website,
+        location: profile.data?.location,
+        social_links: profile.data?.social_links,
+        preferences: profile.data?.preferences,
         created_at: profile.data?.created_at,
         updated_at: profile.data?.updated_at,
-        last_sign_in: profile.data?.last_sign_in
+        // Remove sensitive fields
+        is_active: undefined,
+        last_login_at: undefined,
+        email_verified: undefined,
+        last_sign_in_at: undefined
       },
-      articles: articles.data || [],
-      comments: comments.data || []
+      articles: articles.data?.map(article => ({
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        content: article.content,
+        featured_image: article.featured_image,
+        status: article.status,
+        published_at: article.published_at,
+        created_at: article.created_at,
+        updated_at: article.updated_at,
+        view_count: article.view_count,
+        likes_count: article.likes_count,
+        comments_count: article.comments_count
+      })) || [],
+      comments: comments.data?.map(comment => ({
+        id: comment.id,
+        article_id: comment.article_id,
+        content: comment.content,
+        status: comment.status,
+        created_at: comment.created_at,
+        updated_at: comment.updated_at
+      })) || []
     };
 
-    // Set headers for file download
+    // Set appropriate headers for JSON download
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="user-data-${new Date().toISOString().split('T')[0]}.json"`);
+    res.setHeader('Content-Disposition', `attachment; filename="user-data-${user.id}-${Date.now()}.json"`);
 
-    return res.status(200).json(userData);
+    return res.status(200).json({
+      success: true,
+      data: userData,
+      timestamp: new Date().toISOString()
+    });
 
   } catch (error) {
-    console.error('Error exporting user data:', error);
-    return res.status(500).json({ error: 'Failed to export data' });
+    console.error(`Data export API error for user ${user.email}:`, error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while exporting data',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
+      },
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'export:data',
+  auditAction: 'user_data_exported'
+}));
+            

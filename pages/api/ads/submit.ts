@@ -1,13 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
+// import { CSRFProtection } from '@/lib/csrf'; // TODO: Re-enable when frontend token handling is implemented
 
 // Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabase = getSupabaseAdmin();
 
 // Type for API submission (without database fields)
 type AdSubmissionInput = {
@@ -39,6 +41,7 @@ type AdSubmissionInsert = {
   phone: string;
   company?: string;
   business_type: string;
+  ad_type: string;
   ad_title: string;
   ad_description: string;
   target_audience: string;
@@ -56,8 +59,6 @@ type AdSubmissionInsert = {
   updated_at?: string;
 };
 
-// Type for data without customDuration (for database insertion)
-type DatabaseInsertData = AdSubmissionInsert;
 
 // Function to store ad locations
 async function storeAdLocations(submissionId: string, locationNames: string[]) {
@@ -126,7 +127,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    console.log('Received ad submission request');
+    // Apply rate limiting for ad submissions
+    const rateLimit = getCMSRateLimit('POST');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req) => 
+      getClientIP(req)
+    );
+    rateLimitMiddleware(req);
+
+    // Handle authentication - require authenticated users
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required to submit ads',
+          details: 'Please sign in to submit an advertisement'
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Verify the token and get user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'INVALID_TOKEN',
+          message: 'Invalid or expired authentication token',
+          details: 'Please sign in again'
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    console.log('Received ad submission request from user:', user.email);
     console.log('Request body:', JSON.stringify(req.body, null, 2));
     
     // Validate input
@@ -141,12 +180,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       phone: validatedData.phone,
       company: validatedData.company,
       business_type: validatedData.businessType,
+      ad_type: 'other', // Default ad type since frontend doesn't collect it
       ad_title: validatedData.adTitle,
       ad_description: validatedData.adDescription,
       target_audience: validatedData.targetAudience,
       budget: validatedData.budget,
       duration: validatedData.duration,
-      custom_duration: validatedData.customDuration,
       start_date: validatedData.startDate,
       website: validatedData.website,
       additional_info: validatedData.additionalInfo,
@@ -157,6 +196,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    // Only include custom_duration if it exists and has a value
+    if (validatedData.customDuration && validatedData.customDuration.trim()) {
+      insertData.custom_duration = validatedData.customDuration;
+    }
 
     console.log('Data for database insertion:', JSON.stringify(insertData, null, 2));
 
@@ -175,13 +219,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         code: error.code
       });
       
-      // If the error is about custom_duration column, try without it
-      if (error.message?.includes('custom_duration') || error.code === '42703') {
-        console.log('Attempting fallback without custom_duration field');
-        const fallbackData: DatabaseInsertData = {
-          ...insertData,
-          custom_duration: undefined
+      // If the error is about custom_duration column or any schema issue, try without optional fields
+      if (error.message?.includes('custom_duration') || 
+          error.message?.includes('column') || 
+          error.code === '42703' ||
+          error.code === '42702') {
+        console.log('Attempting fallback without optional fields');
+        
+        // Create minimal insert data with only required fields
+        const fallbackData: AdSubmissionInsert = {
+          first_name: validatedData.firstName,
+          last_name: validatedData.lastName,
+          email: validatedData.email,
+          phone: validatedData.phone,
+          business_type: validatedData.businessType,
+          ad_type: 'other', // Default ad type since frontend doesn't collect it
+          ad_title: validatedData.adTitle,
+          ad_description: validatedData.adDescription,
+          target_audience: validatedData.targetAudience,
+          budget: validatedData.budget,
+          duration: validatedData.duration,
+          start_date: validatedData.startDate,
+          terms_accepted: validatedData.termsAccepted,
+          status: 'pending',
+          payment_status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         };
+        
+        // Add optional fields only if they exist
+        if (validatedData.company) fallbackData.company = validatedData.company;
+        if (validatedData.website) fallbackData.website = validatedData.website;
+        if (validatedData.additionalInfo) fallbackData.additional_info = validatedData.additionalInfo;
+        if (validatedData.attachmentUrls) fallbackData.attachment_urls = validatedData.attachmentUrls;
         
         const { data: fallbackSubmission, error: fallbackError } = await supabase
           .from('ad_submissions')

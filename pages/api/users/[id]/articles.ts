@@ -1,13 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/database-server';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { verifySupabaseToken } from '@/lib/auth';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-export default async function handler(
+// Apply error handling middleware
+export default withErrorHandler(async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -37,7 +34,7 @@ export default async function handler(
     // Check if user can access these articles (own articles or admin)
     if (userId !== id) {
       // Check if requesting user is admin
-      const { data: requestingUser } = await supabase
+      const { data: requestingUser } = await supabaseAdmin
         .from('users')
         .select('role')
         .eq('id', userId)
@@ -53,7 +50,7 @@ export default async function handler(
     const offset = (currentPage - 1) * limit;
 
     // Build query
-    let query = supabase
+    let query = supabaseAdmin
       .from('articles')
       .select(`
         id,
@@ -101,4 +98,4 @@ export default async function handler(
     console.error('User articles API error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
-}
+});

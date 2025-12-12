@@ -1,241 +1,132 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only GET method is allowed',
-        details: null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-
+async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
   try {
-    // Authenticate user using admin client directly
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+    // Apply rate limiting for dashboard stats
+    const rateLimit = getCMSRateLimit('GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
+    rateLimitMiddleware(req);
+
+    // Log user dashboard access
+    console.log(`User dashboard stats accessed by user: ${user.email} (${user.id})`, {
+      timestamp: new Date().toISOString(),
+      securityLevel: user.securityLevel
+    });
+
+    // Only allow GET
+    if (req.method !== 'GET') {
+      return res.status(405).json({
         success: false,
         error: {
-          code: 'UNAUTHORIZED',
-          message: 'No authorization token provided',
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only GET method is allowed',
           details: null
         },
         timestamp: new Date().toISOString()
       });
     }
-
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verify token and get user
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !authUser) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or expired token',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Create user object for compatibility
-    const user = {
-      id: authUser.id,
-      email: authUser.email
-    };
-
-    // Get user role from database
-    const { data: userData, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (userError || !userData) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'USER_NOT_FOUND',
-          message: 'User not found',
-          details: userError?.message
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
     // Add cache control headers to prevent caching
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    // Get dashboard stats using manual queries
-    const [
-      articlesResult,
-      publishedArticlesResult,
-      draftArticlesResult,
-      totalViewsResult,
-      commentsResult,
-      bookmarksResult
-    ] = await Promise.all([
-      // Count all user's articles
-      supabaseAdmin
-        .from('articles')
-        .select('id', { count: 'exact' })
-        .eq('author_id', user.id),
-
-      // Count published articles
-      supabaseAdmin
-        .from('articles')
-        .select('id', { count: 'exact' })
-        .eq('author_id', user.id)
-        .eq('status', 'published'),
-
-      // Count draft articles
-      supabaseAdmin
-        .from('articles')
-        .select('id', { count: 'exact' })
-        .eq('author_id', user.id)
-        .eq('status', 'draft'),
-
-      // Sum total views
-      supabaseAdmin
-        .from('articles')
-        .select('views_count')
-        .eq('author_id', user.id)
-        .eq('status', 'published'),
-
-      // Count user's comments
-      supabaseAdmin
-        .from('comments')
-        .select('id', { count: 'exact' })
-        .eq('user_id', user.id)
-        .eq('status', 'published'),
-
-      // Count user's bookmarks
-      supabaseAdmin
-        .from('article_bookmarks')
-        .select('id', { count: 'exact' })
-        .eq('user_id', user.id)
-    ]);
-
+    // Initialize stats with default values
     const stats = {
-      articles_count: articlesResult.count || 0,
-      published_articles: publishedArticlesResult.count || 0,
-      draft_articles: draftArticlesResult.count || 0,
-      total_views: totalViewsResult.data?.reduce((sum, article) => sum + (article.views_count || 0), 0) || 0,
-      total_comments: commentsResult.count || 0,
-      bookmarked_articles: bookmarksResult.count || 0
+      totalArticles: 0,
+      publishedArticles: 0,
+      draftArticles: 0,
+      totalViews: 0,
+      totalLikes: 0,
+      totalComments: 0,
+      totalBookmarks: 0,
+      recentActivity: 0
     };
 
-    // Get recent articles if user is editor or admin
-    interface RecentArticle {
-      id: string;
-      title: string;
-      status: string;
-      created_at: string;
-      published_at: string | null;
-      views_count: number;
-      likes_count: number;
-    }
-
-    let recentArticles: RecentArticle[] = [];
-    if (['editor', 'admin'].includes(userData.role)) {
-      const { data: articles } = await supabaseAdmin
+    // Get user's articles stats
+    try {
+      // Total articles
+      const { count: totalCount, error: totalError } = await supabaseAdmin
         .from('articles')
-        .select('id, title, status, created_at, published_at, views_count, likes_count')
+        .select('*', { count: 'exact', head: true })
+        .eq('author_id', user.id);
+      
+      if (!totalError) stats.totalArticles = totalCount || 0;
+
+      // Published articles
+      const { count: publishedCount, error: publishedError } = await supabaseAdmin
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
         .eq('author_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .eq('status', 'published');
+      
+      if (!publishedError) stats.publishedArticles = publishedCount || 0;
 
-      recentArticles = articles || [];
-    }
+      // Draft articles
+      const { count: draftCount, error: draftError } = await supabaseAdmin
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
+        .eq('author_id', user.id)
+        .eq('status', 'draft');
+      
+      if (!draftError) stats.draftArticles = draftCount || 0;
 
-    // Get recent activity using proper joins
-    const [recentBookmarks, recentComments] = await Promise.all([
-      // Get recent bookmarks
-      supabaseAdmin
+      // Total views (sum of all article views)
+      const { data: viewData, error: viewError } = await supabaseAdmin
+        .from('articles')
+        .select('view_count')
+        .eq('author_id', user.id)
+        .eq('status', 'published');
+      
+      if (!viewError && viewData) {
+        stats.totalViews = viewData.reduce((sum, article) => sum + (article.view_count || 0), 0);
+      }
+
+      // Total bookmarks
+      const { count: bookmarkCount, error: bookmarkError } = await supabaseAdmin
         .from('article_bookmarks')
-        .select(`
-          created_at,
-          article:articles(id, title, slug)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3),
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+      
+      if (!bookmarkError) stats.totalBookmarks = bookmarkCount || 0;
 
-      // Get recent comments
-      supabaseAdmin
-        .from('comments')
-        .select(`
-          created_at,
-          article:articles(id, title, slug)
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(3)
-    ]);
+      // Recent activity (last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { count: recentCount, error: recentError } = await supabaseAdmin
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
+        .eq('author_id', user.id)
+        .gte('created_at', sevenDaysAgo.toISOString());
+      
+      if (!recentError) stats.recentActivity = recentCount || 0;
 
-    // Define interfaces for type safety
-    interface ActivityItem {
-      type: 'article' | 'comment';
-      title: string;
-      slug: string;
-      timestamp: string;
-      action: string;
+    } catch (statsError) {
+      console.error(`Stats calculation failed for user ${user.email}:`, statsError);
     }
 
-    // Build recent activity array
-    const recentActivity: ActivityItem[] = [
-      ...recentBookmarks.data?.map((bookmark: { created_at: string; article: { id: string; title: string; slug: string }[] }) => {
-        const article = bookmark.article[0];
-        return {
-          type: 'article' as const,
-          title: article?.title || 'Unknown Article',
-          slug: article?.slug || '',
-          timestamp: bookmark.created_at,
-          action: 'bookmarked'
-        };
-      }) || [],
-      ...recentComments.data?.map((comment: { created_at: string; article: { id: string; title: string; slug: string }[] }) => {
-        const article = comment.article[0];
-        return {
-          type: 'comment' as const,
-          title: article?.title || 'Unknown Article',
-          slug: article?.slug || '',
-          timestamp: comment.created_at,
-          action: 'commented on'
-        };
-      }) || []
-    ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-     .slice(0, 5);
+    console.log(`Dashboard stats returned to user ${user.email}:`, {
+      totalArticles: stats.totalArticles,
+      publishedArticles: stats.publishedArticles,
+      timestamp: new Date().toISOString()
+    });
 
-    // Combine stats with additional data
-    const response = {
-      ...stats,
-      recentArticles,
-      recentActivity,
-      role: userData.role
-    };
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      data: response,
+      data: { stats },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Dashboard stats error:', error);
-    res.status(500).json({
+    console.error(`User dashboard stats API error for user ${user.email}:`, error);
+    return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
@@ -247,6 +138,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
-export default withErrorHandler(handler);
-
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'view:analytics',
+  auditAction: 'user_dashboard_accessed'
+}));
+    
+            

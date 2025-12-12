@@ -1,150 +1,141 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { authenticate, checkRole } from '@/lib/api/middleware/auth';
+import { withCMSSecurity } from '@/lib/security/cms-security';
+import { z } from 'zod';
+import { randomUUID } from 'crypto';
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed'
+// Enhanced validation schema for sending invitations
+const sendInvitationSchema = z.object({
+  email: z.string().email('Invalid email format').max(255, 'Email too long'),
+  role: z.enum(['user', 'editor', 'admin']).default('user'),
+  message: z.string().max(500, 'Message too long').optional()
+});
+
+async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
+  try {
+    // Only allow POST for sending invitations
+    if (req.method !== 'POST') {
+      return res.status(405).json({
+        success: false,
+        error: {
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only POST method is allowed for sending invitations',
+          details: null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Validate input with enhanced schema
+    const validatedData = sendInvitationSchema.parse(req.body);
+    const { email, role, message } = validatedData;
+
+    // Log admin invitation action
+    console.log(`Admin invitation email send initiated`, {
+      adminId: user.id,
+      adminEmail: user.email,
+      targetEmail: email,
+      role,
+      message,
+      timestamp: new Date().toISOString()
     });
-  }
 
-  // Authenticate user
-  const user = await authenticate(req);
+    // Check if user already exists
+    const { data: existingUser, error: existingError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .eq('email', email)
+      .maybeSingle();
 
-  // Authorize admin access
-  if (!checkRole(user.role, ['admin'])) {
-    return res.status(403).json({
+    if (existingError && existingError.code !== 'PGRST116') {
+      console.error('Admin send invitation check error:', existingError);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'CHECK_ERROR',
+          message: 'Failed to check if user exists',
+          details: process.env.NODE_ENV === 'development' ? existingError.message : null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'USER_EXISTS',
+          message: 'User with this email already exists',
+          details: 'Use the invite endpoint to invite existing users'
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Generate invitation token
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'signup',
+      email,
+      password: randomUUID(), // Generate temporary password for invitation
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/signup`
+      }
+    });
+
+    if (inviteError) {
+      console.error('Admin invitation generation error:', inviteError);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'INVITATION_GENERATION_FAILED',
+          message: 'Failed to generate invitation link',
+          details: process.env.NODE_ENV === 'development' ? inviteError.message : null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Log successful invitation generation
+    console.log(`Admin invitation email generated successfully`, {
+      adminId: user.id,
+      targetEmail: email,
+      role,
+      timestamp: new Date().toISOString()
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Invitation email generated successfully',
+      data: {
+        email,
+        role,
+        invitationLink: inviteData.properties?.action_link,
+        invited_by: user.id,
+        invited_at: new Date().toISOString(),
+        message
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Admin send invitation API error:', error);
+    return res.status(500).json({
       success: false,
       error: {
-        code: 'FORBIDDEN',
-        message: 'Admin access required',
-        details: null
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while sending the invitation',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
     });
   }
-
-  const { userId, email } = req.body;
-  
-  if (!userId || !email) {
-    return res.status(400).json({
-      success: false,
-      error: 'User ID and email are required'
-    });
-  }
-
-  // Generate a password reset token for the user
-  console.log('Generating reset link for:', { userId, email });
-  
-  // First check if user exists in Supabase Auth
-  console.log('Checking if user exists in Supabase Auth...');
-  
-  // Try multiple methods to find the user
-  let existingUser = null;
-  let userCheckError = null;
-  
-  // Method 1: Try getUserById (works for confirmed users)
-  const { data: userByIdData, error: userByIdError } = await supabaseAdmin.auth.admin.getUserById(userId);
-  
-  if (!userByIdError && userByIdData?.user) {
-    existingUser = userByIdData.user;
-  } else {
-    // Method 2: Try listUsers with filter (works for unconfirmed users)
-    console.log('Trying listUsers method for unconfirmed user...');
-    const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000
-    });
-    
-    if (!listError && users?.users) {
-      existingUser = users.users.find(u => u.id === userId);
-    }
-    
-    if (!existingUser) {
-      userCheckError = userByIdError || listError || new Error('User not found');
-    }
-  }
-  
-  if (!existingUser) {
-    console.error('User not found in Supabase Auth:', userCheckError);
-    return res.status(404).json({
-      success: false,
-      error: 'User not found in Supabase Auth. Please ensure the user exists before generating invitation.',
-      details: userCheckError?.message
-    });
-  }
-  
-  // Use email from existingUser if available, otherwise fallback to request body email
-  const targetEmail = existingUser.email || email;
-  
-  if (!targetEmail) {
-    throw new Error('No email address available for invitation');
-  }
-
-  // For unconfirmed users, we need to use the invite method instead of recovery
-  console.log('Generating invitation link for user:', targetEmail);
-  
-  const { data, error } = await supabaseAdmin.auth.admin.generateLink({
-    type: 'invite', // Use invite type for unconfirmed users
-    email: targetEmail,
-    options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
-      data: {
-        target_email: targetEmail
-      }
-    }
-  });
-
-  if (error) {
-    console.error('Error generating invitation link:', error);
-    // If invite fails, try magic link as fallback
-    console.log('Trying magic link as fallback...');
-    const { data: magicData, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: targetEmail,
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`
-      }
-    });
-    
-    if (magicError) {
-      console.error('Magic link also failed:', magicError);
-      throw new Error(`Failed to generate invitation link: ${error.message}`);
-    }
-    
-    const resetLink = magicData.properties?.action_link;
-    
-    return res.status(200).json({
-      success: true,
-      data: {
-        resetLink,
-        email: targetEmail,
-        instructions: 'Share this invitation link with the user so they can set their password'
-      },
-      message: 'Invitation link generated successfully using magic link'
-    });
-  }
-
-  const resetLink = data.properties?.action_link;
-
-  if (!resetLink) {
-    console.error('No invitation link in response data:', data);
-    throw new Error('Failed to generate invitation link: No action link returned');
-  }
-
-  return res.status(200).json({
-    success: true,
-    data: {
-      resetLink,
-      email: targetEmail,
-      instructions: 'Share this invitation link with the user so they can set their password'
-    },
-    message: 'Invitation link generated successfully'
-  });
 }
 
-export default withErrorHandler(handler);
-
+// Apply CMS security middleware and enhanced error handler
+export default withErrorHandler(withCMSSecurity(handler));
+  
+        
+                  
+    
+        

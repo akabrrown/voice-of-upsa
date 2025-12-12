@@ -1,4 +1,5 @@
 import '../styles/globals.css';
+import '../styles/pages/AdminAdLocations.css';
 import type { AppProps } from 'next/app';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,8 +7,32 @@ import { SupabaseProvider } from '@/components/SupabaseProvider';
 import { NotificationProvider } from '@/components/NotificationProvider';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import Head from 'next/head';
+import { useEffect } from 'react';
+
+// Extend Window interface to include CSP nonce
+declare global {
+  interface Window {
+    __CSP_NONCE__?: string;
+    __webpack_nonce__?: string;
+  }
+}
 
 function MyApp({ Component, pageProps, router }: AppProps) {
+  useEffect(() => {
+    // Ensure styled-components can access the nonce
+    if (typeof window !== 'undefined' && window.__CSP_NONCE__) {
+      window.__webpack_nonce__ = window.__CSP_NONCE__;
+      
+      // Force styled-components to recognize the nonce
+      const styleElements = document.querySelectorAll('style[data-styled]');
+      styleElements.forEach((style) => {
+        if (style.getAttribute('nonce') !== window.__CSP_NONCE__) {
+          style.setAttribute('nonce', window.__CSP_NONCE__!);
+        }
+      });
+    }
+  }, []);
+
   return (
     <>
       <Head>

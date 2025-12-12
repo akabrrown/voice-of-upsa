@@ -118,8 +118,14 @@ const EditArticlePage: React.FC = () => {
       }
 
       // Fetch article
-      const response = await fetch(`/api/articles/${id}`);
+      const response = await fetch(`/api/editor/articles/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to fetch article:', response.status, errorText);
         throw new Error('Article not found');
       }
 

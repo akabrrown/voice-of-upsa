@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
+import { useRealtimeArticles } from '@/hooks/useRealtimeArticles';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { FiSearch, FiCalendar, FiEye, FiEdit2, FiTrash2, FiUser } from 'react-icons/fi';
+
 
 interface Article {
   id: string;
@@ -28,24 +31,68 @@ interface Article {
 
 const EditorArticlesPage: React.FC = () => {
   const { user, loading: authLoading, supabase } = useSupabase();
+  const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Debouncing refs
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isFetchingRef = useRef(false);
+
+  // Set up real-time sync for article changes
+  useRealtimeArticles({
+    enabled: !!user && !authLoading && !loading,
+    onArticleChange: () => {
+      console.log('Article change detected, refreshing editor articles...');
+      debouncedFetchArticles();
+    }
+  });
 
   const fetchArticles = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (isFetchingRef.current) {
+      console.log('Fetch already in progress, skipping');
+      return;
+    }
+    
+    isFetchingRef.current = true;
+    console.log('fetchArticles called', { user: !!user, loading: authLoading });
+    
+    if (!user) {
+      console.log('No user, skipping fetch');
+      isFetchingRef.current = false;
+      return;
+    }
+    
+    setLoading(true);
     try {
-      setLoading(true);
+      console.log('Getting session...');
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('Session result:', { session: !!session, sessionError });
       
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error('No active session');
+      if (sessionError || !session) {
+        console.log('No session, redirecting to sign-in');
+        setLoading(false);
+        isFetchingRef.current = false;
+        router.push('/auth/sign-in');
         return;
       }
+
+      const freshSession = session;
       
-      let url = '/api/admin/articles';
+      // Simple session check - if we have a session, use it
+      if (!session.access_token) {
+        console.error('No access token in session');
+        setLoading(false);
+        isFetchingRef.current = false;
+        router.push('/auth/sign-in');
+        return;
+      }
+
+      let url = '/api/editor/articles';
       const params = new URLSearchParams();
       
       if (filter !== 'all') {
@@ -60,31 +107,59 @@ const EditorArticlesPage: React.FC = () => {
         url += '?' + params.toString();
       }
       
+      console.log('Making request to:', url);
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${freshSession.access_token}`,
         },
       });
 
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
       if (!response.ok) {
-        throw new Error('Failed to fetch articles');
+        console.error('Articles API error:', response.status, responseText);
+        throw new Error(`Failed to fetch articles: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = JSON.parse(responseText);
+      console.log('Parsed data:', data);
       setArticles(data.data?.articles || []);
     } catch (error) {
       console.error('Error fetching articles:', error);
       toast.error('Failed to load articles');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [supabase, filter, searchTerm]);
+  }, [user, filter, searchTerm, router, supabase.auth, authLoading]);
+
+  const debouncedFetchArticles = useCallback(() => {
+    // Clear any existing timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
+    // Set new timeout for 500ms
+    fetchTimeoutRef.current = setTimeout(() => {
+      fetchArticles();
+    }, 500);
+  }, [fetchArticles]);
 
   useEffect(() => {
     if (user && !authLoading) {
-      fetchArticles();
+      debouncedFetchArticles();
     }
-  }, [user, authLoading, filter, searchTerm, fetchArticles]);
+    
+    // Cleanup function
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+      isFetchingRef.current = false;
+    };
+  }, [user, authLoading, filter, searchTerm, debouncedFetchArticles]);
 
   const handleDelete = async (articleId: string) => {
     if (!confirm('Are you sure you want to delete this article?')) {

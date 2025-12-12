@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { FiMessageCircle } from 'react-icons/fi';
-import styles from '@/styles/components/Anonymous.module.css';
 
 interface AnonymousButtonProps {
   variant?: 'primary' | 'secondary' | 'floating';
@@ -14,12 +13,13 @@ const AnonymousButton: React.FC<AnonymousButtonProps> = ({
   size = 'md',
   className = ''
 }) => {
-  const baseClasses = styles.anonymousButton + ' ' + className;
+  // Use inline Tailwind classes instead of CSS modules to avoid TypeScript resolution issues
+  const baseClasses = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2';
   
   const variantClasses = {
-    primary: styles.anonymousButtonPrimary,
-    secondary: styles.anonymousButtonSecondary,
-    floating: styles.anonymousButtonPrimary + ' fixed bottom-6 right-6 z-50 shadow-lg'
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500',
+    floating: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 fixed bottom-6 right-6 z-50 shadow-lg'
   };
   
   const sizeClasses = {
@@ -28,7 +28,7 @@ const AnonymousButton: React.FC<AnonymousButtonProps> = ({
     lg: 'px-8 py-4 text-lg'
   };
 
-  const buttonClasses = baseClasses + ' ' + variantClasses[variant] + ' ' + sizeClasses[size];
+  const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`.trim();
 
   if (variant === 'floating') {
     return (

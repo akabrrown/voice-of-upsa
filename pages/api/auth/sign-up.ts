@@ -3,21 +3,38 @@ import { supabase } from '@/lib/database';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { sanitizeInput } from '@/lib/api/middleware/validation';
 import { withRateLimit } from '@/lib/api/middleware/auth';
+import { withIPWhitelist } from '@/lib/security/ip-whitelist';
+import { 
+  SECURITY_CONFIG, 
+  validatePasswordStrength, 
+  validateEmailEnhanced, 
+  generateDeviceFingerprint,
+  getClientIP,
+  detectSuspiciousActivity,
+  logSecurityEvent,
+  SecurityContext
+} from '@/lib/security/auth-security';
 import { z } from 'zod';
 
-// Validation schema using Zod
+// Enhanced validation schema using Zod
 const signUpSchema = z.object({
-  email: z.string().email('Invalid email format'),
-  password: z.string().min(6, 'Password must be at least 6 characters long'),
-  fullName: z.string().min(1, 'Full name is required').max(255, 'Full name must not exceed 255 characters'),
+  email: z.string().email('Invalid email format').max(254, 'Email must not exceed 254 characters'),
+  password: z.string()
+    .min(SECURITY_CONFIG.passwordMinLength, `Password must be at least ${SECURITY_CONFIG.passwordMinLength} characters long`)
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/\d/, 'Password must contain at least one number')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character'),
+  fullName: z.string().min(1, 'Full name is required').max(255, 'Full name must not exceed 255 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Full name can only contain letters, spaces, hyphens, and apostrophes'),
   bio: z.string().max(1000, 'Bio must not exceed 1000 characters').optional(),
   website: z.string().url('Invalid website URL').optional().nullable(),
   location: z.string().max(255, 'Location must not exceed 255 characters').optional().nullable()
 });
 
-// Rate limiting: 5 sign-up attempts per 15 minutes per IP
-const rateLimitMiddleware = withRateLimit(5, 15 * 60 * 1000, (req) => 
-  req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || 'unknown'
+// Enhanced rate limiting: 3 sign-up attempts per 30 minutes per IP
+const rateLimitMiddleware = withRateLimit(3, 30 * 60 * 1000, (req) => 
+  getClientIP(req)
 );
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -33,24 +50,131 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
+  const clientIP = getClientIP(req);
+  const deviceFingerprint = generateDeviceFingerprint(req);
+  
+  // Create security context
+  const securityContext: SecurityContext = {
+    clientIP,
+    userAgent: req.headers['user-agent'] || 'unknown',
+    timestamp: new Date(),
+    endpoint: '/api/auth/sign-up',
+    email: req.body.email
+  };
+
   try {
     // Apply rate limiting
     rateLimitMiddleware(req);
 
+    // Detect suspicious activity
+    const suspiciousCheck = detectSuspiciousActivity(securityContext);
+    if (suspiciousCheck.isSuspicious) {
+      logSecurityEvent('Suspicious sign-up attempt detected', securityContext, 'high', {
+        reasons: suspiciousCheck.reasons,
+        riskScore: suspiciousCheck.riskScore,
+        deviceFingerprint
+      });
+
+      return res.status(429).json({
+        success: false,
+        error: {
+          code: 'SUSPICIOUS_ACTIVITY',
+          message: 'Your request has been flagged as suspicious. Please try again later.',
+          details: 'Security checks failed'
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
     // Validate and sanitize input
-    signUpSchema.parse(req.body);
-    const email = req.body.email;
-    const password = req.body.password;
-    const fullName = sanitizeInput(req.body.fullName);
-    const bio = req.body.bio ? sanitizeInput(req.body.bio) : undefined;
-    const website = req.body.website;
-    const location = req.body.location ? sanitizeInput(req.body.location) : undefined;
+    const validationResult = signUpSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const errors = validationResult.error.errors.map(err => err.message);
+      
+      logSecurityEvent('Sign-up validation failed', securityContext, 'medium', {
+        validationErrors: errors
+      });
+
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_FAILED',
+          message: 'Invalid input data',
+          details: errors
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const { email, password, fullName, bio, website, location } = validationResult.data;
+
+    // Enhanced email validation
+    const emailValidation = validateEmailEnhanced(email);
+    if (!emailValidation.isValid) {
+      logSecurityEvent('Invalid email detected', securityContext, 'medium', {
+        emailErrors: emailValidation.errors
+      });
+
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_EMAIL',
+          message: 'Email address is not valid or not allowed',
+          details: emailValidation.errors
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Enhanced password validation
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      logSecurityEvent('Weak password attempt', securityContext, 'medium', {
+        passwordScore: passwordValidation.score,
+        passwordErrors: passwordValidation.errors
+      });
+
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'WEAK_PASSWORD',
+          message: 'Password does not meet security requirements',
+          details: passwordValidation.errors,
+          passwordScore: passwordValidation.score
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Log sign-up attempt
-    console.info(`Sign-up attempt for email: ${email}`, {
-      timestamp: new Date().toISOString(),
-      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
+    logSecurityEvent('Sign-up attempt initiated', securityContext, 'low', {
+      email,
+      deviceFingerprint,
+      passwordScore: passwordValidation.score
     });
+
+    // Check if user already exists
+    const { data: existingUser, error: checkError } = await supabase
+      .from('users')
+      .select('id, email')
+      .eq('email', email)
+      .single();
+
+    if (existingUser && !checkError) {
+      logSecurityEvent('Duplicate registration attempt', securityContext, 'medium', {
+        existingUserId: existingUser.id
+      });
+
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: 'USER_EXISTS',
+          message: 'An account with this email already exists',
+          details: 'Please use a different email address or try to sign in'
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Create user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -58,20 +182,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       password,
       options: {
         data: {
-          full_name: fullName,
-          bio: bio || null,
+          full_name: sanitizeInput(fullName),
+          bio: bio ? sanitizeInput(bio) : null,
           website: website || null,
-          location: location || null,
+          location: location ? sanitizeInput(location) : null,
+          device_fingerprint: deviceFingerprint,
+          registration_ip: clientIP
         }
       }
     });
 
     if (authError) {
       // Log security event
-      console.warn(`Sign-up failure for email: ${email}`, {
+      logSecurityEvent('Sign-up failure', securityContext, 'medium', {
         error: authError.message,
-        timestamp: new Date().toISOString(),
-        ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
+        errorType: authError.status?.toString()
       });
 
       return res.status(400).json({
@@ -86,16 +211,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     if (authData.user) {
-      // Create user profile in database with new schema
+      // Create user profile in database with enhanced security fields
       const userProfile = {
         id: authData.user.id,
         email: authData.user.email,
-        name: fullName,
+        name: sanitizeInput(fullName),
         role: 'user',
         avatar_url: authData.user.user_metadata?.avatar_url || null,
-        bio: bio || null,
+        bio: bio ? sanitizeInput(bio) : null,
         website: website || null,
-        location: location || null,
+        location: location ? sanitizeInput(location) : null,
         social_links: {},
         preferences: {},
         is_active: true,
@@ -103,6 +228,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         last_sign_in_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        security_metadata: {
+          registration_ip: clientIP,
+          device_fingerprint: deviceFingerprint,
+          password_strength_score: passwordValidation.score,
+          security_level: passwordValidation.score >= 80 ? 'high' : passwordValidation.score >= 60 ? 'medium' : 'low'
+        }
       };
 
       const { error: profileError } = await supabase
@@ -111,48 +242,52 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        // Don't fail the request if profile creation fails, but log it
-        // This allows the auth to succeed even if profile creation has issues
+        logSecurityEvent('Profile creation failed', securityContext, 'high', {
+          userId: authData.user.id,
+          profileError: profileError.message
+        });
       }
 
-      // Update last login time
-      await supabase
-        .from('users')
-        .update({ 
-          last_login_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', authData.user.id);
-
       // Log successful sign-up
-      console.info(`Successful sign-up for user: ${authData.user.id}`, {
+      logSecurityEvent('Sign-up successful', securityContext, 'low', {
+        userId: authData.user.id,
         email,
-        timestamp: new Date().toISOString(),
-        ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
+        deviceFingerprint,
+        passwordScore: passwordValidation.score
       });
     }
 
     res.status(201).json({
       success: true,
       data: {
-        message: 'User created successfully',
+        message: 'User created successfully. Please check your email to verify your account.',
         user: {
           id: authData.user?.id,
           email: authData.user?.email,
           name: authData.user?.user_metadata?.full_name,
-          email_verified: !!authData.user?.email_confirmed_at
+          email_verified: !!authData.user?.email_confirmed_at,
+          security_level: passwordValidation.score >= 80 ? 'high' : passwordValidation.score >= 60 ? 'medium' : 'low'
         },
         session: authData.session ? {
           access_token: authData.session.access_token,
           refresh_token: authData.session.refresh_token,
           expires_at: authData.session.expires_at
-        } : null
+        } : null,
+        security_info: {
+          password_strength_score: passwordValidation.score,
+          email_verification_required: SECURITY_CONFIG.enableEmailVerification
+        }
       },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('Sign-up error:', error);
+    logSecurityEvent('Sign-up system error', securityContext, 'critical', {
+      error: (error as Error).message,
+      stack: (error as Error).stack
+    });
+
     res.status(500).json({
       success: false,
       error: {
@@ -165,6 +300,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
-export default withErrorHandler(handler);
+// Wrap with error handler and IP whitelist middleware
+export default withErrorHandler(withIPWhitelist(handler, { adminOnly: false }));
 

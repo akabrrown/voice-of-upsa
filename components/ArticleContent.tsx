@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 
 interface ArticleContentProps {
   content: string;
@@ -6,10 +7,12 @@ interface ArticleContentProps {
 }
 
 const ArticleContent: React.FC<ArticleContentProps> = ({ content, className = '' }) => {
-  // Convert plain text to HTML for proper display
-  const htmlContent = content
-    .replace(/\n/g, '<br />')  // Convert line breaks to <br>
-    .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');  // Convert tabs to spaces
+  // Convert plain text to HTML for proper display and sanitize it
+  const htmlContent = DOMPurify.sanitize(
+    content
+      .replace(/\n/g, '<br />')  // Convert line breaks to <br>
+      .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')  // Convert tabs to spaces
+  );
 
   return (
     <div 

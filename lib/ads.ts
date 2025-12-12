@@ -1,18 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { getSupabaseAdmin } from './supabaseAdminClient';
 
-// Server-side Supabase client
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-// Create Supabase client only if environment variables are available
-let supabase: ReturnType<typeof createClient> | null = null;
-
-if (supabaseUrl && supabaseKey) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-} else {
-  console.warn('Supabase environment variables not found. Some features may not work.');
-}
+// Get admin client
+const getSupabase = () => {
+  try {
+    return getSupabaseAdmin();
+  } catch (error) {
+    console.error('Supabase admin client not available:', error);
+    throw new Error('Database not available');
+  }
+};
 
 // Ad submission schema (same as client)
 export const adSubmissionSchema = z.object({
@@ -44,9 +41,7 @@ export type AdSubmission = z.infer<typeof adSubmissionSchema>;
 
 // Get all ad submissions (for admin)
 export async function getAdSubmissions() {
-  if (!supabase) {
-    throw new Error('Database not available');
-  }
+  const supabase = getSupabase();
   
   try {
     const { data, error } = await supabase
@@ -68,9 +63,7 @@ export async function updateAdSubmissionStatus(
   status: string, 
   adminNotes?: string
 ): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not available');
-  }
+  const supabase = getSupabase();
   
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

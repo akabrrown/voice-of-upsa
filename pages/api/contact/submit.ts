@@ -1,86 +1,112 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { sendContactNotification } from '@/lib/email-service';
+import { CSRFProtection } from '@/lib/csrf';
+import { securityMonitor } from '@/lib/security-monitor';
 import { z } from 'zod';
 
-// Validation schema
+// Enhanced validation schema with HTML tag prevention
 const contactSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(255),
+  name: z.string().regex(/^[^<>]{1,255}$/, 'Name must be 1-255 characters and cannot contain HTML tags'),
   email: z.string().email('Invalid email format'),
-  subject: z.string().max(500).optional(),
-  message: z.string().min(10, 'Message must be at least 10 characters').max(5000),
-  phone: z.string().max(50).optional()
+  subject: z.string().regex(/^[^<>]{0,500}$/, 'Subject cannot contain HTML tags').optional(),
+  message: z.string().regex(/^[^<>]{10,5000}$/, 'Message must be 10-5000 characters and cannot contain HTML tags'),
+  phone: z.string().regex(/^[^<>]{0,50}$/, 'Phone cannot contain HTML tags').optional()
 });
 
-// Rate limiting: 3 submissions per hour per IP
-const rateLimitMiddleware = withRateLimit(3, 60 * 60 * 1000, (req) => 
-  req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || 'unknown'
-);
-
-// Input sanitization middleware
-const sanitizeMiddleware = (req: NextApiRequest) => {
-  const fields = ['name', 'email', 'subject', 'message', 'phone'];
-  fields.forEach(field => {
-    if (req.body[field]) {
-      req.body[field] = req.body[field]
-        .trim()
-        .replace(/[<>]/g, '') // Remove potential HTML tags
-        .replace(/javascript:/gi, '') // Remove javascript protocol
-        .replace(/on\w+=/gi, ''); // Remove event handlers
-    }
-  });
-};
-
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({
-      success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only POST method is allowed',
-        details: null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-
   try {
-    // Apply rate limiting
+    // Apply public-friendly rate limiting (more restrictive for contact form)
+    const rateLimit = getCMSRateLimit('POST');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
     rateLimitMiddleware(req);
 
-    // Validate and sanitize input
-    contactSchema.parse(req.body);
-    sanitizeMiddleware(req);
-    const { name, email, subject, message, phone } = req.body;
+    // Log public contact submission access
+    console.log(`Public contact submit API accessed`, {
+      method: req.method,
+      ip: getClientIP(req),
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date().toISOString()
+    });
+
+    // Only allow POST for contact submission
+    if (req.method !== 'POST') {
+      return res.status(405).json({
+        success: false,
+        error: {
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only POST method is allowed for contact submission',
+          details: null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Apply CSRF protection
+    if (!CSRFProtection.protect(req)) {
+      await securityMonitor.logCSRFFailure(req);
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'CSRF_INVALID',
+          message: 'Invalid CSRF token',
+          details: 'Please refresh the page and try again'
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Validate input with enhanced schema
+    const validatedData = contactSchema.parse(req.body);
+    const { name, email, subject, message, phone } = validatedData;
+
+    // Additional input sanitization
+    const sanitizeInput = (input: string) => {
+      return input
+        .trim()
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+=/gi, '')
+        .replace(/data:/gi, '');
+    };
+
+    const sanitizedData = {
+      name: sanitizeInput(name),
+      email: sanitizeInput(email),
+      subject: subject ? sanitizeInput(subject) : null,
+      message: sanitizeInput(message),
+      phone: phone ? sanitizeInput(phone) : null
+    };
 
     // Get IP address and user agent for tracking
-    const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 
-                      req.socket.remoteAddress || 
-                      null;
+    const ipAddress = getClientIP(req);
     const userAgent = req.headers['user-agent'] || null;
 
-    // Insert contact submission
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabaseAdmin as any)
+    // Insert contact submission with sanitized data
+    const { data, error } = await supabaseAdmin
       .from('contact_submissions')
       .insert({
-        name,
-        email,
-        subject: subject || null,
-        message,
-        phone: phone || null,
+        name: sanitizedData.name,
+        email: sanitizedData.email,
+        subject: sanitizedData.subject,
+        message: sanitizedData.message,
+        phone: sanitizedData.phone,
         status: 'new',
         priority: 'normal',
         ip_address: ipAddress,
-        user_agent: userAgent
+        user_agent: userAgent,
+        created_at: new Date().toISOString()
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating contact submission:', error);
+      console.error('Contact submission database error:', error);
       return res.status(500).json({
         success: false,
         error: {
@@ -93,49 +119,56 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Log successful submission
-    console.info('Contact form submitted:', {
-      id: data.id,
-      email,
+    console.log(`Contact form submitted successfully`, {
+      submissionId: data.id,
+      email: sanitizedData.email,
+      ip: ipAddress,
       timestamp: new Date().toISOString()
     });
 
-    // Send email notification to admin
-    try {
-      const emailResult = await sendContactNotification({
-        name,
-        email,
-        subject: subject || undefined,
-        message,
-        phone: phone || undefined
-      });
-      
+    // Send email notification to admin (async, non-blocking)
+    sendContactNotification({
+      name: sanitizedData.name,
+      email: sanitizedData.email,
+      subject: sanitizedData.subject || undefined,
+      message: sanitizedData.message,
+      phone: sanitizedData.phone || undefined
+    }).then(emailResult => {
       if (emailResult.success) {
-        console.info('Email notification sent successfully:', emailResult.messageId);
+        console.log(`Contact email notification sent: ${emailResult.messageId}`);
       } else {
-        console.warn('Failed to send email notification:', emailResult.message);
-        // Don't fail the request if email fails, just log it
+        console.error('Failed to send contact email notification:', emailResult.error);
       }
-    } catch (emailError) {
-      console.error('Error sending email notification:', emailError);
-      // Don't fail the request if email fails, just log it
-    }
+    }).catch(emailError => {
+      console.error('Contact email notification error:', emailError);
+    });
 
     return res.status(201).json({
       success: true,
+      message: 'Contact form submitted successfully',
       data: {
-        message: 'Thank you for contacting us! We will get back to you soon.',
-        submissionId: data.id
+        id: data.id,
+        created_at: data.created_at
       },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Contact form error:', error);
+    console.error('Public contact submit API error:', error);
+    
+    // Log security incident if validation error
+    if (error instanceof Error && error.message.includes('HTML tags')) {
+      await securityMonitor.logSuspiciousActivity(req, 'Contact form HTML injection attempt', {
+        error: error.message,
+        body: req.body
+      });
+    }
+
     return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred',
+        message: 'An unexpected error occurred while submitting the contact form',
         details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
@@ -143,5 +176,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
+// Apply enhanced error handler
 export default withErrorHandler(handler);
-
+      

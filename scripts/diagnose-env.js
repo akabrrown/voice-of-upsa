@@ -1,28 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-// Load env vars manually since we might not have dotenv configured for this script context
-function loadEnv(filePath) {
-  if (fs.existsSync(filePath)) {
-    console.log(`Loading ${filePath}...`);
-    const content = fs.readFileSync(filePath, 'utf8');
-    const lines = content.split('\n');
-    lines.forEach(line => {
-      const match = line.match(/^([^=]+)=(.*)$/);
-      if (match) {
-        const key = match[1].trim();
-        const value = match[2].trim().replace(/^["'](.*)["']$/, '$1');
-        if (!process.env[key]) {
-          process.env[key] = value;
-        }
-      }
-    });
-  }
-}
-
-loadEnv(path.join(__dirname, '../.env'));
-loadEnv(path.join(__dirname, '../.env.local'));
+// Load environment variables
+dotenv.config({ path: '.env.local' });
 
 console.log('--- Environment Variable Check ---');
 const requiredVars = [

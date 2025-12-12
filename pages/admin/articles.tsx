@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
+import { useRealtimeArticles } from '@/hooks/useRealtimeArticles';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiEdit2, FiTrash2, FiEye, FiSearch, FiCalendar, FiUser, FiFileText, FiCheck, FiArchive } from 'react-icons/fi';
@@ -60,6 +61,15 @@ const AdminArticlesPage: React.FC = () => {
   const [publicationModal, setPublicationModal] = useState(false);
   const [featuredModal, setFeaturedModal] = useState(false);
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+
+  // Set up real-time sync for article changes
+  useRealtimeArticles({
+    enabled: !!user && !loading,
+    onArticleChange: () => {
+      console.log('Article change detected, refreshing admin articles...');
+      fetchArticles();
+    }
+  });
 
   const fetchArticles = useCallback(async () => {
     try {
@@ -407,14 +417,20 @@ const AdminArticlesPage: React.FC = () => {
     }
   };
 
-  const filteredArticles = articles.filter(article =>
-    article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    article.author_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredArticles = articles.filter(article => {
+    const matchesSearch = searchTerm === '' || 
+      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      article.author_name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filter === 'all' || article.status === filter;
+    
+    return matchesSearch && matchesFilter;
+  });
   
   console.log('Debug - Articles in state:', articles.length);
   console.log('Debug - Filtered articles:', filteredArticles.length);
   console.log('Debug - Search term:', searchTerm);
+  console.log('Debug - Status filter:', filter);
 
   const getStatusColor = (status: string) => {
     switch (status) {

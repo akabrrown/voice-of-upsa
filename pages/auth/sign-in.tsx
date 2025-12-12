@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiArrowLeft, FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { createSupabaseClient, signInWithEmail } from '@/lib/supabase-client';
+import { signInWithEmail } from '@/lib/supabase-client';
+import { getSupabaseClient } from '@/lib/supabaseClient';
 
 const SignInPage: React.FC = () => {
   const router = useRouter();
@@ -14,6 +15,8 @@ const SignInPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     setMounted(true);
@@ -22,7 +25,7 @@ const SignInPage: React.FC = () => {
   useEffect(() => {
     // Check if user is already signed in
     const checkSession = async () => {
-      const supabase = createSupabaseClient();
+      const supabase = getSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
@@ -36,11 +39,25 @@ const SignInPage: React.FC = () => {
     }
   }, [router, mounted]);
 
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
+    if (!validateForm()) {
       return;
     }
 
@@ -96,6 +113,8 @@ const SignInPage: React.FC = () => {
                   width={64}
                   height={64}
                   className="w-16 h-16 rounded-full"
+                  loading="eager"
+                  priority
                   unoptimized
                 />
               </div>
@@ -126,6 +145,9 @@ const SignInPage: React.FC = () => {
                       placeholder="Enter your email"
                     />
                   </div>
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                  )}
                 </div>
 
                 <div>
@@ -159,9 +181,25 @@ const SignInPage: React.FC = () => {
                       )}
                     </button>
                   </div>
+                  {errors.password && (
+                    <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      id="remember-me"
+                      name="remember-me"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 text-golden focus:ring-golden border-gray-300 rounded"
+                    />
+                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                      Remember me
+                    </label>
+                  </div>
                   <div className="text-sm">
                     <Link href="/auth/reset-password" className="font-medium text-golden hover:text-yellow-400 transition-colors">
                       Forgot your password?

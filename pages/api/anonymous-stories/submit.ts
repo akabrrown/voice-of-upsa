@@ -1,32 +1,58 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/database-server';
 
-// Check for required environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Simple HTML sanitization function
+const sanitizeHTML = (html: string): string => {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/<form\b[^<]*(?:(?!<\/form>)<[^<]*)*<\/form>/gi, '')
+    .replace(/<input\b[^<]*>/gi, '')
+    .replace(/<textarea\b[^<]*(?:(?!<\/textarea>)<[^<]*)*<\/textarea>/gi, '')
+    .replace(/<button\b[^<]*(?:(?!<\/button>)<[^<]*)*<\/button>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
+    .replace(/<[^>]*>/g, '') // Remove all remaining HTML tags
+    .trim();
+};
 
-const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+// Define proper error types
+interface DatabaseError {
+  message: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+}
+
+interface SupabaseError extends DatabaseError {
+  details?: string;
+  hint?: string;
+  code?: string;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Check environment variables
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('[submit] Missing environment variables:', {
-      hasUrl: !!supabaseUrl,
-      hasAnonKey: !!supabaseAnonKey,
-    });
-    return res.status(500).json({ error: 'Server configuration error: Missing Supabase credentials' });
-  }
-
-  if (!supabase) {
-    console.error('[submit] Supabase client not initialized');
-    return res.status(500).json({ error: 'Server configuration error: Supabase client not initialized' });
-  }
-
   // Handle POST request - submit new story
   if (req.method === 'POST') {
     try {
+      // Test database connection first
+      console.log('Testing database connection...');
+      const { error: testError } = await supabaseAdmin
+        .from('anonymous_stories')
+        .select('count')
+        .limit(1);
+      
+      if (testError) {
+        console.error('Database connection test failed:', testError);
+        return res.status(500).json({ 
+          error: 'Database connection failed', 
+          details: testError.message 
+        });
+      }
+      
+      console.log('Database connection test passed');
+      
       const { title, content, category } = req.body;
 
       // Validate input
@@ -38,15 +64,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Invalid input types' });
       }
 
-      if (title.trim().length < 5) {
+      // Sanitize content to prevent XSS
+      const sanitizedTitle = sanitizeHTML(title.trim());
+      const sanitizedContent = sanitizeHTML(content.trim());
+
+      // Check for malicious patterns
+      const maliciousPatterns = /<script|javascript:|on\w+=/gi;
+      if (maliciousPatterns.test(sanitizedContent) || maliciousPatterns.test(sanitizedTitle)) {
+        return res.status(400).json({ error: 'Invalid content detected' });
+      }
+
+      if (sanitizedTitle.length < 5) {
         return res.status(400).json({ error: 'Title must be at least 5 characters' });
       }
 
-      if (content.trim().length < 50) {
+      if (sanitizedContent.length < 50) {
         return res.status(400).json({ error: 'Story must be at least 50 characters' });
       }
 
-      if (content.trim().length > 2000) {
+      if (sanitizedContent.length > 2000) {
         return res.status(400).json({ error: 'Story must be less than 2000 characters' });
       }
 
@@ -55,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Validate category
-      const validCategories = ['general', 'campus-life', 'academics', 'relationships', 'personal-growth', 'struggles', 'achievements'];
+      const validCategories = ['general', 'experience', 'opinion', 'question', 'story', 'advice'];
       const storyCategory = category || 'general';
       if (!validCategories.includes(storyCategory)) {
         return res.status(400).json({ error: 'Invalid category' });
@@ -68,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const authHeader = req.headers.authorization;
       if (authHeader) {
         try {
-          const { data: { user }, error: authError } = await supabase.auth.getUser(
+          const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(
             authHeader.replace('Bearer ', '')
           );
           
@@ -81,31 +117,86 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      // Insert the story
-      const { data: story, error: insertError } = await supabase
-        .from('anonymous_stories')
-        .insert({
-          title: title.trim(),
-          content: content.trim(),
-          category: storyCategory,
-          author_type: authorType,
-          status: 'pending', // All stories start as pending
-        })
-        .select()
-        .single();
+      // Insert the story with service role bypass
+      let story, insertError;
+      
+      try {
+        // Try direct service role insert with explicit auth context
+        const result = await supabaseAdmin
+          .from('anonymous_stories')
+          .insert({
+            title: sanitizedTitle,
+            content: sanitizedContent,
+            category: storyCategory,
+            author_type: authorType,
+            status: 'pending', // All stories start as pending
+          })
+          .select()
+          .single();
+        
+        story = result.data;
+        insertError = result.error;
+        
+        console.log('Insert result:', { story: !!story, error: insertError?.message });
+      } catch (error) {
+        console.error('Insert exception:', error);
+        insertError = error;
+      }
+
+      // If normal insert fails, try minimal data insert
+      if (insertError) {
+        console.log('Normal insert failed, trying minimal data approach:', (insertError as SupabaseError).message);
+        
+        try {
+          const minimalResult = await supabaseAdmin
+            .from('anonymous_stories')
+            .insert({
+              title: sanitizedTitle,
+              content: sanitizedContent,
+              category: storyCategory,
+              author_type: authorType,
+              status: 'pending'
+            })
+            .select('id, title, created_at')
+            .single();
+          
+          if (minimalResult.error) {
+            throw minimalResult.error;
+          }
+          
+          story = minimalResult.data;
+          insertError = null;
+          console.log('Minimal insert succeeded:', story);
+        } catch (minimalError) {
+          console.error('Minimal insert also failed:', minimalError);
+          insertError = minimalError;
+        }
+      }
 
       if (insertError) {
-        console.error('Database error inserting story:', insertError);
+        const error = insertError as SupabaseError;
+        console.error('Database error inserting story:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          table: 'anonymous_stories',
+          data: {
+            title: sanitizedTitle.substring(0, 50),
+            content: sanitizedContent.substring(0, 50),
+            category: storyCategory,
+            author_type: authorType
+          }
+        });
         
-        // Handle specific constraint violations
-        if (insertError.code === '23514') {
-          return res.status(400).json({ 
-            error: 'Invalid story data', 
-            details: insertError.message 
-          });
-        }
-        
-        throw insertError;
+        // Return detailed error to help debug
+        return res.status(500).json({ 
+          error: 'Database error', 
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
       }
 
       return res.status(201).json({

@@ -1,66 +1,45 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { authenticate, checkRole } from '@/lib/api/middleware/auth';
-import { withRateLimit } from '@/lib/api/middleware/auth';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 
-// Rate limiting: 30 access checks per minute per admin
-const rateLimitMiddleware = withRateLimit(30, 60 * 1000, (req) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  return token || req.socket.remoteAddress || 'unknown';
-});
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only GET method is allowed',
-        details: null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-
+async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
   try {
-    // Apply rate limiting
-    rateLimitMiddleware(req);
-
-    // Authenticate user
-    const user = await authenticate(req);
-
-    // Authorize admin access
-    if (!checkRole(user.role, ['admin'])) {
-      return res.status(403).json({
+    // Only allow GET for access check
+    if (req.method !== 'GET') {
+      return res.status(405).json({
         success: false,
         error: {
-          code: 'FORBIDDEN',
-          message: 'Admin access required',
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only GET method is allowed for access check',
           details: null
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    // Log successful admin access check
-    console.info(`Admin access verified for user: ${user.id}`, {
-      timestamp: new Date().toISOString(),
-      email: user.email
+    // Log admin access verification
+    console.log(`Admin access verification completed`, {
+      adminId: user.id,
+      adminEmail: user.email,
+      timestamp: new Date().toISOString()
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
+      message: 'Admin access verified successfully',
       data: {
         role: 'admin',
         userId: user.id,
-        email: user.email
+        email: user.email,
+        securityLevel: user.securityLevel || 'medium',
+        verified_at: new Date().toISOString()
       },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Admin access check error:', error);
-    res.status(500).json({
+    console.error('Admin access check API error:', error);
+    return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
@@ -72,6 +51,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
-export default withErrorHandler(handler);
+// Apply CMS security middleware and enhanced error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:access',
+  auditAction: 'admin_access_checked'
+}));
 

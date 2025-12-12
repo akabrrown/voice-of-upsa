@@ -4,9 +4,23 @@
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
+.env.production
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+backup/
+dumps/
+database/backup_*.sql
 
 # Vercel
 .vercel
+
+# Duplicate API routes to prevent conflicts
+pages/api/users/[id].ts
 
 # Uploads directory
 public/uploads/*
@@ -69,4 +83,22 @@ Thumbs.db
 # Temporary folders
 tmp/
 temp/
-.env*.local
+
+# Security
+*.key
+*.pem
+*.crt
+secrets/
+private/
+credentials/
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+junit.xml
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache

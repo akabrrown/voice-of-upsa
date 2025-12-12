@@ -1,88 +1,74 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
+import { requireAdminOrEditor } from '@/lib/auth-helpers';
 import { z } from 'zod';
-import { Database } from '@/lib/database-types';
 
-type DatabaseArticleUpdate = Database['public']['Tables']['articles']['Update'];
+// Simple HTML sanitization function
+const sanitizeHTML = (html: string): string => {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<video\b[^<]*(?:(?!<\/video>)<[^<]*)*<\/video>/gi, '')
+    .replace(/<audio\b[^<]*(?:(?!<\/audio>)<[^<]*)*<\/audio>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers
+    .replace(/javascript:/gi, '') // Remove javascript: URLs
+    .replace(/data:/gi, ''); // Remove data: URLs
+};
 
-interface ArticleUpdateData {
-  title: string;
-  content: string;
-  excerpt: string;
-  featured_image: string | null;
-  status: string;
-  published_at?: string | null;
-}
-
-interface StatusUpdateData {
-  status: string;
-  published_at?: string | null;
-}
-
-// Validation schemas
-const articleUpdateSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(255, 'Title must not exceed 255 characters'),
-  content: z.string().min(1, 'Content is required'),
-  excerpt: z.string().max(500, 'Excerpt must not exceed 500 characters').optional(),
-  featured_image: z.string().url('Invalid featured image URL').optional().nullable(),
-  status: z.enum(['draft', 'published', 'archived'])
+// Validation schemas for article updates
+const updateFeaturedSchema = z.object({
+  is_featured: z.boolean(),
+  featured_order: z.number().min(0, 'Featured order must be non-negative').max(9999, 'Featured order must be less than 10000').optional(),
+  featured_until: z.string().datetime('Invalid datetime format').optional()
 });
 
-const statusUpdateSchema = z.object({
-  status: z.enum(['draft', 'published', 'archived'])
+const updateCategorySchema = z.object({
+  category_id: z.string().uuid('Invalid category ID format')
 });
 
-// Rate limiting: 15 requests per minute per admin
-const rateLimitMiddleware = withRateLimit(15, 60 * 1000, (req) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  return token || req.socket.remoteAddress || 'unknown';
+const updateDisplayLocationSchema = z.object({
+  display_location: z.enum(['homepage', 'category', 'sidebar', 'hidden'])
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+const updateScheduleSchema = z.object({
+  publish_at: z.string().datetime('Invalid datetime format').optional(),
+  unpublish_at: z.string().datetime('Invalid datetime format').optional()
+});
+
+const updateSettingsSchema = z.object({
+  allow_comments: z.boolean(),
+  show_author: z.boolean(),
+  show_date: z.boolean(),
+  meta_title: z.string().max(100, 'Meta title too long').optional(),
+  meta_description: z.string().max(200, 'Meta description too long').optional(),
+  meta_keywords: z.string().max(200, 'Meta keywords too long').optional()
+});
+
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
   try {
-    // Apply rate limiting
+    // Server-side role check - double security
+    await requireAdminOrEditor(req);
+
+    // Apply rate limiting based on method
+    const rateLimit = getCMSRateLimit(req.method || 'GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
     rateLimitMiddleware(req);
 
-    // Authenticate user using admin client directly
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'No authorization token provided',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verify token and get user
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !authUser) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or expired token',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Create user object for compatibility
-    const user = {
-      id: authUser.id,
-      email: authUser.email
-    };
-
-    // Validate article ID
+    // Log article access
+    console.log(`Admin article [${req.query.id}] accessed by user: ${user.email} (${user.id})`, {
+      method: req.method,
+      timestamp: new Date().toISOString(),
+      securityLevel: user.securityLevel
+    });
+          // Validate article ID
     const { id } = req.query;
     if (!id || typeof id !== 'string') {
       return res.status(400).json({
@@ -96,298 +82,209 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Get user profile from database to check role
-    const { data: userProfile, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role, id')
-      .eq('id', user.id)
-      .single() as { data: { role: string; id: string } | null, error: { message: string } | null };
-
-    if (userError || !userProfile) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'USER_NOT_FOUND',
-          message: 'User profile not found',
-          details: userError?.message
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Check if user is admin or editor
-    if (!['admin', 'editor'].includes(userProfile.role)) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'INSUFFICIENT_PERMISSIONS',
-          message: 'Admin or editor access required',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // GET - Single article
+    // GET - Fetch single article
     if (req.method === 'GET') {
-      const { data: article, error } = await supabaseAdmin
+      const { data, error } = await supabaseAdmin
         .from('articles')
         .select(`
           *,
-          author:users(name)
+          author:users(name, email),
+          category:categories(id, name, slug)
         `)
         .eq('id', id)
-        .single();
-
-      if (error || !article) {
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'ARTICLE_NOT_FOUND',
-            message: 'Article not found',
-            details: error?.message
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: { article },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // PUT - Update article
-    if (req.method === 'PUT') {
-      // Validate input
-      articleUpdateSchema.parse(req.body);
-      const { title, content, excerpt, featured_image, status } = req.body;
-
-      // Get article to check permissions
-      const { data: existingArticle, error: fetchError } = await supabaseAdmin
-        .from('articles')
-        .select('author_id, status')
-        .eq('id', id)
-        .single() as { data: { author_id: string; status: string } | null, error: { message: string } | null };
-
-      if (fetchError || !existingArticle) {
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'ARTICLE_NOT_FOUND',
-            message: 'Article not found',
-            details: fetchError?.message
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Check if user is author or admin
-      if (existingArticle.author_id !== userProfile.id && userProfile.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: {
-            code: 'INSUFFICIENT_PERMISSIONS',
-            message: 'Can only edit own articles',
-            details: null
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Generate new slug if title changed
-      const updateData: ArticleUpdateData = { title, content, excerpt, featured_image, status };
-      
-      if (status === 'published' && existingArticle.status !== 'published') {
-        updateData.published_at = new Date().toISOString();
-      } else if (status === 'draft') {
-        updateData.published_at = null;
-      }
-
-      const { data: article, error } = await supabaseAdmin
-        .from('articles')
-        .update(updateData as DatabaseArticleUpdate)
-        .eq('id', id)
-        .select(`
-          *,
-          author:users(name)
-        `)
         .single();
 
       if (error) {
-        console.error('Error updating article:', error);
+        console.error(`Article fetch failed for admin ${user.email}:`, error);
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'ARTICLE_NOT_FOUND',
+            message: 'Article not found',
+            details: process.env.NODE_ENV === 'development' ? error.message : null
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // Sanitize article data
+      const sanitizedArticle = {
+        id: data.id,
+        title: data.title,
+        content: data.content,
+        excerpt: data.excerpt,
+        featured_image: data.featured_image,
+        status: data.status,
+        views_count: data.views_count,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        published_at: data.published_at,
+        author: data.author,
+        category: data.category
+      };
+
+      console.log(`Article [${id}] returned to admin: ${user.email}`, {
+        title: data.title,
+        status: data.status,
+        timestamp: new Date().toISOString()
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: { article: sanitizedArticle },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // PUT - Update article properties
+    if (req.method === 'PUT') {
+      const { updateType } = req.body;
+      
+      if (!updateType) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'MISSING_UPDATE_TYPE',
+            message: 'Update type is required',
+            details: 'Valid types: featured, category, display_location, schedule, settings'
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      let updateData: any = {};
+      let validatedData: any;
+
+      switch (updateType) {
+        case 'featured':
+          validatedData = updateFeaturedSchema.safeParse(req.body);
+          if (!validatedData.success) {
+            return res.status(400).json({
+              success: false,
+              error: {
+                code: 'INVALID_INPUT',
+                message: 'Invalid featured update data',
+                details: validatedData.error.errors
+              },
+              timestamp: new Date().toISOString()
+            });
+          }
+          updateData = {
+            is_featured: validatedData.data.is_featured,
+            featured_order: validatedData.data.featured_order,
+            featured_until: validatedData.data.featured_until
+          };
+          break;
+
+        case 'category':
+          validatedData = updateCategorySchema.safeParse(req.body);
+          if (!validatedData.success) {
+            return res.status(400).json({
+              success: false,
+              error: {
+                code: 'INVALID_INPUT',
+                message: 'Invalid category update data',
+                details: validatedData.error.errors
+              },
+              timestamp: new Date().toISOString()
+            });
+          }
+          updateData = { category_id: validatedData.data.category_id };
+          break;
+
+        case 'display_location':
+          validatedData = updateDisplayLocationSchema.safeParse(req.body);
+          if (!validatedData.success) {
+            return res.status(400).json({
+              success: false,
+              error: {
+                code: 'INVALID_INPUT',
+                message: 'Invalid display location update data',
+                details: validatedData.error.errors
+              },
+              timestamp: new Date().toISOString()
+            });
+          }
+          updateData = { display_location: validatedData.data.display_location };
+          break;
+
+        case 'schedule':
+          validatedData = updateScheduleSchema.safeParse(req.body);
+          if (!validatedData.success) {
+            return res.status(400).json({
+              success: false,
+              error: {
+                code: 'INVALID_INPUT',
+                message: 'Invalid schedule update data',
+                details: validatedData.error.errors
+              },
+              timestamp: new Date().toISOString()
+            });
+          }
+          updateData = {
+            publish_at: validatedData.data.publish_at,
+            unpublish_at: validatedData.data.unpublish_at
+          };
+          break;
+
+        case 'settings':
+          validatedData = updateSettingsSchema.safeParse(req.body);
+          if (!validatedData.success) {
+            return res.status(400).json({
+              success: false,
+              error: {
+                code: 'INVALID_INPUT',
+                message: 'Invalid settings update data',
+                details: validatedData.error.errors
+              },
+              timestamp: new Date().toISOString()
+            });
+          }
+          updateData = {
+            allow_comments: validatedData.data.allow_comments,
+            show_author: validatedData.data.show_author,
+            show_date: validatedData.data.show_date,
+            meta_title: validatedData.data.meta_title,
+            meta_description: validatedData.data.meta_description,
+            meta_keywords: validatedData.data.meta_keywords
+          };
+          break;
+
+        default:
+          return res.status(400).json({
+            success: false,
+            error: {
+              code: 'INVALID_UPDATE_TYPE',
+              message: 'Invalid update type',
+              details: 'Valid types: featured, category, display_location, schedule, settings'
+            },
+            timestamp: new Date().toISOString()
+          });
+      }
+
+      const { data: updatedArticle, error } = await supabaseAdmin
+        .from('articles')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error(`Article update failed for admin ${user.email}:`, error);
         return res.status(500).json({
           success: false,
           error: {
             code: 'ARTICLE_UPDATE_FAILED',
             message: 'Failed to update article',
-            details: error.message
+            details: process.env.NODE_ENV === 'development' ? error.message : null
           },
           timestamp: new Date().toISOString()
         });
       }
-
-      // Log article update
-      console.info(`Article updated by admin/editor: ${user.id}`, {
-        articleId: id,
-        articleTitle: title,
-        timestamp: new Date().toISOString()
-      });
 
       return res.status(200).json({
         success: true,
-        data: { article },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // PATCH - Update article status (admin only)
-    if (req.method === 'PATCH') {
-      // Authorize admin only
-      if (userProfile.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: {
-            code: 'INSUFFICIENT_PERMISSIONS',
-            message: 'Admin access required',
-            details: null
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Validate input
-      const validatedData = statusUpdateSchema.parse(req.body);
-      const { status } = validatedData;
-
-      // Get article to check current status
-      const { data: existingArticle, error: fetchError } = await supabaseAdmin
-        .from('articles')
-        .select('status')
-        .eq('id', id)
-        .single();
-
-      if (fetchError || !existingArticle) {
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'ARTICLE_NOT_FOUND',
-            message: 'Article not found',
-            details: fetchError?.message
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Update status
-      const updateData: StatusUpdateData = { status };
-      
-      if (status === 'published' && existingArticle.status !== 'published') {
-        updateData.published_at = new Date().toISOString();
-      } else if (status === 'draft') {
-        updateData.published_at = null;
-      }
-
-      const { data: article, error } = await supabaseAdmin
-        .from('articles')
-        .update(updateData as DatabaseArticleUpdate)
-        .eq('id', id)
-        .select(`
-          *,
-          author:users(name)
-        `)
-        .single();
-
-      if (error) {
-        console.error('Error updating article status:', error);
-        return res.status(500).json({
-          success: false,
-          error: {
-            code: 'ARTICLE_STATUS_UPDATE_FAILED',
-            message: 'Failed to update article status',
-            details: error.message
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Log status change
-      console.info(`Article status changed by admin: ${user.id}`, {
-        articleId: id,
-        oldStatus: existingArticle.status,
-        newStatus: status,
-        timestamp: new Date().toISOString()
-      });
-
-      return res.status(200).json({
-        success: true,
-        data: { article },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // DELETE - Delete article
-    if (req.method === 'DELETE') {
-      // Get article to check permissions
-      const { data: existingArticle, error: fetchError } = await supabaseAdmin
-        .from('articles')
-        .select('author_id')
-        .eq('id', id)
-        .single();
-
-      if (fetchError || !existingArticle) {
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'ARTICLE_NOT_FOUND',
-            message: 'Article not found',
-            details: fetchError?.message
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Check if user is author or admin
-      if (existingArticle.author_id !== userProfile.id && userProfile.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: {
-            code: 'INSUFFICIENT_PERMISSIONS',
-            message: 'Can only delete own articles',
-            details: null
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      const { error } = await supabaseAdmin
-        .from('articles')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Error deleting article:', error);
-        return res.status(500).json({
-          success: false,
-          error: {
-            code: 'ARTICLE_DELETION_FAILED',
-            message: 'Failed to delete article',
-            details: error.message
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Log article deletion
-      console.info(`Article deleted by admin/editor: ${user.id}`, {
-        articleId: id,
-        timestamp: new Date().toISOString()
-      });
-
-      return res.status(200).json({
-        success: true,
-        data: { message: 'Article deleted successfully' },
+        data: { article: updatedArticle },
         timestamp: new Date().toISOString()
       });
     }
@@ -396,15 +293,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       success: false,
       error: {
         code: 'METHOD_NOT_ALLOWED',
-        message: 'Only GET, PUT, PATCH, and DELETE methods are allowed',
+        message: 'Only GET and PUT methods are allowed',
         details: null
       },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Admin article API error:', error);
-    res.status(500).json({
+    console.error(`Article API error for admin ${user.email}:`, error);
+    return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
@@ -416,5 +313,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:content',
+  auditAction: 'article_accessed'
+}));
+
+                                      

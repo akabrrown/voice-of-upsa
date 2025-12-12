@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
@@ -15,16 +15,12 @@ interface User {
   email: string;
   role: 'user' | 'admin' | 'editor';
   created_at: string;
-  last_sign_in?: string;
+  updated_at: string;
+  last_login_at?: string;
   avatar_url?: string;
-  status: 'active' | 'archived';
-  archived_at?: string;
-  archived_by?: string;
-  archive_reason?: string;
-  archiver?: {
-    name: string;
-    email: string;
-  };
+  is_active: boolean;
+  security_level?: string;
+  password_strength_score?: number;
 }
 
 const AdminUsersPage: React.FC = () => {
@@ -41,18 +37,49 @@ const AdminUsersPage: React.FC = () => {
   const [deleteUserModal, setDeleteUserModal] = useState<User | null>(null);
   const [permanentDeleteModal, setPermanentDeleteModal] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const lastRefreshRef = useRef<number>(0);
 
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Admin users: Starting fetch...');
       
-      if (!session) {
+      // Get current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('Admin users: Session result:', { session: !!session, sessionError });
+      
+      if (sessionError || !session) {
+        console.log('Admin users: No session, showing error');
         toast.error('No active session');
         return;
       }
+
+      // Only refresh if token is expired or it's been more than 5 minutes since last refresh
+      const now = Date.now();
+      const tokenExpiresAt = session.expires_at ? session.expires_at * 1000 : 0;
+      const shouldRefresh = tokenExpiresAt < now || (now - lastRefreshRef.current) > 300000; // 5 minutes
+
+      let freshSession = session;
+      
+      if (shouldRefresh) {
+        console.log('Admin users: Token expired or stale, refreshing session...');
+        // Refresh session to get fresh token
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+        console.log('Admin users: Refresh result:', { freshSession: !!refreshedSession, refreshError });
+        
+        if (refreshError || !refreshedSession) {
+          console.error('Admin users: Session refresh failed:', refreshError);
+          toast.error('Session expired, please sign in again');
+          return;
+        }
+        freshSession = refreshedSession;
+        lastRefreshRef.current = now;
+      } else {
+        console.log('Admin users: Using existing valid token');
+      }
+      
+      console.log('Admin users: Making API call with token...');
       
       const params = new URLSearchParams();
       if (roleFilter !== 'all') params.append('role', roleFilter);
@@ -63,15 +90,27 @@ const AdminUsersPage: React.FC = () => {
       
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${freshSession.access_token}`,
         },
       });
 
+      console.log('Admin users: API response status:', response.status);
+      console.log('Admin users: API response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error('Failed to fetch users');
+        const errorText = await response.text();
+        console.error('Admin users: API error response:', errorText);
+        throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('Admin users frontend: Received response:', data);
+      console.log('Admin users frontend: Users array:', data.data?.users);
+      console.log('Admin users frontend: Alternative paths:', {
+        'data.users': data.data?.users,
+        'users': data.users,
+        'data.data': data.data?.data
+      });
       setUsers(data.data?.users || []);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -265,10 +304,27 @@ const AdminUsersPage: React.FC = () => {
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && user.is_active === true) ||
+                         (statusFilter === 'archived' && user.is_active === false);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  // Debug logging
+  console.log('Admin users page debug:', {
+    loading,
+    usersCount: users.length,
+    filteredUsersCount: filteredUsers.length,
+    roleFilter,
+    statusFilter,
+    searchTerm,
+    usersSample: users.slice(0, 2)
+  });
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -283,15 +339,8 @@ const AdminUsersPage: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'archived':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800';
   };
 
   const getRoleIcon = (role: string) => {
@@ -487,8 +536,8 @@ const AdminUsersPage: React.FC = () => {
                               {getRoleIcon(userItem.role)}
                               <span className="ml-1">{userItem.role}</span>
                             </span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(userItem.status)}`}>
-                              {userItem.status}
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(userItem.is_active)}`}>
+                              {userItem.is_active ? 'Active' : 'Archived'}
                             </span>
                           </div>
                           <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -501,13 +550,6 @@ const AdminUsersPage: React.FC = () => {
                               Joined {new Date(userItem.created_at).toLocaleDateString()}
                             </div>
                           </div>
-                          {userItem.status === 'archived' && userItem.archived_at && (
-                            <div className="mt-2 text-sm text-orange-600 flex items-center">
-                              <FiArchive className="inline mr-1" />
-                              Archived {new Date(userItem.archived_at).toLocaleDateString()}
-                              {userItem.archiver && ` by ${userItem.archiver.name}`}
-                            </div>
-                          )}
                         </div>
                       </div>
 
@@ -526,7 +568,7 @@ const AdminUsersPage: React.FC = () => {
                           <FiKey className="mr-1" />
                           Invite User
                         </button>
-                        {userItem.status === 'active' ? (
+                        {userItem.is_active ? (
                           <button
                             onClick={() => setDeleteUserModal(userItem)}
                             className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors duration-200"

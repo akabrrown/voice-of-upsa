@@ -74,9 +74,16 @@ const ArticlesPage: React.FC = () => {
     const checkUserRole = async () => {
       if (session?.user) {
         try {
+          // Refresh session to get fresh token
+          const { data: { session: freshSession }, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError || !freshSession) {
+            console.error('Session refresh failed:', refreshError);
+            return;
+          }
+          
           const response = await fetch(`/api/users/${session.user.id}`, {
             headers: {
-              'Authorization': `Bearer ${session.access_token}`,
+              'Authorization': `Bearer ${freshSession.access_token}`,
             },
           });
           if (response.ok) {
@@ -91,7 +98,7 @@ const ArticlesPage: React.FC = () => {
     };
     
     checkUserRole();
-  }, [session]);
+  }, [session, supabase.auth]);
 
   const fetchCategories = useCallback(async () => {
     try {

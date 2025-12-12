@@ -2,7 +2,6 @@ import React, { ReactNode } from 'react';
 import Head from 'next/head';
 import Header from './Header';
 import Footer from './Footer';
-import AnonymousButton from './AnonymousButton';
 
 interface AnonymousLayoutProps {
   children: ReactNode;
@@ -32,9 +31,6 @@ const AnonymousLayout: React.FC<AnonymousLayoutProps> = ({
 
       {/* Main Site Footer */}
       <Footer />
-      
-      {/* Anonymous Zone Floating Button */}
-      <AnonymousButton variant="floating" />
     </div>
   );
 };

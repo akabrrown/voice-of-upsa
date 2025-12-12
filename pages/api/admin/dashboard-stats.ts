@@ -1,21 +1,24 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { authenticate, checkRole } from '@/lib/api/middleware/auth';
+import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
+import { requireAdminOrEditor } from '@/lib/auth-helpers';
 
 interface ActivityItem {
-  type: 'article' | 'user' | 'comment';
+  type: 'article' | 'user';
   title: string;
   date: string;
   timestamp?: string;
 }
 
-// Rate limiting: 20 requests per minute per admin
-const rateLimitMiddleware = withRateLimit(20, 60 * 1000, (req) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  return token || req.socket.remoteAddress || 'unknown';
-});
+interface MonthlyStats {
+  month: string;
+  users: number;
+  articles: number;
+  views: number;
+}
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -31,29 +34,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Apply rate limiting
+    // Server-side role check - double security
+    const user = await requireAdminOrEditor(req);
+
+    // Apply rate limiting for dashboard access
+    const rateLimit = getCMSRateLimit('GET');
+    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req) => 
+      getClientIP(req)
+    );
     rateLimitMiddleware(req);
 
-    // Authenticate user
-    const user = await authenticate(req);
-
-    // Authorize admin access
-    if (!checkRole(user.role, ['admin'])) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'FORBIDDEN',
-          message: 'Admin access required',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
     // Log admin dashboard access
-    console.info(`Admin dashboard accessed by user: ${user.id}`, {
+    console.info(`Admin dashboard accessed by user: ${user.id} (${user.email})`, {
       timestamp: new Date().toISOString(),
-      email: user.email
+      role: 'admin/editor'
     });
 
     // Get total users
@@ -89,16 +83,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       // Comments table might not exist yet
     }
 
-    // Get total views using SQL aggregation for better performance
+    // Get total views
     let totalViews = 0;
     try {
-      // Use SQL aggregation instead of JavaScript reduce for better performance
       const { data: viewsResult } = await supabaseAdmin
         .from('articles')
         .select('views_count')
         .not('views_count', 'is', null);
       
-      totalViews = viewsResult?.reduce((sum, article) => sum + (article.views_count || 0), 0) || 0;
+      totalViews = viewsResult?.reduce((sum: number, article: { views_count?: number }) => 
+        sum + (article.views_count || 0), 0) || 0;
     } catch {
       // If articles table doesn't exist, views will be 0
     }
@@ -113,7 +107,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       .order('published_at', { ascending: false })
       .limit(3);
 
-    recentArticles?.forEach(article => {
+    recentArticles?.forEach((article: { title: string; published_at?: string }) => {
       recentActivity.push({
         type: 'article',
         title: `New article: ${article.title}`,
@@ -129,20 +123,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       .order('created_at', { ascending: false })
       .limit(2);
 
-    recentUsers?.forEach(user => {
+    recentUsers?.forEach((userItem: { name: string; created_at?: string }) => {
       recentActivity.push({
         type: 'user',
-        title: `New user: ${user.name}`,
-        date: user.created_at || new Date().toISOString(),
-        timestamp: user.created_at
+        title: `New user: ${userItem.name}`,
+        date: userItem.created_at || new Date().toISOString(),
+        timestamp: userItem.created_at
       });
     });
 
     // Sort recent activity by timestamp
-    recentActivity.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+    recentActivity.sort((a, b) => 
+      new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+    );
 
     // Get monthly stats (last 6 months)
-    const monthlyStats = [];
+    const monthlyStats: MonthlyStats[] = [];
     const currentDate = new Date();
     
     for (let i = 0; i < 6; i++) {
@@ -173,7 +169,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         .gte('published_at', startOfMonth)
         .lt('published_at', endOfMonth);
       
-      const monthViews = monthArticlesData?.reduce((sum, article) => sum + (article.views_count || 0), 0) || 0;
+      const monthViews = monthArticlesData?.reduce((sum: number, article: { views_count?: number }) => 
+        sum + (article.views_count || 0), 0) || 0;
       
       monthlyStats.push({
         month: monthName,
@@ -184,6 +181,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     monthlyStats.reverse(); // Show oldest to newest
+
+    console.info(`Dashboard stats returned to admin: ${user.email}`, {
+      totalUsers: totalUsers || 0,
+      totalArticles: totalArticles || 0,
+      timestamp: new Date().toISOString()
+    });
 
     res.status(200).json({
       success: true,
@@ -201,7 +204,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
   } catch (error) {
-    console.error('Admin dashboard stats error:', error);
+    console.error(`Dashboard stats error:`, error);
     res.status(500).json({
       success: false,
       error: {
@@ -214,6 +217,5 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
+// Apply enhanced CMS security middleware and error handler
 export default withErrorHandler(handler);
-

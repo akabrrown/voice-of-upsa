@@ -1,6 +1,11 @@
 import { supabaseAdmin } from './database-server';
 
 export async function checkIfAdminExists(): Promise<boolean> {
+  if (!supabaseAdmin) {
+    console.error('Supabase admin client not initialized');
+    return false;
+  }
+  
   try {
     const { data, error } = await supabaseAdmin
       .from('users')
@@ -25,6 +30,10 @@ export async function createAdmin(adminData: {
   name: string;
   password?: string;
 }): Promise<{ success: boolean; error?: string }> {
+  if (!supabaseAdmin) {
+    return { success: false, error: 'Supabase admin client not initialized' };
+  }
+  
   try {
     // Check if admin already exists
     const adminExists = await checkIfAdminExists();
@@ -82,6 +91,11 @@ export async function createAdmin(adminData: {
 }
 
 export async function validateAdminSetupToken(token: string): Promise<boolean> {
+  if (!supabaseAdmin) {
+    console.error('Supabase admin client not initialized');
+    return false;
+  }
+  
   // This would validate a special setup token for initial admin creation
   // For now, we'll use a simple approach with environment variables
   const setupToken = process.env.ADMIN_SETUP_TOKEN;
@@ -100,6 +114,11 @@ export async function getAdminUsers(): Promise<Array<{
   created_at: string;
   last_sign_in?: string;
 }>> {
+  if (!supabaseAdmin) {
+    console.error('Supabase admin client not initialized');
+    return [];
+  }
+  
   try {
     const { data, error } = await supabaseAdmin
       .from('users')

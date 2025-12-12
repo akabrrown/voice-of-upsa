@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
 import { FiMessageCircle, FiSend, FiArrowLeft } from 'react-icons/fi';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
+
+const DRAFT_KEY = 'anonymous_story_draft';
 
 const AnonymousSubmitPage: React.FC = () => {
   const router = useRouter();
@@ -14,6 +16,44 @@ const AnonymousSubmitPage: React.FC = () => {
     category: 'general'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Load draft on mount
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        setFormData(draft);
+        toast.success('Draft restored from previous session');
+      }
+    } catch (error) {
+      console.error('Error loading draft:', error);
+    }
+  }, []);
+
+  // Auto-save to localStorage
+  useEffect(() => {
+    const saveDraft = () => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+      } catch (error) {
+        console.error('Error saving draft:', error);
+      }
+    };
+
+    // Save draft when form data changes (debounced)
+    const timeoutId = setTimeout(saveDraft, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [formData]);
+
+  // Clear draft after successful submission
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch (error) {
+      console.error('Error clearing draft:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +91,7 @@ const AnonymousSubmitPage: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
+        clearDraft(); // Clear the saved draft
         toast.success('Your anonymous story has been submitted for review');
         setFormData({ title: '', content: '', category: 'general' });
         
@@ -209,12 +250,25 @@ const AnonymousSubmitPage: React.FC = () => {
 
               {/* Submit Button */}
               <div className="flex items-center justify-between">
-                <Link 
-                  href="/articles?category=anonymous"
-                  className="text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  Cancel
-                </Link>
+                <div className="flex items-center space-x-4">
+                  <Link 
+                    href="/articles?category=anonymous"
+                    className="text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    Cancel
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearDraft();
+                      setFormData({ title: '', content: '', category: 'general' });
+                      toast.success('Draft cleared');
+                    }}
+                    className="text-red-600 hover:text-red-800 transition-colors text-sm"
+                  >
+                    Clear Draft
+                  </button>
+                </div>
                 <button
                   type="submit"
                   disabled={isSubmitting || !formData.title.trim() || !formData.content.trim()}

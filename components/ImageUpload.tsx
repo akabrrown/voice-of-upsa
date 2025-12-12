@@ -1,11 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { CldUploadWidget } from 'next-cloudinary';
-import Image from 'next/image';
 import { FiUpload, FiX } from 'react-icons/fi';
-
-// Type assertion for Next.js Image component
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const NextImage = Image as any;
 
 interface ImageUploadProps {
   value?: string;
@@ -21,40 +16,115 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   disabled = false
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const uploadTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const handleUpload = useCallback((result: unknown) => {
-    if (
-      result && 
-      typeof result === 'object' && 
-      'event' in result && 
-      result.event === 'success' &&
-      'info' in result &&
-      result.info &&
-      typeof result.info === 'object' &&
-      'secure_url' in result.info
-    ) {
-      onChange(result.info.secure_url as string);
-      setIsUploading(false);
-      
-      // Fix scroll issue caused by Cloudinary widget
-      setTimeout(() => {
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-      }, 100);
+  interface CloudinaryResult {
+  event?: string;
+  info?: {
+    secure_url?: string;
+    url?: string;
+    public_id?: string;
+    original_secure_url?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+const handleUpload = useCallback((result: unknown) => {
+    console.log('=== Image Upload Debug ===');
+    console.log('Raw result:', result);
+    console.log('Result type:', typeof result);
+    
+    // Clear any existing timeout
+    if (uploadTimeoutRef.current) {
+      clearTimeout(uploadTimeoutRef.current);
     }
+    
+    // Check different result structures
+    if (result && typeof result === 'object') {
+      const cloudinaryResult = result as CloudinaryResult;
+      console.log('Result keys:', Object.keys(result));
+      
+      // Check for success event
+      if (cloudinaryResult.event) {
+        console.log('Event type:', cloudinaryResult.event);
+        
+        if (cloudinaryResult.event === 'success') {
+          console.log('Upload success detected');
+          
+          // Try different ways to get the URL
+          if (cloudinaryResult.info && typeof cloudinaryResult.info === 'object') {
+            console.log('Info object:', cloudinaryResult.info);
+            console.log('Info keys:', Object.keys(cloudinaryResult.info));
+            
+            if (cloudinaryResult.info.secure_url) {
+              console.log('Found secure_url:', cloudinaryResult.info.secure_url);
+              onChange(cloudinaryResult.info.secure_url);
+              setIsUploading(false);
+              
+              // Fix scroll issue caused by Cloudinary widget
+              setTimeout(() => {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+              }, 100);
+              return;
+            }
+            
+            // Try other possible URL fields
+            const possibleUrlFields: (keyof typeof cloudinaryResult.info)[] = ['url', 'public_id', 'secure_url', 'original_secure_url'];
+            for (const field of possibleUrlFields) {
+              if (field in cloudinaryResult.info && cloudinaryResult.info[field]) {
+                console.log(`Found ${field}:`, cloudinaryResult.info[field]);
+                if (typeof field === 'string' && field.includes('url') && typeof cloudinaryResult.info[field] === 'string') {
+                  onChange(cloudinaryResult.info[field]);
+                  setIsUploading(false);
+                  return;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Handle other events
+      if (cloudinaryResult.event === 'close' || cloudinaryResult.event === 'abort') {
+        console.log('Upload cancelled/closed');
+        setIsUploading(false);
+      } else if (cloudinaryResult.event === 'error') {
+        console.log('Upload error:', result);
+        setIsUploading(false);
+      }
+    }
+    
+    console.log('=== End Upload Debug ===');
   }, [onChange]);
+
+  const handleOpen = useCallback(() => {
+    console.log('=== Handle Open Called ===');
+    console.log('Setting isUploading to true');
+    setIsUploading(true);
+    
+    // Ensure scroll is not disabled when opening widget
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    
+    // Add timeout to reset upload state if it gets stuck
+    console.log('Setting 60-second timeout');
+    uploadTimeoutRef.current = setTimeout(() => {
+      console.log('Upload timeout - resetting state');
+      setIsUploading(false);
+    }, 60000); // 60 seconds timeout
+  }, []);
 
   return (
     <div className="space-y-4">
       {value ? (
         <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-300">
-          <NextImage
+          {/* Using regular img tag due to Next.js Image optimization 500 error with Cloudinary URLs */}
+          <img
             src={value}
             alt="Upload preview"
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover"
-            priority={true}
+            className="w-full h-full object-cover"
           />
           {!disabled && onRemove && (
             <button
@@ -68,22 +138,74 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         </div>
       ) : (
         <CldUploadWidget
-          uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'default'}
-          onUpload={handleUpload}
+          uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'voice_of_upsa'}
+          onUpload={(result, widget) => {
+            console.log('=== OnUpload Callback Called ===');
+            console.log('Result:', result);
+            console.log('Widget:', widget);
+            handleUpload(result);
+          }}
+          onSuccess={(result, widget) => {
+            console.log('=== OnSuccess Callback Called ===');
+            console.log('Result:', result);
+            console.log('Widget:', widget);
+            handleUpload(result);
+          }}
+          onError={(error, widget) => {
+            console.log('=== OnError Callback Called ===');
+            console.log('Error:', error);
+            console.log('Widget:', widget);
+            setIsUploading(false);
+          }}
+          onClose={() => {
+            console.log('=== OnClose Callback Called ===');
+            setIsUploading(false);
+          }}
+          options={{
+            folder: 'voice-of-upsa/articles',
+            resourceType: 'image',
+            // Size limits
+            maxFileSize: 5242880, // 5MB
+            // Cropping and transformation settings
+            cropping: false,
+            croppingAspectRatio: undefined,
+            // UI settings
+            showPoweredBy: false,
+            showSkipCropButton: false,
+            showAdvancedOptions: false,
+            showInsecurePreview: false,
+            // Language and theme
+            language: 'en',
+            theme: 'minimal',
+            // Multiple files disabled for single upload
+            multiple: false,
+            maxFiles: 1,
+          }}
         >
-          {({ open }) => (
-            <button
-              type="button"
-              onClick={() => {
-                setIsUploading(true);
-                // Ensure scroll is not disabled when opening widget
-                document.body.style.overflow = '';
-                document.documentElement.style.overflow = '';
-                open();
-              }}
-              disabled={disabled || isUploading}
-              className="w-full h-64 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+          {(widget) => {
+            console.log('=== Cloudinary Widget Debug ===');
+            console.log('Widget object:', widget);
+            
+            const { open, isLoading } = widget || {};
+            console.log('Open function:', open);
+            console.log('Is loading:', isLoading);
+            
+            return (
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('=== Button Clicked ===');
+                  handleOpen();
+                  if (open) {
+                    console.log('Calling open() function');
+                    open();
+                  } else {
+                    console.log('No open function available');
+                  }
+                }}
+                disabled={disabled || isUploading || isLoading}
+                className="w-full h-64 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
               <FiUpload className="w-12 h-12 text-gray-400 mb-4" />
               <p className="text-gray-600 font-medium">
                 {isUploading ? 'Uploading...' : 'Click to upload image'}
@@ -91,8 +213,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               <p className="text-gray-400 text-sm mt-2">
                 PNG, JPG, GIF up to 10MB
               </p>
-            </button>
-          )}
+              </button>
+            );
+          }}
         </CldUploadWidget>
       )}
     </div>

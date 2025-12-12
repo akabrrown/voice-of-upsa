@@ -158,6 +158,8 @@ const ResetPasswordPage: React.FC = () => {
                   width={64}
                   height={64}
                   className="w-16 h-16 rounded-full"
+                  loading="eager"
+                  priority
                   unoptimized
                 />
               </div>

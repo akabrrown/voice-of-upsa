@@ -5,6 +5,7 @@
   Next.js Image treats these URLs as routes causing "hard navigate to same URL" errors.
 */
 import React from 'react';
+import DOMPurify from 'dompurify';
 import styles from '../styles/MarkdownContent.module.css';
 
 interface MarkdownContentProps {
@@ -193,7 +194,7 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
             <div
               key={index}
               dangerouslySetInnerHTML={{
-                __html: processMarkdown(part.content)
+                __html: DOMPurify.sanitize(processMarkdown(part.content))
               }}
             />
           );

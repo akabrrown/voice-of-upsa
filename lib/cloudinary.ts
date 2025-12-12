@@ -1,4 +1,4 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -33,14 +33,31 @@ export async function uploadImage(
       throw new Error('Cloudinary configuration is missing');
     }
 
-    const result = await cloudinary.uploader.upload(file, {
+    const uploadOptions: UploadApiOptions = {
       folder,
       resource_type: 'image',
-      upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || 'voice_of_upsa', // Configure in Cloudinary dashboard
-      transformation: [
-        { quality: 'auto', fetch_format: 'auto' }
-      ]
-    });
+      upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || 'voice_of_upsa',
+      // Optimized settings for faster upload
+      quality: 'auto:good', // Faster than 'auto' with good quality
+      fetch_format: 'auto',
+      // Disable unnecessary processing for faster upload
+      format: 'auto',
+      // Add timeout to prevent hanging
+      timeout: 30000, // 30 seconds timeout
+      // Reduce processing steps
+      eager: [], // No eager transformations
+      invalidate: false, // Don't invalidate CDN cache
+      overwrite: true, // Allow overwriting for faster retries
+      // Size limits to prevent large files
+      max_file_size: 5242880, // 5MB
+      // Moderation and analysis (disable for speed)
+      moderation: 'manual',
+      // Metadata
+      use_filename: true,
+      unique_filename: false, // Don't generate unique filename to save time
+    };
+
+    const result = await cloudinary.uploader.upload(file, uploadOptions);
 
     return {
       public_id: result.public_id,

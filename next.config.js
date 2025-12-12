@@ -4,15 +4,83 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Remove eslint config - no longer supported in Next.js 16
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          // Remove CSP headers here - they're handled by the proxy middleware
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'microphone=(), geolocation=()',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+    ];
+  },
+  // Update images config to use remotePatterns instead of deprecated domains
   images: {
-    domains: [
-      'res.cloudinary.com',
-      'localhost',
-      '127.0.0.1',
-      'voiceofupsa.com',
-      'uploads.voiceofupsa.com',
-    ],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '3000',
+      },
+      {
+        protocol: 'https',
+        hostname: 'voiceofupsa.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'uploads.voiceofupsa.com',
+      },
       {
         protocol: 'http',
         hostname: '**',
@@ -23,6 +91,8 @@ const nextConfig = {
       },
     ],
   },
+  // Add empty turbopack config to resolve webpack/turbopack conflict
+  turbopack: {},
   webpack: (config, { isServer }) => {
     // Apply Node.js module fallbacks for client-side builds
     if (!isServer) {
@@ -87,7 +157,6 @@ const nextConfig = {
 
 // PWA is disabled to fix module resolution issues
 // You can re-enable it later by setting NODE_ENV=production
-let config = nextConfig;
 
 // Temporarily disable PWA completely to fix build issues
 // if (process.env.NODE_ENV === 'production') {
@@ -129,4 +198,4 @@ let config = nextConfig;
 //   }
 // }
 
-module.exports = config;
+export default nextConfig;

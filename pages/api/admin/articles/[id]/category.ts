@@ -1,64 +1,31 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { withRateLimit } from '@/lib/api/middleware/auth';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { z } from 'zod';
 import { Database } from '@/lib/database-types';
 
 type DatabaseArticleUpdate = Database['public']['Tables']['articles']['Update'];
 
-// Validation schema
+// Enhanced validation schema for category update
 const categoryUpdateSchema = z.object({
-  category_id: z.string().nullable().optional()
+  category_id: z.string().uuid('Invalid category ID format').nullable().optional()
 });
 
-// Rate limiting: 20 requests per minute per admin
-const rateLimitMiddleware = withRateLimit(20, 60 * 1000, (req) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  return token || req.socket.remoteAddress || 'unknown';
-});
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
   try {
-    // Apply rate limiting
-    rateLimitMiddleware(req);
-
-    // Authenticate user using admin client directly
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+    // Only allow PUT for category updates
+    if (req.method !== 'PUT') {
+      return res.status(405).json({
         success: false,
         error: {
-          code: 'UNAUTHORIZED',
-          message: 'No authorization token provided',
+          code: 'METHOD_NOT_ALLOWED',
+          message: 'Only PUT method is allowed for category updates',
           details: null
         },
         timestamp: new Date().toISOString()
       });
     }
-
-    const token = authHeader.replace('Bearer ', '');
-    
-    // Verify token and get user
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !authUser) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or expired token',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Create user object for compatibility
-    const user = {
-      id: authUser.id,
-      email: authUser.email
-    };
 
     // Validate article ID
     const { id } = req.query;
@@ -74,142 +41,114 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Get user profile from database to check role
-    const { data: userProfile, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('role, id')
-      .eq('id', user.id)
-      .single() as { data: { role: string; id: string } | null, error: { message: string } | null };
+    // Validate input with enhanced schema
+    const validatedData = categoryUpdateSchema.parse(req.body);
+    const { category_id } = validatedData;
 
-    if (userError || !userProfile) {
+    // Log admin category update action
+    console.log(`Admin article category update initiated`, {
+      adminId: user.id,
+      adminEmail: user.email,
+      articleId: id,
+      newCategoryId: category_id,
+      timestamp: new Date().toISOString()
+    });
+
+    // Verify article exists
+    const { data: article, error: articleError } = await supabaseAdmin
+      .from('articles')
+      .select('id, title, category_id')
+      .eq('id', id)
+      .single();
+
+    if (articleError) {
+      console.error('Admin category update - article fetch error:', articleError);
       return res.status(404).json({
         success: false,
         error: {
-          code: 'USER_NOT_FOUND',
-          message: 'User profile not found',
-          details: userError?.message
+          code: 'ARTICLE_NOT_FOUND',
+          message: 'Article not found',
+          details: process.env.NODE_ENV === 'development' ? articleError.message : null
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    // Check if user is admin
-    if (userProfile.role !== 'admin') {
-      return res.status(403).json({
+    // If category_id is provided, verify category exists
+    if (category_id) {
+      const { error: categoryError } = await supabaseAdmin
+        .from('categories')
+        .select('id')
+        .eq('id', category_id)
+        .single();
+
+      if (categoryError) {
+        console.error('Admin category update - category fetch error:', categoryError);
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'CATEGORY_NOT_FOUND',
+            message: 'Category not found',
+            details: process.env.NODE_ENV === 'development' ? categoryError.message : null
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
+    // Update article category
+    const updateData: DatabaseArticleUpdate = {
+      category_id: category_id
+    };
+
+    const { data: updatedArticle, error: updateError } = await supabaseAdmin
+      .from('articles')
+      .update(updateData)
+      .eq('id', id)
+      .select('id, title, category_id, updated_at')
+      .single();
+
+    if (updateError) {
+      console.error('Admin category update error:', updateError);
+      return res.status(500).json({
         success: false,
         error: {
-          code: 'INSUFFICIENT_PERMISSIONS',
-          message: 'Admin access required',
-          details: null
+          code: 'UPDATE_ERROR',
+          message: 'Failed to update article category',
+          details: process.env.NODE_ENV === 'development' ? updateError.message : null
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    // PUT - Update article category
-    if (req.method === 'PUT') {
-      // Validate input
-      const validatedData = categoryUpdateSchema.parse(req.body);
-      const { category_id } = validatedData;
+    // Log successful category update
+    console.log(`Admin article category updated successfully`, {
+      adminId: user.id,
+      articleId: id,
+      articleTitle: article.title,
+      oldCategoryId: article.category_id,
+      newCategoryId: category_id,
+      timestamp: new Date().toISOString()
+    });
 
-      // Check if article exists
-      const { data: existingArticle, error: fetchError } = await supabaseAdmin
-        .from('articles')
-        .select('id, title, category_id')
-        .eq('id', id)
-        .single();
-
-      if (fetchError || !existingArticle) {
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'ARTICLE_NOT_FOUND',
-            message: 'Article not found',
-            details: fetchError?.message
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // If category_id is provided, verify it exists
-      if (category_id) {
-        const { data: category, error: categoryError } = await supabaseAdmin
-          .from('categories')
-          .select('id, name')
-          .eq('id', category_id)
-          .single();
-
-        if (categoryError || !category) {
-          return res.status(400).json({
-            success: false,
-            error: {
-              code: 'INVALID_CATEGORY',
-              message: 'Category not found',
-              details: 'The specified category does not exist'
-            },
-            timestamp: new Date().toISOString()
-          });
-        }
-      }
-
-      // Update article category
-      const { data: article, error } = await supabaseAdmin
-        .from('articles')
-        .update({ category_id } as DatabaseArticleUpdate)
-        .eq('id', id)
-        .select(`
-          *,
-          author:users(name),
-          category:categories(name, slug)
-        `)
-        .single();
-
-      if (error) {
-        console.error('Error updating article category:', error);
-        return res.status(500).json({
-          success: false,
-          error: {
-            code: 'ARTICLE_CATEGORY_UPDATE_FAILED',
-            message: 'Failed to update article category',
-            details: error.message
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Log category change
-      console.info(`Article category changed by admin: ${user.id}`, {
-        articleId: id,
-        articleTitle: existingArticle.title,
-        oldCategoryId: existingArticle.category_id,
-        newCategoryId: category_id,
-        timestamp: new Date().toISOString()
-      });
-
-      return res.status(200).json({
-        success: true,
-        data: { article },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    return res.status(405).json({
-      success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only PUT method is allowed',
-        details: null
+    return res.status(200).json({
+      success: true,
+      message: 'Article category updated successfully',
+      data: {
+        article: updatedArticle,
+        updated_by: user.id,
+        updated_at: updatedArticle.updated_at
       },
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('Admin article category API error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred while processing category request',
+        message: 'An unexpected error occurred while updating the article category',
         details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
@@ -217,5 +156,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
-export default withErrorHandler(handler);
+// Apply CMS security middleware and enhanced error handler
+export default withErrorHandler(withCMSSecurity(handler));
+
+                        
