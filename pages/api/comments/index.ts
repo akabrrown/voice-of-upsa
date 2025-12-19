@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { z } from 'zod';
@@ -58,7 +58,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const token = authHeader.replace('Bearer ', '');
     
     // Verify the token and get user
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: { user }, error: authError } = await (await supabaseAdmin as any).auth.getUser(token);
     
     if (authError || !user) {
       return res.status(401).json({
@@ -88,7 +89,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         });
       }
 
-      const { data: comments, error } = await supabaseAdmin
+      const { data: comments, error } = await (await supabaseAdmin as any)
         .from('comments')
         .select(`
           *,
@@ -129,7 +130,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const sanitizedContent = sanitizeComment(content);
 
       // Check if article exists and is published
-      const { data: article, error: articleError } = await supabaseAdmin
+      const { data: article, error: articleError } = await (await supabaseAdmin as any)
         .from('articles')
         .select('id, status')
         .eq('id', article_id)
@@ -148,7 +149,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       // Create comment with moderation status
-      const { data: comment, error: commentError } = await supabaseAdmin
+      const { data: comment, error: commentError } = await (await supabaseAdmin as any)
         .from('comments')
         .insert({
           article_id,
@@ -208,7 +209,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       // Check if user owns the comment
-      const { data: existingComment, error: fetchError } = await supabaseAdmin
+      const { data: existingComment, error: fetchError } = await (await supabaseAdmin as any)
         .from('comments')
         .select('id, user_id')
         .eq('id', comment_id)
@@ -242,7 +243,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const sanitizedContent = sanitizeComment(validatedData.content);
 
       // Update comment
-      const { data: updatedComment, error: updateError } = await supabaseAdmin
+      const { data: updatedComment, error: updateError } = await (await supabaseAdmin as any)
         .from('comments')
         .update({
           content: sanitizedContent,
@@ -293,7 +294,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       // Check user role
-      const { data: userData } = await supabaseAdmin
+      const { data: userData } = await (await supabaseAdmin as any)
         .from('users')
         .select('role')
         .eq('id', user.id)
@@ -302,7 +303,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const isAdmin = userData?.role === 'admin';
 
       // Check if user owns the comment or is admin
-      const { data: existingComment, error: fetchError } = await supabaseAdmin
+      const { data: existingComment, error: fetchError } = await (await supabaseAdmin as any)
         .from('comments')
         .select('id, user_id')
         .eq('id', comment_id)
@@ -333,7 +334,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       // Delete comment
-      const { error: deleteError } = await supabaseAdmin
+      const { error: deleteError } = await (await supabaseAdmin as any)
         .from('comments')
         .delete()
         .eq('id', comment_id);
@@ -384,4 +385,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+// Comments API handler with CMS security
+const handlerWithCMS = withCMSSecurity(
+  handler,
+  { requirePermission: 'comment:create', auditAction: 'comment_manage' }
+);
+
+export default withErrorHandler(handlerWithCMS);

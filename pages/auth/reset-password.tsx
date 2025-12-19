@@ -109,13 +109,8 @@ const ResetPasswordPage: React.FC = () => {
     setLoading(true);
     
     try {
-      const { error } = await updatePassword(newPassword);
+      await updatePassword(newPassword);
       
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
       toast.success('Password updated successfully!');
       router.push('/auth/sign-in');
     } catch (error) {

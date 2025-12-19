@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { useSupabase } from '@/components/SupabaseProvider';
+import { useSupabase } from '../components/SupabaseProvider';
 import toast from 'react-hot-toast';
 
 interface ArticleRecord {
@@ -63,9 +63,9 @@ export const useRealtimeArticles = ({
           const event: ArticleEvent = {
             type: payload.eventType,
             table: payload.table,
-            record: payload.record,
-            old_record: payload.old_record,
-            new_record: payload.new_record
+            ...(payload.record && { record: payload.record }),
+            ...(payload.old_record && { old_record: payload.old_record }),
+            ...(payload.new_record && { new_record: payload.new_record })
           };
 
           // Show toast notification for article changes
@@ -125,8 +125,7 @@ export const useRealtimeArticles = ({
       // Simulate a refresh event
       onArticleChange({
         type: 'UPDATE',
-        table: 'articles',
-        record: undefined
+        table: 'articles'
       });
     }
   }, [onArticleChange]);

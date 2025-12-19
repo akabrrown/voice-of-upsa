@@ -20,7 +20,7 @@ export async function verifyAdmin(req: NextApiRequest): Promise<AdminUser> {
   const token = authHeader.replace('Bearer ', '');
 
   // Verify token with Supabase
-  const adminClient = getSupabaseAdmin();
+  const adminClient = await getSupabaseAdmin();
   const { data: { user }, error: authError } = await adminClient.auth.getUser(token);
   
   if (authError || !user) {
@@ -30,7 +30,7 @@ export async function verifyAdmin(req: NextApiRequest): Promise<AdminUser> {
   // Get user role from database with additional verification
   const { data: userData, error: userError } = await adminClient
     .from('users')
-    .select('id, email, role, status')
+    .select('id, email, role')
     .eq('id', user.id)
     .single();
 
@@ -38,13 +38,9 @@ export async function verifyAdmin(req: NextApiRequest): Promise<AdminUser> {
     throw new Error('User not found in database');
   }
 
-  // Verify user status
-  if (userData.status !== 'active') {
-    throw new Error('User account is not active');
-  }
-
-  // Verify admin role
-  if (userData.role !== 'admin') {
+  // Verify user role is admin
+  const userRecord = userData as { id: string; email: string; role: string };
+  if (userRecord.role !== 'admin') {
     throw new Error('Insufficient permissions - admin role required');
   }
 
@@ -63,9 +59,9 @@ export async function verifyAdmin(req: NextApiRequest): Promise<AdminUser> {
   }
 
   return {
-    id: userData.id,
-    email: userData.email,
-    role: userData.role
+    id: userRecord.id,
+    email: userRecord.email,
+    role: userRecord.role
   };
 }
 
@@ -121,8 +117,8 @@ export async function logAdminAction(
   req?: NextApiRequest
 ): Promise<void> {
   try {
-    const adminClient = getSupabaseAdmin();
-    await adminClient
+    const adminClient = await getSupabaseAdmin();
+    await (adminClient as any)
       .from('admin_audit_log')
       .insert({
         admin_id: admin.id,

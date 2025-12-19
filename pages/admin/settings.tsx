@@ -6,6 +6,39 @@ import { useSupabase } from '@/components/SupabaseProvider';
 import toast from 'react-hot-toast';
 import { FiSettings, FiGlobe, FiMail, FiBell, FiImage, FiSave, FiUpload } from 'react-icons/fi';
 
+// Input validation schemas
+const validateSiteName = (name: string): string | null => {
+  if (!name || name.trim().length === 0) return 'Site name is required';
+  if (name.length > 100) return 'Site name must be less than 100 characters';
+  if (!/^[a-zA-Z0-9\s\-_]+$/.test(name)) return 'Site name can only contain letters, numbers, spaces, hyphens, and underscores';
+  return null;
+};
+
+const validateSiteDescription = (description: string): string | null => {
+  if (!description || description.trim().length === 0) return 'Site description is required';
+  if (description.length > 500) return 'Site description must be less than 500 characters';
+  return null;
+};
+
+const validateSiteUrl = (url: string): string | null => {
+  if (!url || url.trim().length === 0) return 'Site URL is required';
+  try {
+    new URL(url);
+    if (!url.startsWith('https://')) return 'Site URL must use HTTPS';
+    return null;
+  } catch {
+    return 'Please enter a valid URL';
+  }
+};
+
+const validateEmail = (email: string): string | null => {
+  if (!email || email.trim().length === 0) return 'Email is required';
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return 'Please enter a valid email address';
+  return null;
+};
+
+
 interface SiteSettings {
   site_name: string;
   site_description: string;
@@ -54,9 +87,11 @@ const AdminSettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastRefreshRef = useRef<number>(0);
+  const originalSettingsRef = useRef<SiteSettings | null>(null);
 
   const fetchSettings = useCallback(async () => {
     // Clear any existing timeout
@@ -198,21 +233,61 @@ const AdminSettingsPage: React.FC = () => {
 
   const handleSave = async () => {
     try {
+      // Basic validation before saving
+      const errors: Record<string, string> = {};
+      
+      const siteNameError = validateSiteName(settings.site_name);
+      if (siteNameError) errors.site_name = siteNameError;
+
+      const siteDescError = validateSiteDescription(settings.site_description);
+      if (siteDescError) errors.site_description = siteDescError;
+
+      const siteUrlError = validateSiteUrl(settings.site_url);
+      if (siteUrlError) errors.site_url = siteUrlError;
+
+      const contactEmailError = validateEmail(settings.contact_email);
+      if (contactEmailError) errors.contact_email = contactEmailError;
+
+      const notificationEmailError = validateEmail(settings.notification_email);
+      if (notificationEmailError) errors.notification_email = notificationEmailError;
+      
+      if (Object.keys(errors).length > 0) {
+        toast.error('Please fix validation errors before saving', {
+          icon: '⚠️'
+        });
+        return;
+      }
+
+      // Check if there are actual changes
+      if (!hasChanges) {
+        toast('No changes to save', {
+          icon: 'ℹ️'
+        });
+        return;
+      }
+
       setSaving(true);
       
       // Get session from Supabase
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error('No active session');
+        toast.error('No active session. Please sign in again.', {
+          icon: '🔒'
+        });
         return;
       }
+
+      // Add CSRF protection
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
       
       const response = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
         },
         body: JSON.stringify(settings),
       });
@@ -220,8 +295,35 @@ const AdminSettingsPage: React.FC = () => {
       if (!response.ok) {
         const errorData = await response.json();
         console.error('API Error details:', errorData);
-        throw new Error(errorData.error || errorData.details?.message || 'Failed to save settings');
+        
+        // Handle specific error types
+        if (response.status === 401) {
+          toast.error('Session expired. Please sign in again.', {
+            icon: '🔒'
+          });
+          // Redirect to login after delay
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+          return;
+        } else if (response.status === 403) {
+          toast.error('Insufficient permissions to update settings.', {
+            icon: '🚫'
+          });
+          return;
+        } else if (response.status === 429) {
+          toast.error('Too many requests. Please try again later.', {
+            icon: '⏱️'
+          });
+          return;
+        }
+        
+        throw new Error(errorData.error?.message || errorData.details?.message || 'Failed to save settings');
       }
+
+      // Update original settings reference
+      originalSettingsRef.current = { ...settings };
+      setHasChanges(false);
 
       toast.success('Settings saved successfully', {
         icon: '✅'
@@ -230,7 +332,17 @@ const AdminSettingsPage: React.FC = () => {
       // Note: Realtime will update other admins' views automatically
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast.error('Failed to save settings');
+      
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast.error('Network error. Please check your connection.', {
+          icon: '🌐'
+        });
+      } else {
+        toast.error('Failed to save settings. Please try again.', {
+          icon: '❌'
+        });
+      }
     } finally {
       setSaving(false);
     }

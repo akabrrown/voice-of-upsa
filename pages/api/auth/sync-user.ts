@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { z } from 'zod';
 
@@ -33,17 +33,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    
     // Handle self-sync for authenticated users
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.replace('Bearer ', '');
       
       // Verify the token and get user
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+      const { data: { user }, error: authError } = await (await supabaseAdmin as any).auth.getUser(token);
       
       if (!authError && user) {
         // Check if user exists in database
-        const { data: existingUser, error: fetchError } = await supabaseAdmin
+        const { data: existingUser, error: fetchError } = await (await supabaseAdmin as any)
           .from('users')
           .select('*')
           .eq('id', user.id)
@@ -51,7 +53,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
         if (fetchError && fetchError.code === 'PGRST116') {
           // User doesn't exist, create them
-          const { data: newUser, error: createError } = await supabaseAdmin
+          const { data: newUser, error: createError } = await (await supabaseAdmin as any)
             .from('users')
             .insert({
               id: user.id,
@@ -134,7 +136,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: updateError } = await (supabaseAdmin as any)
+      const { error: updateError } = await (await supabaseAdmin as any)
         .from('users')
         .update({
           email_verified: emailVerified,
@@ -186,7 +188,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       case 'user.created':
         // Create user profile in database
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: user, error } = await (supabaseAdmin as any)
+        const { data: user, error } = await (await supabaseAdmin as any)
           .from('users')
           .upsert({
             id: authUser.id,
@@ -229,7 +231,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       case 'user.updated':
         // Update user profile in database
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: updateError } = await (supabaseAdmin as any)
+        const { error: updateError } = await (await supabaseAdmin as any)
           .from('users')
           .update({
             email: authUser.email,

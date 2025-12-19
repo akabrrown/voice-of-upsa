@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
+import { useCMSAuth } from '@/hooks/useCMSAuth';
 import ImageUpload from '@/components/ImageUpload';
 import MediaManager from '@/components/MediaManager';
 import MarkdownContent from '@/components/MarkdownContent';
@@ -19,8 +20,7 @@ import {
   FiX,
   FiPlus,
   FiPaperclip,
-  FiCode,
-  FiMinimize
+  FiCode
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -61,9 +61,11 @@ interface MediaItem {
 
 const EditArticlePage: React.FC = () => {
   const { user, loading: authLoading, supabase } = useSupabase();
+  const { user: cmsUser, loading: cmsLoading } = useCMSAuth();
   const router = useRouter();
   const { id } = router.query;
   const autoSaveRef = useRef<NodeJS.Timeout | null>(null);
+  
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '',
     content: '',
@@ -92,8 +94,35 @@ const EditArticlePage: React.FC = () => {
   const [titleFontSize, setTitleFontSize] = useState('text-4xl');
 
   const fetchArticle = useCallback(async () => {
+    // Determine effective loading state to prevent premature checks
+    if (authLoading || cmsLoading) return;
+    
+    // Check if ID is available and valid
+    console.log('fetchArticle called with id:', id);
+    console.log('id type:', typeof id);
+    console.log('id value:', id);
+    
+    if (!id) {
+      console.error('Article ID is missing or undefined');
+      toast.error('Article ID is missing');
+      router.push('/editor/articles');
+      return;
+    }
+    
+    if (typeof id !== 'string' && typeof id !== 'number') {
+      console.error('Invalid article ID type:', typeof id);
+      toast.error('Invalid article ID format');
+      router.push('/editor/articles');
+      return;
+    }
+    
+    const articleId = String(id);
+    console.log('Using article ID:', articleId);
+    
     try {
       setLoading(true);
+      
+      console.log('Fetching article with ID:', articleId);
       
       // Check user role first
       const { data: { session } } = await supabase.auth.getSession();
@@ -102,43 +131,85 @@ const EditArticlePage: React.FC = () => {
         return;
       }
       
-      const userResponse = await fetch(`/api/users/${user?.id}`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-      if (!userResponse.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-      const userDataResponse = await userResponse.json();
-      const userRole = userDataResponse.data?.role || userDataResponse.role;
+      // Get user role from CMS auth data
+      // If cmsUser is still null despite !cmsLoading, it means fetch failed or no user
+      const userRole = cmsUser?.role || 'user';
+      console.log('Edit article page - User role:', userRole);
+      
       if (userRole !== 'editor' && userRole !== 'admin') {
+        console.warn('Insufficient permissions:', userRole);
         router.push('/unauthorized');
         return;
       }
 
       // Fetch article
-      const response = await fetch(`/api/editor/articles/${id}`, {
+      console.log('Making API call to:', `/api/editor/articles/${articleId}`);
+      console.log('Session token available:', !!session.access_token);
+      console.log('Session token length:', session.access_token?.length);
+      
+      const response = await fetch(`/api/editor/articles/${articleId}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },
       });
+      
+      console.log('API Response status:', response.status);
+      console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Failed to fetch article:', response.status, errorText);
-        throw new Error('Article not found');
+        
+        // Try to parse the error to get more specific information
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error('Parsed error data:', errorData);
+          
+          // Show specific error message instead of generic "Article not found"
+          if (errorData.error?.message) {
+            throw new Error(errorData.error.message);
+          } else if (errorData.error?.code) {
+            throw new Error(`API Error: ${errorData.error.code}`);
+          }
+        } catch (parseError) {
+          // If we can't parse the error, use the original error text
+          console.error('Could not parse error response:', parseError);
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
+        }
       }
 
       const data = await response.json();
+      console.log('API Response data:', data);
+      console.log('API Response data.data:', data.data);
+      console.log('API Response data.article:', data.article);
+      console.log('API Response data.data?.article:', data.data?.article);
+      
       const article = data.data?.article || data.article;
       
+      if (!article) {
+        console.error('No article found in response:', data);
+        console.error('Response structure:', {
+          hasData: !!data,
+          hasDataData: !!data?.data,
+          hasArticle: !!data?.article,
+          hasDataArticle: !!data?.data?.article,
+          dataKeys: data ? Object.keys(data) : 'no data',
+          dataDataKeys: data?.data ? Object.keys(data.data) : 'no data.data'
+        });
+        throw new Error(`Article not found in API response. Response: ${JSON.stringify(data)}`);
+      }
+      
       // Check if user can edit this article
+      // Admins can edit anything. Editors can only edit their own.
       if (userRole === 'editor' && article.author_id !== user?.id) {
         toast.error('You can only edit your own articles');
         router.push('/editor/articles');
         return;
       }
       
+      console.log('Article loaded successfully:', article.title);
+      
+      // ... set form data ...
       setFormData({
         title: article?.title || '',
         content: article?.content || '',
@@ -161,13 +232,13 @@ const EditArticlePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, router, id, supabase]);
+  }, [user, router, id, supabase, cmsUser, authLoading, cmsLoading]);
 
   useEffect(() => {
-    if (id && user && !authLoading) {
+    if (id && user && !authLoading && !cmsLoading) {
       fetchArticle();
     }
-  }, [id, user, authLoading, fetchArticle]);
+  }, [id, user, authLoading, cmsLoading, fetchArticle]);
 
   useEffect(() => {
     // Calculate word count, character count and reading time
@@ -329,7 +400,7 @@ const EditArticlePage: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`/api/articles/${id}`, {
+      const response = await fetch(`/api/editor/articles/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -714,29 +785,24 @@ const EditArticlePage: React.FC = () => {
                       <label htmlFor="content" className="block text-sm font-medium text-gray-700">
                         Article Content *
                       </label>
-                      <div className="flex items-center space-x-4 text-sm">
-                        <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 md:space-x-4 text-xs md:text-sm overflow-x-auto pb-1 scrollbar-hide flex-shrink-0 max-w-full">
+                        <div className="flex items-center space-x-2 whitespace-nowrap">
                           <span className={`font-medium ${getWordCountColor()}`}>
                             {wordCount} words
                           </span>
-                          {wordCount < 300 && <span className="text-orange-600 text-xs">(min: 300)</span>}
-                          {wordCount > 2000 && <span className="text-orange-600 text-xs">(max: 2000)</span>}
                         </div>
-                        <div className="w-px h-4 bg-gray-300"></div>
-                        <span className="text-gray-600">
+                        <div className="flex-shrink-0 w-px h-4 bg-gray-300"></div>
+                        <span className="text-gray-600 whitespace-nowrap">
                           {characterCount.toLocaleString()} chars
                         </span>
-                        <div className="w-px h-4 bg-gray-300"></div>
-                        <span className={`font-medium ${getReadingTimeColor()}`}>
+                        <div className="flex-shrink-0 w-px h-4 bg-gray-300"></div>
+                        <span className={`font-medium whitespace-nowrap ${getReadingTimeColor()}`}>
                           {readingTime} min read
-                          {readingTime < 1 && ' (very short)'}
-                          {readingTime > 10 && ' (very long)'}
                         </span>
-                        <div className="w-px h-4 bg-gray-300"></div>
                         <button
                           type="button"
                           onClick={() => setPreview(!preview)}
-                          className="text-golden hover:text-golden-dark flex items-center"
+                          className="text-golden hover:text-golden-dark flex items-center whitespace-nowrap pl-4 transition-colors"
                         >
                           <FiEye className="mr-1" />
                           {preview ? 'Edit' : 'Preview'}
@@ -746,14 +812,14 @@ const EditArticlePage: React.FC = () => {
 
                     {/* Formatting Toolbar */}
                     {!preview && (
-                      <div className="border-b border-gray-200 mb-4">
+                      <div className="border-2 border-gray-200 rounded-xl mb-4 bg-white shadow-sm overflow-hidden">
                         {/* First Row - Basic Formatting */}
-                        <div className="flex items-center space-x-1 p-2 bg-gray-50 border-b border-gray-200">
-                          <div className="flex items-center space-x-1 pr-2 border-r border-gray-300">
+                        <div className="flex items-center space-x-1 p-2 md:p-3 bg-gray-50 border-b border-gray-200 overflow-x-auto scrollbar-hide">
+                          <div className="flex items-center space-x-1 pr-2 border-r border-gray-300 flex-shrink-0">
                             <button
                               type="button"
                               onClick={() => insertFormatting('bold')}
-                              className="p-2 hover:bg-gray-200 rounded font-bold"
+                              className="p-2 hover:bg-gray-200 rounded-lg font-bold text-gray-700 hover:text-gray-900 transition-colors"
                               title="Bold (Ctrl+B)"
                             >
                               <FiBold />
@@ -761,7 +827,7 @@ const EditArticlePage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => insertFormatting('italic')}
-                              className="p-2 hover:bg-gray-200 rounded italic"
+                              className="p-2 hover:bg-gray-200 rounded-lg italic text-gray-700 hover:text-gray-900 transition-colors"
                               title="Italic (Ctrl+I)"
                             >
                               <FiItalic />
@@ -769,18 +835,18 @@ const EditArticlePage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => insertFormatting('underline')}
-                              className="p-2 hover:bg-gray-200 rounded underline"
+                              className="p-2 hover:bg-gray-200 rounded text-gray-700 font-serif"
                               title="Underline (Ctrl+U)"
                             >
-                              U
+                              <span className="underline">U</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => insertFormatting('strikethrough')}
-                              className="p-2 hover:bg-gray-200 rounded line-through"
+                              className="p-2 hover:bg-gray-200 rounded text-gray-700"
                               title="Strikethrough"
                             >
-                              <FiMinimize />
+                              <span className="line-through">S</span>
                             </button>
                           </div>
 
@@ -909,78 +975,35 @@ const EditArticlePage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Publication Status
-                    </label>
-                    <div className="flex space-x-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="draft"
-                          checked={formData.status === 'draft'}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        <span className="text-gray-700">Draft</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="published"
-                          checked={formData.status === 'published'}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        <span className="text-gray-700">Published</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="pending_review"
-                          checked={formData.status === 'pending_review'}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        <span className="text-gray-700">Pending Review</span>
-                      </label>
-                    </div>
-                  </div>
 
                   {/* Submit Buttons */}
-                  <div className="flex justify-between items-center pt-6 border-t">
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t mt-8">
                     <button
                       type="button"
                       onClick={() => router.push('/editor/articles')}
-                      className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                      className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 order-3 sm:order-1"
                     >
                       Cancel
                     </button>
-                    <div className="flex space-x-4">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFormData(prev => ({ ...prev, status: 'draft' }));
-                          const event = new Event('submit', { cancelable: true }) as unknown as React.FormEvent;
-                          handleSubmit(event);
-                        }}
-                        disabled={isSubmitting}
-                        className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
-                      >
-                        {isSubmitting ? 'Saving...' : 'Save Draft'}
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="px-6 py-3 bg-golden text-navy rounded-lg hover:bg-yellow-400 disabled:opacity-50 font-semibold"
-                      >
-                        {isSubmitting ? 'Publishing...' : 'Update Article'}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, status: 'draft' }));
+                        const event = new Event('submit', { cancelable: true }) as unknown as React.FormEvent;
+                        handleSubmit(event);
+                      }}
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 order-2"
+                    >
+                      {isSubmitting ? 'Saving...' : 'Save Draft'}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto px-6 py-3 bg-golden text-navy rounded-lg hover:bg-yellow-400 disabled:opacity-50 font-semibold order-1 sm:order-3"
+                    >
+                      {isSubmitting ? 'Publishing...' : 'Update Article'}
+                    </button>
                   </div>
                 </div>
               </div>

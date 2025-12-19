@@ -58,14 +58,17 @@ const AdminMessagesPage: React.FC = () => {
     try {
       setLoading(true);
       
-      // Get session from Supabase
+      console.log('=== ADMIN MESSAGES FETCH ===');
+      console.log('Getting session...');
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session result:', { session: !!session, userId: session?.user?.id });
       
       if (!session) {
         toast.error('No active session found');
         return;
       }
       
+      console.log('Making API call to /api/admin/messages...');
       const response = await fetch('/api/admin/messages', {
         method: 'GET',
         headers: {
@@ -74,11 +77,17 @@ const AdminMessagesPage: React.FC = () => {
         },
       });
 
+      console.log('API response status:', response.status);
+      console.log('API response headers:', response.headers);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log('API error response:', errorText);
         throw new Error('Failed to fetch messages');
       }
 
       const data = await response.json();
+      console.log('API response data:', data);
       setMessages(data.data?.messages || []);
       
       // Fetch replies for all messages

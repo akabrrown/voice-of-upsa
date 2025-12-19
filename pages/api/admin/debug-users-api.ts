@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { requireAdminOrEditor } from '@/lib/auth-helpers';
 import { supabaseAdmin } from '@/lib/database-server';
 
@@ -21,7 +22,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     await requireAdminOrEditor(req);
 
     // Check RLS status on users table
-    const { data: rlsStatus, error: rlsError } = await supabaseAdmin
+    const { data: rlsStatus, error: rlsError } = await (await supabaseAdmin as any)
       .from('pg_tables')
       .select('tablename, rowsecurity')
       .eq('tablename', 'users')
@@ -29,20 +30,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       .single();
 
     // Check existing RLS policies
-    const { data: policies, error: policiesError } = await supabaseAdmin
+    const { data: policies, error: policiesError } = await (await supabaseAdmin as any)
       .from('pg_policies')
       .select('policyname, tablename, permissive, roles, cmd, qual')
       .eq('tablename', 'users')
       .eq('schemaname', 'public');
 
     // Test a simple query as admin
-    const { data: testQuery, error: testError } = await supabaseAdmin
+    const { data: testQuery, error: testError } = await (await supabaseAdmin as any)
       .from('users')
       .select('id, email, role')
       .limit(1);
 
     // Check if notification_preferences table exists
-    const { data: tableExists, error: tableError } = await supabaseAdmin
+    const { data: tableExists, error: tableError } = await (await supabaseAdmin as any)
       .from('information_schema.tables')
       .select('table_name')
       .eq('table_name', 'notification_preferences')
@@ -94,4 +95,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:debug',
+  auditAction: 'users_api_debugged'
+}));

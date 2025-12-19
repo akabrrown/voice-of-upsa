@@ -11,7 +11,7 @@ interface PendingStory {
   content: string;
   category: string;
   status: 'pending';
-  author_type: 'anonymous' | 'user' | 'non_user';
+  author_type: 'anonymous' | 'user' | 'non_user' | 'admin';
   created_at: string;
 }
 

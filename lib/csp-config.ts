@@ -37,7 +37,9 @@ export function getCSPConfig(reportOnly = false): CSPConfig {
       "'unsafe-eval'",
       'https://fonts.googleapis.com',
       'https://va.vercel-scripts.com',
-      'https://upload-widget.cloudinary.com'
+      'https://upload-widget.cloudinary.com',
+      'https://vercel.live',
+      'blob:'
     ],
     'style-src': [
       "'self'",
@@ -62,11 +64,13 @@ export function getCSPConfig(reportOnly = false): CSPConfig {
       'https://*.supabase.co',
       'https://va.vercel-scripts.com',
       'https://api.cloudinary.com',
+      'https://www.google-analytics.com',
       'wss://*.supabase.co'
     ],
     'frame-src': [
       "'self'",
-      'https://upload-widget.cloudinary.com'
+      'https://upload-widget.cloudinary.com',
+      'https://vercel.live'
     ],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
@@ -135,8 +139,8 @@ export function getSecurityHeaders(isProduction = false): SecurityHeaders {
     // Cross-domain policies
     headers['X-Permitted-Cross-Domain-Policies'] = 'none';
 
-    // COOP/COEP for isolation
-    headers['Cross-Origin-Embedder-Policy'] = 'require-corp';
+    // COOP/COEP for isolation (relaxed for Cloudinary)
+    headers['Cross-Origin-Embedder-Policy'] = 'unsafe-none';
     headers['Cross-Origin-Opener-Policy'] = 'same-origin';
     headers['Cross-Origin-Resource-Policy'] = 'same-origin';
   } else {

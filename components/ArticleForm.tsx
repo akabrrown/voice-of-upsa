@@ -43,7 +43,10 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
       if (err instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
         err.errors.forEach(error => {
-          newErrors[error.path[0]] = error.message;
+          const path = error.path[0];
+          if (path) {
+            newErrors[path] = error.message;
+          }
         });
         setErrors(newErrors);
       }

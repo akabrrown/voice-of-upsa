@@ -106,7 +106,7 @@ async function handleStatusUpdate(req: NextApiRequest, res: NextApiResponse) {
 
     // Update ad submission
     const supabaseAdmin = getSupabaseAdmin();
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await (await (await supabaseAdmin as any) as any)
       .from('ad_submissions')
       .update({
         status,
@@ -227,7 +227,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       throw new Error('Database connection failed');
     }
 
-    let query = supabaseAdmin
+    let query = (await (await supabaseAdmin as any) as any)
       .from('ad_submissions')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });

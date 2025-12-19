@@ -1,17 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Check environment variables
-  if (!supabaseAdmin) {
-    console.error('Missing Supabase environment variables');
-    return res.status(500).json({ error: 'Server configuration error' });
-  }
-
   // Handle GET request - fetch approved stories
   if (req.method === 'GET') {
     try {
-      const { data: stories, error: fetchError } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data: stories, error: fetchError } = await (await supabaseAdmin as any)
         .from('anonymous_stories')
         .select('*')
         .eq('status', 'approved')

@@ -60,7 +60,7 @@ const EditArticlePage: React.FC = () => {
         return;
       }
       
-      const response = await fetch(`/api/articles/${id}`, {
+      const response = await fetch(`/api/editor/articles/${id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -144,7 +144,7 @@ const EditArticlePage: React.FC = () => {
         status: publish ? 'published' : 'draft'
       };
 
-      const response = await fetch(`/api/admin/articles/${id}`, {
+      const response = await fetch(`/api/editor/articles/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

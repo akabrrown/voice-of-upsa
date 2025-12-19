@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity } from '@/lib/security/cms-security';
 import { z } from 'zod';
@@ -56,7 +56,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     });
 
     // Verify article exists
-    const { data: article, error: articleError } = await supabaseAdmin
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: article, error: articleError } = await (await supabaseAdmin as any)
       .from('articles')
       .select('id, title, scheduled_at, timezone, auto_publish, status')
       .eq('id', id)
@@ -101,7 +102,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
       updated_at: new Date().toISOString()
     };
 
-    const { data: updatedArticle, error: updateError } = await supabaseAdmin
+    const { data: updatedArticle, error: updateError } = await (await supabaseAdmin as any)
       .from('articles')
       .update(updateData)
       .eq('id', id)
@@ -164,5 +165,3 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
 
 // Apply CMS security middleware and enhanced error handler
 export default withErrorHandler(withCMSSecurity(handler));
-    
-        

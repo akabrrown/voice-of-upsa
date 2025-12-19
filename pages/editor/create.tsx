@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
+import { useCMSAuth } from '@/hooks/useCMSAuth';
 import ImageUpload from '@/components/ImageUpload';
 import MediaManager from '@/components/MediaManager';
 import ReactMarkdown from 'react-markdown';
@@ -88,8 +89,36 @@ interface MediaItem {
 
 const CreateArticlePage: React.FC = () => {
   const { user, loading: authLoading, supabase } = useSupabase();
+  const { user: cmsUser, loading: cmsLoading, isEditor } = useCMSAuth();
   const router = useRouter();
   const autoSaveRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Check if user has required permissions using CMS auth (consistent with articles.tsx)
+  console.log('=== CREATE ARTICLE PAGE DEBUG ===');
+  console.log('cmsUser:', cmsUser);
+  console.log('cmsUser?.role:', cmsUser?.role);
+  console.log('isEditor():', isEditor());
+  console.log('authLoading:', authLoading);
+  console.log('cmsLoading:', cmsLoading);
+  console.log('user:', user?.email);
+  
+  const canCreateArticles = isEditor() || cmsUser?.role === 'admin';
+  console.log('canCreateArticles:', canCreateArticles);
+  const canUploadMedia = isEditor() || cmsUser?.role === 'admin';
+  
+  // Combined loading state - wait for both auth systems
+  const isLoading = authLoading || cmsLoading;
+
+  // Helper function to get Supabase session token
+  const getAuthToken = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || null;
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return null;
+    }
+  }, [supabase]);
   
   const initialFormData: ArticleFormData = {
     title: '',
@@ -168,16 +197,23 @@ const CreateArticlePage: React.FC = () => {
     const checkRole = async () => {
       if (user && !authLoading) {
         try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
+          // User is already authenticated via simple auth, no need to check session
+          if (!user) {
             router.push('/auth/sign-in');
             return;
           }
           
-          // Fetch user role with existing session (no refresh to avoid rate limits)
+          // Get auth token from Supabase session
+          const token = await getAuthToken();
+          if (!token) {
+            router.push('/auth/sign-in');
+            return;
+          }
+          
+          // Fetch user profile with simple auth token
           const response = await fetch('/api/user/profile', {
             headers: {
-              'Authorization': `Bearer ${session.access_token}`,
+              'Authorization': `Bearer ${token}`,
             },
           });
           
@@ -186,29 +222,41 @@ const CreateArticlePage: React.FC = () => {
           console.log('Profile response:', responseText);
           
           if (!response.ok) {
-            // If token is expired, try refresh once
+            // If token is expired, try to get a fresh token from Supabase session
             if (response.status === 401) {
-              const { data: { session: freshSession }, error: refreshError } = await supabase.auth.refreshSession();
-              if (refreshError || !freshSession) {
-                console.error('Session refresh failed:', refreshError);
+              console.log('Token expired, trying to get a fresh token from Supabase session...');
+              const freshToken = await getAuthToken();
+              
+              if (!freshToken) {
+                console.error('No fresh token available');
+                toast.error('Session expired. Please sign in again.');
                 router.push('/auth/sign-in');
                 return;
               }
               
-              // Retry with fresh token
+              console.log('Retrying request with fresh token...');
               const retryResponse = await fetch('/api/user/profile', {
                 headers: {
-                  'Authorization': `Bearer ${freshSession.access_token}`,
+                  'Authorization': `Bearer ${freshToken}`,
                 },
               });
               
-              if (retryResponse.ok) {
-                const retryData = await retryResponse.json();
-                setUserData(retryData.data?.profile || retryData.profile);
+              if (!retryResponse.ok) {
+                console.error('Retry failed with status:', retryResponse.status);
+                toast.error('Session expired. Please sign in again.');
+                router.push('/auth/sign-in');
                 return;
               }
+              
+              console.log('Retry successful');
+              return; // Exit early since retry was successful
             }
-            throw new Error(`Failed to fetch user data: ${response.status} - ${responseText}`);
+            
+            // Handle other errors
+            const errorText = await response.text();
+            console.error('Profile fetch failed:', response.status, errorText);
+            toast.error('Failed to load user profile. Please try again.');
+            return;
           }
           
           const userDataResponse = JSON.parse(responseText);
@@ -224,7 +272,7 @@ const CreateArticlePage: React.FC = () => {
     // Add debouncing to prevent excessive calls
     const timeoutId = setTimeout(checkRole, 1000);
     return () => clearTimeout(timeoutId);
-  }, [user, authLoading, router, supabase.auth]);
+  }, [user, authLoading, router, getAuthToken]);
 
   useEffect(() => {
     // Calculate word count, character count and reading time
@@ -245,31 +293,7 @@ const CreateArticlePage: React.FC = () => {
     // Temporarily disabled auto-save due to schema issues
     console.log('Auto-save temporarily disabled');
     return;
-    
-    if (!user || !formData.title.trim()) return;
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        return;
-      }
-
-      const response = await fetch('/api/articles/auto-save', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token || ''}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        // Auto-save successful, the useFormPersist hook will handle the status
-      }
-    } catch (error) {
-      console.error('Auto-save failed:', error);
-    }
-  }, [user, formData, supabase.auth]);
+  }, []);
 
   // Auto-save functionality
   useEffect(() => {
@@ -407,6 +431,8 @@ const CreateArticlePage: React.FC = () => {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        if (!file) continue;
+        
         const formData = new FormData();
         formData.append('file', file);
         
@@ -513,7 +539,7 @@ const CreateArticlePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userData) {
+    if (!user) {
       toast.error('User data not loaded');
       return;
     }
@@ -530,13 +556,12 @@ const CreateArticlePage: React.FC = () => {
     }
 
     // Editors can now publish directly without admin approval
-    // No restrictions based on user role - all users can publish
-
     setIsSubmitting(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const token = await getAuthToken();
+      if (!token) {
+        toast.error('Authentication required. Please log in again.');
         router.push('/auth/sign-in');
         return;
       }
@@ -544,16 +569,37 @@ const CreateArticlePage: React.FC = () => {
       const response = await fetch('/api/editor/articles', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        console.log('Create article error response:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+          console.log('Parsed error data:', errorData);
+        } catch (parseError) {
+          console.log('Failed to parse error as JSON:', parseError);
+          errorData = { error: errorText };
+        }
+        
         const errorMessage = errorData.error?.message || errorData.error || 'Failed to create article';
-        throw new Error(typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage);
+        let finalErrorMessage = errorMessage;
+        
+        if (typeof errorMessage === 'object') {
+          try {
+            finalErrorMessage = JSON.stringify(errorMessage);
+          } catch {
+            finalErrorMessage = 'Failed to create article - error details unavailable';
+          }
+        }
+        
+        throw new Error(finalErrorMessage);
       }
 
       await response.json();
@@ -604,6 +650,63 @@ const CreateArticlePage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Authorization checks
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-golden"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    console.log('User is null, checking auth state...');
+    console.log('Loading:', authLoading, 'CMS Loading:', cmsLoading);
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-navy mb-4">Access Denied</h2>
+            <p className="text-gray-600 mb-4">
+              You must be authenticated to create articles.
+            </p>
+            <button
+              onClick={() => window.location.href = '/auth/sign-in'}
+              className="bg-golden text-navy font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition-colors"
+            >
+              Login
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  console.log('User data:', user);
+
+  if (!canCreateArticles) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-navy mb-4">Access Denied</h2>
+            <p className="text-gray-600 mb-4">
+              You must be an editor or admin to create articles.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin'}
+              className="bg-golden text-navy font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition-colors"
+            >
+              Back to Admin
+            </button>
           </div>
         </div>
       </Layout>
@@ -665,11 +768,19 @@ const CreateArticlePage: React.FC = () => {
                 <FiImage className="mr-2" />
                 Featured Image
               </h3>
-              <ImageUpload
-                value={formData.featured_image || undefined}
-                onChange={handleImageUpload}
-                onRemove={handleImageRemove}
-              />
+              {canUploadMedia ? (
+                <ImageUpload
+                  value={formData.featured_image || undefined}
+                  onChange={handleImageUpload}
+                  onRemove={handleImageRemove}
+                />
+              ) : (
+                <div className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <FiUpload className="mx-auto text-4xl text-gray-400 mb-4" />
+                  <p className="text-gray-600">You don&apos;t have permission to upload images</p>
+                  <p className="text-sm text-gray-500 mt-2">Contact an administrator to get media upload permissions</p>
+                </div>
+              )}
             </div>
 
             {/* Article Content */}
@@ -718,25 +829,6 @@ const CreateArticlePage: React.FC = () => {
                     </h3>
                   </div>
                 )}
-
-                {/* Contributor Name */}
-                <div>
-                  <label htmlFor="contributor_name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Contributor Name
-                  </label>
-                  <input
-                    type="text"
-                    id="contributor_name"
-                    name="contributor_name"
-                    value={formData.contributor_name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent"
-                    placeholder="Enter contributor name (if different from author)..."
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Credit the person who contributed to this article (optional)
-                  </p>
-                </div>
 
                 {/* Category and Tags */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -840,29 +932,24 @@ const CreateArticlePage: React.FC = () => {
                       <label htmlFor="content" className="block text-sm font-medium text-gray-700">
                         Article Content *
                       </label>
-                      <div className="flex items-center space-x-4 text-sm">
-                        <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 md:space-x-4 text-xs md:text-sm overflow-x-auto pb-1 scrollbar-hide flex-shrink-0 max-w-full">
+                        <div className="flex items-center space-x-2 whitespace-nowrap">
                           <span className={`font-medium ${getWordCountColor()}`}>
                             {wordCount} words
                           </span>
-                          {wordCount < 300 && <span className="text-orange-600 text-xs">(min: 300)</span>}
-                          {wordCount > 2000 && <span className="text-orange-600 text-xs">(max: 2000)</span>}
                         </div>
-                        <div className="w-px h-4 bg-gray-300"></div>
-                        <span className="text-gray-600">
+                        <div className="flex-shrink-0 w-px h-4 bg-gray-300"></div>
+                        <span className="text-gray-600 whitespace-nowrap">
                           {characterCount.toLocaleString()} chars
                         </span>
-                        <div className="w-px h-4 bg-gray-300"></div>
-                        <span className={`font-medium ${getReadingTimeColor()}`}>
+                        <div className="flex-shrink-0 w-px h-4 bg-gray-300"></div>
+                        <span className={`font-medium whitespace-nowrap ${getReadingTimeColor()}`}>
                           {readingTime} min read
-                          {readingTime < 1 && ' (very short)'}
-                          {readingTime > 10 && ' (very long)'}
                         </span>
-                        <div className="w-px h-4 bg-gray-300"></div>
                         <button
                           type="button"
                           onClick={() => setPreview(!preview)}
-                          className="text-golden hover:text-golden-dark flex items-center"
+                          className="text-golden hover:text-golden-dark flex items-center whitespace-nowrap pl-4 transition-colors"
                         >
                           <FiEye className="mr-1" />
                           {preview ? 'Edit' : 'Preview'}
@@ -874,12 +961,12 @@ const CreateArticlePage: React.FC = () => {
                     {!preview && (
                       <div className="border-2 border-gray-200 rounded-xl mb-4 bg-white shadow-sm overflow-hidden">
                         {/* First Row - Basic Formatting */}
-                        <div className="flex items-center space-x-1 p-3 bg-gray-50 border-b border-gray-200">
-                          <div className="flex items-center space-x-1 pr-2 border-r border-gray-300">
+                        <div className="flex items-center space-x-1 p-2 md:p-3 bg-gray-50 border-b border-gray-200 overflow-x-auto scrollbar-hide">
+                          <div className="flex items-center space-x-1 pr-2 border-r border-gray-300 flex-shrink-0">
                             <button
                               type="button"
                               onClick={() => insertFormatting('bold')}
-                              className="p-2.5 hover:bg-gray-200 rounded-lg font-bold text-gray-700 hover:text-gray-900 transition-colors duration-150"
+                              className="p-2 hover:bg-gray-200 rounded-lg font-bold text-gray-700 hover:text-gray-900 transition-colors"
                               title="Bold (Ctrl+B)"
                             >
                               <FiBold />
@@ -887,7 +974,7 @@ const CreateArticlePage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => insertFormatting('italic')}
-                              className="p-2.5 hover:bg-gray-200 rounded-lg italic text-gray-700 hover:text-gray-900 transition-colors duration-150"
+                              className="p-2 hover:bg-gray-200 rounded-lg italic text-gray-700 hover:text-gray-900 transition-colors"
                               title="Italic (Ctrl+I)"
                             >
                               <FiItalic />
@@ -895,18 +982,18 @@ const CreateArticlePage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => insertFormatting('underline')}
-                              className="p-2 hover:bg-gray-200 rounded underline"
+                              className="p-2 hover:bg-gray-200 rounded text-gray-700 font-serif"
                               title="Underline (Ctrl+U)"
                             >
-                              U
+                              <span className="underline">U</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => insertFormatting('strikethrough')}
-                              className="p-2 hover:bg-gray-200 rounded line-through"
+                              className="p-2 hover:bg-gray-200 rounded text-gray-700"
                               title="Strikethrough"
                             >
-                              <FiMinimize />
+                              <span className="line-through">S</span>
                             </button>
                           </div>
 
@@ -1229,6 +1316,20 @@ const CreateArticlePage: React.FC = () => {
                           Author Settings
                         </h4>
                         <div>
+                          <label htmlFor="contributor_name" className="block text-sm font-medium text-gray-700 mb-2">
+                            Contributor Name (overrides author name)
+                          </label>
+                          <input
+                            type="text"
+                            id="contributor_name"
+                            name="contributor_name"
+                            value={formData.contributor_name}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent mb-4"
+                            placeholder="e.g. Guest Writer"
+                          />
+                        </div>
+                        <div>
                           <label htmlFor="author_bio" className="block text-sm font-medium text-gray-700 mb-2">
                             Author Bio (optional)
                           </label>
@@ -1246,59 +1347,71 @@ const CreateArticlePage: React.FC = () => {
                     </div>
 
                   {/* Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {/* Status Options - Refined for mobile */}
+                  <div className="mt-8">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
                       Publication Status
                     </label>
-                    <div className="flex space-x-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="draft"
-                          checked={formData.status === 'draft'}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        <span className="text-gray-700">Draft</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <label className="flex items-center p-3 border rounded-lg cursor-pointer group hover:bg-gray-50 transition-colors">
+                        <div className="relative flex items-center">
+                          <input
+                            type="radio"
+                            name="status"
+                            value="draft"
+                            checked={formData.status === 'draft'}
+                            onChange={handleInputChange}
+                            className="sr-only"
+                          />
+                          <div className={`w-5 h-5 border-2 rounded-full mr-2 flex items-center justify-center transition-colors ${formData.status === 'draft' ? 'border-golden' : 'border-gray-300 group-hover:border-gray-400'}`}>
+                            {formData.status === 'draft' && <div className="w-2.5 h-2.5 bg-golden rounded-full" />}
+                          </div>
+                        </div>
+                        <span className={`text-sm ${formData.status === 'draft' ? 'text-navy font-semibold' : 'text-gray-600'}`}>Draft</span>
                       </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="scheduled"
-                          checked={formData.status === 'scheduled'}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        <span className="text-blue-700 font-medium">Schedule for Later</span>
+                      <label className="flex items-center p-3 border rounded-lg cursor-pointer group hover:bg-gray-50 transition-colors">
+                        <div className="relative flex items-center">
+                          <input
+                            type="radio"
+                            name="status"
+                            value="scheduled"
+                            checked={formData.status === 'scheduled'}
+                            onChange={handleInputChange}
+                            className="sr-only"
+                          />
+                          <div className={`w-5 h-5 border-2 rounded-full mr-2 flex items-center justify-center transition-colors ${formData.status === 'scheduled' ? 'border-blue-500' : 'border-gray-300 group-hover:border-gray-400'}`}>
+                            {formData.status === 'scheduled' && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />}
+                          </div>
+                        </div>
+                        <span className={`text-sm ${formData.status === 'scheduled' ? 'text-blue-700 font-semibold' : 'text-gray-600'}`}>Schedule</span>
                       </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="status"
-                          value="published"
-                          checked={formData.status === 'published'}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                          disabled={userData?.role !== 'admin' && userData?.role !== 'editor'} // Only admins and editors can publish
-                        />
-                        <span className="text-green-700 font-medium">Publish Now</span>
+                      <label className={`flex items-center p-3 border rounded-lg cursor-pointer group hover:bg-gray-50 transition-colors ${userData?.role !== 'admin' && userData?.role !== 'editor' ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        <div className="relative flex items-center">
+                          <input
+                            type="radio"
+                            name="status"
+                            value="published"
+                            checked={formData.status === 'published'}
+                            onChange={handleInputChange}
+                            className="sr-only"
+                            disabled={userData?.role !== 'admin' && userData?.role !== 'editor'}
+                          />
+                          <div className={`w-5 h-5 border-2 rounded-full mr-2 flex items-center justify-center transition-colors ${formData.status === 'published' ? 'border-green-500' : 'border-gray-300 group-hover:border-gray-400'}`}>
+                            {formData.status === 'published' && <div className="w-2.5 h-2.5 bg-green-500 rounded-full" />}
+                          </div>
+                        </div>
+                        <span className={`text-sm ${formData.status === 'published' ? 'text-green-700 font-semibold' : 'text-gray-600'}`}>Publish Now</span>
                       </label>
-                      {/* Debug info - remove in production */}
-                      <div className="text-xs text-gray-500 mt-2">
-                        Debug: User role = {userData?.role}, Can publish = {userData?.role === 'admin' || userData?.role === 'editor'}
-                      </div>
                     </div>
                   </div>
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="flex justify-end space-x-4 pt-6 border-t">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t mt-8">
                   <button
                     type="button"
                     onClick={() => router.push('/editor/articles')}
-                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                    className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 order-2 sm:order-1"
                     disabled={isSubmitting}
                   >
                     Cancel
@@ -1307,7 +1420,7 @@ const CreateArticlePage: React.FC = () => {
                   {formData.status === 'scheduled' ? (
                     <button
                       type="submit"
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
+                      className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 order-1 sm:order-2"
                       disabled={isSubmitting}
                     >
                       <FiSend />
@@ -1316,7 +1429,7 @@ const CreateArticlePage: React.FC = () => {
                   ) : (
                     <button
                       type="submit"
-                      className="px-6 py-3 bg-golden text-navy rounded-lg hover:bg-yellow-400 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
+                      className="w-full sm:w-auto px-6 py-3 bg-golden text-navy rounded-lg hover:bg-yellow-400 transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 order-1 sm:order-2"
                       disabled={isSubmitting}
                     >
                       {formData.status === 'published' ? <FiSend /> : <FiSave />}

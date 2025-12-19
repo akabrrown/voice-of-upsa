@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
+import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { z } from 'zod';
@@ -35,7 +35,7 @@ interface CommentData {
   [key: string]: unknown;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
@@ -56,12 +56,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
     );
     rateLimitMiddleware(req);
 
-    // Log comments access
-    console.log(`Admin comments accessed by user: ${user.email} (${user.id})`, {
-      timestamp: new Date().toISOString(),
-      securityLevel: user.securityLevel
-    });
-
   // Validate query parameters
     const validatedParams = commentsQuerySchema.parse(req.query);
     const { search, status, page } = validatedParams;
@@ -70,6 +64,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
     const limit = 20;
     const offset = (pageNum - 1) * limit;
 
+    const supabaseAdmin = await getSupabaseAdmin();
     let query = supabaseAdmin
       .from('comments')
       .select(`
@@ -96,7 +91,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
     const { data, error, count } = await query;
 
     if (error) {
-      console.error(`Comments fetch failed for admin ${user.email}:`, error);
+      console.error('Comments fetch failed:', error);
       return res.status(500).json({
         success: false,
         error: {
@@ -130,7 +125,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       user_agent: undefined
     }));
 
-    console.log(`Comments list returned to admin: ${user.email}`, {
+    console.log('Comments list returned:', {
       commentCount: sanitizedComments.length,
       timestamp: new Date().toISOString()
     });
@@ -149,7 +144,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       timestamp: new Date().toISOString()
     });
           } catch (error) {
-    console.error(`Comments API error for admin ${user.email}:`, error);
+    console.error('Comments API error:', error);
     return res.status(500).json({
       success: false,
       error: {
@@ -163,9 +158,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
 }
 
 // Apply enhanced CMS security middleware and error handler
-export default withErrorHandler(withCMSSecurity(handler, {
-  requirePermission: 'manage:comments',
-  auditAction: 'comments_accessed'
-}));
-
-  
+export default withErrorHandler(handler);

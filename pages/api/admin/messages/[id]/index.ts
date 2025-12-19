@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -46,7 +46,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
 
     // GET - Fetch single message
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data, error } = await (await supabaseAdmin as any)
         .from('contact_messages')
         .select('*')
         .eq('id', id)
@@ -101,7 +102,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       const validatedData = messageUpdateSchema.parse(req.body);
 
       // Get message to ensure it exists
-      const { data: existingMessage, error: fetchError } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data: existingMessage, error: fetchError } = await (await supabaseAdmin as any)
         .from('contact_messages')
         .select('*')
         .eq('id', id)
@@ -120,7 +122,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       }
 
       // Update message
-      const { data: updatedMessage, error } = await supabaseAdmin
+      const { data: updatedMessage, error } = await (await supabaseAdmin as any)
         .from('contact_messages')
         .update(validatedData)
         .eq('id', id)
@@ -202,6 +204,3 @@ export default withErrorHandler(withCMSSecurity(handler, {
   requirePermission: 'manage:messages',
   auditAction: 'message_accessed'
 }));
-      
-    
-      

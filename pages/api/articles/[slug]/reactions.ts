@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { z } from 'zod';
 
@@ -33,7 +33,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (authHeader) {
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: { user }, error: authError } = await (await supabaseAdmin as any).auth.getUser(token);
     if (!authError && user) {
       userId = user.id;
     }
@@ -42,8 +43,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   // For POST, allow both authenticated and anonymous users
   // userId will be undefined for anonymous users
 
+  const supabaseAdmin = await getSupabaseAdmin();
+
   // Resolve article ID from slug/id
-  const { data: article, error: articleError } = await supabaseAdmin
+  const { data: article, error: articleError } = await (await supabaseAdmin as any)
     .from('articles')
     .select('id')
     .eq(queryField, slug)
@@ -108,17 +111,19 @@ async function handlePost(
     });
   }
 
+  const supabaseAdmin = await getSupabaseAdmin();
+
   // Remove any existing reaction from this client for this article
   if (userId) {
     // For authenticated users, remove by user_id
-    await supabaseAdmin
+    await (await supabaseAdmin as any)
       .from('reactions')
       .delete()
       .eq('article_id', articleId)
       .eq('user_id', userId);
   } else {
     // For anonymous users, remove by IP address
-    await supabaseAdmin
+    await (await supabaseAdmin as any)
       .from('reactions')
       .delete()
       .eq('article_id', articleId)
@@ -127,7 +132,7 @@ async function handlePost(
   }
 
   // Add new reaction
-  const { error: reactionError } = await supabaseAdmin
+  const { error: reactionError } = await (await supabaseAdmin as any)
     .from('reactions')
     .insert({
       article_id: articleId,
@@ -165,7 +170,8 @@ async function handleGet(
 }
 
 async function getReactionCounts(articleId: string, userId?: string) {
-  const { data: reactions, error } = await supabaseAdmin
+  const supabaseAdmin = await getSupabaseAdmin();
+  const { data: reactions, error } = await (await supabaseAdmin as any)
     .from('reactions')
     .select('reaction_type, user_id')
     .eq('article_id', articleId);

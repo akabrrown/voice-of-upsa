@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { authenticate } from '@/lib/api/middleware/auth';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,25 +17,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Authenticate user (must be admin)
-    const user = await authenticate(req);
-    
-    if (user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'FORBIDDEN',
-          message: 'Admin access required',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
+    // User is already authenticated and verified as admin by withCMSSecurity middleware
+    // The middleware passes the user object to the handler
 
     console.log('🔄 Starting manual user sync...');
 
+    // Get the admin client (it's a Promise)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const adminClient: any = await supabaseAdmin;
+
     // Get all users from Supabase auth
-    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: authUsers, error: authError } = await adminClient.auth.admin.listUsers();
     
     if (authError) {
       console.error('Error fetching auth users:', authError);
@@ -51,7 +43,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Sync each auth user to our users table
     for (const authUser of authUsers.users) {
       try {
-        const { data: existingUser, error: fetchError } = await supabaseAdmin
+        const { data: existingUser, error: fetchError } = await adminClient
           .from('users')
           .select('*')
           .eq('id', authUser.id)
@@ -65,7 +57,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
         if (!existingUser) {
           // Create new user record
-          const { error: insertError } = await supabaseAdmin
+          const { error: insertError } = await adminClient
             .from('users')
             .insert({
               id: authUser.id,
@@ -73,12 +65,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
               name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
               role: 'user',
               avatar_url: authUser.user_metadata?.avatar_url || null,
-              bio: null,
-              website: null,
-              location: null,
-              social_links: {},
-              preferences: {},
-              email_verified: authUser.email_confirmed_at ? true : false,
+              status: 'active',
               created_at: authUser.created_at || new Date().toISOString(),
               updated_at: new Date().toISOString(),
             });
@@ -95,17 +82,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           const needsUpdate = 
             existingUser.email !== authUser.email ||
             existingUser.name !== (authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User') ||
-            existingUser.avatar_url !== (authUser.user_metadata?.avatar_url || null) ||
-            existingUser.email_verified !== (authUser.email_confirmed_at ? true : false);
+            existingUser.avatar_url !== (authUser.user_metadata?.avatar_url || null);
 
           if (needsUpdate) {
-            const { error: updateError } = await supabaseAdmin
+            const { error: updateError } = await adminClient
               .from('users')
               .update({
                 email: authUser.email,
                 name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
                 avatar_url: authUser.user_metadata?.avatar_url || null,
-                email_verified: authUser.email_confirmed_at ? true : false,
                 updated_at: new Date().toISOString(),
               })
               .eq('id', authUser.id);
@@ -155,5 +140,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Wrap with error handler middleware
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:users',
+  auditAction: 'users_sync_all'
+}));

@@ -94,13 +94,31 @@ const Layout: React.FC<LayoutProps> = ({
         {/* Open Graph Meta Tags */}
         <meta property="og:title" content={title} />
         <meta property="og:description" content={ogDescription} />
-        <meta property="og:type" content="website" />
+        <meta property="og:type" content={router.pathname.startsWith('/articles/') ? 'article' : 'website'} />
         {(() => {
-          const finalOgImage = ogImage || '/images/og-default.jpg';
-          const imageUrl = finalOgImage.startsWith('http') ? finalOgImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${finalOgImage}`;
+          // Determine the final OG image
+          let finalImageUrl = '';
+          
+          if (ogImage) {
+            // If ogImage is already absolute (starts with http/https), use it as is
+            if (ogImage.startsWith('http://') || ogImage.startsWith('https://')) {
+              finalImageUrl = ogImage;
+            } else {
+              // If relative, prepend the site URL
+              const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+              finalImageUrl = `${baseUrl}${ogImage.startsWith('/') ? ogImage : '/' + ogImage}`;
+            }
+          } else {
+            // Use default OG image
+            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+            finalImageUrl = `${baseUrl}/images/og-default.jpg`;
+          }
+          
+          console.log('Final OG image URL:', finalImageUrl);
+          
           return (
             <>
-              <meta property="og:image" content={imageUrl} />
+              <meta property="og:image" content={finalImageUrl} />
               <meta property="og:image:width" content="1200" />
               <meta property="og:image:height" content="630" />
               <meta property="og:image:alt" content={title} />
@@ -116,11 +134,24 @@ const Layout: React.FC<LayoutProps> = ({
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={ogDescription} />
         {(() => {
-          const finalOgImage = ogImage || '/images/og-default.jpg';
-          const imageUrl = finalOgImage.startsWith('http') ? finalOgImage : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${finalOgImage}`;
+          // Use the same logic as OG image for Twitter
+          let finalImageUrl = '';
+          
+          if (ogImage) {
+            if (ogImage.startsWith('http://') || ogImage.startsWith('https://')) {
+              finalImageUrl = ogImage;
+            } else {
+              const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+              finalImageUrl = `${baseUrl}${ogImage.startsWith('/') ? ogImage : '/' + ogImage}`;
+            }
+          } else {
+            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+            finalImageUrl = `${baseUrl}/images/og-default.jpg`;
+          }
+          
           return (
             <>
-              <meta name="twitter:image" content={imageUrl} />
+              <meta name="twitter:image" content={finalImageUrl} />
               <meta name="twitter:image:alt" content={title} />
             </>
           );

@@ -2,69 +2,19 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { z } from 'zod';
 import nodemailer from 'nodemailer';
-import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 // import { CSRFProtection } from '@/lib/csrf'; // TODO: Re-enable when frontend token handling is implemented
 
-// Supabase client
-const supabase = getSupabaseAdmin();
-
-// Type for API submission (without database fields)
-type AdSubmissionInput = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  company?: string;
-  businessType: 'individual' | 'small-business' | 'corporate' | 'non-profit' | 'other';
-  adLocations: string[];
-  adTitle: string;
-  adDescription: string;
-  targetAudience: string;
-  budget: string;
-  duration: '1-week' | '2-weeks' | '1-month' | '3-months' | '6-months' | '1-year' | 'custom';
-  startDate: string;
-  website?: string;
-  additionalInfo?: string;
-  termsAccepted: boolean;
-  attachmentUrls?: string[];
-  customDuration?: string;
-};
-
-// Type for database insertion (includes database fields)
-type AdSubmissionInsert = {
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  company?: string;
-  business_type: string;
-  ad_type: string;
-  ad_title: string;
-  ad_description: string;
-  target_audience: string;
-  budget: string;
-  duration: string;
-  custom_duration?: string;
-  start_date: string;
-  website?: string;
-  additional_info?: string;
-  terms_accepted: boolean;
-  attachment_urls?: string[];
-  status?: string;
-  payment_status?: string;
-  created_at?: string;
-  updated_at?: string;
-};
+// Supabase client will be initialized in the handler
 
 
 // Function to store ad locations
-async function storeAdLocations(submissionId: string, locationNames: string[]) {
+async function storeAdLocations(submissionId: string, locationNames: string[], supabase: any) {
   try {
     // Get location IDs from names
-    const { data: locations, error: locationError } = await supabase
+    const { data: locations, error: locationError } = await (await supabase as any)
       .from('ad_locations')
       .select('id')
       .in('name', locationNames);
@@ -80,12 +30,12 @@ async function storeAdLocations(submissionId: string, locationNames: string[]) {
     }
 
     // Insert into junction table
-    const locationInserts = locations.map(location => ({
+    const locationInserts = locations.map((location: { id: string }) => ({
       ad_submission_id: submissionId,
       ad_location_id: location.id
     }));
 
-    const { error: insertError } = await supabase
+    const { error: insertError } = await (await supabase as any)
       .from('ad_submission_locations')
       .insert(locationInserts);
 
@@ -126,13 +76,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
+  // Initialize Supabase client
+  const supabase = await getSupabaseAdmin();
+
   try {
     // Apply rate limiting for ad submissions
-    const rateLimit = getCMSRateLimit('POST');
-    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req) => 
-      getClientIP(req)
-    );
-    rateLimitMiddleware(req);
+    try {
+      const rateLimit = getCMSRateLimit('POST');
+      const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req) => 
+        getClientIP(req)
+      );
+      rateLimitMiddleware(req);
+    } catch (rateLimitError) {
+      console.error('Rate limiting error:', rateLimitError);
+      // Continue without rate limiting if it fails
+    }
 
     // Handle authentication - require authenticated users
     const authHeader = req.headers.authorization;
@@ -151,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = authHeader.replace('Bearer ', '');
     
     // Verify the token and get user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await (await supabase as any).auth.getUser(token);
     
     if (authError || !user) {
       return res.status(401).json({
@@ -173,12 +131,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('Validation passed:', JSON.stringify(validatedData, null, 2));
 
     // Prepare data for insertion (map to snake_case)
-    const insertData: AdSubmissionInsert = {
+    const insertData: Record<string, string | boolean | undefined | string[]> = {
       first_name: validatedData.firstName,
       last_name: validatedData.lastName,
       email: validatedData.email,
       phone: validatedData.phone,
-      company: validatedData.company,
+      ...(validatedData.company && { company: validatedData.company }),
       business_type: validatedData.businessType,
       ad_type: 'other', // Default ad type since frontend doesn't collect it
       ad_title: validatedData.adTitle,
@@ -186,9 +144,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       target_audience: validatedData.targetAudience,
       budget: validatedData.budget,
       duration: validatedData.duration,
+      custom_duration: validatedData.customDuration || undefined,
       start_date: validatedData.startDate,
-      website: validatedData.website,
-      additional_info: validatedData.additionalInfo,
+      ...(validatedData.website && { website: validatedData.website }),
+      ...(validatedData.additionalInfo && { additional_info: validatedData.additionalInfo }),
       terms_accepted: validatedData.termsAccepted,
       attachment_urls: validatedData.attachmentUrls,
       status: 'pending',
@@ -205,35 +164,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('Data for database insertion:', JSON.stringify(insertData, null, 2));
 
     // Store in database
-    const { data: submission, error } = await supabase
-      .from('ad_submissions')
-      .insert([insertData])
-      .select()
-      .single();
+    console.log('Attempting database insertion with data:', JSON.stringify(insertData, null, 2));
+    
+    let submission, error;
+    try {
+      const result = await (await supabase as any)
+        .from('ad_submissions')
+        .insert([insertData])
+        .select()
+        .single();
+      
+      submission = result.data;
+      error = result.error;
+      
+      console.log('Database insertion result:', { submission, error });
+    } catch (dbError) {
+      console.error('Database insertion threw error:', dbError);
+      error = dbError;
+    }
 
     if (error) {
       console.error('Database error details:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
+        message: (error as Error & { details?: string; hint?: string; code?: string }).message,
+        details: (error as Error & { details?: string; hint?: string; code?: string }).details,
+        hint: (error as Error & { details?: string; hint?: string; code?: string }).hint,
+        code: (error as Error & { details?: string; hint?: string; code?: string }).code
       });
       
       // If the error is about custom_duration column or any schema issue, try without optional fields
-      if (error.message?.includes('custom_duration') || 
-          error.message?.includes('column') || 
-          error.code === '42703' ||
-          error.code === '42702') {
-        console.log('Attempting fallback without optional fields');
+      if ((error as Error & { message?: string; code?: string }).message?.includes('custom_duration') || 
+          (error as Error & { message?: string; code?: string }).message?.includes('column') || 
+          (error as Error & { message?: string; code?: string }).message?.includes('schema')) {
         
-        // Create minimal insert data with only required fields
-        const fallbackData: AdSubmissionInsert = {
+        const fallbackData: Record<string, string | boolean | undefined | string[]> = {
           first_name: validatedData.firstName,
           last_name: validatedData.lastName,
           email: validatedData.email,
           phone: validatedData.phone,
           business_type: validatedData.businessType,
-          ad_type: 'other', // Default ad type since frontend doesn't collect it
+          ad_type: 'other',
           ad_title: validatedData.adTitle,
           ad_description: validatedData.adDescription,
           target_audience: validatedData.targetAudience,
@@ -247,13 +216,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updated_at: new Date().toISOString(),
         };
         
-        // Add optional fields only if they exist
         if (validatedData.company) fallbackData.company = validatedData.company;
         if (validatedData.website) fallbackData.website = validatedData.website;
         if (validatedData.additionalInfo) fallbackData.additional_info = validatedData.additionalInfo;
         if (validatedData.attachmentUrls) fallbackData.attachment_urls = validatedData.attachmentUrls;
         
-        const { data: fallbackSubmission, error: fallbackError } = await supabase
+        const { data: fallbackSubmission, error: fallbackError } = await (await supabase as any)
           .from('ad_submissions')
           .insert([fallbackData])
           .select()
@@ -273,7 +241,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         // Store ad locations for fallback submission
         if (validatedData.adLocations && validatedData.adLocations.length > 0) {
-          await storeAdLocations(fallbackSubmission.id, validatedData.adLocations);
+          await storeAdLocations(fallbackSubmission.id, validatedData.adLocations, supabase);
         }
         
         // Send emails with fallback submission
@@ -294,14 +262,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
       
-      return res.status(500).json({ message: 'Failed to store ad submission', error: error.message });
+      return res.status(500).json({ message: 'Failed to store ad submission', error: (error as Error).message });
     }
 
     console.log('Submission successful:', submission);
 
     // Store ad locations
-    if (validatedData.adLocations && validatedData.adLocations.length > 0) {
-      await storeAdLocations(submission.id, validatedData.adLocations);
+    if (validatedData.adLocations && validatedData.adLocations.length > 0 && submission) {
+      await storeAdLocations(submission.id, validatedData.adLocations, supabase);
     }
 
     console.log('Database insertion successful:', submission);
@@ -309,7 +277,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Send emails in parallel
     try {
       await Promise.all([
-        sendAdminNotification(submission),
+        sendAdminNotification(submission!),
         sendUserConfirmation(validatedData),
       ]);
       console.log('Emails sent successfully');
@@ -338,7 +306,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // Send email notification to admin
-async function sendAdminNotification(submission: AdSubmissionInput & { id: string; status: string; created_at: string; custom_duration?: string }) {
+async function sendAdminNotification(submission: Record<string, any>) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || '587'),
@@ -411,7 +379,7 @@ async function sendAdminNotification(submission: AdSubmissionInput & { id: strin
 }
 
 // Send confirmation email to user
-async function sendUserConfirmation(data: AdSubmissionInput) {
+async function sendUserConfirmation(data: Record<string, any>) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || '587'),

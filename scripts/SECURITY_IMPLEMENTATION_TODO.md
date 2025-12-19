@@ -214,12 +214,6 @@
   ```
   DATABASE_URL=postgresql://username:password@host:5432/database_name
   ```
-- [x] Add NextAuth configuration:
-  ```
-  NEXTAUTH_URL=http://localhost:3000
-  NEXTAUTH_SECRET=generate_random_secret_here_min_32_chars
-  JWT_SECRET=your_jwt_secret_here_min_32_chars
-  BCRYPT_ROUNDS=12
   ```
 - [x] Add email configuration:
   ```
@@ -262,17 +256,6 @@
   backup/
   dumps/
   ```
-
-### 4.4 Generate Secure Secrets
-- [x] Generate NEXTAUTH_SECRET:
-  ```bash
-  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-  ```
-- [x] Generate JWT_SECRET:
-  ```bash
-  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-  ```
-- [x] Add generated secrets to .env.local
 
 ---
 

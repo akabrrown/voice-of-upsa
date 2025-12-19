@@ -42,7 +42,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     });
 
     // Check if user already exists
-    const { data: existingUser, error: existingError } = await supabaseAdmin
+    const { data: existingUser, error: existingError } = await (await supabaseAdmin as any)
       .from('users')
       .select('id, email, role')
       .eq('email', email)
@@ -74,7 +74,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     }
 
     // Generate invitation token
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+    const { data: inviteData, error: inviteError } = await (await supabaseAdmin as any).auth.admin.generateLink({
       type: 'signup',
       email,
       password: randomUUID(), // Generate temporary password for invitation

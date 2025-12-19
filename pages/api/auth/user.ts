@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { verifyToken, findUserById } from '@/lib/simple-auth';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { createClient } from '@supabase/supabase-js';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -17,7 +16,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Authenticate user using admin client directly
+    // Authenticate user using simple auth token verification
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
@@ -33,15 +32,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const token = authHeader.replace('Bearer ', '');
     
-    // Verify token and get user using regular Supabase client
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // Verify token using simple auth (no rate limiting)
+    const authUser = verifyToken(token);
     
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !authUser) {
+    if (!authUser) {
       return res.status(401).json({
         success: false,
         error: {
@@ -53,42 +47,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Get user profile from database using SQL function to bypass RLS
-    let profile = null;
-    let profileError = null;
-    
-    try {
-      // Try SQL function first (most reliable)
-      const { data: role, error: roleError } = await supabaseAdmin
-        .rpc('get_user_role', { user_id: authUser.id });
-        
-      if (!roleError) {
-        // Get full user profile using admin client (bypasses RLS)
-        const { data: fullProfile, error: fullProfileError } = await supabaseAdmin
-          .from('users')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
-          
-        if (fullProfileError) {
-          profileError = fullProfileError;
-        } else {
-          profile = { ...fullProfile, role };
-        }
-      } else {
-        profileError = roleError;
-      }
-    } catch (error) {
-      profileError = error;
-    }
+    // Get user profile from database using simple auth (no Supabase auth calls)
+    const profile = await findUserById(authUser.id);
 
-    if (profileError) {
+    if (!profile) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'USER_PROFILE_NOT_FOUND',
           message: 'User profile not found',
-          details: (profileError as Error).message
+          details: null
         },
         timestamp: new Date().toISOString()
       });
@@ -97,39 +65,23 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     res.status(200).json({
       success: true,
       data: {
-        user: {
-          id: authUser.id,
-          email: authUser.email,
-          name: profile.name,
-          role: profile.role,
-          avatar_url: profile.avatar_url,
-          bio: profile.bio,
-          website: profile.website,
-          location: profile.location,
-          is_active: profile.is_active,
-          email_verified: profile.email_verified,
-          last_sign_in_at: profile.last_sign_in_at,
-          created_at: profile.created_at,
-          updated_at: profile.updated_at
-        }
+        user: profile
       },
       timestamp: new Date().toISOString()
     });
-
   } catch (error) {
-    console.error('Get user error:', error);
+    console.error('Error in auth/user API:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred while fetching user data',
-        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
+        message: 'Internal server error',
+        details: (error as Error).message
       },
       timestamp: new Date().toISOString()
     });
   }
 }
 
-// Wrap with error handler middleware
 export default withErrorHandler(handler);
 

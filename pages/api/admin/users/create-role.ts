@@ -41,7 +41,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     });
 
     // Check if user already exists
-    const { data: existingUser, error: checkError } = await supabaseAdmin
+    const { data: existingUser, error: checkError } = await (await supabaseAdmin as any)
       .from('users')
       .select('id, email, name, role')
       .eq('email', email)
@@ -79,7 +79,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     ).join('');
 
     // Create user in Supabase Auth first
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: authUser, error: authError } = await (await supabaseAdmin as any).auth.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true, // Auto-confirm so they can use temp password
@@ -116,7 +116,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     }
 
     // Create new user with role in users table
-    const { data: newUser, error: createError } = await supabaseAdmin
+    const { data: newUser, error: createError } = await (await supabaseAdmin as any)
       .from('users')
       .insert({
         id: authUser.user.id, // Use the same ID as auth user
@@ -134,7 +134,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     if (createError) {
       console.error('Admin create role database error:', createError);
       // Clean up auth user if database record creation failed
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id);
+      await (await supabaseAdmin as any).auth.admin.deleteUser(authUser.user.id);
       
       return res.status(500).json({
         success: false,

@@ -393,12 +393,12 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 overflow-x-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex space-x-8">
+            <div className="flex space-x-8 min-w-max">
               <button
                 onClick={() => handleTabChange('overview')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'overview'
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex-shrink-0 ${activeTab === 'overview'
                     ? 'border-golden text-golden'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
@@ -408,7 +408,7 @@ const AdminDashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => handleTabChange('articles')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'articles'
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex-shrink-0 ${activeTab === 'articles'
                     ? 'border-golden text-golden'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
@@ -418,7 +418,7 @@ const AdminDashboard: React.FC = () => {
               </button>
               <button
                 onClick={() => handleTabChange('users')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${activeTab === 'users'
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex-shrink-0 ${activeTab === 'users'
                     ? 'border-golden text-golden'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
@@ -427,7 +427,7 @@ const AdminDashboard: React.FC = () => {
                 Users
               </button>
               <NextLink href="/admin/comments" legacyBehavior>
-              <a className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center ${
+              <a className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center flex-shrink-0 ${
                 isPathActive('/admin/comments')
                   ? 'border-golden text-golden'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -437,7 +437,7 @@ const AdminDashboard: React.FC = () => {
               </a>
             </NextLink>
             <NextLink href="/admin/messages" legacyBehavior>
-              <a className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center ${
+              <a className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center flex-shrink-0 ${
                 isPathActive('/admin/messages')
                   ? 'border-golden text-golden'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -642,7 +642,7 @@ const AdminDashboard: React.FC = () => {
                           {/* NEW Combined Monthly Statistics Chart */}
                           <div>
                             <h4 className="text-sm font-medium text-gray-700 mb-3">Overview (Articles, Views, Users)</h4>
-                            <div className="bg-gray-50 rounded-lg p-4" style={{ height: '400px' }}>
+                            <div className="bg-gray-50 rounded-lg p-2 md:p-4" style={{ height: '400px', minWidth: '300px' }}>
                               <ResponsiveContainer width="100%" height="100%">
                                 <ComposedChart data={stats.monthlyStats}>
                                   <CartesianGrid strokeDasharray="3 3" />

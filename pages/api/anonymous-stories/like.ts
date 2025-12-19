@@ -1,12 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!supabaseAdmin) {
-    console.error('Missing Supabase environment variables');
-    return res.status(500).json({ error: 'Server configuration error' });
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -23,12 +18,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       (req.connection.remoteAddress as string) || 
                       'unknown';
 
+    const supabaseAdmin = await getSupabaseAdmin();
+
     // Check if user already liked this story
     let existingLike = null;
     
     if (userId) {
       // Check for authenticated user
-      const { data } = await supabaseAdmin
+      const { data } = await (await supabaseAdmin as any)
         .from('story_likes')
         .select('*')
         .eq('story_id', storyId)
@@ -38,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       existingLike = data;
     } else if (sessionId) {
       // Check for anonymous user by session
-      const { data } = await supabaseAdmin
+      const { data } = await (await supabaseAdmin as any)
         .from('story_likes')
         .select('*')
         .eq('story_id', storyId)
@@ -48,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       existingLike = data;
     } else {
       // Check for anonymous user by IP address
-      const { data } = await supabaseAdmin
+      const { data } = await (await supabaseAdmin as any)
         .from('story_likes')
         .select('*')
         .eq('story_id', storyId)
@@ -60,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (existingLike) {
       // UNLIKE: Remove the like and decrement count
-      const deleteQuery = supabaseAdmin
+      const deleteQuery = (await supabaseAdmin as any)
         .from('story_likes')
         .delete()
         .eq('story_id', storyId);
@@ -81,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Get current likes count
-      const { data: currentStory, error: fetchError } = await supabaseAdmin
+      const { data: currentStory, error: fetchError } = await (await supabaseAdmin as any)
         .from('anonymous_stories')
         .select('likes_count')
         .eq('id', storyId)
@@ -93,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Decrement likes count
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await (await supabaseAdmin as any)
         .from('anonymous_stories')
         .update({ 
           likes_count: Math.max(0, (currentStory?.likes_count || 0) - 1),
@@ -116,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     } else {
       // LIKE: Add the like and increment count
-      const { error: likeError } = await supabaseAdmin
+      const { error: likeError } = await (await supabaseAdmin as any)
         .from('story_likes')
         .insert({
           story_id: storyId,
@@ -131,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Get current likes count
-      const { data: currentStory, error: fetchError } = await supabaseAdmin
+      const { data: currentStory, error: fetchError } = await (await supabaseAdmin as any)
         .from('anonymous_stories')
         .select('likes_count')
         .eq('id', storyId)
@@ -143,7 +140,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Increment likes count
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await (await supabaseAdmin as any)
         .from('anonymous_stories')
         .update({ 
           likes_count: (currentStory?.likes_count || 0) + 1,

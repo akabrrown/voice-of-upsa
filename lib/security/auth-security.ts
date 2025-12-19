@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest } from 'next';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 export interface SecurityContext {
   clientIP: string;
@@ -74,11 +74,11 @@ export function getClientIP(req: NextApiRequest): string {
   
   if (forwardedFor) {
     const forwardedStr = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
-    return forwardedStr.split(',')[0].trim();
+    return forwardedStr?.split(',')[0]?.trim() || '';
   }
   
-  if (realIP) return Array.isArray(realIP) ? realIP[0] : realIP;
-  if (cfConnectingIP) return Array.isArray(cfConnectingIP) ? cfConnectingIP[0] : cfConnectingIP;
+  if (realIP) return Array.isArray(realIP) ? realIP[0] || '' : realIP || '';
+  if (cfConnectingIP) return Array.isArray(cfConnectingIP) ? cfConnectingIP[0] || '' : cfConnectingIP || '';
   
   return req.socket.remoteAddress || 'unknown';
 }

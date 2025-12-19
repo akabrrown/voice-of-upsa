@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -31,6 +30,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const token = authHeader.replace('Bearer ', '');
+    // Get admin client
+    const supabaseAdmin = await import('@/lib/database-server').then(m => m.getSupabaseAdmin());
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {

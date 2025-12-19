@@ -56,19 +56,19 @@ const UserTable: React.FC<UserTableProps> = ({
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               User
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Role
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Joined
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Last Active
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
             </th>
           </tr>
@@ -76,41 +76,41 @@ const UserTable: React.FC<UserTableProps> = ({
         <tbody className="bg-white divide-y divide-gray-200">
           {users.map((user) => (
             <tr key={user.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
+              <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
-                  <div className="flex-shrink-0 h-10 w-10">
+                  <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
                     {user.avatar_url ? (
                       <Image
-                        className="h-10 w-10 rounded-full object-cover"
+                        className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover"
                         src={user.avatar_url}
                         alt={user.name}
                         width={40}
                         height={40}
                       />
                     ) : (
-                      <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600">
+                      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                        <span className="text-xs sm:text-sm font-medium text-gray-600">
                           {user.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">
+                  <div className="ml-3 sm:ml-4">
+                    <div className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[100px] sm:max-w-none">
                       {user.name}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-[10px] sm:text-sm text-gray-500 truncate max-w-[100px] sm:max-w-none">
                       {user.email}
                     </div>
                   </div>
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
+              <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                 {onRoleChange ? (
                   <select
                     value={user.role}
                     onChange={(e) => handleRoleChange(user.id, e.target.value as User['role'])}
-                    className="text-sm border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                    className="text-[10px] sm:text-sm border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500 p-1 sm:p-2"
                   >
                     <option value="reader">Reader</option>
                     <option value="author">Author</option>
@@ -119,7 +119,7 @@ const UserTable: React.FC<UserTableProps> = ({
                   </select>
                 ) : (
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    className={`px-1.5 sm:px-2 inline-flex text-[10px] sm:text-xs leading-5 font-semibold rounded-full ${
                       user.role === 'admin'
                         ? 'bg-purple-100 text-purple-800'
                         : user.role === 'editor'
@@ -133,19 +133,19 @@ const UserTable: React.FC<UserTableProps> = ({
                   </span>
                 )}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {new Date(user.created_at).toLocaleDateString()}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {user.last_sign_in_at
                   ? new Date(user.last_sign_in_at).toLocaleDateString()
                   : 'Never'}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 {onEdit && (
                   <button
                     onClick={() => onEdit(user)}
-                    className="text-blue-600 hover:text-blue-900 mr-3"
+                    className="text-blue-600 hover:text-blue-900 mr-2 sm:mr-3"
                   >
                     Edit
                   </button>

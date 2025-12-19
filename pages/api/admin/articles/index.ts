@@ -41,12 +41,18 @@ const articleCreateSchema = z.object({
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
+  console.log('Admin Articles API [index] reached:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    timestamp: new Date().toISOString()
+  });
   try {
     // Server-side role check - double security
     await requireAdminOrEditor(req);
 
     // Get supabase admin client
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseAdmin = await getSupabaseAdmin();
     if (!supabaseAdmin) {
       throw new Error('Database connection failed');
     }
@@ -92,13 +98,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       console.log('Pagination:', { pageNum, limit, offset });
 
       console.log('Building database query...');
-      let query = supabaseAdmin
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (await supabaseAdmin as any)
         .from('articles')
-        .select(`
-          *,
-          author:users(name, email),
-          category:categories(id, name, slug)
-        `, { count: 'exact' })
+        .select('*, author:users!author_id(name, email)', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       // Add search filter with SQL injection protection
@@ -145,7 +148,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       return res.status(200).json({
         success: true,
         data: {
-          articles: data || [],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          articles: (data || []).map((article: any) => ({
+            ...article,
+            author_name: article.contributor_name || article.author?.name || 'Unknown',
+            author_email: article.author?.email || 'Unknown'
+          })),
           pagination: {
             currentPage: pageNum,
             totalPages: count ? Math.ceil(count / limit) : 0,
@@ -198,7 +206,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       };
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: article, error } = await (supabaseAdmin as any)
+      const { data: article, error } = await (await supabaseAdmin as any)
         .from('articles')
         .insert(articleData)
         .select(`
@@ -294,4 +302,3 @@ export default withErrorHandler(withCMSSecurity(handler, {
   requirePermission: 'manage:content',
   auditAction: 'articles_accessed'
 }));
-

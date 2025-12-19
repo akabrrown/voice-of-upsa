@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -44,7 +44,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
 
     // GET - Fetch single comment
     if (req.method === 'GET') {
-      const { data, error } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data, error } = await (await supabaseAdmin as any)
         .from('comments')
         .select(`
           *,
@@ -108,7 +109,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       const validatedData = commentUpdateSchema.parse(req.body);
 
       // Get comment to ensure it exists
-      const { data: existingComment, error: fetchError } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data: existingComment, error: fetchError } = await (await supabaseAdmin as any)
         .from('comments')
         .select('*')
         .eq('id', id)
@@ -127,7 +129,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       }
 
       // Update comment
-      const { data: updatedComment, error } = await supabaseAdmin
+      const { data: updatedComment, error } = await (await supabaseAdmin as any)
         .from('comments')
         .update(validatedData)
         .eq('id', id)
@@ -179,7 +181,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
     // DELETE - Delete comment
     if (req.method === 'DELETE') {
       // Get comment to ensure it exists
-      const { data: existingComment, error: fetchError } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data: existingComment, error: fetchError } = await (await supabaseAdmin as any)
         .from('comments')
         .select('id')
         .eq('id', id)
@@ -198,7 +201,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       }
 
       // Delete the comment
-      const { error: deleteError } = await supabaseAdmin
+      const { error: deleteError } = await (await supabaseAdmin as any)
         .from('comments')
         .delete()
         .eq('id', id);

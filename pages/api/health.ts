@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -14,7 +14,9 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
     // Test Supabase connection
     let supabaseTest = { success: false, error: null as string | null, count: 0 };
     try {
-      const { count, error } = await supabaseAdmin.from('articles').select('*', { count: 'exact', head: true });
+      const supabaseAdmin = await getSupabaseAdmin();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count, error } = await (supabaseAdmin as any).from('articles').select('*', { count: 'exact', head: true });
       if (error) {
         supabaseTest.error = error.message;
       } else {
@@ -27,7 +29,9 @@ export default async function handler(_req: NextApiRequest, res: NextApiResponse
     // Test articles API
     let articlesTest = { success: false, error: null as string | null, count: 0 };
     try {
-      const { data, error } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabaseAdmin as any)
         .from('articles')
         .select('id, title, status', { count: 'exact' })
         .eq('status', 'published')

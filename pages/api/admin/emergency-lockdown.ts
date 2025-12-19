@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getClientIP } from '@/lib/security/auth-security';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { withStrictRateLimit } from '@/lib/security/strict-rate-limits';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -19,7 +19,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     );
 
     // Emergency: Hide all articles immediately
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (await supabaseAdmin as any)
       .from('articles')
       .update({ published: false })
       .neq('id', ''); // Update all rows
@@ -41,5 +41,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Apply enhanced error handler
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:emergency',
+  auditAction: 'emergency_lockdown_activated'
+}));

@@ -65,7 +65,8 @@ export class CSRFProtection {
    * Set CSRF token in HTTP-only cookie
    */
   static setCSRFCookie(res: NextApiResponse, token: string): void {
-    const cookie = serialize(this.COOKIE_NAME, token, {
+    // Set both HTTP-only cookie (for server-side validation) and accessible cookie (for client-side access)
+    const httpOnlyCookie = serialize(this.COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -73,7 +74,15 @@ export class CSRFProtection {
       path: '/'
     });
     
-    res.setHeader('Set-Cookie', cookie);
+    const accessibleCookie = serialize(`${this.COOKIE_NAME}-client`, token, {
+      httpOnly: false, // Allow JavaScript access
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60, // 24 hours
+      path: '/'
+    });
+    
+    res.setHeader('Set-Cookie', [httpOnlyCookie, accessibleCookie]);
   }
 
   /**
@@ -88,19 +97,22 @@ export class CSRFProtection {
    */
   static getTokenFromCookie(req: NextApiRequest): string | null {
     const cookies = req.cookies;
-    if (typeof cookies === 'object' && cookies !== null) {
-      return cookies[this.COOKIE_NAME] as string || null;
-    }
     
+    // Try HTTP-only cookie first
+    if (typeof cookies === 'object' && cookies !== null) {
+      const token = cookies[this.COOKIE_NAME] as string || cookies[`${this.COOKIE_NAME}-client`] as string || null;
+      if (token) return token;
+    }
+
     // Fallback for older cookie parsing
     const cookieHeader = req.headers.cookie || '';
     const parsedCookies = cookieHeader.split(';').reduce((acc, cookie) => {
       const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
+      if (key && value) acc[key.trim()] = value.trim();
       return acc;
     }, {} as Record<string, string>);
-    
-    return parsedCookies[this.COOKIE_NAME] || null;
+
+    return parsedCookies[this.COOKIE_NAME] || parsedCookies[`${this.COOKIE_NAME}-client`] || null;
   }
 
   /**

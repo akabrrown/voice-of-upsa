@@ -38,10 +38,10 @@ const Modal: React.FC<ModalProps> = ({
   }, [isOpen, onClose]);
 
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl'
+    sm: 'sm:max-w-md',
+    md: 'sm:max-w-lg',
+    lg: 'sm:max-w-2xl',
+    xl: 'sm:max-w-4xl'
   };
 
   if (!isOpen) return null;
@@ -63,7 +63,7 @@ const Modal: React.FC<ModalProps> = ({
 
         <div
           className={`
-            inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full
+            inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-all sm:w-full
             ${sizeClasses[size]}
             ${className}
           `}

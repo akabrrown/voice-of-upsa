@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session, User, SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/router';
-import { getSupabaseClient } from '@/lib/supabaseClient';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 type SupabaseContextType = {
   supabase: SupabaseClient;
@@ -29,7 +29,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.access_token) {
-        const response = await fetch('/api/auth/user', {
+        const response = await fetch('/api/user/profile', {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
@@ -38,8 +38,20 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         
         if (response.ok) {
           const data = await response.json();
-          setUserRole(data.data?.user?.role || 'user');
+          console.log('=== SupabaseProvider fetchUserRole DEBUG ===');
+          console.log('Full API Response:', JSON.stringify(data, null, 2));
+          console.log('data.data:', data.data);
+          console.log('data.data?.profile:', data.data?.profile);
+          console.log('data.data?.profile?.role:', data.data?.profile?.role);
+          // API returns { success: true, data: { profile: { role: '...' } } }
+          const extractedRole = data.data?.profile?.role || 'user';
+          console.log('Extracted role:', extractedRole);
+          setUserRole(extractedRole);
         } else {
+          console.log('=== SupabaseProvider fetchUserRole FAILED ===');
+          console.log('Response status:', response.status);
+          const errorText = await response.text();
+          console.log('Error response:', errorText);
           setUserRole('user');
         }
       } else {
@@ -93,9 +105,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       
       if (event === 'SIGNED_IN') {
-        // Only replace if the current path is valid (has all required parameters)
-        if (router.asPath && !router.asPath.includes('[slug]') && !router.asPath.includes('[id]')) {
-          router.replace(router.asPath);
+        // Only redirect if we're on auth pages to avoid redirect loops
+        if (router.pathname.startsWith('/auth/')) {
+          const redirectUrl = router.query.redirect_url as string || '/';
+          router.replace(redirectUrl);
         }
       }
     });

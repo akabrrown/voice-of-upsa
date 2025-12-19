@@ -10,7 +10,7 @@ interface AnonymousStory {
   content: string;
   category: string;
   status: 'approved';
-  author_type: 'anonymous' | 'user' | 'non_user';
+  author_type: 'anonymous' | 'user' | 'non_user' | 'admin';
   created_at: string;
   likes_count?: number;
   featured?: boolean;
@@ -28,53 +28,66 @@ const AnonymousPage: React.FC = () => {
   const [showReportDialog, setShowReportDialog] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState('');
 
-  const fetchUserLikes = useCallback(async () => {
-    try {
-      const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+  // Temporarily commented out since we're using test data
+  // const fetchUserLikes = useCallback(async () => {
+  //   try {
+  //     const userId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
       
-      const response = await fetch('/api/anonymous-stories/get-user-likes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId, sessionId }),
-      });
+  //     const response = await fetch('/api/anonymous-stories/get-user-likes', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ userId, sessionId }),
+  //     });
 
-      const data = await response.json();
+  //     const data = await response.json();
       
-      if (response.ok && data.likedStories) {
-        setLikedStories(new Set(data.likedStories));
-      }
-    } catch (error) {
-      console.error('Error fetching user likes:', error);
-    }
-  }, [sessionId]);
+  //     if (response.ok && data.likedStories) {
+  //       setLikedStories(new Set(data.likedStories));
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching user likes:', error);
+  //   }
+  // }, [sessionId]);
 
   const fetchStories = useCallback(async () => {
     try {
+      console.log('Fetching stories...');
+      setLoading(true);
+      
       const response = await fetch('/api/anonymous-stories/get-approved');
       const data = await response.json();
-      
-      console.log('Stories API response (updated):', data);
-      
-      if (response.ok) {
+
+      if (response.ok && data.success) {
+        console.log('Stories fetched successfully:', data.data);
         setStories(data.data || []);
-        // Fetch user likes after stories are loaded
-        fetchUserLikes();
       } else {
-        throw new Error(data.error || 'Failed to fetch stories');
+        console.error('Failed to fetch stories:', data.error);
+        // Don't show error toast on 404/empty, just show empty list
+        setStories([]);
       }
     } catch (error) {
       console.error('Error fetching stories:', error);
       toast.error('Failed to load stories');
+      setStories([]);
     } finally {
       setLoading(false);
     }
-  }, [fetchUserLikes]);
+  }, []);
 
   useEffect(() => {
+    console.log('AnonymousStories component mounted. Calling fetchStories...');
     fetchStories();
-  }, [fetchStories]);
+    
+    // Add a timeout fallback to ensure loading state is cleared
+    const timeout = setTimeout(() => {
+      console.log('Timeout fallback: forcing loading to false');
+      setLoading(false);
+    }, 3000); // 3 second timeout
+    
+    return () => clearTimeout(timeout);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,8 +107,8 @@ const AnonymousPage: React.FC = () => {
       return;
     }
 
-    if (newContent.trim().length < 50) {
-      toast.error('Story must be at least 50 characters');
+    if (newContent.trim().length < 10) {
+      toast.error('Story must be at least 10 characters');
       return;
     }
 
@@ -242,6 +255,7 @@ const AnonymousPage: React.FC = () => {
   };
 
   if (loading) {
+    console.log('Loading state is true, showing loader');
     return (
       <Layout title="Anonymous Stories - Voice of UPSA">
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -251,9 +265,16 @@ const AnonymousPage: React.FC = () => {
     );
   }
 
+  // Debug: Always show current state
+  console.log('Rendering page - stories length:', stories.length, 'loading:', loading);
+  
   return (
     <Layout title="Anonymous Stories - Voice of UPSA">
       <div className="min-h-screen bg-gray-50">
+        {/* Debug Info */}
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <strong>DEBUG:</strong> stories.length = {stories.length}, loading = {loading.toString()}
+        </div>
         {/* Header */}
         <div className="bg-navy text-white">
           <div className="max-w-4xl mx-auto px-4 py-12 text-center">
@@ -338,11 +359,11 @@ const AnonymousPage: React.FC = () => {
               
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500">
-                  Minimum 50 characters required
+                  Minimum 10 characters required
                 </span>
                 <button
                   type="submit"
-                  disabled={submitting || !newTitle.trim() || !newContent.trim() || newContent.length < 50}
+                  disabled={submitting || !newTitle.trim() || !newContent.trim() || newContent.length < 10}
                   className="px-6 py-2 bg-golden text-navy font-semibold rounded-lg hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                 >
                   <FiSend className="w-4 h-4" />

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
+import { useCMSAuth } from '@/hooks/useCMSAuth';
 import ImageUpload from '@/components/ImageUpload';
 import { useFormPersist } from '@/hooks/useFormPersist';
 import { FiEye, FiSave } from 'react-icons/fi';
@@ -16,19 +17,28 @@ interface ArticleFormData {
   excerpt: string;
   featured_image: string | null;
   status: 'draft' | 'published';
+  contributor_name?: string;
 }
 
 const EditArticlePage: React.FC = () => {
   const { user, loading: authLoading, supabase } = useSupabase();
+  const { user: cmsUser, hasPermission, isEditor, loading: cmsLoading } = useCMSAuth();
   const router = useRouter();
   const { id } = router.query;
+  
+  // Check if user has required permissions
+  const canEditArticles = hasPermission('write:content');
+  
+  // Combined loading state
+  const isLoading = authLoading || cmsLoading;
   
   const initialFormData: ArticleFormData = {
     title: '',
     content: '',
     excerpt: '',
     featured_image: null,
-    status: 'draft'
+    status: 'draft',
+    contributor_name: ''
   };
 
   const {
@@ -75,7 +85,8 @@ const EditArticlePage: React.FC = () => {
             content: data.article.content,
             excerpt: data.article.excerpt || '',
             featured_image: data.article.featured_image,
-            status: data.article.status
+            status: data.article.status,
+            contributor_name: data.article.contributor_name || ''
           };
           
           // Only update if no local changes exist or if user explicitly wants to reload
@@ -204,6 +215,80 @@ const EditArticlePage: React.FC = () => {
     );
   }
 
+  // Authorization checks
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-golden"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!cmsUser) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-navy mb-4">Access Denied</h2>
+            <p className="text-gray-600 mb-4">
+              You must be authenticated to edit articles.
+            </p>
+            <button
+              onClick={() => window.location.href = '/auth/sign-in'}
+              className="bg-golden text-navy font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition-colors"
+            >
+              Login
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isEditor()) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-navy mb-4">Access Denied</h2>
+            <p className="text-gray-600 mb-4">
+              You must be an editor or admin to edit articles.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin'}
+              className="bg-golden text-navy font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition-colors"
+            >
+              Dashboard
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!canEditArticles) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-navy mb-4">Insufficient Permissions</h2>
+            <p className="text-gray-600 mb-4">
+              You do not have permission to edit articles.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin'}
+              className="bg-golden text-navy font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition-colors"
+            >
+              Dashboard
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 py-8">
@@ -295,6 +380,23 @@ const EditArticlePage: React.FC = () => {
                       <option value="published">Published</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Contributor Name
+                  </label>
+                  <input
+                    type="text"
+                    name="contributor_name"
+                    value={formData.contributor_name || ''}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent"
+                    placeholder="Enter contributor name (optional)"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Credit the person who contributed to this article (if different from author)
+                  </p>
                 </div>
 
                 <div className="mt-6">

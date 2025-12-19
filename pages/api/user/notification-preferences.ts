@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -48,7 +48,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     }
       if (req.method === 'GET') {
       // Get current notification preferences
-      const { data: profile, error: profileError } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data: profile, error: profileError } = await (await supabaseAdmin as any)
         .from('users')
         .select('preferences')
         .eq('id', user.id)
@@ -95,8 +96,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     } else if (req.method === 'PUT') {
       // Validate and update notification preferences
       const validatedData = notificationPreferencesSchema.parse(req.body);
-
-      const { data: updatedProfile, error: updateError } = await supabaseAdmin
+      
+      const supabaseAdmin = await getSupabaseAdmin();
+      const { data: updatedProfile, error: updateError } = await (await supabaseAdmin as any)
         .from('users')
         .update({ 
           preferences: validatedData,

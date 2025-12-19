@@ -1,12 +1,17 @@
 import { NextApiRequest } from 'next';
-import { supabaseAdmin } from './database-server';
+import { getSupabaseAdmin } from './database-server';
 
 export async function verifySupabaseToken(token: string): Promise<string | null> {
-  if (!token || !supabaseAdmin) {
+  if (!token) {
     return null;
   }
 
   try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      return null;
+    }
+
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
     
     if (error || !user) {
@@ -21,11 +26,16 @@ export async function verifySupabaseToken(token: string): Promise<string | null>
 }
 
 export async function getUserFromToken(token: string): Promise<{ id: string; email?: string } | null> {
-  if (!token || !supabaseAdmin) {
+  if (!token) {
     return null;
   }
 
   try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      return null;
+    }
+
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
     
     if (error || !user) {
@@ -43,6 +53,7 @@ export async function getUserFromToken(token: string): Promise<{ id: string; ema
 }
 
 export async function requireRole(req: NextApiRequest, allowedRoles: string[]): Promise<{ id: string; email?: string; role: string }> {
+  const supabaseAdmin = await getSupabaseAdmin();
   if (!supabaseAdmin) {
     throw new Error('Supabase admin client not initialized');
   }
@@ -70,12 +81,14 @@ export async function requireRole(req: NextApiRequest, allowedRoles: string[]): 
     throw new Error('User not found in database');
   }
 
-  if (!allowedRoles.includes(userData.role)) {
+  const userRecord = userData as { role: string };
+
+  if (!allowedRoles.includes(userRecord.role)) {
     throw new Error('Insufficient permissions');
   }
 
   return {
     ...user,
-    role: userData.role
+    role: userRecord.role
   };
 }

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { verifySupabaseToken } from '@/lib/auth';
 
@@ -32,9 +32,10 @@ export default withErrorHandler(async function handler(
     }
 
     // Check if user can access these articles (own articles or admin)
+    const supabaseAdmin = await getSupabaseAdmin();
     if (userId !== id) {
       // Check if requesting user is admin
-      const { data: requestingUser } = await supabaseAdmin
+      const { data: requestingUser } = await (await supabaseAdmin as any)
         .from('users')
         .select('role')
         .eq('id', userId)
@@ -50,7 +51,7 @@ export default withErrorHandler(async function handler(
     const offset = (currentPage - 1) * limit;
 
     // Build query
-    let query = supabaseAdmin
+    let query = (await supabaseAdmin as any)
       .from('articles')
       .select(`
         id,

@@ -78,9 +78,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
         e.preventDefault();
         if (activeSuggestion >= 0) {
           const suggestion = filteredSuggestions[activeSuggestion];
-          setQuery(suggestion);
-          onSuggestionClick?.(suggestion);
-          setIsOpen(false);
+          if (suggestion) {
+            setQuery(suggestion);
+            onSuggestionClick?.(suggestion);
+            setIsOpen(false);
+          }
         }
         break;
       case 'Escape':

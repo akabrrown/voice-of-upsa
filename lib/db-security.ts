@@ -58,7 +58,7 @@ export async function validateRLSPolicies(): Promise<DBSecurityResult> {
 
     for (const table of criticalTables) {
       try {
-        await adminClient
+        await (await adminClient)
           .from(table)
           .select('count')
           .limit(1);
@@ -106,7 +106,7 @@ export async function checkDatabasePermissions(): Promise<DBSecurityResult> {
     
     // Test if service role key has appropriate permissions
     try {
-      await adminClient
+      await (await adminClient)
         .from('users')
         .select('id')
         .limit(1);

@@ -86,7 +86,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     const logoUrl = `/${sanitizedFilename}`;
 
     // Update site settings with new logo URL
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (await supabaseAdmin as any)
       .from('site_settings')
       .upsert({
         id: 'default',

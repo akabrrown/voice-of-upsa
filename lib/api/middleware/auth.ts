@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { supabaseAdmin } from '../../database-server';
 
 export interface AuthenticatedUser {
   id: string;
@@ -56,7 +56,7 @@ export async function authenticate(req: NextApiRequest): Promise<AuthenticatedUs
   const token = authHeader.replace('Bearer ', '');
 
   // Verify token with Supabase
-  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  const { data: { user }, error: authError } = await (await supabaseAdmin).auth.getUser(token);
 
   if (authError || !user) {
     const error = new Error('Invalid or expired token') as Error & { statusCode?: number; code?: string };
@@ -66,7 +66,7 @@ export async function authenticate(req: NextApiRequest): Promise<AuthenticatedUs
   }
 
   // Get user role from database
-  const { data: userData, error: userError } = await supabaseAdmin
+  const { data: userData, error: userError } = await (await supabaseAdmin as any)
     .from('users')
     .select('role')
     .eq('id', user.id)

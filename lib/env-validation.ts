@@ -11,6 +11,7 @@ export interface EnvValidationResult {
 
 export interface SecurityConfig {
   requiredVars: string[];
+  optionalVars: string[];
   sensitiveVars: string[];
   publicVars: string[];
   minLengths: Record<string, number>;
@@ -21,7 +22,9 @@ const SECURITY_CONFIG: SecurityConfig = {
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
     'SUPABASE_SERVICE_ROLE_KEY',
-    'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME',
+    'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME'
+  ],
+  optionalVars: [
     'CLOUDINARY_API_KEY',
     'CLOUDINARY_API_SECRET'
   ],
@@ -75,6 +78,22 @@ export function validateEnvironment(): EnvValidationResult {
     // Check for weak/default values
     if (value.includes('example') || value.includes('test') || value.includes('demo')) {
       warnings.push(`Environment variable ${varName} appears to contain example/test value`);
+    }
+  }
+
+  // Check optional variables (add warnings if missing)
+  for (const varName of SECURITY_CONFIG.optionalVars) {
+    const value = process.env[varName];
+    
+    if (!value) {
+      warnings.push(`Optional environment variable ${varName} is missing (may affect functionality)`);
+      continue;
+    }
+
+    // Check minimum length for optional vars that are present
+    const minLength = SECURITY_CONFIG.minLengths[varName];
+    if (minLength && value.length < minLength) {
+      warnings.push(`Environment variable ${varName} is too short (minimum ${minLength} characters)`);
     }
   }
 
@@ -156,18 +175,16 @@ export function validateCSRFSecret(): boolean {
  * Get database configuration securely
  */
 export function getDatabaseConfig() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !anonKey || !serviceKey) {
-    throw new Error('Missing required database configuration');
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase environment variables');
   }
 
   return {
-    url,
-    anonKey,
-    serviceKey
+    supabaseUrl,
+    supabaseServiceKey
   };
 }
 

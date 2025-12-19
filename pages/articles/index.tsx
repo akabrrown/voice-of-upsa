@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { FiSearch, FiFilter, FiCalendar, FiUser, FiEye, FiMessageCircle, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useSupabase } from '@/components/SupabaseProvider';
@@ -39,15 +40,25 @@ interface Article {
   author: {
     id: string;
     name: string;
+    email: string;
     avatar_url?: string;
-  };
-  views_count: number;
-  likes_count: number;
-  comments_count: number;
+  } | null;
+  categories?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
   published_at: string;
-  updated_at: string;
+  created_at: string;
+  reading_time?: number;
+  likes_count?: number;
+  views_count?: number;
+  comments_count?: number;
+  status?: string;
+  is_featured?: boolean;
+  featured_order?: number;
+  featured_until?: string | null;
   isAnonymous?: boolean;
-  originalMessage?: AnonymousStory;
 }
 
 interface PaginationInfo {
@@ -59,6 +70,7 @@ interface PaginationInfo {
 }
 
 const ArticlesPage: React.FC = () => {
+  const router = useRouter();
   const { supabase, session } = useSupabase();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,21 +81,43 @@ const ArticlesPage: React.FC = () => {
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const [isAdmin, setIsAdmin] = useState(false); // Represents admin OR editor access
 
+  // Initialize selectedCategory from URL parameters
+  useEffect(() => {
+    console.log('Router state:', { isReady: router.isReady, query: router.query, path: router.asPath });
+    
+    if (router.isReady) {
+      const { category } = router.query;
+      console.log('Router ready, category from URL:', category);
+      if (category && typeof category === 'string') {
+        console.log('Setting category from URL:', category);
+        setSelectedCategory(category);
+      } else {
+        // Try to get category from URL path as fallback
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCategory = urlParams.get('category');
+        console.log('Fallback - category from URLSearchParams:', urlCategory);
+        if (urlCategory) {
+          setSelectedCategory(urlCategory);
+        } else {
+          console.log('No category in URL or invalid type, keeping default');
+        }
+      }
+    }
+  }, [router.isReady, router.query, router.asPath]);
+  console.log('ArticlesPage component rendering');
+  console.log('Current loading state:', loading);
+  console.log('Current articles state:', articles);
+  console.log('Current articles count:', articles.length);
+
   // Check if user is admin or editor
   useEffect(() => {
     const checkUserRole = async () => {
       if (session?.user) {
         try {
-          // Refresh session to get fresh token
-          const { data: { session: freshSession }, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError || !freshSession) {
-            console.error('Session refresh failed:', refreshError);
-            return;
-          }
-          
+          // Use existing session token instead of forcing refresh (avoids infinite loop)
           const response = await fetch(`/api/users/${session.user.id}`, {
             headers: {
-              'Authorization': `Bearer ${freshSession.access_token}`,
+              'Authorization': `Bearer ${session.access_token}`,
             },
           });
           if (response.ok) {
@@ -133,60 +167,53 @@ const ArticlesPage: React.FC = () => {
 
   const fetchArticles = useCallback(async () => {
     try {
+      console.log('=== fetchArticles START ===');
       setLoading(true);
+      console.log('Set loading to true');
 
-      // If anonymous category is selected, fetch anonymous stories instead
+      // If anonymous category is selected, fetch anonymous stories
       if (selectedCategory === 'anonymous') {
-        const response = await fetch('/api/anonymous-stories/get-approved');
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch anonymous stories');
+        console.log('Anonymous category selected - fetching anonymous stories');
+        try {
+          const response = await fetch('/api/anonymous-stories/get-approved');
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            console.log('Anonymous stories fetched:', data.data);
+            // Transform anonymous stories to match article structure
+            const transformedArticles = (data.data || []).map((story: AnonymousStory) => ({
+              ...story,
+              isAnonymous: true,
+              slug: story.id, // Use ID as slug for anonymous stories
+              excerpt: story.content.substring(0, 200) + '...',
+              featured_image: null,
+              author: 'Anonymous',
+              published_at: story.created_at,
+              reading_time: Math.ceil(story.content.length / 1000) // Rough estimate
+            }));
+            
+            setArticles(transformedArticles);
+            setPagination({
+              currentPage: 1,
+              totalPages: 1,
+              totalArticles: transformedArticles.length,
+              hasNextPage: false,
+              hasPreviousPage: false
+            });
+          } else {
+            console.error('Error fetching anonymous stories:', data.error);
+            setArticles([]);
+          }
+        } catch (error) {
+          console.error('Error fetching anonymous stories:', error);
+          setArticles([]);
+        } finally {
+          setLoading(false);
         }
-
-        // Transform anonymous stories to article format
-        console.log('Raw anonymous stories data:', data.data);
-        const anonymousArticles = (data.data || [])
-          .filter((story: AnonymousStory) => {
-            const isValid = story.id && typeof story.id === 'string' && story.id.trim() !== '';
-            console.log('Story ID validation: "' + story.id + '" -> Valid: ' + isValid, story);
-            return isValid;
-          }) // Only include stories with valid IDs
-          .map((story: AnonymousStory) => {
-            const safeId = String(story.id).trim();
-            console.log('Creating article with safe ID:', safeId);
-            return {
-          id: safeId,
-          title: story.title || story.content.substring(0, 100) + (story.content.length > 100 ? '...' : ''),
-          slug: 'anonymous-' + safeId,
-          excerpt: story.content,
-          contributor_name: 'Anonymous',
-          author: {
-            id: 'anonymous',
-            name: 'Anonymous',
-            avatar_url: '/images/anonymous-avatar.jpg'
-          },
-          views_count: story.views_count || 0,
-          likes_count: story.likes_count || 0,
-          comments_count: 0,
-          published_at: story.created_at,
-          updated_at: story.updated_at || story.created_at,
-          isAnonymous: true,
-          originalMessage: story
-        };
-          });
-
-        setArticles(anonymousArticles);
-        setPagination({
-          currentPage: 1,
-          totalPages: 1,
-          totalArticles: anonymousArticles.length,
-          hasNextPage: false,
-          hasPreviousPage: false
-        });
         return;
       }
 
+      console.log('Fetching regular articles...');
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '12',
@@ -200,31 +227,79 @@ const ArticlesPage: React.FC = () => {
       if (selectedCategory !== 'all') {
         // Find the category slug and use it for filtering
         const category = categories.find(c => c.id === selectedCategory);
+        console.log('Category filtering logic:', {
+          selectedCategory,
+          categories: categories.map(c => ({ id: c.id, slug: c.slug, name: c.name })),
+          foundCategory: category
+        });
+        
         if (category && category.slug !== 'all') {
           params.append('category', category.slug);
+          console.log('Added category filter:', category.slug);
+        } else {
+          console.log('No valid category found for filtering');
         }
+      } else {
+        console.log('No category filter - selectedCategory is "all"');
       }
 
+      console.log('API URL:', `/api/articles?${params.toString()}`);
       const response = await fetch(`/api/articles?${params.toString()}`);
+      console.log('API Response status:', response.status);
+      
       const data = await response.json();
+      console.log('API Response data:', data);
+      console.log('API Response articles count:', data.data?.articles?.length || data.articles?.length || 0);
+      console.log('SIMPLE TEST: This should always appear');
+      console.log('=== DEBUGGING CODE EXECUTING ===');
+      
+      // Always show structure check
+      console.log('Data structure check:', {
+        hasData: !!data.data,
+        hasArticles: !!data.data?.articles,
+        articlesLength: data.data?.articles?.length,
+        directArticles: !!data.articles,
+        directArticlesLength: data.articles?.length
+      });
+      
+      // Show category data regardless of structure
+      const articles = data.data?.articles || data.articles || [];
+      console.log('Articles array:', articles);
+      console.log('Articles with category data:', articles.map((article: {
+        id: string;
+        title: string;
+        category_id: string | null;
+        categories: {
+          id: string;
+          name: string;
+          slug: string;
+        } | null;
+      }) => ({
+        id: article.id,
+        title: article.title,
+        category_id: article.category_id,
+        category: article.categories,
+        category_slug: article.categories?.slug
+      })));
+      console.log('=== DEBUGGING CODE FINISHED ===');
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch articles');
+        console.error('API Error Response:', data);
+        const errorMessage = data?.error?.message || data?.error || data?.message || 'Failed to fetch articles';
+        console.error('Extracted error message:', errorMessage);
+        console.error('Full error object:', JSON.stringify(data?.error, null, 2));
+        throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
       }
 
-      setArticles(data.data?.articles || data.articles || []);
-      setPagination(data.data?.pagination || data.pagination);
-      
-      // Debug: Log the first article to check featured_image
-      if (data.data?.articles?.[0] || data.articles?.[0]) {
-        const firstArticle = data.data?.articles?.[0] || data.articles?.[0];
-        console.log('First article data:', firstArticle);
-        console.log('Featured image:', firstArticle.featured_image);
-      }
+      const articlesData = data.data?.articles || data.articles || [];
+      setArticles(articlesData);
+      console.log('Articles set successfully, count:', articlesData.length);
     } catch (error) {
       console.error('Error fetching articles:', error);
       toast.error('Failed to load articles');
+      setArticles([]); // Set empty array on error
     } finally {
+      console.log('Setting loading to false in fetchArticles');
       setLoading(false);
     }
   }, [currentPage, searchTerm, selectedCategory, categories]);
@@ -233,44 +308,21 @@ const ArticlesPage: React.FC = () => {
     fetchCategories();
   }, [fetchCategories]);
 
+  // Initial fetch of articles
   useEffect(() => {
+    console.log('Initial articles fetch triggered');
     fetchArticles();
+    
+    // Add a timeout fallback to ensure loading state is cleared
+    const timeout = setTimeout(() => {
+      console.log('Timeout fallback: forcing loading to false');
+      setLoading(false);
+    }, 2000); // 2 second timeout - more aggressive
+    
+    return () => clearTimeout(timeout);
   }, [fetchArticles]);
 
   // Real-time subscription for article updates
-  useEffect(() => {
-    // Subscribe to real-time changes on articles table
-    const subscription = supabase
-      .channel('articles_changes_list')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'articles',
-          filter: 'status=eq.published' // Only listen to published articles
-        },
-        (payload) => {
-          console.log('Real-time article change in list:', payload);
-          
-          // Refresh articles when there's a change
-          fetchArticles();
-          
-          // Show a subtle notification for new articles
-          if (payload.eventType === 'INSERT') {
-            toast.success('New article published!');
-          }
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscription on unmount
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, [fetchArticles, supabase]);
-
-  // Real-time subscription for article changes
   useEffect(() => {
     if (!supabase) return;
 
@@ -288,7 +340,6 @@ const ArticlesPage: React.FC = () => {
           
           // Refresh articles when any change occurs
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
-            // Simply refresh the articles list to get the latest data
             fetchArticles();
           }
         }
@@ -353,7 +404,8 @@ const ArticlesPage: React.FC = () => {
     },
   };
 
-  if (loading && articles.length === 0) {
+  if (loading) {
+    console.log('Loading state is true, showing loader');
     return (
       <Layout>
         <div className="min-h-screen bg-gray-50">
@@ -523,7 +575,7 @@ const ArticlesPage: React.FC = () => {
                             return '/articles/' + String(article.slug || '').trim();
                           }
                         })()} 
-                        className="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer group"
+                        className={`block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer group ${article.is_featured ? 'ring-2 ring-yellow-400 ring-offset-2' : ''}`}
                       >
                         {/* Featured Image - Only for non-anonymous articles */}
                         {!article.isAnonymous && (() => {

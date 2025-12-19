@@ -43,7 +43,7 @@ class SecurityTester {
     try {
       for (const input of maliciousInputs) {
         // Test on a safe endpoint
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await (await supabaseAdmin)
           .from('articles')
           .select('id, title')
           .limit(1);
@@ -125,7 +125,7 @@ class SecurityTester {
       ];
 
       for (const token of invalidTokens) {
-        const { data, error } = await supabaseAdmin.auth.getUser(token || '');
+        const { data, error } = await (await supabaseAdmin).auth.getUser(token || '');
         
         if (data.user && !error) {
           return {
@@ -229,7 +229,7 @@ class SecurityTester {
   async testRLSPolicies(): Promise<TestResult> {
     try {
       // Test RLS on users table
-      const { data: userData, error: userError } = await supabaseAdmin
+      const { data: userData, error: userError } = await (await supabaseAdmin)
         .from('users')
         .select('id, email, role')
         .limit(1);

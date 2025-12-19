@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '@/lib/database';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { sanitizeInput } from '@/lib/api/middleware/validation';
 import { withRateLimit } from '@/lib/api/middleware/auth';
@@ -61,7 +61,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       
       // Try to generate a recovery link directly as fallback
       try {
-        const { data: recoveryData, error: recoveryError } = await supabaseAdmin.auth.admin.generateLink({
+        const supabaseAdmin = await getSupabaseAdmin();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: recoveryData, error: recoveryError } = await (supabaseAdmin as any).auth.admin.generateLink({
           type: 'recovery',
           email: email,
           options: {

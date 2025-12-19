@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { requireAdminOrEditor } from '@/lib/auth-helpers';
 import { signedURLManager } from '@/lib/security/signed-urls';
 
@@ -61,4 +62,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:setup',
+  auditAction: 'signed_url_generated'
+}));

@@ -26,7 +26,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     });
 
     // Create table without RLS
-    const { error } = await supabaseAdmin.rpc('exec_sql', {
+    const { error } = await (await supabaseAdmin as any).rpc('exec_sql', {
       sql: `
         CREATE TABLE IF NOT EXISTS settings (
           id INTEGER PRIMARY KEY DEFAULT 1,

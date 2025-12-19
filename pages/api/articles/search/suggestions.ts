@@ -94,4 +94,3 @@ function highlightText(text: string, query: string): string {
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { CldUploadWidget } from 'next-cloudinary';
 import { FiUpload, FiX } from 'react-icons/fi';
+import Image from 'next/image';
 
 interface ImageUploadProps {
   value?: string;
@@ -18,19 +19,25 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const uploadTimeoutRef = useRef<NodeJS.Timeout>();
 
-  interface CloudinaryResult {
-  event?: string;
-  info?: {
-    secure_url?: string;
-    url?: string;
-    public_id?: string;
-    original_secure_url?: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
+  // Check if Cloudinary is properly configured for client-side
+  const isCloudinaryConfigured = !!(
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
+    process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+  );
 
-const handleUpload = useCallback((result: unknown) => {
+  interface CloudinaryResult {
+    event?: string;
+    info?: {
+      secure_url?: string;
+      url?: string;
+      public_id?: string;
+      original_secure_url?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  }
+
+  const handleUpload = useCallback((result: unknown) => {
     console.log('=== Image Upload Debug ===');
     console.log('Raw result:', result);
     console.log('Result type:', typeof result);
@@ -120,11 +127,13 @@ const handleUpload = useCallback((result: unknown) => {
     <div className="space-y-4">
       {value ? (
         <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-300">
-          {/* Using regular img tag due to Next.js Image optimization 500 error with Cloudinary URLs */}
-          <img
+          <Image
             src={value}
             alt="Upload preview"
             className="w-full h-full object-cover"
+            width={500}
+            height={500}
+            unoptimized
           />
           {!disabled && onRemove && (
             <button
@@ -137,86 +146,110 @@ const handleUpload = useCallback((result: unknown) => {
           )}
         </div>
       ) : (
-        <CldUploadWidget
-          uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'voice_of_upsa'}
-          onUpload={(result, widget) => {
-            console.log('=== OnUpload Callback Called ===');
-            console.log('Result:', result);
-            console.log('Widget:', widget);
-            handleUpload(result);
-          }}
-          onSuccess={(result, widget) => {
-            console.log('=== OnSuccess Callback Called ===');
-            console.log('Result:', result);
-            console.log('Widget:', widget);
-            handleUpload(result);
-          }}
-          onError={(error, widget) => {
-            console.log('=== OnError Callback Called ===');
-            console.log('Error:', error);
-            console.log('Widget:', widget);
-            setIsUploading(false);
-          }}
-          onClose={() => {
-            console.log('=== OnClose Callback Called ===');
-            setIsUploading(false);
-          }}
-          options={{
-            folder: 'voice-of-upsa/articles',
-            resourceType: 'image',
-            // Size limits
-            maxFileSize: 5242880, // 5MB
-            // Cropping and transformation settings
-            cropping: false,
-            croppingAspectRatio: undefined,
-            // UI settings
-            showPoweredBy: false,
-            showSkipCropButton: false,
-            showAdvancedOptions: false,
-            showInsecurePreview: false,
-            // Language and theme
-            language: 'en',
-            theme: 'minimal',
-            // Multiple files disabled for single upload
-            multiple: false,
-            maxFiles: 1,
-          }}
-        >
-          {(widget) => {
-            console.log('=== Cloudinary Widget Debug ===');
-            console.log('Widget object:', widget);
-            
-            const { open, isLoading } = widget || {};
-            console.log('Open function:', open);
-            console.log('Is loading:', isLoading);
-            
-            return (
-              <button
-                type="button"
-                onClick={() => {
-                  console.log('=== Button Clicked ===');
-                  handleOpen();
-                  if (open) {
-                    console.log('Calling open() function');
-                    open();
-                  } else {
-                    console.log('No open function available');
-                  }
-                }}
-                disabled={disabled || isUploading || isLoading}
-                className="w-full h-64 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-              <FiUpload className="w-12 h-12 text-gray-400 mb-4" />
-              <p className="text-gray-600 font-medium">
-                {isUploading ? 'Uploading...' : 'Click to upload image'}
-              </p>
-              <p className="text-gray-400 text-sm mt-2">
-                PNG, JPG, GIF up to 10MB
-              </p>
-              </button>
-            );
-          }}
-        </CldUploadWidget>
+        // Only render Cloudinary widget if properly configured
+        isCloudinaryConfigured ? (
+          <CldUploadWidget
+            uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'voice_of_upsa'}
+            onUpload={(result, widget) => {
+              console.log('=== OnUpload Callback Called ===');
+              console.log('Result:', result);
+              console.log('Widget:', widget);
+              handleUpload(result);
+            }}
+            onSuccess={(result, widget) => {
+              console.log('=== OnSuccess Callback Called ===');
+              console.log('Result:', result);
+              console.log('Widget:', widget);
+              handleUpload(result);
+            }}
+            onError={(error, widget) => {
+              console.log('=== OnError Callback Called ===');
+              console.log('Error:', error);
+              console.log('Widget:', widget);
+              setIsUploading(false);
+            }}
+            onClose={() => {
+              console.log('=== OnClose Callback Called ===');
+              setIsUploading(false);
+            }}
+            options={{
+              folder: 'voice-of-upsa/articles',
+              resourceType: 'image',
+              // Size limits
+              maxFileSize: 5242880, // 5MB
+              // Cropping and transformation settings
+              cropping: false,
+              // UI settings
+              showPoweredBy: false,
+              showSkipCropButton: false,
+              showAdvancedOptions: false,
+              showInsecurePreview: false,
+              // Language and theme
+              language: 'en',
+              theme: 'minimal',
+              // Multiple files disabled for single upload
+              multiple: false,
+              maxFiles: 1,
+            }}
+          >
+            {(widget) => {
+              console.log('=== Cloudinary Widget Debug ===');
+              console.log('Widget object:', widget);
+              
+              // Add null check for widget
+              if (!widget) {
+                console.error('Cloudinary widget not initialized');
+                return (
+                  <div className="w-full h-64 border-2 border-dashed border-red-300 rounded-lg flex flex-col items-center justify-center">
+                    <p className="text-red-600 font-medium">Upload widget not available</p>
+                    <p className="text-red-400 text-sm mt-2">Please check Cloudinary configuration</p>
+                  </div>
+                );
+              }
+              
+              // Add more robust destructuring with defaults
+              const { open = undefined, isLoading = false } = widget || {};
+              console.log('Open function:', open);
+              console.log('Is loading:', isLoading);
+              console.log('Widget type:', typeof widget);
+              console.log('Widget keys:', widget ? Object.keys(widget) : 'widget is null');
+              
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log('=== Button Clicked ===');
+                    handleOpen();
+                    if (open && typeof open === 'function') {
+                      console.log('Calling open() function');
+                      open();
+                    } else {
+                      console.error('Open function not available or not a function');
+                      console.log('Widget properties:', widget ? Object.keys(widget) : 'widget is null');
+                    }
+                  }}
+                  disabled={disabled || isUploading || isLoading}
+                  className="w-full h-64 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                <FiUpload className="w-12 h-12 text-gray-400 mb-4" />
+                <p className="text-gray-600 font-medium">
+                  {isUploading ? 'Uploading...' : 'Click to upload image'}
+                </p>
+                <p className="text-gray-400 text-sm mt-2">
+                  PNG, JPG, GIF up to 10MB
+                </p>
+                </button>
+              );
+            }}
+          </CldUploadWidget>
+        ) : (
+          // Fallback UI when Cloudinary is not configured
+          <div className="w-full h-64 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center">
+            <FiUpload className="w-12 h-12 text-gray-400 mb-4" />
+            <p className="text-gray-600 font-medium">Image upload unavailable</p>
+            <p className="text-gray-400 text-sm mt-2">Cloudinary not configured</p>
+          </div>
+        )
       )}
     </div>
   );

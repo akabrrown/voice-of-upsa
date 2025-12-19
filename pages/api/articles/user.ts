@@ -25,7 +25,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = (supabaseAdmin as any)
     .from('articles')
-    .select('*')
+    .select(`
+      *,
+      users (
+        name,
+        email,
+        avatar_url
+      )
+    `)
     .eq('author_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -51,7 +58,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   return res.status(200).json({
     success: true,
-    articles: articles || [],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    articles: (articles || []).map((article: any) => ({
+      ...article,
+      author_name: article.contributor_name || article.users?.name || 'Unknown',
+      author: article.users // Keep original structure too
+    })),
     timestamp: new Date().toISOString()
   });
 }

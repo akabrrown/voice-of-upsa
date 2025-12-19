@@ -1,5 +1,55 @@
 import { supabaseAdmin } from './database-server';
 
+// Define specific types for better type safety
+interface SupabaseQueryResult<T = unknown> {
+  data: T;
+  error: SupabaseError | null;
+}
+
+interface SupabaseError {
+  message: string;
+  code?: string;
+  details?: unknown;
+}
+
+interface SupabaseUser {
+  id: string;
+  email?: string;
+}
+
+interface AuthResponse {
+  data: { user: SupabaseUser };
+  error: SupabaseError | null;
+}
+
+interface UserRecord {
+  id: string;
+  email: string;
+  name: string;
+  created_at: string;
+  last_sign_in?: string;
+}
+
+// Define a simple type for Supabase operations to avoid complex type constraints
+type TypedSupabaseClient = {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string | number) => {
+        limit: (limit: number) => Promise<SupabaseQueryResult<UserRecord[]>>;
+        order: (column: string, options: { ascending: boolean }) => Promise<SupabaseQueryResult<UserRecord[]>>;
+      };
+      insert: (data: Record<string, unknown>) => Promise<SupabaseQueryResult<null>>;
+    };
+    insert: (data: Record<string, unknown>) => Promise<SupabaseQueryResult<null>>;
+  };
+  auth: {
+    admin: {
+      createUser: (userData: Record<string, unknown>) => Promise<AuthResponse>;
+      deleteUser: (userId: string) => Promise<SupabaseQueryResult<null>>;
+    };
+  };
+};
+
 export async function checkIfAdminExists(): Promise<boolean> {
   if (!supabaseAdmin) {
     console.error('Supabase admin client not initialized');
@@ -7,7 +57,7 @@ export async function checkIfAdminExists(): Promise<boolean> {
   }
   
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as unknown as TypedSupabaseClient)
       .from('users')
       .select('id')
       .eq('role', 'admin')
@@ -45,7 +95,7 @@ export async function createAdmin(adminData: {
     let userId: string;
     
     if (adminData.password) {
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      const { data: authData, error: authError } = await (supabaseAdmin as unknown as TypedSupabaseClient).auth.admin.createUser({
         email: adminData.email,
         password: adminData.password,
         email_confirm: true,
@@ -67,7 +117,7 @@ export async function createAdmin(adminData: {
     }
 
     // Create user record in database
-    const { error: dbError } = await supabaseAdmin
+    const { error: dbError } = await (supabaseAdmin as unknown as TypedSupabaseClient)
       .from('users')
       .insert({
         id: userId,
@@ -79,7 +129,7 @@ export async function createAdmin(adminData: {
 
     if (dbError) {
       // Rollback auth user creation if database insert fails
-      await supabaseAdmin.auth.admin.deleteUser(userId);
+      await (supabaseAdmin as unknown as TypedSupabaseClient).auth.admin.deleteUser(userId);
       return { success: false, error: dbError.message };
     }
 
@@ -120,7 +170,7 @@ export async function getAdminUsers(): Promise<Array<{
   }
   
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as unknown as TypedSupabaseClient)
       .from('users')
       .select('id, email, name, created_at, last_sign_in')
       .eq('role', 'admin')

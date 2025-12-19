@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 // Simple HTML sanitization function
 const sanitizeHTML = (html: string): string => {
@@ -18,6 +18,11 @@ const sanitizeHTML = (html: string): string => {
     .trim();
 };
 
+// Define type for user data
+interface UserData {
+  role: string;
+}
+
 // Define proper error types
 interface DatabaseError {
   message: string;
@@ -32,10 +37,27 @@ interface SupabaseError extends DatabaseError {
   code?: string;
 }
 
+import { rateLimits } from '@/lib/rate-limiter';
+
+// ... (existing imports)
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Handle POST request - submit new story
   if (req.method === 'POST') {
+    // Apply rate limiting
+    let isAllowed = false;
+    rateLimits.stories(req, res, () => {
+      isAllowed = true;
+    });
+    
+    if (!isAllowed) {
+      return; // Response already handled by rate limiter
+    }
+
     try {
+      // Get admin client
+      const supabaseAdmin = await getSupabaseAdmin();
+      
       // Test database connection first
       console.log('Testing database connection...');
       const { error: testError } = await supabaseAdmin
@@ -78,8 +100,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Title must be at least 5 characters' });
       }
 
-      if (sanitizedContent.length < 50) {
-        return res.status(400).json({ error: 'Story must be at least 50 characters' });
+      if (sanitizedContent.length < 10) {
+        return res.status(400).json({ error: 'Story must be at least 10 characters' });
       }
 
       if (sanitizedContent.length > 2000) {
@@ -91,13 +113,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Validate category
-      const validCategories = ['general', 'experience', 'opinion', 'question', 'story', 'advice'];
+      const validCategories = ['general', 'campus-life', 'academics', 'relationships', 'personal-growth', 'struggles', 'achievements'];
       const storyCategory = category || 'general';
       if (!validCategories.includes(storyCategory)) {
         return res.status(400).json({ error: 'Invalid category' });
       }
 
-      // Determine author type based on authentication
+      // Determine author type based on authentication and role
       let authorType = 'non_user'; // Default for non-authenticated users
       
       // Check if user is authenticated (this would require auth token in headers)
@@ -109,7 +131,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           );
           
           if (!authError && user) {
-            authorType = 'user';
+            // Check if the authenticated user is an admin
+            const { data: userData, error: userError } = await supabaseAdmin
+              .from('users')
+              .select('role')
+              .eq('id', user.id)
+              .single();
+            
+            if (!userError && userData) {
+              const userRole = (userData as unknown as UserData).role;
+              if (userRole === 'admin' || userRole === 'editor') {
+                authorType = 'admin';
+              } else {
+                authorType = 'user';
+              }
+            } else {
+              authorType = 'user';
+            }
           }
         } catch {
           // If auth fails, keep as non_user
@@ -130,7 +168,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             category: storyCategory,
             author_type: authorType,
             status: 'pending', // All stories start as pending
-          })
+          } as any) // eslint-disable-line @typescript-eslint/no-explicit-any -- TODO: Fix Supabase type resolution
           .select()
           .single();
         
@@ -156,7 +194,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               category: storyCategory,
               author_type: authorType,
               status: 'pending'
-            })
+            } as any) // eslint-disable-line @typescript-eslint/no-explicit-any -- TODO: Fix Supabase type resolution
             .select('id, title, created_at')
             .single();
           

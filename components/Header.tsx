@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useSupabase } from './SupabaseProvider';
+import { useCMSAuth } from '../hooks/useCMSAuth';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 import { FiMenu, FiX, FiHome, FiFileText, FiInfo, FiMail, FiUser, FiSettings, FiEdit, FiUsers, FiBookmark, FiDollarSign, FiMessageCircle } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -25,9 +26,13 @@ const Header: React.FC = () => {
   ];
 
   const { user, userRole, supabase } = useSupabase();
+  const { user: cmsUser } = useCMSAuth();
   const { settings: siteSettings } = useSiteSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
+
+  // Use CMS user role if available, fallback to Supabase user role
+  const currentUserRole = cmsUser?.role || userRole;
 
   const handleSignOut = async () => {
     try {
@@ -55,14 +60,14 @@ const Header: React.FC = () => {
       { href: '/account-settings', label: 'Settings', icon: FiSettings },
     ];
 
-    if (userRole === 'editor' || userRole === 'admin') {
+    if (currentUserRole === 'editor' || currentUserRole === 'admin') {
       userLinks.push(
         { href: '/editor/create', label: 'Create Article', icon: FiEdit },
         { href: '/editor/articles', label: 'Manage Articles', icon: FiFileText }
       );
     }
 
-    if (userRole === 'admin') {
+    if (currentUserRole === 'admin') {
       userLinks.push(
         { href: '/admin', label: 'Admin Panel', icon: FiUsers },
         { href: '/admin/ads', label: 'Manage Ads', icon: FiDollarSign },
@@ -81,18 +86,18 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0">
             <Image
               src={siteSettings.site_logo}
               alt={siteSettings.site_name}
-              width={48}
-              height={48}
-              className="h-12 w-12 rounded-full object-cover"
+              width={40}
+              height={40}
+              className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover"
               loading="eager"
               priority
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = '/logo.jpg'; // Fallback to default logo
+                target.src = '/logo.jpg';
               }}
             />
           </Link>
@@ -128,8 +133,8 @@ const Header: React.FC = () => {
                   <div className="py-2">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="text-sm font-semibold truncate">{user.email}</p>
-                      {userRole && (
-                        <p className="text-xs text-gray-600 capitalize">{userRole}</p>
+                      {currentUserRole && (
+                        <p className="text-xs text-gray-600 capitalize">{currentUserRole}</p>
                       )}
                     </div>
                     
@@ -191,19 +196,19 @@ const Header: React.FC = () => {
                 <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
                   Main
                 </div>
-                {baseLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={closeMobileMenu}
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-navy-light transition-colors ${
-                      router.pathname === link.href ? 'bg-navy-light text-golden' : ''
-                    }`}
-                  >
-                    <link.icon className="w-5 h-5" />
-                    <span>{link.label}</span>
-                  </Link>
-                ))}
+                  {baseLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={closeMobileMenu}
+                      className={`flex items-center space-x-4 px-4 py-3.5 rounded-lg hover:bg-navy-light transition-colors ${
+                        router.pathname === link.href ? 'bg-navy-light text-golden' : 'text-gray-100'
+                      }`}
+                    >
+                      <link.icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="font-medium">{link.label}</span>
+                    </Link>
+                  ))}
               </div>
 
               {/* User Links */}
@@ -230,7 +235,7 @@ const Header: React.FC = () => {
               )}
 
               {/* Editor Tools */}
-              {userRole === 'editor' || userRole === 'admin' ? (
+              {currentUserRole === 'editor' || currentUserRole === 'admin' ? (
                 <div className="space-y-1 border-t border-navy-light pt-4 mt-4">
                   <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
                     Editor Tools
@@ -253,7 +258,7 @@ const Header: React.FC = () => {
               ) : null}
 
               {/* Admin Tools */}
-              {userRole === 'admin' ? (
+              {currentUserRole === 'admin' ? (
                 <div className="space-y-1 border-t border-navy-light pt-4 mt-4">
                   <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 bg-navy-dark z-10">
                     Admin Tools
@@ -285,8 +290,8 @@ const Header: React.FC = () => {
                   </div>
                   <div className="px-4 py-2 mb-2">
                     <p className="text-sm font-semibold truncate">{user.email}</p>
-                    {userRole && (
-                      <p className="text-xs text-gray-400 capitalize">{userRole}</p>
+                    {currentUserRole && (
+                      <p className="text-xs text-gray-400 capitalize">{currentUserRole}</p>
                     )}
                   </div>
                   <button

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { FiArrowLeft, FiUser, FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { signUpWithEmail } from '@/lib/supabase-client';
-import { getSupabaseClient } from '@/lib/supabaseClient';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 const SignUpPage: React.FC = () => {
   const router = useRouter();
@@ -109,17 +109,14 @@ const SignUpPage: React.FC = () => {
     setLoading(true);
     
     try {
-      const { data, error } = await signUpWithEmail(email, password, {
-        full_name: fullName,
+      const data = await signUpWithEmail(email, password, {
+        data: {
+          full_name: fullName,
+        }
       });
       
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
       if (data.user) {
-        toast.success('Account created successfully! Please check your email to verify your account.');
+        toast.success('Account created!');
         router.push('/auth/sign-in');
       }
     } catch (error) {

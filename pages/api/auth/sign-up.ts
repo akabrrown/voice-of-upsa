@@ -154,7 +154,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     // Check if user already exists
-    const { data: existingUser, error: checkError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingUser, error: checkError } = await (supabase as any)
       .from('users')
       .select('id, email')
       .eq('email', email)
@@ -177,7 +178,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Create user with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: authData, error: authError } = await (supabase as any).auth.signUp({
       email,
       password,
       options: {
@@ -219,24 +221,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         role: 'user',
         avatar_url: authData.user.user_metadata?.avatar_url || null,
         bio: bio ? sanitizeInput(bio) : null,
-        website: website || null,
-        location: location ? sanitizeInput(location) : null,
-        social_links: {},
-        preferences: {},
-        is_active: true,
-        email_verified: authData.user.email_confirmed_at ? true : false,
-        last_sign_in_at: new Date().toISOString(),
+        status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        security_metadata: {
-          registration_ip: clientIP,
-          device_fingerprint: deviceFingerprint,
-          password_strength_score: passwordValidation.score,
-          security_level: passwordValidation.score >= 80 ? 'high' : passwordValidation.score >= 60 ? 'medium' : 'low'
-        }
+        last_sign_in: new Date().toISOString(),
       };
 
-      const { error: profileError } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: profileError } = await (supabase as any)
         .from('users')
         .insert(userProfile);
 
@@ -247,6 +239,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           profileError: profileError.message
         });
       }
+
 
       // Log successful sign-up
       logSecurityEvent('Sign-up successful', securityContext, 'low', {

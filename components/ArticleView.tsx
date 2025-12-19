@@ -5,8 +5,7 @@ import MarkdownContent from '@/components/MarkdownContent';
 import WatermarkCanvas from '@/components/WatermarkCanvas';
 import Image from 'next/image';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
-import { FiHeart, FiBookmark, FiShare2, FiUser, FiCalendar, FiEye, FiEdit, FiFolder } from 'react-icons/fi';
+import { FiUser, FiCalendar, FiEye, FiEdit, FiFolder } from 'react-icons/fi';
 import styles from '../styles/ArticleView.module.css';
 
 interface Article {
@@ -51,10 +50,8 @@ const ArticleView: React.FC<ArticleViewProps> = ({
   onEdit 
 }) => {
   const { session } = useSupabase();
-  const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(article.likes_count || 0);
   const [isAdmin, setIsAdmin] = useState(false); // Renamed but represents admin OR editor access
+  const [imageError, setImageError] = useState(false);
 
   // Check if user is admin or editor
   useEffect(() => {
@@ -98,99 +95,6 @@ const ArticleView: React.FC<ArticleViewProps> = ({
     }
   }, [article.id, article.slug, session]);
 
-  // Check initial bookmark status
-  useEffect(() => {
-    const checkBookmarkStatus = async () => {
-      if (!session?.access_token || !article.id) return;
-
-      try {
-        const response = await fetch(`/api/articles/${article.slug}/bookmark`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setIsBookmarked(data.data.bookmarked);
-        }
-      } catch (error) {
-        console.error('Error checking bookmark status:', error);
-      }
-    };
-
-    checkBookmarkStatus();
-  }, [article.id, article.slug, session]);
-
-  const handleLike = async () => {
-    if (!session) {
-      toast.error('Please sign in to like articles');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/articles/${article.slug}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.ok) {
-        setIsLiked(!isLiked);
-        setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
-      }
-    } catch (error) {
-      console.error('Error liking article:', error);
-      toast.error('Failed to like article');
-    }
-  };
-
-  const handleBookmark = async () => {
-    if (!session) {
-      toast.error('Please sign in to bookmark articles');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/articles/${article.slug}/bookmark`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setIsBookmarked(data.data.bookmarked);
-        toast.success(data.data.bookmarked ? 'Article saved' : 'Article removed from bookmarks');
-      } else {
-        toast.error('Failed to update bookmark');
-      }
-    } catch (error) {
-      console.error('Error bookmarking article:', error);
-      toast.error('Failed to update bookmark');
-    }
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: article.title,
-          text: article.excerpt,
-          url: window.location.href,
-        });
-      } catch (error) {
-        console.error('Error sharing:', error);
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -222,11 +126,11 @@ const ArticleView: React.FC<ArticleViewProps> = ({
             </div>
           )}
           
-          <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">{article.title}</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6">{article.title}</h1>
           
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
             <div className="flex items-center space-x-2">
-              {article.author.avatar_url ? (
+              {article.author && article.author.avatar_url ? (
                 <Image
                   src={article.author.avatar_url}
                   alt={article.contributor_name && article.contributor_name.trim() ? article.contributor_name : article.author.name}
@@ -242,7 +146,7 @@ const ArticleView: React.FC<ArticleViewProps> = ({
               <span>
                 {article.contributor_name && article.contributor_name.trim() 
                   ? article.contributor_name 
-                  : article.author.name}
+                  : article.author?.name}
               </span>
             </div>
             
@@ -272,27 +176,42 @@ const ArticleView: React.FC<ArticleViewProps> = ({
         </div>
 
         {/* Featured Image */}
-        {article.featured_image && (
-          <div className="relative w-full h-64 lg:h-96">
+        {article.featured_image && !imageError && (
+          <div className="relative w-full h-56 sm:h-64 lg:h-96">
             <Image
               src={article.featured_image}
               alt={article.title}
               fill
               className="object-cover"
-              sizes="(max-width: 1200px) 100vw, 1200px"
+              sizes="(max-width: 640px) 100vw, (max-width: 1200px) 100vw, 1200px"
+              onError={() => setImageError(true)}
             />
+          </div>
+        )}
+        
+        {/* Fallback for image errors */}
+        {article.featured_image && imageError && (
+          <div className="relative w-full h-64 lg:h-96 bg-gray-200 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-gray-400 mb-2">
+                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-500 text-sm">Image temporarily unavailable</p>
+            </div>
           </div>
         )}
 
         {/* Article Content */}
-        <div className="p-6 lg:p-8">
+        <div className="p-5 sm:p-6 lg:p-8">
           <WatermarkCanvas
             watermarkText="VOU - Voice of UPSA"
             opacity={0.08}
-            fontSize={28}
+            fontSize={24}
             color="#1e3a8a"
           >
-            <div className="prose prose-lg max-w-none">
+            <div className="prose prose-sm sm:prose-base lg:prose-lg max-w-none">
               <MarkdownContent content={article.content} />
             </div>
           </WatermarkCanvas>
@@ -307,30 +226,6 @@ const ArticleView: React.FC<ArticleViewProps> = ({
         className={styles.articleActions}
       >
         <div className={styles.actionButtons}>
-          <button
-            onClick={handleLike}
-            className={`${styles.actionButton} ${isLiked ? styles.primaryButton : styles.secondaryButton}`}
-          >
-            <FiHeart />
-            <span>{likeCount}</span>
-          </button>
-          
-          <button
-            onClick={handleBookmark}
-            className={`${styles.actionButton} ${isBookmarked ? styles.primaryButton : styles.secondaryButton}`}
-          >
-            <FiBookmark />
-            <span>{isBookmarked ? 'Saved' : 'Save'}</span>
-          </button>
-          
-          <button
-            onClick={handleShare}
-            className={`${styles.actionButton} ${styles.secondaryButton}`}
-          >
-            <FiShare2 />
-            <span>Share</span>
-          </button>
-          
           {isEditable && onEdit && (
             <button
               onClick={onEdit}

@@ -18,6 +18,7 @@ export interface Database {
           content: string;
           excerpt: string | null;
           featured_image: string | null;
+          contributor_name: string | null;
           author_id: string;
           category_id: string | null;
           status: 'draft' | 'published' | 'archived';
@@ -62,7 +63,7 @@ export interface Database {
           archived_by: string | null;
           archive_reason: string | null;
         };
-        Insert: Omit<Database['public']['Tables']['users']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Insert: Omit<Database['public']['Tables']['users']['Row'], 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['users']['Insert']>;
       };
       comments: {

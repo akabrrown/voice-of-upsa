@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -38,7 +38,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     const { password } = validatedData;
 
     // Verify password before deletion (additional security)
-    const { error: passwordError } = await supabaseAdmin.auth.signInWithPassword({
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { error: passwordError } = await (await supabaseAdmin as any).auth.signInWithPassword({
       email: user.email!,
       password,
     });
@@ -67,7 +68,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
 
     try {
       // Delete user's articles
-      const { error: articlesError } = await supabaseAdmin
+      const { error: articlesError } = await (await supabaseAdmin as any)
         .from('articles')
         .delete()
         .eq('author_id', user.id);
@@ -77,7 +78,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
       }
 
       // Delete user's comments
-      const { error: commentsError } = await supabaseAdmin
+      const { error: commentsError } = await (await supabaseAdmin as any)
         .from('comments')
         .delete()
         .eq('user_id', user.id);
@@ -87,7 +88,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
       }
 
       // Delete user's bookmarks
-      const { error: bookmarksError } = await supabaseAdmin
+      const { error: bookmarksError } = await (await supabaseAdmin as any)
         .from('article_bookmarks')
         .delete()
         .eq('user_id', user.id);
@@ -97,7 +98,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
       }
 
       // Delete user profile from users table
-      const { error: profileError } = await supabaseAdmin
+      const { error: profileError } = await (await supabaseAdmin as any)
         .from('users')
         .delete()
         .eq('id', user.id);
@@ -110,8 +111,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
       deletionErrors.push(`Cleanup: ${(cleanupError as Error).message}`);
     }
 
-    // Finally, delete the auth user
-    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+    // Delete user from Supabase Auth
+    const { error: authDeleteError } = await (await supabaseAdmin as any).auth.admin.deleteUser(user.id);
 
     if (authDeleteError) {
       deletionErrors.push(`Auth: ${authDeleteError.message}`);

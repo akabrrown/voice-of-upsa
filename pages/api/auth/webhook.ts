@@ -58,7 +58,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     switch (eventType) {
       case 'user.created':
         // Create user in Supabase
-        const { data: newUser, error: createError } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: newUser, error: createError } = await (supabase as any)
           .from('users')
           .insert({
             clerk_id: id,
@@ -78,7 +79,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // Log the sync
-        await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
           .from('clerk_sync')
           .insert({
             clerk_user_id: id,
@@ -91,7 +93,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       case 'user.updated':
         // Update user in Supabase
-        const { error: updateError } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: updateError } = await (supabase as any)
           .from('users')
           .update({
             email,
@@ -111,7 +114,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       case 'user.deleted':
         // Soft delete user in Supabase (or hard delete based on your preference)
-        const { error: deleteError } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: deleteError } = await (supabase as any)
           .from('users')
           .update({
             updated_at: new Date().toISOString(),

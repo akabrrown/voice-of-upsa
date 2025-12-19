@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { getClientIP } from '@/lib/security/auth-security';
 
@@ -164,5 +165,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   });
 }
 
-// Wrap with error handler only - temporarily disable CMS security to stop automatic logout
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:settings',
+  auditAction: 'admin_settings_updated'
+}));

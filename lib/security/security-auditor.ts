@@ -75,13 +75,13 @@ class SecurityAuditor {
       const criticalTables = ['users', 'articles', 'comments', 'settings'];
       
       for (const table of criticalTables) {
-        const { data: rlsStatus } = await supabaseAdmin
+        const { data: rlsStatus } = await (await supabaseAdmin as any)
           .from('pg_tables')
           .select('rowsecurity')
           .eq('tablename', table)
           .single();
         
-        if (!rlsStatus?.rowsecurity) {
+        if (!(rlsStatus as any)?.rowsecurity) {
           findings.push({
             severity: 'critical',
             category: 'data',
@@ -94,13 +94,13 @@ class SecurityAuditor {
       }
       
       // Check for exposed sensitive data
-      const { data: userColumns } = await supabaseAdmin
+      const { data: userColumns } = await (await supabaseAdmin as any)
         .from('information_schema.columns')
         .select('column_name, data_type')
         .eq('table_name', 'users');
       
       if (userColumns) {
-        const sensitiveColumns = userColumns.filter(col => 
+        const sensitiveColumns = (userColumns as any[]).filter(col => 
           col.column_name.includes('password') || 
           col.column_name.includes('token') ||
           col.column_name.includes('secret')
@@ -194,12 +194,12 @@ class SecurityAuditor {
     
     try {
       // Check bucket security
-      const { data: buckets } = await supabaseAdmin
+      const { data: buckets } = await (await supabaseAdmin as any)
         .from('storage.buckets')
         .select('id, public, file_size_limit, allowed_mime_types');
       
       if (buckets) {
-        const publicBuckets = buckets.filter(bucket => bucket.public);
+        const publicBuckets = (buckets as any[]).filter(bucket => bucket.public);
         
         if (publicBuckets.length > 0) {
           findings.push({
@@ -304,7 +304,7 @@ class SecurityAuditor {
   // Save audit results
   private async saveAuditResults(report: SecurityAuditReport) {
     try {
-      await supabaseAdmin
+      await (await supabaseAdmin as any)
         .from('security_audits')
         .insert({
           overall_score: report.overallScore,

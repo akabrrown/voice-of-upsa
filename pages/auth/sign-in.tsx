@@ -5,8 +5,45 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiArrowLeft, FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { signInWithEmail } from '@/lib/supabase-client';
-import { getSupabaseClient } from '@/lib/supabaseClient';
+import { getSupabaseClient } from '../../lib/supabase/client';
+
+// Debug: Check if imports are working
+console.log('Sign-in page loaded, getSupabaseClient:', typeof getSupabaseClient);
+
+// Local implementation of signInWithEmail to avoid import issues
+const signInWithEmailLocal = async (email: string, password: string) => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    if (!supabase) {
+      throw new Error('Failed to initialize Supabase client');
+    }
+    
+    console.log('Attempting sign in for email:', email);
+    console.log('Supabase client initialized:', !!supabase.auth);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error('Sign in error details:', {
+        message: error.message,
+        status: error.status,
+        name: error.name
+      });
+      throw error;
+    }
+
+    console.log('Sign in successful, user:', data.user?.email);
+    console.log('Sign in result data:', data);
+    return data;
+  } catch (error) {
+    console.error('signInWithEmail error:', error);
+    throw error;
+  }
+};
 
 const SignInPage: React.FC = () => {
   const router = useRouter();
@@ -30,7 +67,8 @@ const SignInPage: React.FC = () => {
       
       if (session) {
         const redirectUrl = router.query.redirect_url as string || '/';
-        router.push(redirectUrl);
+        // Use replace instead of push to avoid adding to history
+        router.replace(redirectUrl);
       }
     };
 
@@ -64,17 +102,33 @@ const SignInPage: React.FC = () => {
     setLoading(true);
     
     try {
-      const { data, error } = await signInWithEmail(email, password);
+      // First check if user exists
+      const checkResponse = await fetch('/api/auth/check-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
       
-      if (error) {
-        toast.error(error.message);
+      const checkData = await checkResponse.json();
+      
+      if (!checkData.exists) {
+        toast.error('No account found with this email. Please sign up first.');
         return;
       }
-
-      if (data.user) {
+      
+      // User exists, attempt sign in
+      const signInResult = await signInWithEmailLocal(email, password);
+      
+      console.log('Sign in result:', signInResult);
+      
+      if (signInResult && signInResult.user) {
         toast.success('Signed in successfully!');
-        const redirectUrl = router.query.redirect_url as string || '/';
-        router.push(redirectUrl);
+        // Let SupabaseProvider handle the redirect
+      } else {
+        toast.error('Sign in failed: Invalid response');
+        console.error('Invalid sign in result:', signInResult);
       }
     } catch (error) {
       toast.error('An unexpected error occurred');

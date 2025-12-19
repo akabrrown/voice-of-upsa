@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { createClient } from '@supabase/supabase-js';
 
 interface UserUpdateData {
   name?: string;
@@ -10,8 +11,23 @@ interface UserUpdateData {
   updated_at: string;
 }
 
+// Type for database query results
+interface UserQueryResult {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string | null;
+}
+
+// Type for database errors
+interface DatabaseError {
+  message?: string;
+  code?: string;
+  details?: unknown;
+}
+
 // Apply error handling middleware
-export default withErrorHandler(async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -32,11 +48,15 @@ export default withErrorHandler(async function handler(
     }
   } catch (error) {
     console.error('User API error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Top-level API error',
+      details: error instanceof Error ? error.message : String(error) 
+    });
   }
+}
 
-  async function handleGet(req: NextApiRequest, res: NextApiResponse, id: string) {
-    try {
+async function handleGet(req: NextApiRequest, res: NextApiResponse, id: string) {
+  try {
     // For GET requests, we require a token for consistent authentication
     const authHeader = req.headers.authorization;
     
@@ -48,6 +68,7 @@ export default withErrorHandler(async function handler(
     const token = authHeader.replace('Bearer ', '');
     
     // Verify the token and get user
+    const supabaseAdmin = await getSupabaseAdmin();
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !user) {
@@ -92,6 +113,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, id: string) 
     }
 
     // Verify the token and get user
+    const supabaseAdmin = await getSupabaseAdmin();
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
@@ -100,7 +122,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, id: string) 
 
     // Check if user can update this profile (own profile or admin)
     if (user.id !== id) {
-      const { data: requestingUser } = await supabaseAdmin
+      const { data: requestingUser } = await (supabaseAdmin as unknown as { from: (table: string) => { select: (columns: string) => { eq: (column: string, value: string) => { single: () => Promise<{ data: UserQueryResult | null; error: unknown }> } } } })
         .from('users')
         .select('role')
         .eq('id', user.id)
@@ -128,7 +150,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, id: string) 
 
     // Only admins can change roles
     if (role !== undefined) {
-      const { data: requestingUser } = await supabaseAdmin
+      const { data: requestingUser } = await (supabaseAdmin as unknown as { from: (table: string) => { select: (columns: string) => { eq: (column: string, value: string) => { single: () => Promise<{ data: UserQueryResult | null; error: unknown }> } } } })
         .from('users')
         .select('role')
         .eq('id', user.id)
@@ -143,7 +165,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, id: string) 
       }
     }
 
-    // Update user
+    // Update public.users table using the existing admin client (known to work)
     const updateData: UserUpdateData = { updated_at: new Date().toISOString() };
     
     if (name !== undefined) updateData.name = name;
@@ -151,7 +173,9 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, id: string) 
     if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
     if (role !== undefined) updateData.role = role;
 
-    const { data: updatedUser, error } = await supabaseAdmin
+    console.log(`Updating user ${id} with data:`, updateData);
+
+    const { data: updatedUser, error } = await (supabaseAdmin as unknown as { from: (table: string) => { update: (data: UserUpdateData) => { eq: (column: string, value: string) => { select: () => { single: () => Promise<{ data: UserQueryResult | null; error: DatabaseError | null }> } } } } })
       .from('users')
       .update(updateData)
       .eq('id', id)
@@ -159,14 +183,61 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, id: string) 
       .single();
 
     if (error) {
-      console.error('Error updating user:', error);
-      return res.status(500).json({ error: 'Failed to update user' });
+      console.error('Error updating user table:', error);
+      return res.status(500).json({ error: 'Failed to update user profile', details: error.message });
+    }
+
+    // Try to sync with Auth Metadata, but don't fail the request if it fails
+    if (role !== undefined) {
+      try {
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+        if (serviceRoleKey && supabaseUrl) {
+           console.log(`Syncing role '${role}' to auth.users metadata for user ${id}`);
+           
+           const serviceClient = createClient(
+            supabaseUrl,
+            serviceRoleKey,
+            {
+              auth: {
+                autoRefreshToken: false,
+                persistSession: false
+              }
+            }
+          );
+          
+          const { error: authUpdateError } = await serviceClient.auth.admin.updateUserById(
+            id,
+            { 
+              user_metadata: { role: role },
+              app_metadata: { role: role }
+            }
+          );
+
+          if (authUpdateError) {
+            console.error('Error updating auth metadata:', authUpdateError);
+          } else {
+            console.log('Auth metadata updated successfully');
+          }
+        } else {
+          console.warn('Skipping auth metadata update: Missing service role key or URL');
+        }
+      } catch (authSyncError) {
+        console.error('Exception during auth metadata sync:', authSyncError);
+        // Continue execution, do not throw
+      }
     }
 
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error('Error in handlePut:', error);
-    res.status(500).json({ error: 'Failed to update user' });
+    res.status(500).json({ 
+      error: 'Failed to update user', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    });
   }
-  }
-});
+}
+
+// Users API handler with simple error handling (removed CMS security for user-facing endpoint)
+export default withErrorHandler(handler);

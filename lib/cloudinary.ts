@@ -2,19 +2,34 @@ import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || '',
+  api_key: process.env.CLOUDINARY_API_KEY || '',
+  api_secret: process.env.CLOUDINARY_API_SECRET || '',
+  secure: true,
 });
 
 /**
  * Validate that Cloudinary configuration is properly set
  */
 export function validateCloudinaryConfig(): boolean {
+  const config = {
+    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  };
+  
+  console.log('Cloudinary config check:', {
+    cloud_name: !!config.cloud_name,
+    api_key: !!config.api_key,
+    api_secret: !!config.api_secret,
+    cloud_name_value: config.cloud_name,
+    api_key_length: config.api_key?.length,
+  });
+  
   return !!(
-    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
-    process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET
+    config.cloud_name &&
+    config.api_key &&
+    config.api_secret
   );
 }
 
@@ -40,16 +55,16 @@ export async function uploadImage(
       // Optimized settings for faster upload
       quality: 'auto:good', // Faster than 'auto' with good quality
       fetch_format: 'auto',
-      // Disable unnecessary processing for faster upload
-      format: 'auto',
+      // Remove invalid format parameter
+      // format: 'auto', // This was causing the error
       // Add timeout to prevent hanging
       timeout: 30000, // 30 seconds timeout
-      // Reduce processing steps
+      // Disable unnecessary processing for faster upload
       eager: [], // No eager transformations
       invalidate: false, // Don't invalidate CDN cache
       overwrite: true, // Allow overwriting for faster retries
       // Size limits to prevent large files
-      max_file_size: 5242880, // 5MB
+      max_file_size: 10485760, // 10MB (increased from 5MB)
       // Moderation and analysis (disable for speed)
       moderation: 'manual',
       // Metadata
@@ -67,7 +82,13 @@ export async function uploadImage(
     };
   } catch (error) {
     console.error('Error uploading image to Cloudinary:', error);
-    throw new Error('Failed to upload image');
+    console.error('Cloudinary config check:', {
+      cloud_name: !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+      api_key: !!process.env.CLOUDINARY_API_KEY,
+      api_secret: !!process.env.CLOUDINARY_API_SECRET,
+      upload_preset: process.env.CLOUDINARY_UPLOAD_PRESET || 'voice_of_upsa'
+    });
+    throw new Error(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -102,7 +123,7 @@ export function getImageUrl(
     quality?: string | number;
   }
 ): string {
-  const baseUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`;
+  const baseUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`;
   
   if (!transformations) {
     return `${baseUrl}/${publicId}`;

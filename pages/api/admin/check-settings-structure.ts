@@ -1,7 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { requireAdminOrEditor } from '@/lib/auth-helpers';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -21,7 +22,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     await requireAdminOrEditor(req);
 
     // Check settings table structure
-    const { data: columns, error: columnsError } = await supabaseAdmin
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: columns, error: columnsError } = await (await supabaseAdmin as any)
       .from('information_schema.columns')
       .select('column_name, data_type, is_nullable')
       .eq('table_name', 'settings')
@@ -42,14 +44,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Generate appropriate RLS policy based on actual table structure
-    const keyColumn = columns?.find(col => 
+    const keyColumn = (columns as any[])?.find((col: any) => 
       col.column_name.includes('key') || 
       col.column_name.includes('name') ||
       col.column_name === 'setting_key' ||
       col.column_name === 'name'
     );
 
-    const valueColumn = columns?.find(col => 
+    const valueColumn = (columns as any[])?.find((col: any) => 
       col.column_name.includes('value') ||
       col.column_name.includes('data') ||
       col.column_name === 'setting_value'
@@ -152,4 +154,7 @@ ${publicPolicySQL}`;
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:setup',
+  auditAction: 'settings_structure_checked'
+}));

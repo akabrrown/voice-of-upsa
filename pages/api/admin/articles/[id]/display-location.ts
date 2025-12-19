@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity } from '@/lib/security/cms-security';
 import { z } from 'zod';
@@ -53,7 +53,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     });
 
     // Verify article exists before updating
-    const { data: existingArticle, error: fetchError } = await supabaseAdmin
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: existingArticle, error: fetchError } = await (await supabaseAdmin as any)
       .from('articles')
       .select('id, title, display_location')
       .eq('id', id)
@@ -73,7 +74,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     }
 
     // Update article display location
-    const { data: article, error: updateError } = await supabaseAdmin
+    const { data: article, error: updateError } = await (await supabaseAdmin as any)
       .from('articles')
       .update({
         display_location: validatedData.display_location,
@@ -84,7 +85,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
         id,
         title,
         display_location,
-        category:categories(id, name, slug),
         updated_at
       `)
       .single();

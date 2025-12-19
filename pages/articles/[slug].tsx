@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { GetServerSideProps } from 'next';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { motion } from 'framer-motion';
 import { useSupabase } from '@/components/SupabaseProvider';
 import Layout from '@/components/Layout';
@@ -66,7 +68,7 @@ interface Bookmark {
   created_at: string;
 }
 
-const ArticlePage: React.FC = () => {
+const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle }) => {
   console.log('ArticlePage component rendering');
   
   const router = useRouter();
@@ -80,19 +82,36 @@ const ArticlePage: React.FC = () => {
     }
   }, [slug, router.isReady, router]);
   
-  const [article, setArticle] = useState<Article | null>(null);
+  const [article, setArticle] = useState<Article | null>(initialArticle || null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialArticle); // Set loading based on initialArticle
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [userReaction, setUserReaction] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [viewTracked, setViewTracked] = useState(false);
+  const [viewTrackingCooldown, setViewTrackingCooldown] = useState(false);
   const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [cachedSession, setCachedSession] = useState<{ access_token?: string } | null>(null);
+
+  // Cache session to reduce API calls
+  useEffect(() => {
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setCachedSession(session);
+    };
+    getSession();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCachedSession(session);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const fetchArticle = useCallback(async () => {
     if (!slug) return;
@@ -147,13 +166,18 @@ const ArticlePage: React.FC = () => {
       // Always ensure loading is turned off
       setLoading(false);
     }
-  }, [slug, router, loading]);
+  }, [slug, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchComments = useCallback(async () => {
     if (!slug) return;
     
     try {
-      const response = await fetch(`/api/articles/${slug}/comments`);
+      const response = await fetch(`/api/articles/${slug}/comments`, {
+        headers: {
+          ...(cachedSession && { 'Authorization': `Bearer ${cachedSession.access_token}` }),
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -166,13 +190,18 @@ const ArticlePage: React.FC = () => {
       console.log('Comments fetch failed, continuing without comments');
       // Don't show error toast for missing comments endpoint
     }
-  }, [slug]);
+  }, [slug, cachedSession]);
 
   const fetchReactions = useCallback(async () => {
     if (!slug) return;
     
     try {
-      const response = await fetch(`/api/articles/${slug}/reactions`);
+      const response = await fetch(`/api/articles/${slug}/reactions`, {
+        headers: {
+          ...(cachedSession && { 'Authorization': `Bearer ${cachedSession.access_token}` }),
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -190,56 +219,43 @@ const ArticlePage: React.FC = () => {
       console.log('Reactions fetch failed, continuing without reactions');
       // Don't show error toast for missing reactions endpoint
     }
-  }, [slug]);
+  }, [slug, cachedSession]);
 
-  const trackView = useCallback(async () => {
-    if (!article) return;
+ const trackView = useCallback(async () => {
+  if (!article || viewTracked || viewTrackingCooldown) return;
 
-    try {
-      console.log('🔍 Tracking view for article:', article.id);
-      
-      // Try to get session for authenticated users
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('🔍 Session available:', !!session);
-      
-      const response = await fetch(`/api/articles/${article.id}/view`, {
-        method: 'POST',
-        headers: {
-          // Only include auth header if we have a session
-          ...(session && { 'Authorization': `Bearer ${session.access_token}` }),
-          'Content-Type': 'application/json',
-        },
-      });
+  try {
+    setViewTrackingCooldown(true);
+    
+    const response = await fetch(`/api/articles/${article.id}/view`, {
+      method: 'POST',
+      headers: {
+        ...(cachedSession && { 'Authorization': `Bearer ${cachedSession.access_token}` }),
+        'Content-Type': 'application/json',
+      },
+    });
 
-      console.log('🔍 View tracking response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔍 View tracking response data:', data);
-        setViewTracked(true);
-        // Update the article's view count with the server response
-        setArticle(prev => prev ? { ...prev, views_count: data.data.views_count } : null);
-        console.log('🔍 View count updated to:', data.data.views_count);
-      } else {
-        console.error('🔍 View tracking failed:', response.status);
-      }
-    } catch (error) {
-      console.error('🔍 Error tracking view:', error);
-      // Don't show error to user, just fail silently
+    if (response.ok) {
+      const data = await response.json();
+      setViewTracked(true);
+      setArticle(prev => prev ? { ...prev, views_count: data.data.views_count } : null);
     }
-  }, [article, supabase]);
+  } catch (error) {
+    console.error('Error tracking view:', error);
+  } finally {
+    setTimeout(() => setViewTrackingCooldown(false), 5000); // 5 second cooldown
+  }
+}, [article, cachedSession, viewTracked, viewTrackingCooldown]);
 
   const checkBookmarkStatus = useCallback(async () => {
     if (!article || !user) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) return;
+      if (!cachedSession) return;
 
       const response = await fetch(`/api/user/bookmarks`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${cachedSession.access_token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -252,7 +268,7 @@ const ArticlePage: React.FC = () => {
     } catch (error) {
       console.error('Error checking bookmark status:', error);
     }
-  }, [article, user, supabase]);
+  }, [article, user, cachedSession]);
 
   useEffect(() => {
     console.log('useEffect triggered, slug:', slug);
@@ -454,9 +470,7 @@ const ArticlePage: React.FC = () => {
     setIsBookmarked(!isBookmarked);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
+      if (!cachedSession) {
         toast.error('Please sign in to bookmark articles');
         setIsBookmarked(previousState); // Revert on error
         return;
@@ -465,7 +479,7 @@ const ArticlePage: React.FC = () => {
       const response = await fetch(`/api/articles/${article.id}/bookmark`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${cachedSession.access_token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -524,10 +538,7 @@ const ArticlePage: React.FC = () => {
     try {
       setIsSubmittingComment(true);
       
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
+      if (!cachedSession) {
         toast.error('No active session');
         // Revert optimistic update
         setComments(prev => prev.filter(c => c.id !== optimisticComment.id));
@@ -539,7 +550,7 @@ const ArticlePage: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${cachedSession.access_token}`
         },
         body: JSON.stringify({
           content: optimisticComment.content,
@@ -555,9 +566,16 @@ const ArticlePage: React.FC = () => {
       }
 
       // Replace optimistic comment with real comment from server
-      setComments(prev => prev.map(c => 
-        c.id === optimisticComment.id ? data.data.comment : c
-      ));
+      setComments(prev => {
+        const updatedComments = prev.map(c => 
+          c.id === optimisticComment.id ? data.data.comment : c
+        );
+        // Remove any potential duplicates by filtering unique IDs
+        const uniqueComments = updatedComments.filter((comment, index, array) => 
+          array.findIndex(c => c.id === comment.id) === index
+        );
+        return uniqueComments;
+      });
       toast.success('Comment posted successfully');
     } catch (error) {
       console.error('Error posting comment:', error);
@@ -611,9 +629,7 @@ const ArticlePage: React.FC = () => {
     try {
       setIsSubmittingComment(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
+      if (!cachedSession) {
         toast.error('No active session');
         setComments(prev => prev.filter(c => c.id !== optimisticReply.id));
         setReplyText(previousReplyText);
@@ -625,7 +641,7 @@ const ArticlePage: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${cachedSession.access_token}`
         },
         body: JSON.stringify({
           content: optimisticReply.content,
@@ -683,15 +699,12 @@ const ArticlePage: React.FC = () => {
     setUserReaction(userReaction === type ? null : type);
 
     try {
-      // Try to get session for authenticated users, but allow anonymous reactions
-      const { data: { session } } = await supabase.auth.getSession();
-
       const response = await fetch(`/api/articles/${article?.id}/reactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           // Only include auth header if we have a session
-          ...(session && { 'Authorization': `Bearer ${session.access_token}` })
+          ...(cachedSession && { 'Authorization': `Bearer ${cachedSession.access_token}` })
         },
         body: JSON.stringify({ reaction_type: type }),
       });
@@ -834,48 +847,6 @@ const ArticlePage: React.FC = () => {
         transition={{ duration: 0.5 }}
       >
         <article>
-          {/* Comments Section - Keep existing comments functionality */}
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
-          <FiMessageCircle className="w-6 h-6" />
-          <span>Comments ({comments.length})</span>
-        </h2>
-
-        {/* Comment Form */}
-        {user && (
-          <form onSubmit={handleCommentSubmit} className="mb-8">
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-navy font-semibold flex-shrink-0">
-                  {(user.user_metadata?.name || user.email || 'Anonymous').charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1">
-                  <textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent resize-none"
-                    rows={3}
-                    maxLength={1000}
-                  />
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">
-                      {commentText.length}/1000 characters
-                    </span>
-                    <button
-                      type="submit"
-                      disabled={isSubmittingComment || !commentText.trim()}
-                      className="px-6 py-2 bg-golden text-navy font-semibold rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSubmittingComment ? 'Posting...' : 'Post Comment'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
-        )}
-
           {/* Action Buttons */}
           <div className="flex items-center space-x-4 py-6 border-y border-gray-200">
             <button
@@ -978,7 +949,12 @@ const ArticlePage: React.FC = () => {
 
             {/* Comments List */}
             <div className="space-y-6">
-              {comments.filter(c => !!c && !c.parent_id).map((comment) => {
+              {comments
+                .filter(c => !!c && !c.parent_id)
+                .filter((comment, index, array) => 
+                  array.findIndex(c => c.id === comment.id) === index
+                )
+                .map((comment) => {
                 // Get replies for this comment
                 const replies = comments.filter(r => r.parent_id === comment.id);
                 
@@ -1165,8 +1141,7 @@ const ArticlePage: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
-        </article>
+      </article>
       </motion.div>
 
       {/* Share Modal */}
@@ -1238,6 +1213,39 @@ const ArticlePage: React.FC = () => {
       )}
     </Layout>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { slug } = context.params || {};
+  
+  if (!slug || typeof slug !== 'string') {
+    return { props: { initialArticle: null } };
+  }
+  
+  try {
+    const supabase = await getSupabaseAdmin();
+    // Fetch article with category and author info
+    const { data: article, error } = await supabase
+      .from('articles')
+      .select('*, author:profiles(id, name, avatar_url), category:categories(id, name, slug)')
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .single();
+      
+    if (error || !article) {
+      console.error('Error fetching article for SSR:', error);
+      return { props: { initialArticle: null } };
+    }
+    
+    return {
+      props: {
+        initialArticle: article
+      }
+    };
+  } catch (error) {
+    console.error('Exception in getServerSideProps:', error);
+    return { props: { initialArticle: null } };
+  }
 };
 
 export default ArticlePage;

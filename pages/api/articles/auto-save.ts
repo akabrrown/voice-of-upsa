@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -50,7 +50,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const token = authHeader.replace('Bearer ', '');
     
     // Verify the token and get user
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: { user }, error: authError } = await (await supabaseAdmin as any).auth.getUser(token);
     
     if (authError || !user) {
       return res.status(401).json({
@@ -88,7 +89,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const articleData = validationResult.data;
 
     // Check if user has an existing draft for this article
-    const { data: existingDraft, error: fetchError } = await supabaseAdmin
+    const { data: existingDraft, error: fetchError } = await (await supabaseAdmin as any)
       .from('articles')
       .select('id')
       .eq('author_id', user.id)
@@ -100,7 +101,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     
     if (existingDraft && !fetchError) {
       // Update existing draft
-      const { data: updatedDraft, error: updateError } = await supabaseAdmin
+      const { data: updatedDraft, error: updateError } = await (await supabaseAdmin as any)
         .from('articles')
         .update({
           ...articleData,
@@ -126,7 +127,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       result = updatedDraft;
     } else {
       // Create new draft
-      const { data: newDraft, error: insertError } = await supabaseAdmin
+      const { data: newDraft, error: insertError } = await (await supabaseAdmin as any)
         .from('articles')
         .insert({
           ...articleData,

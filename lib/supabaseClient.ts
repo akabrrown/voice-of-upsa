@@ -1,22 +1,26 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+/**
+ * @deprecated This file is deprecated. Use @/lib/supabase/client instead.
+ * 
+ * This file now re-exports from lib/supabase/client.ts to maintain backward compatibility
+ * and prevent multiple Supabase client instances.
+ */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Re-export everything from the canonical client file
+export { 
+  createClient as createSupabaseClient,
+  getSupabaseClient,
+  checkUserExists,
+  signInWithEmail,
+  signUpWithEmail,
+  signOut,
+  resetPassword,
+  updatePassword,
+  getCurrentUser,
+  getCurrentSession,
+  updateUserMetadata,
+  onAuthStateChange
+} from './supabase/client';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-// Create client-side Supabase client factory function
-export function createSupabaseClient(): SupabaseClient {
-  return createClient(supabaseUrl!, supabaseAnonKey!);
-}
-
-// Export a singleton for backward compatibility (but encourage using factory)
-let supabase: SupabaseClient | null = null;
-export const getSupabaseClient = (): SupabaseClient => {
-  if (!supabase) {
-    supabase = createSupabaseClient();
-  }
-  return supabase;
-};
+// Default export for backward compatibility
+import { getSupabaseClient } from './supabase/client';
+export default getSupabaseClient();

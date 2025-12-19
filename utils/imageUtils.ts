@@ -24,7 +24,7 @@ export function getPublicIdFromUrl(url: string): string | null {
     
     // Remove version if present (starts with v_)
     const lastPart = publicIdParts[publicIdParts.length - 1];
-    if (lastPart.startsWith('v')) {
+    if (lastPart && lastPart.startsWith('v')) {
       publicIdParts.pop();
     }
 

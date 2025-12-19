@@ -1,0 +1,237 @@
+
+> voice-of-upsa@1.0.0 build
+> next build
+
+ ÔÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\akaye\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\akaye\Desktop\voiceofupsa\package-lock.json
+
+   Ôû▓ Next.js 16.0.8 (Turbopack)
+   - Environments: .env.local, .env
+
+   Running TypeScript ...
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully in 35.7s
+   Collecting page data using 7 workers ...
+Sign-in page loaded, getSupabaseClient: function
+   Generating static pages using 7 workers (0/49) ...
+Sign-in page loaded, getSupabaseClient: function
+Debug - Articles in state: 0
+Debug - Filtered articles: 0
+Debug - Search term: 
+Debug - Status filter: all
+Filter debug: {
+  totalSubmissions: 0,
+  statusFilter: 'all',
+  filteredCount: 0,
+  submissionsByStatus: {}
+}
+Ad-locations: Component rendering started
+Ad-locations: Component state initialized { loading: true, locationsCount: 0 }
+Loading state is true, showing loader
+ArticlePage component rendering
+Still loading, article state: null
+   Generating static pages using 7 workers (12/49) 
+Admin users page debug: {
+  loading: true,
+  usersCount: 0,
+  filteredUsersCount: 0,
+  roleFilter: 'all',
+  statusFilter: 'active',
+  searchTerm: '',
+  usersSample: []
+}
+   Generating static pages using 7 workers (24/49) 
+ArticlesPage component rendering
+Current loading state: true
+Current articles state: []
+Current articles count: 0
+Loading state is true, showing loader
+   Generating static pages using 7 workers (36/49) 
+=== CREATE ARTICLE PAGE DEBUG ===
+cmsUser: null
+cmsUser?.role: undefined
+isEditor(): false
+authLoading: true
+cmsLoading: true
+user: undefined
+canCreateArticles: false
+ Ô£ô Generating static pages using 7 workers (49/49) in 5.2s
+   Finalizing page optimization ...
+
+Route (pages)
+Ôöî Ôùï / (1834 ms)
+Ôö£   /_app
+Ôö£ Ôùï /404
+Ôö£ Ôùï /about (1642 ms)
+Ôö£ Ôùï /account-settings (973 ms)
+Ôö£ Ôùï /admin (340 ms)
+Ôö£ Ôùï /admin/ad-locations (1647 ms)
+Ôö£ Ôùï /admin/ads (1649 ms)
+Ôö£ Ôùï /admin/anonymous-messages (1665 ms)
+Ôö£ Ôùï /admin/anonymous-stories (1646 ms)
+Ôö£ Ôùï /admin/articles (1646 ms)
+Ôö£ Ôùï /admin/articles/[id]/edit (974 ms)
+Ôö£ Ôùï /admin/articles/new (907 ms)
+Ôö£ Ôùï /admin/comments (1645 ms)
+Ôö£ Ôùï /admin/dashboard (339 ms)
+Ôö£ Ôùï /admin/messages (1649 ms)
+Ôö£ Ôùï /admin/settings
+Ôö£ Ôùï /admin/users (401 ms)
+Ôö£ Ôùï /ads (530 ms)
+Ôö£ Ôùï /ads/my-submissions (342 ms)
+Ôö£ Ôùï /ads/payment/[id] (343 ms)
+Ôö£ Ôùï /ads/payment/verify (349 ms)
+Ôö£ Ôùï /ads/submission-success (341 ms)
+Ôö£ Ôùï /ads/success
+Ôö£ Ôùï /anonymous
+Ôö£ Ôùï /anonymous/[id] (339 ms)
+Ôö£ Ôùï /anonymous/about
+Ôö£ Ôùï /anonymous/submit
+Ôö£ ãÆ /api/admin/ad-locations
+Ôö£ ãÆ /api/admin/ads
+Ôö£ ãÆ /api/admin/articles
+Ôö£ ãÆ /api/admin/articles/[id]
+Ôö£ ãÆ /api/admin/articles/[id]/category
+Ôö£ ãÆ /api/admin/articles/[id]/display-location
+Ôö£ ãÆ /api/admin/articles/[id]/featured
+Ôö£ ãÆ /api/admin/articles/[id]/schedule
+Ôö£ ãÆ /api/admin/articles/[id]/settings
+Ôö£ ãÆ /api/admin/check-access
+Ôö£ ãÆ /api/admin/check-admin-status
+Ôö£ ãÆ /api/admin/check-settings-structure
+Ôö£ ãÆ /api/admin/comments
+Ôö£ ãÆ /api/admin/comments/[id]
+Ôö£ ãÆ /api/admin/create-settings-table
+Ôö£ ãÆ /api/admin/dashboard-stats
+Ôö£ ãÆ /api/admin/debug-roles
+Ôö£ ãÆ /api/admin/debug-token
+Ôö£ ãÆ /api/admin/debug-users-api
+Ôö£ ãÆ /api/admin/disable-rls
+Ôö£ ãÆ /api/admin/emergency-lockdown
+Ôö£ ãÆ /api/admin/field-encryption
+Ôö£ ãÆ /api/admin/fix-admin-role
+Ôö£ ãÆ /api/admin/fix-messages-permissions
+Ôö£ ãÆ /api/admin/fix-roles
+Ôö£ ãÆ /api/admin/force-create-settings
+Ôö£ ãÆ /api/admin/generate-signed-url
+Ôö£ ãÆ /api/admin/messages
+Ôö£ ãÆ /api/admin/messages/[id]
+Ôö£ ãÆ /api/admin/messages/[id]/reply
+Ôö£ ãÆ /api/admin/rotate-logs
+Ôö£ ãÆ /api/admin/run-security-tests
+Ôö£ ãÆ /api/admin/security-audit
+Ôö£ ãÆ /api/admin/settings
+Ôö£ ãÆ /api/admin/sync-user
+Ôö£ ãÆ /api/admin/upload
+Ôö£ ãÆ /api/admin/upload-logo
+Ôö£ ãÆ /api/admin/upload-media
+Ôö£ ãÆ /api/admin/users
+Ôö£ ãÆ /api/admin/users/[id]
+Ôö£ ãÆ /api/admin/users/archived-users
+Ôö£ ãÆ /api/admin/users/create-role
+Ôö£ ãÆ /api/admin/users/invite
+Ôö£ ãÆ /api/admin/users/send-invitation
+Ôö£ ãÆ /api/admin/users/sync-all
+Ôö£ ãÆ /api/admin/users/test
+Ôö£ ãÆ /api/ads/locations
+Ôö£ ãÆ /api/ads/my-submissions
+Ôö£ ãÆ /api/ads/payment/initialize
+Ôö£ ãÆ /api/ads/payment/verify
+Ôö£ ãÆ /api/ads/paystack/initialize
+Ôö£ ãÆ /api/ads/paystack/verify
+Ôö£ ãÆ /api/ads/secure-submit
+Ôö£ ãÆ /api/ads/submit
+Ôö£ ãÆ /api/anonymous-stories/[id]
+Ôö£ ãÆ /api/anonymous-stories/admin/get-all
+Ôö£ ãÆ /api/anonymous-stories/admin/get-reported
+Ôö£ ãÆ /api/anonymous-stories/admin/moderate
+Ôö£ ãÆ /api/anonymous-stories/admin/stats
+Ôö£ ãÆ /api/anonymous-stories/get-approved
+Ôö£ ãÆ /api/anonymous-stories/get-user-likes
+Ôö£ ãÆ /api/anonymous-stories/like
+Ôö£ ãÆ /api/anonymous-stories/report
+Ôö£ ãÆ /api/anonymous-stories/submit
+Ôö£ ãÆ /api/anonymous-stories/view
+Ôö£ ãÆ /api/articles
+Ôö£ ãÆ /api/articles/[slug]
+Ôö£ ãÆ /api/articles/[slug]/bookmark
+Ôö£ ãÆ /api/articles/[slug]/comments
+Ôö£ ãÆ /api/articles/[slug]/reactions
+Ôö£ ãÆ /api/articles/[slug]/view
+Ôö£ ãÆ /api/articles/auto-save
+Ôö£ ãÆ /api/articles/search/suggestions
+Ôö£ ãÆ /api/articles/user
+Ôö£ ãÆ /api/auth/check-user
+Ôö£ ãÆ /api/auth/cms-user
+Ôö£ ãÆ /api/auth/reset-password
+Ôö£ ãÆ /api/auth/sign-in
+Ôö£ ãÆ /api/auth/sign-out
+Ôö£ ãÆ /api/auth/sign-up
+Ôö£ ãÆ /api/auth/simple-login
+Ôö£ ãÆ /api/auth/sync-user
+Ôö£ ãÆ /api/auth/token
+Ôö£ ãÆ /api/auth/user
+Ôö£ ãÆ /api/auth/verify-email
+Ôö£ ãÆ /api/auth/webhook
+Ôö£ ãÆ /api/categories
+Ôö£ ãÆ /api/cms/user
+Ôö£ ãÆ /api/comments
+Ôö£ ãÆ /api/contact/submit
+Ôö£ ãÆ /api/csrf-token
+Ôö£ ãÆ /api/csrf/token
+Ôö£ ãÆ /api/debug-auth
+Ôö£ ãÆ /api/debug/ads
+Ôö£ ãÆ /api/debug/current-user-role
+Ôö£ ãÆ /api/debug/user-role
+Ôö£ ãÆ /api/editor/articles
+Ôö£ ãÆ /api/editor/articles/[id]
+Ôö£ ãÆ /api/editor/dashboard-stats
+Ôö£ ãÆ /api/errors
+Ôö£ ãÆ /api/health
+Ôö£ ãÆ /api/media/upload
+Ôö£ ãÆ /api/newsletter/subscribe
+Ôö£ ãÆ /api/public/settings
+Ôö£ ãÆ /api/search
+Ôö£ ãÆ /api/security/csp-report
+Ôö£ ãÆ /api/sign-cloudinary
+Ôö£ ãÆ /api/test/cms-enforcement
+Ôö£ ãÆ /api/user/bookmarks
+Ôö£ ãÆ /api/user/dashboard-stats
+Ôö£ ãÆ /api/user/delete-account
+Ôö£ ãÆ /api/user/export-data
+Ôö£ ãÆ /api/user/notification-preferences
+Ôö£ ãÆ /api/user/notification-preferences-simple
+Ôö£ ãÆ /api/user/profile
+Ôö£ ãÆ /api/users/[id]
+Ôö£ ãÆ /api/users/[id]/articles
+Ôö£ Ôùï /articles
+Ôö£ Ôùï /articles/[slug] (1942 ms)
+Ôö£ Ôùï /auth/callback
+Ôö£ Ôùï /auth/reset-password
+Ôö£ Ôùï /auth/sign-in (1890 ms)
+Ôö£ Ôùï /auth/sign-up
+Ôö£ Ôùï /bookmarks (1836 ms)
+Ôö£ Ôùï /categories/anonymous (1836 ms)
+Ôö£ Ôùï /contact (1884 ms)
+Ôö£ Ôùï /editor/[id]/edit (973 ms)
+Ôö£ Ôùï /editor/articles (1837 ms)
+Ôö£ Ôùï /editor/create (1344 ms)
+Ôö£ Ôùï /editor/edit/[id] (1296 ms)
+Ôö£ Ôùï /newsletter (1832 ms)
+Ôö£ Ôùï /offline (366 ms)
+Ôö£ Ôùï /privacy (366 ms)
+Ôö£ Ôùï /rss (366 ms)
+Ôö£ Ôùï /search (363 ms)
+Ôö£ Ôùï /social (363 ms)
+Ôö£ Ôùï /terms (365 ms)
+Ôöö Ôùï /unauthorized (364 ms)
+
+ãÆ Proxy (Middleware)
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { authenticate } from '@/lib/api/middleware/auth';
 import { withRateLimit } from '@/lib/api/middleware/auth';
@@ -51,8 +51,10 @@ async function handler(
   // Authenticate user
   const user = await authenticate(req);
 
+  const supabaseAdmin = await getSupabaseAdmin();
+
   // Resolve article ID
-  const { data: article, error: articleError } = await supabaseAdmin
+  const { data: article, error: articleError } = await (await supabaseAdmin as any)
     .from('articles')
     .select('id')
     .eq(queryField, slug)
@@ -74,7 +76,7 @@ async function handler(
 
   if (req.method === 'GET') {
     // Check if bookmarked
-    const { data: bookmark } = await supabaseAdmin
+    const { data: bookmark } = await (await supabaseAdmin as any)
       .from('article_bookmarks') // Use correct table name
       .select('id')
       .eq('article_id', articleId)
@@ -90,7 +92,7 @@ async function handler(
 
   // POST - Toggle bookmark
   // Check if already bookmarked
-  const { data: existingBookmark } = await supabaseAdmin
+  const { data: existingBookmark } = await (await supabaseAdmin as any)
     .from('article_bookmarks')
     .select('id')
     .eq('article_id', articleId)
@@ -101,7 +103,7 @@ async function handler(
 
   if (existingBookmark) {
     // Remove bookmark
-    const { error: deleteError } = await supabaseAdmin
+    const { error: deleteError } = await (await supabaseAdmin as any)
       .from('article_bookmarks')
       .delete()
       .eq('article_id', articleId)
@@ -114,7 +116,7 @@ async function handler(
     isBookmarked = false;
   } else {
     // Add bookmark
-    const { error: insertError } = await supabaseAdmin
+    const { error: insertError } = await (await supabaseAdmin as any)
       .from('article_bookmarks')
       .insert({
         article_id: articleId,

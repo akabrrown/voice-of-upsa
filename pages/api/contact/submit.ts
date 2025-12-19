@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -63,7 +63,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Validate input with enhanced schema
-    const validatedData = contactSchema.parse(req.body);
+    let validatedData;
+    try {
+      validatedData = contactSchema.parse(req.body);
+    } catch (validationError) {
+      console.error('Contact form validation error:', validationError);
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid form data',
+          details: validationError instanceof Error ? validationError.message : 'Please check all required fields'
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
     const { name, email, subject, message, phone } = validatedData;
 
     // Additional input sanitization
@@ -88,22 +102,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const userAgent = req.headers['user-agent'] || null;
 
     // Insert contact submission with sanitized data
-    const { data, error } = await supabaseAdmin
+    const admin = await getSupabaseAdmin();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (admin as unknown as any)
       .from('contact_submissions')
       .insert({
         name: sanitizedData.name,
         email: sanitizedData.email,
-        subject: sanitizedData.subject,
+        subject: sanitizedData.subject || undefined,
         message: sanitizedData.message,
-        phone: sanitizedData.phone,
-        status: 'new',
-        priority: 'normal',
+        phone: sanitizedData.phone || undefined,
         ip_address: ipAddress,
-        user_agent: userAgent,
-        created_at: new Date().toISOString()
+        user_agent: userAgent
       })
       .select()
-      .single();
+      .single() as { data: { id: string; created_at: string } | null; error: { message: string; details?: string } | null };
 
     if (error) {
       console.error('Contact submission database error:', error);
@@ -120,20 +133,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Log successful submission
     console.log(`Contact form submitted successfully`, {
-      submissionId: data.id,
+      submissionId: data?.id,
       email: sanitizedData.email,
       ip: ipAddress,
       timestamp: new Date().toISOString()
     });
 
     // Send email notification to admin (async, non-blocking)
-    sendContactNotification({
+    const emailData = {
       name: sanitizedData.name,
       email: sanitizedData.email,
-      subject: sanitizedData.subject || undefined,
       message: sanitizedData.message,
-      phone: sanitizedData.phone || undefined
-    }).then(emailResult => {
+      ...(sanitizedData.subject && { subject: sanitizedData.subject }),
+      ...(sanitizedData.phone && { phone: sanitizedData.phone })
+    };
+    
+    sendContactNotification(emailData).then(emailResult => {
       if (emailResult.success) {
         console.log(`Contact email notification sent: ${emailResult.messageId}`);
       } else {
@@ -147,8 +162,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       success: true,
       message: 'Contact form submitted successfully',
       data: {
-        id: data.id,
-        created_at: data.created_at
+        id: data?.id,
+        created_at: data?.created_at
       },
       timestamp: new Date().toISOString()
     });

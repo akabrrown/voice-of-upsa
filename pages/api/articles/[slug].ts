@@ -1,5 +1,5 @@
-﻿import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -62,12 +62,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const queryField = isUuid ? 'id' : 'slug';
 
     // Fetch single published article
-    const { data: article, error } = await supabaseAdmin
+    const supabaseAdmin = await getSupabaseAdmin();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: article, error } = await (await supabaseAdmin as any)
       .from('articles')
-      .select('id, title, slug, excerpt, content, featured_image, status, published_at, created_at, updated_at, views_count, likes_count, comments_count, display_location, author:users(id, name, avatar_url)')
+      .select('id, title, slug, excerpt, content, featured_image, status, published_at, created_at, updated_at, views_count, likes_count, comments_count, display_location, contributor_name, author:users(id, name, avatar_url)')
       .eq(queryField, validatedSlug)
       .eq('status', 'published') // Only show published articles to public
-      .eq('blocked', false) // Don't show blocked articles
       .single();
 
     if (error || !article) {
@@ -97,12 +98,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       views_count: article.views_count,
       likes_count: article.likes_count,
       comments_count: article.comments_count,
+      contributor_name: article.contributor_name || null,
       category: null, // Category field removed from database
-      author: article.author && Array.isArray(article.author) && article.author.length > 0 ? {
+      author: article.contributor_name ? {
+        id: '',
+        name: article.contributor_name,
+        avatar_url: undefined
+      } : (article.author && Array.isArray(article.author) && article.author.length > 0 ? {
         id: article.author[0].id,
         name: article.author[0].name,
         avatar_url: article.author[0].avatar_url
-      } : null
+      } : null)
     };
 
     // Log successful fetch
@@ -136,5 +142,3 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
 // Apply enhanced error handler
 export default withErrorHandler(handler);
-
-                            

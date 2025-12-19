@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
@@ -24,7 +24,7 @@ interface User {
 }
 
 const AdminUsersPage: React.FC = () => {
-  const { user, supabase } = useSupabase();
+  const { user, loading: authLoading, supabase } = useSupabase();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,46 +37,53 @@ const AdminUsersPage: React.FC = () => {
   const [deleteUserModal, setDeleteUserModal] = useState<User | null>(null);
   const [permanentDeleteModal, setPermanentDeleteModal] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
-  const lastRefreshRef = useRef<number>(0);
+
+  // Helper function to get Supabase session token
+  const getAuthToken = useCallback(async () => {
+    try {
+      console.log('Getting Supabase session...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('Session data:', {
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        userEmail: session?.user?.email,
+        sessionError
+      });
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        return null;
+      }
+      
+      if (!session || !session.access_token) {
+        console.log('No valid session found');
+        return null;
+      }
+      
+      console.log('Session found, token length:', session.access_token.length);
+      return session.access_token;
+    } catch (error) {
+      console.error('Error getting auth token:', error);
+      return null;
+    }
+  }, [supabase]);
 
   const fetchUsers = useCallback(async () => {
+    console.log('fetchUsers called');
     try {
+      console.log('Admin users: Starting fetch...');
       setLoading(true);
       
-      console.log('Admin users: Starting fetch...');
+      // Get auth token from Supabase session
+      console.log('Admin users: Getting auth token...');
+      const token = await getAuthToken();
+      console.log('Admin users: Token result:', { hasToken: !!token });
       
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('Admin users: Session result:', { session: !!session, sessionError });
-      
-      if (sessionError || !session) {
-        console.log('Admin users: No session, showing error');
+      if (!token) {
+        console.log('Admin users: No token, showing error');
         toast.error('No active session');
         return;
-      }
-
-      // Only refresh if token is expired or it's been more than 5 minutes since last refresh
-      const now = Date.now();
-      const tokenExpiresAt = session.expires_at ? session.expires_at * 1000 : 0;
-      const shouldRefresh = tokenExpiresAt < now || (now - lastRefreshRef.current) > 300000; // 5 minutes
-
-      let freshSession = session;
-      
-      if (shouldRefresh) {
-        console.log('Admin users: Token expired or stale, refreshing session...');
-        // Refresh session to get fresh token
-        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
-        console.log('Admin users: Refresh result:', { freshSession: !!refreshedSession, refreshError });
-        
-        if (refreshError || !refreshedSession) {
-          console.error('Admin users: Session refresh failed:', refreshError);
-          toast.error('Session expired, please sign in again');
-          return;
-        }
-        freshSession = refreshedSession;
-        lastRefreshRef.current = now;
-      } else {
-        console.log('Admin users: Using existing valid token');
       }
       
       console.log('Admin users: Making API call with token...');
@@ -88,9 +95,19 @@ const AdminUsersPage: React.FC = () => {
       
       const url = `/api/admin/users${params.toString() ? '?' + params.toString() : ''}`;
       
+      console.log('Admin users: API call details:', {
+        url,
+        roleFilter,
+        statusFilter,
+        searchTerm,
+        hasToken: !!token,
+        tokenLength: token?.length,
+        tokenStart: token?.substring(0, 20),
+      });
+      
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${freshSession.access_token}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -99,7 +116,12 @@ const AdminUsersPage: React.FC = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Admin users: API error response:', errorText);
+        console.error('Admin users: API error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: errorText
+        });
         throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
       }
 
@@ -111,29 +133,41 @@ const AdminUsersPage: React.FC = () => {
         'users': data.users,
         'data.data': data.data?.data
       });
-      setUsers(data.data?.users || []);
+      
+      const usersArray = data.data?.users || [];
+      console.log('fetchUsers: Setting users array with length:', usersArray.length);
+      setUsers(usersArray);
+      console.log('fetchUsers: Users after update should trigger re-render');
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to load users');
     } finally {
       setLoading(false);
+      console.log('fetchUsers completed, loading set to false');
     }
-  }, [supabase, roleFilter, statusFilter, searchTerm]);
+  }, [roleFilter, statusFilter, searchTerm, getAuthToken]);
 
   useEffect(() => {
-    if (user) {
-      fetchUsers();
+    console.log('Admin users: useEffect triggered', { user: !!user, userEmail: user?.email, authLoading });
+    if (!authLoading) {
+      if (user) {
+        console.log('Admin users: User exists, calling fetchUsers');
+        fetchUsers();
+      } else {
+        console.log('Admin users: No user available, not fetching');
+        setLoading(false);
+      }
     }
-  }, [user, fetchUsers]);
+  }, [user, authLoading, fetchUsers]);
 
   const handleSyncUsers = async () => {
     try {
       setIsSyncing(true);
       
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get auth token from Supabase session
+      const token = await getAuthToken();
       
-      if (!session) {
+      if (!token) {
         toast.error('No active session');
         return;
       }
@@ -141,7 +175,7 @@ const AdminUsersPage: React.FC = () => {
       const response = await fetch('/api/admin/users/sync-all', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -166,37 +200,76 @@ const AdminUsersPage: React.FC = () => {
   };
 
   const handleRoleChange = async (userId: string, newRole: 'user' | 'editor' | 'admin') => {
+    console.log('handleRoleChange called with:', { userId, newRole });
+    
     if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
+      console.log('User cancelled role change');
       return;
     }
 
+    console.log('User confirmed role change, proceeding...');
     try {
       setIsUpdatingRole(true);
       
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast.error('No active session');
+      // Get auth token from Supabase session
+      console.log('Getting auth token for role change...');
+      const token = await getAuthToken();
+      if (!token) {
+        toast.error('Authentication required. Please log in again.');
         return;
       }
-      
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
+
+      console.log('Making role change API call...');
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ role: newRole }),
       });
 
+      console.log('Role change API call details:', {
+        userId,
+        newRole,
+        token: token ? `${token.substring(0, 20)}...` : 'none',
+        responseStatus: response.status,
+        responseStatusText: response.statusText,
+        responseHeaders: Object.fromEntries(response.headers.entries())
+      });
+
+      const responseData = await response.json();
+      console.log('Role change API response:', responseData);
+
       if (!response.ok) {
-        throw new Error('Failed to update user role');
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: JSON.stringify(responseData, null, 2), // Stringify to ensure we see the full object in logs
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        
+        // Show specific error from backend if available
+        const errorMessage = responseData.error || responseData.message || `Failed to update user role: ${response.status}`;
+        const errorDetails = responseData.details ? ` (${responseData.details})` : '';
+        
+        throw new Error(`${errorMessage}${errorDetails}`);
       }
 
+      console.log('Role change successful, calling fetchUsers...');
       toast.success('User role updated successfully');
-      fetchUsers();
+      await fetchUsers();
       setSelectedUser(null);
+      
+      // If changing own role, refresh session to update permissions
+      if (userId === user?.id) {
+        console.log('Refreshing session after own role change...');
+        await supabase.auth.refreshSession();
+        // Force page reload to ensure all components pick up new role
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
     } catch (error) {
       console.error('Error updating user role:', error);
       toast.error('Failed to update user role');
@@ -207,10 +280,10 @@ const AdminUsersPage: React.FC = () => {
 
   const handleArchiveUser = async (userId: string, reason?: string) => {
     try {
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get auth token from Supabase session
+      const token = await getAuthToken();
       
-      if (!session) {
+      if (!token) {
         toast.error('No active session');
         return;
       }
@@ -218,7 +291,7 @@ const AdminUsersPage: React.FC = () => {
       const response = await fetch(`/api/admin/users/archive-user?userId=${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ reason: reason || 'Admin decision' }),
@@ -241,10 +314,10 @@ const AdminUsersPage: React.FC = () => {
 
   const handleRestoreUser = async (userId: string) => {
     try {
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get auth token from Supabase session
+      const token = await getAuthToken();
       
-      if (!session) {
+      if (!token) {
         toast.error('No active session');
         return;
       }
@@ -252,7 +325,7 @@ const AdminUsersPage: React.FC = () => {
       const response = await fetch(`/api/admin/users/restore-user?userId=${userId}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -273,10 +346,10 @@ const AdminUsersPage: React.FC = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      // Get session from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get auth token from Supabase session
+      const token = await getAuthToken();
       
-      if (!session) {
+      if (!token) {
         toast.error('No active session');
         return;
       }
@@ -284,7 +357,7 @@ const AdminUsersPage: React.FC = () => {
       const response = await fetch(`/api/admin/users/delete-user?userId=${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -377,7 +450,7 @@ const AdminUsersPage: React.FC = () => {
     },
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <Layout>
         <div className="min-h-screen bg-gray-50">
@@ -430,7 +503,7 @@ const AdminUsersPage: React.FC = () => {
                   </button>
                 </div>
               </h1>
-              <p className="text-gray-300">Manage user roles and permissions. Use &quot;Sync Users&quot; to sync new users from Supabase auth.</p>
+              <p className="text-gray-300">Manage user roles and permissions. Use &quot;Sync Users&quot; to sync new users from the authentication system.</p>
             </motion.div>
           </div>
         </section>
@@ -554,25 +627,25 @@ const AdminUsersPage: React.FC = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center space-x-2 mt-4 md:mt-0">
+                      <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
                         <button
                           onClick={() => setSelectedUser(userItem)}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                          className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
                         >
-                          Change Role
+                          Role
                         </button>
                         <button
                           onClick={() => setInvitationUser(userItem)}
-                          className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-200"
+                          className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-200 text-sm font-medium flex items-center"
                         >
                           <FiKey className="mr-1" />
-                          Invite User
+                          Invite
                         </button>
                         {userItem.is_active ? (
                           <button
                             onClick={() => setDeleteUserModal(userItem)}
-                            className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors duration-200"
-                            disabled={userItem.id === user?.id} // Prevent self-archiving
+                            className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors duration-200 text-sm font-medium flex items-center"
+                            disabled={userItem.id === user?.id}
                           >
                             <FiArchive className="mr-1" />
                             Archive
@@ -580,7 +653,7 @@ const AdminUsersPage: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => handleRestoreUser(userItem.id)}
-                            className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-200"
+                            className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-200 text-sm font-medium flex items-center"
                           >
                             <FiArchive className="mr-1" />
                             Restore
@@ -588,8 +661,8 @@ const AdminUsersPage: React.FC = () => {
                         )}
                         <button
                           onClick={() => setPermanentDeleteModal(userItem)}
-                          className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200"
-                          disabled={userItem.id === user?.id} // Prevent self-deletion
+                          className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200 text-sm font-medium flex items-center"
+                          disabled={userItem.id === user?.id}
                         >
                           <FiTrash2 className="mr-1" />
                           Delete

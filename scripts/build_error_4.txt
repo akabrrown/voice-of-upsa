@@ -1,0 +1,28 @@
+
+> voice-of-upsa@1.0.0 build
+> next build
+
+ ÔÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\akaye\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\akaye\Desktop\voiceofupsa\package-lock.json
+
+   Ôû▓ Next.js 16.0.8 (Turbopack)
+   - Environments: .env.local, .env
+
+   Running TypeScript ...
+Failed to compile.
+
+./pages/api/auth/sign-up.ts:165:38
+Type error: Property 'id' does not exist on type 'never'.
+
+  163 |     if (existingUser && !checkError) {
+  164 |       logSecurityEvent('Duplicate registration attempt', securityContext, 'medium', {
+> 165 |         existingUserId: existingUser.id
+      |                                      ^
+  166 |       });
+  167 |
+  168 |       return res.status(409).json({
+Next.js build worker exited with code: 1 and signal: null

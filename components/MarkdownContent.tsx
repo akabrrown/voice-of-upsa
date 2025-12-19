@@ -72,8 +72,8 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
       // Add image part
       parts.push({
         type: 'image',
-        alt: match[1],
-        url: match[2],
+        ...(match[1] && { alt: match[1] }),
+        ...(match[2] && { url: match[2] }),
         content: match[0]
       });
 
@@ -141,16 +141,9 @@ const MarkdownContent: React.FC<MarkdownContentProps> = ({
                 style={getImageStyle(part.url)}
                 onError={(e) => {
                   console.error('Image failed to load:', part.url);
+                  // Simply hide the failed image without polluting content with error messages
                   const img = e.target as HTMLImageElement;
                   img.style.display = 'none';
-                  const errorDiv = document.createElement('div');
-                  errorDiv.textContent = `Failed to load image: ${part.alt || 'Unknown'}`;
-                  errorDiv.style.color = 'red';
-                  errorDiv.style.padding = '1rem';
-                  errorDiv.style.border = '1px solid red';
-                  errorDiv.style.borderRadius = '4px';
-                  errorDiv.style.backgroundColor = '#fee';
-                  img.parentNode?.replaceChild(errorDiv, img);
                 }}
               />
               {editable && (

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
+import { useCMSAuth } from '@/hooks/useCMSAuth';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { FiMessageCircle, FiSearch, FiUser, FiCalendar, FiTrash2 } from 'react-icons/fi';
@@ -29,17 +30,35 @@ interface Comment {
 
 const AdminCommentsPage: React.FC = () => {
   const { user, supabase } = useSupabase();
+  const { user: cmsUser, loading: authLoading, hasPermission } = useCMSAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
 
+  // Check if user has required permissions
+  const canManageComments = cmsUser && hasPermission('manage:comments');
+
+  // Combined loading state
+  const isLoading = authLoading || loading;
+
   const fetchComments = useCallback(async () => {
+    // Check if user has permission to manage comments
+    if (!cmsUser || !hasPermission('manage:comments')) {
+      console.error('User does not have permission to manage comments');
+      toast.error('You do not have permission to manage comments');
+      return;
+    }
+
     try {
       setLoading(true);
       
+      console.log('=== ADMIN COMMENTS FETCH ===');
+      
       // Get session from Supabase
+      console.log('Getting session...');
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session result:', { session: !!session, userId: session?.user?.id });
       
       if (!session) {
         toast.error('No active session');
@@ -54,11 +73,17 @@ const AdminCommentsPage: React.FC = () => {
         },
       });
 
+      console.log('API response status:', response.status);
+      console.log('API response Hague response headers:', response.headers);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log('API error response:', errorText);
         throw new Error('Failed to fetch comments');
       }
 
       const data = await response.json();
+      console.log('API response data:', data);
       setComments(data.data?.comments || []);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -66,13 +91,13 @@ const AdminCommentsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, cmsUser, hasPermission]);
 
   useEffect(() => {
-    if (user) {
+    if (user && cmsUser && canManageComments) {
       fetchComments();
     }
-  }, [user, fetchComments]);
+  }, [user, cmsUser, canManageComments, fetchComments]);
 
   const handleDelete = async (commentId: string) => {
     if (!confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
@@ -137,7 +162,7 @@ const AdminCommentsPage: React.FC = () => {
     },
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Layout>
         <div className="min-h-screen bg-gray-50">

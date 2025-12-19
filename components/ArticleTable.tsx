@@ -55,22 +55,22 @@ const ArticleTable: React.FC<ArticleTableProps> = ({
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Title
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Author
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Published
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Updated
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
             </th>
           </tr>
@@ -78,22 +78,22 @@ const ArticleTable: React.FC<ArticleTableProps> = ({
         <tbody className="bg-white divide-y divide-gray-200">
           {articles.map((article) => (
             <tr key={article.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div>
-                  <div className="text-sm font-medium text-gray-900">
+              <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                <div className="max-w-[150px] sm:max-w-xs md:max-w-md lg:max-w-lg overflow-hidden">
+                  <div className="text-sm font-medium text-gray-900 truncate">
                     {article.title}
                   </div>
                   {article.excerpt && (
-                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                    <div className="text-xs sm:text-sm text-gray-500 truncate mt-1">
                       {article.excerpt}
                     </div>
                   )}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {article.author.name}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
+              <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                 <span
                   className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                     article.status === 'published'
@@ -106,19 +106,19 @@ const ArticleTable: React.FC<ArticleTableProps> = ({
                   {article.status}
                 </span>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {article.published_at
                   ? new Date(article.published_at).toLocaleDateString()
                   : '-'}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {new Date(article.updated_at).toLocaleDateString()}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 {onEdit && (
                   <button
                     onClick={() => onEdit(article)}
-                    className="text-blue-600 hover:text-blue-900 mr-3"
+                    className="text-blue-600 hover:text-blue-900 mr-2 sm:mr-3"
                   >
                     Edit
                   </button>

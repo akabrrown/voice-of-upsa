@@ -1,8 +1,10 @@
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 interface AdBannerProps {
   ad: {
+    id?: string;
     title: string;
     description: string;
     imageUrl?: string;
@@ -13,9 +15,15 @@ interface AdBannerProps {
 }
 
 const AdBanner: React.FC<AdBannerProps> = ({ ad, className = "" }) => {
+  const router = useRouter();
+
   const handleClick = () => {
-    console.log('AdBanner clicked:', { title: ad.title, linkUrl: ad.linkUrl });
-    if (ad.linkUrl) {
+    console.log('AdBanner clicked:', { id: ad.id, title: ad.title });
+    
+    // Always navigate to internal detail page if ID exists
+    if (ad.id) {
+      router.push(`/ads/${ad.id}`);
+    } else if (ad.linkUrl) {
       window.open(ad.linkUrl, '_blank', 'noopener,noreferrer');
     } else {
       // Show ad details in a modal/alert when no link is available

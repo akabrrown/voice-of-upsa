@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { authenticate } from '@/lib/api/middleware/auth';
 import { withRateLimit } from '@/lib/api/middleware/auth';
@@ -70,8 +70,10 @@ async function handler(
     // View tracking works for anonymous users too
   }
 
+  const supabaseAdmin = await getSupabaseAdmin();
+
   // Resolve article ID
-  const { data: article, error: articleError } = await supabaseAdmin
+  const { data: article, error: articleError } = await (await supabaseAdmin as any)
     .from('articles')
     .select('id')
     .eq(queryField, slug)
@@ -92,7 +94,7 @@ async function handler(
   const articleId = article.id;
 
   // Get current view count
-  const { data: currentArticle, error: fetchError } = await supabaseAdmin
+  const { data: currentArticle, error: fetchError } = await (await supabaseAdmin as any)
     .from('articles')
     .select('views_count')
     .eq('id', articleId)
@@ -103,7 +105,7 @@ async function handler(
   }
 
   // Track view using article_views table
-  const { error: viewError } = await supabaseAdmin
+  const { error: viewError } = await (await supabaseAdmin as any)
     .from('article_views')
     .insert({
       article_id: articleId,
@@ -121,7 +123,7 @@ async function handler(
     }
   } else {
     // New view recorded, increment the count
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await (await supabaseAdmin as any)
       .from('articles')
       .update({ 
         views_count: (currentArticle?.views_count || 0) + 1 
@@ -136,7 +138,7 @@ async function handler(
   }
 
   // Get updated view count for response
-  const { data: updatedArticle, error: updatedFetchError } = await supabaseAdmin
+  const { data: updatedArticle, error: updatedFetchError } = await (await supabaseAdmin as any)
     .from('articles')
     .select('views_count')
     .eq('id', articleId)

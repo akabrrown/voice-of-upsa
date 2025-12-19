@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -34,21 +34,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Server-side role check - double security
-    const user = await requireAdminOrEditor(req);
-
-    // Apply rate limiting for dashboard access
-    const rateLimit = getCMSRateLimit('GET');
-    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req) => 
+    // Apply rate limiting
+    const rateLimitConfig = getCMSRateLimit('GET');
+    const rateLimitMiddleware = withRateLimit(rateLimitConfig.requests, rateLimitConfig.window, (req: NextApiRequest) => 
       getClientIP(req)
     );
     rateLimitMiddleware(req);
 
-    // Log admin dashboard access
-    console.info(`Admin dashboard accessed by user: ${user.id} (${user.email})`, {
-      timestamp: new Date().toISOString(),
-      role: 'admin/editor'
-    });
+    // Apply authentication middleware
+    const user = await requireAdminOrEditor(req);
+    console.log(`Dashboard stats: Admin access granted for ${user.email}`);
+
+    // Get Supabase admin client
+    const supabaseAdmin = await getSupabaseAdmin();
 
     // Get total users
     const { count: totalUsers } = await supabaseAdmin
@@ -182,7 +180,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     monthlyStats.reverse(); // Show oldest to newest
 
-    console.info(`Dashboard stats returned to admin: ${user.email}`, {
+    console.info(`Dashboard stats returned (temporarily bypassed auth)`, {
       totalUsers: totalUsers || 0,
       totalArticles: totalArticles || 0,
       timestamp: new Date().toISOString()

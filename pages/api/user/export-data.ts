@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -26,24 +26,25 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
         timestamp: new Date().toISOString()
       });
     }
-            // Fetch all user data
+            // Fetch// Get user's data
+    const supabaseAdmin = await getSupabaseAdmin();
     const [profile, articles, comments] = await Promise.all([
       // User profile
-      supabaseAdmin
+      (await supabaseAdmin as any)
         .from('users')
         .select('*')
         .eq('id', user.id)
         .single(),
       
       // User's articles
-      supabaseAdmin
+      (await supabaseAdmin as any)
         .from('articles')
         .select('*')
         .eq('author_id', user.id)
         .order('created_at', { ascending: false }),
       
       // User's comments
-      supabaseAdmin
+      (await supabaseAdmin as any)
         .from('comments')
         .select('*')
         .eq('user_id', user.id)
@@ -85,7 +86,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
         email_verified: undefined,
         last_sign_in_at: undefined
       },
-      articles: articles.data?.map(article => ({
+      articles: articles.data?.map((article: any) => ({
         id: article.id,
         title: article.title,
         slug: article.slug,
@@ -100,7 +101,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
         likes_count: article.likes_count,
         comments_count: article.comments_count
       })) || [],
-      comments: comments.data?.map(comment => ({
+      comments: comments.data?.map((comment: any) => ({
         id: comment.id,
         article_id: comment.article_id,
         content: comment.content,

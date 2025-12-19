@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -62,7 +62,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const ipAddress = getClientIP(req);
 
     // Check if email already exists
-    const { data: existingSubscription, error: checkError } = await supabaseAdmin
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: existingSubscription, error: checkError } = await (await supabaseAdmin as any)
       .from('newsletter_subscriptions')
       .select('id, email')
       .eq('email', sanitizedEmail)
@@ -92,7 +93,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Insert new newsletter subscription
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (await supabaseAdmin as any)
       .from('newsletter_subscriptions')
       .insert({
         email: sanitizedEmail,

@@ -1,5 +1,8 @@
+/* eslint-disable-next-line */
 @tailwind base;
+/* eslint-disable-next-line */
 @tailwind components;
+/* eslint-disable-next-line */
 @tailwind utilities;
 
 @import './components/Layout.css';
@@ -27,7 +30,6 @@
 @import './pages/Search.css';
 @import './pages/Unauthorized.css';
 @import './pages/EditorArticles.css';
-@import './pages/Dashboard.css';
 
 /* Voice of UPSA - Main CSS Import File */
 /* This file imports all CSS modules for the application */

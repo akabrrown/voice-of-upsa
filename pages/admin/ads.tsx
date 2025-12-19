@@ -204,7 +204,16 @@ const AdminAdsPage: React.FC = () => {
                 </p>
               </div>
               <Button
-                onClick={() => router.push('/admin/ad-locations')}
+                onClick={() => {
+                  console.log('Manage Ad Locations button clicked');
+                  console.log('Current router path:', router.pathname);
+                  console.log('Attempting to navigate to /admin/ad-locations');
+                  router.push('/admin/ad-locations').then(() => {
+                    console.log('Navigation completed');
+                  }).catch((error) => {
+                    console.error('Navigation error:', error);
+                  });
+                }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Manage Ad Locations

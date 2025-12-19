@@ -71,7 +71,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
     <div className={`${isReply ? 'ml-8' : ''}`}>
       <div className="flex space-x-3">
         <Avatar
-          src={comment.author.avatar_url}
+          {...(comment.author.avatar_url && { src: comment.author.avatar_url })}
           name={comment.author.name}
           size="md"
         />
@@ -169,10 +169,10 @@ const CommentCard: React.FC<CommentCardProps> = ({
                 <CommentCard
                   key={reply.id}
                   comment={reply}
-                  currentUser={currentUser}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  isReply={true}
+                  {...(currentUser && { currentUser })}
+                  {...(onEdit && { onEdit })}
+                  {...(onDelete && { onDelete })}
+                  isReply
                 />
               ))}
             </div>

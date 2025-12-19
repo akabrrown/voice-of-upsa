@@ -2,7 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useSupabase } from '@/components/SupabaseProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { useRealtimeArticles } from '@/hooks/useRealtimeArticles';
+import { CMSButton } from '@/components/ui/CMSGuard';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiEdit2, FiTrash2, FiEye, FiSearch, FiCalendar, FiUser, FiFileText, FiCheck, FiArchive } from 'react-icons/fi';
@@ -27,6 +29,7 @@ interface Article {
   author_id: string;
   author_name: string;
   author_email: string;
+  contributor_name: string | null;
   category_id: string | null;
   category_name: string | null;
   display_location: 'homepage' | 'category_page' | 'both' | 'none';
@@ -49,7 +52,8 @@ interface Article {
 }
 
 const AdminArticlesPage: React.FC = () => {
-  const { user, supabase } = useSupabase();
+  const { user, supabase, userRole } = useSupabase();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
@@ -62,9 +66,16 @@ const AdminArticlesPage: React.FC = () => {
   const [featuredModal, setFeaturedModal] = useState(false);
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
 
+  // Check if user has required permissions based on role
+  // Only admins can manage articles in admin panel
+  const canManageArticles = userRole === 'admin' || userRole === 'editor';
+
+  // Combined loading state
+  const isLoading = authLoading || loading;
+
   // Set up real-time sync for article changes
   useRealtimeArticles({
-    enabled: !!user && !loading,
+    enabled: !!user && !isLoading && !!authUser,
     onArticleChange: () => {
       console.log('Article change detected, refreshing admin articles...');
       fetchArticles();
@@ -72,10 +83,23 @@ const AdminArticlesPage: React.FC = () => {
   });
 
   const fetchArticles = useCallback(async () => {
+    // Wait for CMS auth to complete before checking permissions
+    if (authLoading) {
+      console.log('CMS auth still loading, skipping fetch');
+      return;
+    }
+    
+    // Check if user has permission to manage articles
+    if (!authUser || !canManageArticles) {
+      console.error('User does not have permission to manage articles');
+      toast.error('You do not have permission to manage articles');
+      return;
+    }
+
     try {
       setLoading(true);
       
-      console.log('=== FRONTEND ARTICLES DEBUG ===');
+      console.log('=== ADMIN ARTICLES FETCH ===');
       
       // Get session from Supabase
       console.log('Getting session...');
@@ -86,9 +110,15 @@ const AdminArticlesPage: React.FC = () => {
         console.error('No active session found');
         throw new Error('No active session');
       }
+
+      if (!authUser) {
+        console.error('No authenticated user found');
+        throw new Error('Authentication required');
+      }
       
       console.log('Making API request to /api/admin/articles...');
       console.log('Session access token:', session.access_token ? 'Present' : 'Missing');
+      console.log('User role:', userRole);
       const response = await fetch('/api/admin/articles', {
         method: 'GET',
         headers: {
@@ -118,7 +148,7 @@ const AdminArticlesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [supabase]);
+  }, [supabase, authUser, canManageArticles, authLoading, userRole]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -200,13 +230,13 @@ const AdminArticlesPage: React.FC = () => {
       
       const token = session.access_token;
       
-      const response = await fetch(`/api/admin/articles/${articleId}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/editor/articles/${articleId}`, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus })
       });
 
       if (!response.ok) {
@@ -398,7 +428,15 @@ const AdminArticlesPage: React.FC = () => {
       
       const token = session.access_token;
       
-      const response = await fetch(`/api/admin/articles/${articleId}`, {
+      const url = `/api/admin/articles/${articleId}`;
+      console.log('Admin DELETE request details:', {
+        articleId,
+        url,
+        tokenAvailable: !!token,
+        method: 'DELETE'
+      });
+
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -496,7 +534,7 @@ const AdminArticlesPage: React.FC = () => {
     },
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Layout>
         <div className="min-h-screen bg-gray-50">
@@ -515,6 +553,48 @@ const AdminArticlesPage: React.FC = () => {
     );
   }
 
+  if (!authUser) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-navy mb-4">Access Denied</h2>
+            <p className="text-gray-600 mb-4">
+              {'You must be authenticated to access this page.'}
+            </p>
+            <button
+              onClick={() => window.location.href = '/auth/sign-in'}
+              className="bg-golden text-navy font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition-colors"
+            >
+              Login
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!canManageArticles) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-navy mb-4">Insufficient Permissions</h2>
+            <p className="text-gray-600 mb-4">
+              You do not have permission to manage articles.
+            </p>
+            <button
+              onClick={() => window.location.href = '/admin'}
+              className="bg-golden text-navy font-semibold py-2 px-6 rounded-lg hover:bg-yellow-400 transition-colors"
+            >
+              Dashboard
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50">
@@ -525,12 +605,28 @@ const AdminArticlesPage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
+              className="flex items-center justify-between"
             >
-              <h1 className="text-3xl font-bold mb-2 flex items-center">
-                <FiFileText className="mr-3" />
-                Article Moderation
-              </h1>
-              <p className="text-gray-300">Review and manage all articles on the platform</p>
+              <div>
+                <h1 className="text-3xl font-bold mb-2 flex items-center">
+                  <FiFileText className="mr-3" />
+                  Article Moderation
+                </h1>
+                <p className="text-gray-300">Review and manage all articles on the platform</p>
+              </div>
+              {canManageArticles ? (
+                <NextLink href="/editor/create">
+                  <button className="bg-golden text-navy px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors duration-200 flex items-center">
+                    <FiEdit2 className="mr-2" />
+                    Create New Article
+                  </button>
+                </NextLink>
+              ) : (
+                <div className="bg-gray-300 text-gray-500 px-6 py-3 rounded-lg font-semibold cursor-not-allowed flex items-center opacity-60">
+                  <FiEdit2 className="mr-2" />
+                  Create New Article
+                </div>
+              )}
             </MotionDiv>
           </div>
         </section>
@@ -586,9 +682,7 @@ const AdminArticlesPage: React.FC = () => {
               className="space-y-4"
             >
               {filteredArticles.length > 0 ? (
-                filteredArticles.map((article) => {
-                  console.log('Rendering article:', article.title);
-                  return (
+                filteredArticles.map((article) => (
                   <MotionDiv
                     key={article.id}
                     variants={itemVariants}
@@ -610,7 +704,9 @@ const AdminArticlesPage: React.FC = () => {
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
                           <div className="flex items-center">
                             <FiUser className="mr-1" />
-                            {article.author_name}
+                            {article.contributor_name && article.contributor_name.trim() 
+                              ? article.contributor_name 
+                              : article.author_name}
                           </div>
                           {article.category_name && (
                             <div className="flex items-center">
@@ -642,89 +738,96 @@ const AdminArticlesPage: React.FC = () => {
 
                         {/* Featured NextImage */}
                         {article.featured_image && (
-                          <div className="mb-4">
+                          <div className="mb-4 max-w-md">
                             <NextImage
                               src={article.featured_image}
                               alt={article.title}
                               width={400}
                               height={192}
-                              className="w-full h-48 object-cover rounded-lg"
+                              className="w-full h-32 md:h-48 object-cover rounded-lg"
                             />
                           </div>
                         )}
                       </div>
                       
                       {/* Actions */}
-                      <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-2 lg:space-y-0 lg:space-x-2">
-                        {article.status === 'published' && (
-                          <NextLink href={article.slug ? `/articles/${article.slug}` : '#'}>
-                            <button className="p-2 text-gray-600 hover:text-navy transition-colors">
-                              <FiEye className="text-xl" />
+                      <div className="flex flex-wrap items-center gap-2 mt-4 lg:mt-0 lg:flex-nowrap">
+                        <div className="flex items-center space-x-2 mr-2">
+                          {article.status === 'published' && (
+                            <NextLink href={article.slug ? `/articles/${article.slug}` : '#'}>
+                              <button className="p-2 text-gray-600 hover:text-navy transition-colors bg-gray-50 rounded-lg">
+                                <FiEye className="text-xl" />
+                              </button>
+                            </NextLink>
+                          )}
+                          <NextLink href={`/editor/${article.id}/edit`}>
+                            <button className="p-2 text-gray-600 hover:text-navy transition-colors bg-gray-50 rounded-lg">
+                              <FiEdit2 className="text-xl" />
                             </button>
                           </NextLink>
-                        )}
-                        <NextLink href={`/editor/${article.id}/edit`}>
-                          <button className="p-2 text-gray-600 hover:text-navy transition-colors">
-                            <FiEdit2 className="text-xl" />
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedArticle(article);
+                              setCategoryModal(true);
+                            }}
+                            className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-200 text-xs font-medium"
+                          >
+                            Category
                           </button>
-                        </NextLink>
-                        <button
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setCategoryModal(true);
-                          }}
-                          className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors duration-200 text-sm"
-                        >
-                          Set Category
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setDisplayLocationModal(true);
-                          }}
-                          className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors duration-200 text-sm"
-                        >
-                          Set Display
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setFeaturedModal(true);
-                          }}
-                          className="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors duration-200 text-sm"
-                        >
-                          Featured
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedArticle(article);
-                            setPublicationModal(true);
-                          }}
-                          className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-200 text-sm"
-                        >
-                          Settings
-                        </button>
-                        <button
-                          onClick={() => setSelectedArticle(article)}
-                          className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm"
-                        >
-                          Change Status
-                        </button>
-                        <button
-                          onClick={() => handleDelete(article.id)}
-                          className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-                        >
-                          <FiTrash2 className="text-xl" />
-                        </button>
+                          <button
+                            onClick={() => {
+                              setSelectedArticle(article);
+                              setDisplayLocationModal(true);
+                            }}
+                            className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors duration-200 text-xs font-medium"
+                          >
+                            Display
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedArticle(article);
+                              setFeaturedModal(true);
+                            }}
+                            className="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors duration-200 text-xs font-medium"
+                          >
+                            Featured
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedArticle(article);
+                              setPublicationModal(true);
+                            }}
+                            className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors duration-200 text-xs font-medium"
+                          >
+                            Settings
+                          </button>
+                          <button
+                             onClick={() => setSelectedArticle(article)}
+                             className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-xs font-medium"
+                          >
+                             Status
+                          </button>
+                          <CMSButton
+                            onClick={() => handleDelete(article.id)}
+                            permission="delete:all"
+                            className="p-2 text-gray-600 hover:text-red-600 transition-colors bg-gray-50 rounded-lg"
+                            fallback={
+                              <div className="p-2 text-gray-400 cursor-not-allowed bg-gray-50 rounded-lg">
+                                <FiTrash2 className="text-xl" />
+                              </div>
+                            }
+                          >
+                            <FiTrash2 className="text-xl" />
+                          </CMSButton>
+                        </div>
                       </div>
                     </div>
                   </MotionDiv>
-                  );
-                })
+                ))
               ) : (
-                (() => {
-                  console.log('Showing empty state - no articles found');
-                  return (
                 <MotionDiv
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -738,8 +841,6 @@ const AdminArticlesPage: React.FC = () => {
                     {searchTerm ? 'Try adjusting your search terms' : 'No articles match the current filter'}
                   </p>
                 </MotionDiv>
-                  );
-                })()
               )}
             </MotionDiv>
           </div>

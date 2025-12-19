@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { requireAdminOrEditor } from '@/lib/auth-helpers';
@@ -100,7 +100,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const filePath = `${folderPath}/${secureFileName}`;
 
     // Upload to Supabase Storage
-    const { error: uploadError } = await supabaseAdmin.storage
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { error: uploadError } = await (await supabaseAdmin as any).storage
       .from('media')
       .upload(filePath, file.buffer, {
         contentType: fileType,
@@ -122,7 +123,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Generate public URL (signed URLs for private files)
-    const { data: { publicUrl } } = supabaseAdmin.storage
+    const { data: { publicUrl } } = (await supabaseAdmin as any).storage
       .from('media')
       .getPublicUrl(filePath);
 
@@ -161,4 +162,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+// Upload handler with CMS security
+const handlerWithCMS = withCMSSecurity(
+  handler,
+  { requirePermission: 'upload:media', auditAction: 'upload_media' }
+);
+
+export default withErrorHandler(handlerWithCMS);

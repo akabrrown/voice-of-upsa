@@ -1,0 +1,28 @@
+
+> voice-of-upsa@1.0.0 build
+> next build
+
+ ÔÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\akaye\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\akaye\Desktop\voiceofupsa\package-lock.json
+
+   Ôû▓ Next.js 16.0.8 (Turbopack)
+   - Environments: .env.local, .env
+
+   Running TypeScript ...
+Failed to compile.
+
+./pages/api/admin/users/sync-all.ts:39:71
+Type error: Property 'auth' does not exist on type 'Promise<SupabaseClient<Database, "public", "public", never, { PostgrestVersion: "12"; }>>'.
+
+  37 |
+  38 |     // Get all users from Supabase auth
+> 39 |     const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+     |                                                                       ^
+  40 |     
+  41 |     if (authError) {
+  42 |       console.error('Error fetching auth users:', authError);
+Next.js build worker exited with code: 1 and signal: null

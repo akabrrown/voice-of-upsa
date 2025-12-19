@@ -12,6 +12,7 @@
 *.sqlite
 *.sqlite3
 *.sql
+!supabase/migrations/*.sql
 backup/
 dumps/
 database/backup_*.sql

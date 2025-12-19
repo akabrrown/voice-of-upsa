@@ -41,14 +41,22 @@ const HomePage: React.FC = () => {
               'Authorization': `Bearer ${session.access_token}`,
             },
           });
+          
           if (response.ok) {
             const data = await response.json();
             const userRole = data.data?.profile?.role || data.role;
             setIsAdmin(userRole === 'admin' || userRole === 'editor');
+          } else {
+            // If any error occurs, just set isAdmin to false and don't retry
+            console.log('Profile check failed, user is not admin/editor');
+            setIsAdmin(false);
           }
         } catch (error) {
           console.error('Error checking user role:', error);
+          setIsAdmin(false);
         }
+      } else {
+        setIsAdmin(false);
       }
     };
     
@@ -181,7 +189,6 @@ const HomePage: React.FC = () => {
     },
   };
 
-  
   return (
     <LayoutSupabase>
       <div className="min-h-screen bg-gray-50">
@@ -205,8 +212,8 @@ const HomePage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <h2 className="text-3xl font-bold text-navy mb-8">Featured Articles</h2>
-                <div className={featuredArticles.length === 1 ? "w-full" : "grid grid-cols-1 lg:grid-cols-2 gap-8"}>
+                <h2 className="text-2xl lg:text-3xl font-bold text-navy mb-6 sm:mb-8">Featured Articles</h2>
+                <div className={featuredArticles.length === 1 ? "w-full" : "grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8"}>
                   {featuredArticles.map((article) => (
                     <Link key={article.id} href={article.slug && article.slug.trim() ? `/articles/${article.slug}` : '#'} className="block bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer">
                       <div className="md:flex">
@@ -226,7 +233,7 @@ const HomePage: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <div className="md:w-1/2 p-8">
+                        <div className="md:w-1/2 p-6 sm:p-8">
                           <div className="flex items-center space-x-4 mb-4">
                             <span className="bg-golden text-navy px-3 py-1 rounded-full text-sm font-semibold">
                               Featured
@@ -236,7 +243,7 @@ const HomePage: React.FC = () => {
                               {formatDate(article.published_at)}
                             </div>
                           </div>
-                          <h3 className="text-2xl font-bold text-navy mb-4 hover:text-golden transition-colors">
+                          <h3 className="text-xl sm:text-2xl font-bold text-navy mb-4 hover:text-golden transition-colors">
                             {article.title}
                           </h3>
                           <p className="text-gray-600 mb-6 line-clamp-3">
@@ -246,7 +253,7 @@ const HomePage: React.FC = () => {
                             <div className="flex items-center space-x-2">
                               {article.author?.avatar_url ? (
                                 <Image
-                                  src={article.author.avatar_url}
+                                  src={article.author?.avatar_url}
                                   alt={article.contributor_name && article.contributor_name.trim() ? article.contributor_name : article.author?.name || 'Author'}
                                   width={32}
                                   height={32}
@@ -311,12 +318,12 @@ const HomePage: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex justify-between items-center mb-8"
             >
-              <h2 className="text-3xl font-bold text-navy">Latest News</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-navy">Latest News</h2>
               <Link 
                 href="/articles"
-                className="bg-golden text-navy px-6 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors duration-200"
+                className="bg-golden text-navy px-4 sm:px-6 py-2 rounded-lg text-sm sm:text-base font-semibold hover:bg-yellow-400 transition-colors duration-200 whitespace-nowrap"
               >
-                View All Articles
+                View All
               </Link>
             </motion.div>
 
@@ -376,10 +383,10 @@ const HomePage: React.FC = () => {
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
-                            {article.author.avatar_url ? (
+                            {article.author?.avatar_url ? (
                               <Image
-                                src={article.author.avatar_url}
-                                alt={article.contributor_name && article.contributor_name.trim() ? article.contributor_name : article.author.name}
+                                src={article.author?.avatar_url}
+                                alt={article.contributor_name && article.contributor_name.trim() ? article.contributor_name : article.author?.name || 'Author'}
                                 width={24}
                                 height={24}
                                 className="w-6 h-6 rounded-full"
@@ -393,18 +400,18 @@ const HomePage: React.FC = () => {
                             <span className="text-sm text-gray-600">
                               {article.contributor_name && article.contributor_name.trim() 
                                 ? article.contributor_name 
-                                : article.author.name}
+                                : article.author?.name || 'Unknown Author'}
                             </span>
                           </div>
                           <div className="flex items-center space-x-3 text-gray-500 text-sm">
-                              {/* Only show view count to admins and editors */}
-                              {isAdmin && (
-                                <div className="flex items-center">
-                                  <FiEye className="mr-1" />
-                                  {article.views_count}
-                                </div>
-                              )}
-                            </div>
+                            {/* Only show view count to admins and editors */}
+                            {isAdmin && (
+                              <div className="flex items-center">
+                                <FiEye className="mr-1" />
+                                {article.views_count}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Link>

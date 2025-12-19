@@ -131,34 +131,34 @@ const AdminDashboard: React.FC = () => {
           </MotionDiv>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
             {statsLoading ? (
               <>
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="bg-white rounded-lg shadow-md p-6">
-                    <div className="animate-pulse">
-                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-8 bg-gray-200 rounded"></div>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-6 bg-gray-200 rounded"></div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </>
             ) : (
               <>
-                <MotionDiv
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="bg-white rounded-lg shadow-md p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Total Users</p>
-                      <p className="text-2xl font-bold text-navy">{stats?.totalUsers || 0}</p>
+                  <MotionDiv
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-white rounded-lg shadow-md p-4 sm:p-6"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Users</p>
+                        <p className="text-xl sm:text-2xl font-bold text-navy">{stats?.totalUsers || 0}</p>
+                      </div>
+                      <FiUsers className="w-6 h-6 sm:w-8 sm:h-8 text-golden" />
                     </div>
-                    <FiUsers className="w-8 h-8 text-golden" />
-                  </div>
-                </MotionDiv>
+                  </MotionDiv>
 
                 <MotionDiv
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -218,47 +218,41 @@ const AdminDashboard: React.FC = () => {
             transition={{ delay: 0.5 }}
             className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"
           >
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-navy mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <NextLink href="/admin/users">
-                  <div className="bg-navy text-white p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer">
-                    <FiUsers className="w-6 h-6 mb-2" />
-                    <p className="font-semibold">Manage Users</p>
-                  </div>
-                </NextLink>
-                <NextLink href="/admin/articles">
-                  <div className="bg-navy text-white p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer">
-                    <FiFileText className="w-6 h-6 mb-2" />
-                    <p className="font-semibold">Manage Articles</p>
-                  </div>
-                </NextLink>
-                <NextLink href="/admin/comments">
-                  <div className="bg-navy text-white p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer">
-                    <FiMessageSquare className="w-6 h-6 mb-2" />
-                    <p className="font-semibold">Manage Comments</p>
-                  </div>
-                </NextLink>
-                <NextLink href="/admin/messages">
-                  <div className="bg-navy text-white p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer">
-                    <FiMail className="w-6 h-6 mb-2" />
-                    <p className="font-semibold">User Messages</p>
-                  </div>
-                </NextLink>
-                <NextLink href="/admin/anonymous-messages">
-                  <div className="bg-navy text-white p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer">
-                    <FiMessageCircle className="w-6 h-6 mb-2" />
-                    <p className="font-semibold">Anonymous Messages</p>
-                  </div>
-                </NextLink>
-                <NextLink href="/admin/settings">
-                  <div className="bg-navy text-white p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer col-span-2">
-                    <FiSettings className="w-6 h-6 mb-2" />
-                    <p className="font-semibold">Settings</p>
-                  </div>
-                </NextLink>
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-navy mb-4">Quick Actions</h2>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <NextLink href="/admin/users">
+                    <div className="bg-navy text-white p-3 sm:p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer flex flex-col items-center sm:items-start">
+                      <FiUsers className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
+                      <p className="text-sm sm:font-semibold text-center sm:text-left">Manage Users</p>
+                    </div>
+                  </NextLink>
+                  <NextLink href="/admin/articles">
+                    <div className="bg-navy text-white p-3 sm:p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer flex flex-col items-center sm:items-start">
+                      <FiFileText className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
+                      <p className="text-sm sm:font-semibold text-center sm:text-left">Articles</p>
+                    </div>
+                  </NextLink>
+                  <NextLink href="/admin/comments">
+                    <div className="bg-navy text-white p-3 sm:p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer flex flex-col items-center sm:items-start">
+                      <FiMessageSquare className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
+                      <p className="text-sm sm:font-semibold text-center sm:text-left">Comments</p>
+                    </div>
+                  </NextLink>
+                  <NextLink href="/admin/messages">
+                    <div className="bg-navy text-white p-3 sm:p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer flex flex-col items-center sm:items-start">
+                      <FiMail className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
+                      <p className="text-sm sm:font-semibold text-center sm:text-left">Messages</p>
+                    </div>
+                  </NextLink>
+                  <NextLink href="/admin/anonymous-messages">
+                    <div className="bg-navy text-white p-3 sm:p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer col-span-2 flex flex-col items-center sm:items-start">
+                      <FiMessageCircle className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
+                      <p className="text-sm sm:font-semibold">Anonymous Messages</p>
+                    </div>
+                  </NextLink>
+                </div>
               </div>
-            </div>
 
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-navy mb-4">Recent Activity</h2>

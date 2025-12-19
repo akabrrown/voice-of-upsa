@@ -1,8 +1,10 @@
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 interface AdInArticleProps {
   ad: {
+    id?: string;
     title: string;
     description: string;
     imageUrl?: string;
@@ -13,8 +15,15 @@ interface AdInArticleProps {
 }
 
 const AdInArticle: React.FC<AdInArticleProps> = ({ ad, className = "" }) => {
+  const router = useRouter();
+
   const handleClick = () => {
-    if (ad.linkUrl) {
+    console.log('AdInArticle clicked:', { id: ad.id, title: ad.title });
+    
+    // Always navigate to internal detail page if ID exists
+    if (ad.id) {
+      router.push(`/ads/${ad.id}`);
+    } else if (ad.linkUrl) {
       window.open(ad.linkUrl, '_blank', 'noopener,noreferrer');
     }
   };

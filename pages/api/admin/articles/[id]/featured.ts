@@ -1,32 +1,42 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { withCMSSecurity } from '@/lib/security/cms-security';
-import { z } from 'zod';
+import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { getClientIP } from '@/lib/security/auth-security';
+import { withRateLimit } from '@/lib/api/middleware/auth';
+import { requireAdminOrEditor } from '@/lib/auth-helpers';
 
-// Enhanced validation schema for featured article updates
-const updateFeaturedSchema = z.object({
-  is_featured: z.boolean(),
-  featured_order: z.number().min(0, 'Featured order must be non-negative').max(9999, 'Featured order must be less than 10000').optional(),
-  featured_until: z.string().datetime('Invalid datetime format').optional()
-});
+interface ArticleUpdate {
+  is_featured: boolean;
+  featured_order: number;
+  updated_at: string;
+}
 
-async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'PUT') {
+    return res.status(405).json({
+      success: false,
+      error: {
+        code: 'METHOD_NOT_ALLOWED',
+        message: 'Only PUT method is allowed',
+        details: null
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
+
   try {
-    // Only allow PUT for featured status updates
-    if (req.method !== 'PUT') {
-      return res.status(405).json({
-        success: false,
-        error: {
-          code: 'METHOD_NOT_ALLOWED',
-          message: 'Only PUT method is allowed for featured status updates',
-          details: null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Apply rate limiting
+    const rateLimitConfig = getCMSRateLimit('PUT');
+    const rateLimitMiddleware = withRateLimit(rateLimitConfig.requests, rateLimitConfig.window, (req: NextApiRequest) => 
+      getClientIP(req)
+    );
+    rateLimitMiddleware(req);
 
-    // Validate article ID
+    // Apply authentication middleware
+    const user = await requireAdminOrEditor(req);
+    console.log(`Featured API: Admin access granted for ${user.email}`);
+
     const { id } = req.query;
     if (!id || typeof id !== 'string') {
       return res.status(400).json({
@@ -40,118 +50,78 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
       });
     }
 
-    // Validate input with enhanced schema
-    const validatedData = updateFeaturedSchema.parse(req.body);
-    const { is_featured, featured_order, featured_until } = validatedData;
+    const { is_featured, featured_order } = req.body;
 
-    // Log admin featured status update action
-    console.log(`Admin article featured status update initiated`, {
-      adminId: user.id,
-      adminEmail: user.email,
-      articleId: id,
-      is_featured,
-      featured_order,
-      featured_until,
-      timestamp: new Date().toISOString()
-    });
-
-    // Verify article exists
-    const { data: article, error: articleError } = await supabaseAdmin
-      .from('articles')
-      .select('id, title, is_featured, featured_order, featured_until')
-      .eq('id', id)
-      .single();
-
-    if (articleError) {
-      console.error('Admin featured update - article fetch error:', articleError);
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'ARTICLE_NOT_FOUND',
-          message: 'Article not found',
-          details: process.env.NODE_ENV === 'development' ? articleError.message : null
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // If setting as featured, check if featured_until is in the future
-    if (is_featured && featured_until) {
-      const featuredUntilDate = new Date(featured_until);
-      const now = new Date();
-      
-      if (featuredUntilDate <= now) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'INVALID_FEATURED_DATE',
-            message: 'Featured until date must be in the future',
-            details: null
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-    }
+    // Get Supabase admin client
+    const supabaseAdmin = await getSupabaseAdmin();
 
     // Update article featured status
-    const updateData = {
-      is_featured,
-      featured_order: is_featured ? (featured_order || 1) : 0,
-      featured_until: is_featured ? (featured_until || null) : null,
+    const updateData: ArticleUpdate = {
+      is_featured: is_featured,
+      featured_order: featured_order || 0,
       updated_at: new Date().toISOString()
     };
-
-    const { data: updatedArticle, error: updateError } = await supabaseAdmin
+    
+  
+    const { error } = await supabaseAdmin
       .from('articles')
-      .update(updateData)
-      .eq('id', id)
-      .select(`
-        id, title, is_featured, featured_order, featured_until, updated_at,
-        category:categories(id, name, slug)
-      `)
-      .single();
-
-    if (updateError) {
-      console.error('Admin featured status update error:', updateError);
+      .update(updateData as never)
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error updating featured status:', error);
       return res.status(500).json({
         success: false,
         error: {
-          code: 'UPDATE_ERROR',
+          code: 'DATABASE_ERROR',
           message: 'Failed to update article featured status',
-          details: process.env.NODE_ENV === 'development' ? updateError.message : null
+          details: process.env.NODE_ENV === 'development' ? error.message : null
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    // Log successful featured status update
-    console.log(`Admin article featured status updated successfully`, {
-      adminId: user.id,
+    // Fetch the updated article
+    const { data: updatedArticle, error: fetchError } = await supabaseAdmin
+      .from('articles')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (fetchError) {
+      console.error('Error fetching updated article:', fetchError);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'FETCH_ERROR',
+          message: 'Failed to fetch updated article',
+          details: process.env.NODE_ENV === 'development' ? fetchError.message : null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    console.info(`Article featured status updated by ${user.email}:`, {
       articleId: id,
-      articleTitle: article.title,
-      oldStatus: article.is_featured,
-      newStatus: is_featured,
+      is_featured,
+      featured_order,
       timestamp: new Date().toISOString()
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: 'Article featured status updated successfully',
-      data: {
-        article: updatedArticle,
-        updated_by: user.id,
-        updated_at: updatedArticle.updated_at
-      },
+      data: updatedArticle,
+      message: `Article ${is_featured ? 'featured' : 'unfeatured'} successfully`,
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Admin featured status API error:', error);
-    return res.status(500).json({
+    console.error('Featured update error:', error);
+    res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred while updating the article featured status',
+        message: 'An unexpected error occurred while updating featured status',
         details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
@@ -159,5 +129,5 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
   }
 }
 
-// Apply CMS security middleware and enhanced error handler
-export default withErrorHandler(withCMSSecurity(handler));
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(handler);

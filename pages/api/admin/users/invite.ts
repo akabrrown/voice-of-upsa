@@ -41,7 +41,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     });
 
     // Verify target user exists
-    const { data: targetUser, error: fetchError } = await supabaseAdmin
+    const { data: targetUser, error: fetchError } = await (await supabaseAdmin as any)
       .from('users')
       .select('id, email, name, role')
       .eq('id', userId)
@@ -92,7 +92,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     }
 
     // Update user role and invitation status
-    const { data: updatedUser, error: updateError } = await supabaseAdmin
+    const { data: updatedUser, error: updateError } = await (await supabaseAdmin as any)
       .from('users')
       .update({
         role,

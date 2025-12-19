@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { requireAdminOrEditor } from '@/lib/auth-helpers';
 import { fieldEncryption, FieldEncryption } from '@/lib/security/field-encryption';
 
@@ -137,4 +138,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:setup',
+  auditAction: 'field_encryption_accessed'
+}));

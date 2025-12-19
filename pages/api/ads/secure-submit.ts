@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -57,7 +57,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const token = authHeader.replace('Bearer ', '');
     
     // Verify the token and get user
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: { user }, error: authError } = await (await supabaseAdmin as any).auth.getUser(token);
     
     if (authError || !user) {
       return res.status(401).json({
@@ -84,7 +85,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     };
 
     // Insert ad submission with pending status (requires admin approval)
-    const { data: submission, error: submissionError } = await supabaseAdmin
+    const { data: submission, error: submissionError } = await (await supabaseAdmin as any)
       .from('ad_submissions')
       .insert({
         ...sanitizedData,

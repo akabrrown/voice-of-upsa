@@ -1,0 +1,32 @@
+
+> voice-of-upsa@1.0.0 build
+> next build
+
+ ÔÜá Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\akaye\pnpm-lock.yaml as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\akaye\Desktop\voiceofupsa\package-lock.json
+
+   Ôû▓ Next.js 16.0.8 (Turbopack)
+   - Environments: .env.local, .env
+
+   Running TypeScript ...
+Failed to compile.
+
+./pages/api/admin/users/sync-all.ts:76:14
+Type error: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "users", never, "POST">', gave the following error.
+    Argument of type '{ id: string; email: string | undefined; name: any; role: string; avatar_url: any; bio: null; website: null; location: null; social_links: {}; preferences: {}; email_verified: boolean; created_at: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "users", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'id' does not exist in type 'never[]'.
+
+  74 |           const { error: insertError } = await adminClient
+  75 |             .from('users')
+> 76 |             .insert({
+     |              ^
+  77 |               id: authUser.id,
+  78 |               email: authUser.email,
+  79 |               name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+Next.js build worker exited with code: 1 and signal: null

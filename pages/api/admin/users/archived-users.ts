@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity } from '@/lib/security/cms-security';
 import { z } from 'zod';
@@ -43,7 +43,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
     const offset = (page - 1) * limit;
 
     // Build the query with enhanced security
-    let query = supabaseAdmin
+    const supabaseAdmin = await getSupabaseAdmin();
+    let query = (await supabaseAdmin as any)
       .from('users')
       .select(`
         id,
@@ -124,4 +125,3 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
 
 // Apply CMS security middleware and enhanced error handler
 export default withErrorHandler(withCMSSecurity(handler));
-

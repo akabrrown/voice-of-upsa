@@ -21,7 +21,7 @@ class SecurityMonitor {
    */
   async logEvent(event: SecurityEvent): Promise<void> {
     try {
-      await this.adminClient
+      await (await this.adminClient as any)
         .from('security_events')
         .insert({
           event_type: event.type,
@@ -191,7 +191,7 @@ class SecurityMonitor {
    */
   async getRecentEvents(limit: number = 100): Promise<SecurityEvent[]> {
     try {
-      const { data } = await this.adminClient
+      const { data } = await (await this.adminClient)
         .from('security_events')
         .select('*')
         .order('created_at', { ascending: false })
@@ -216,7 +216,7 @@ class SecurityMonitor {
     eventsByType: Record<string, number>;
   }> {
     try {
-      const { data } = await this.adminClient
+      const { data } = await (await this.adminClient)
         .from('security_events')
         .select('severity, event_type');
 
@@ -231,7 +231,7 @@ class SecurityMonitor {
         };
       }
 
-      const stats = data.reduce((acc, event) => {
+      const stats = (data as any[]).reduce((acc, event) => {
         acc.totalEvents++;
         const severityKey = `${event.severity}Events` as keyof typeof acc;
         acc[severityKey]++;

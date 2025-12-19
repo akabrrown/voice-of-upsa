@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { FiUpload, FiX, FiImage, FiVideo, FiFile, FiPaperclip } from 'react-icons/fi';
+import { useSupabase } from './SupabaseProvider';
 
 interface MediaItem {
   id: string;
@@ -22,6 +23,7 @@ const MediaManager: React.FC<MediaManagerProps> = ({
   isOpen, 
   onClose 
 }) => {
+  const { supabase } = useSupabase();
   const [mediaFiles, setMediaFiles] = useState<MediaItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -65,17 +67,91 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     setUploading(true);
     
     try {
+      // Get authentication token with refresh
+      const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !initialSession) {
+        throw new Error('Not authenticated');
+      }
+      
+      let currentSession = initialSession;
+      
+      // Try to refresh session if it's old (more than 5 minutes)
+      const sessionAge = Date.now() - new Date(currentSession.expires_at! * 1000).getTime();
+      if (sessionAge > 5 * 60 * 1000) {
+        console.log('Refreshing session...');
+        const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshedSession) {
+          console.log('Session refresh failed:', refreshError);
+          throw new Error('Session expired. Please refresh the page and try again.');
+        }
+        
+        currentSession = refreshedSession;
+        console.log('Session refreshed successfully');
+      }
+      
+      // Get CSRF token
+      const csrfResponse = await fetch('/api/csrf-token');
+      if (!csrfResponse.ok) {
+        throw new Error('Failed to get CSRF token');
+      }
+      const csrfData = await csrfResponse.json();
+      const csrfToken = csrfData.data?.csrfToken;
+      
+      if (!csrfToken) {
+        throw new Error('CSRF token not available');
+      }
+      
+      // Use FormData for large files - more efficient than base64 in JSON
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('type', 'article');
+      formData.append('folder', 'upsa-media/article');
+      
+      console.log('=== Media Upload Debug ===');
+      console.log('Uploading file:', file.name, file.type, file.size);
+      console.log('Making request to: /api/media/upload');
+      console.log('Has session:', !!currentSession);
+      console.log('Session expires at:', new Date(currentSession.expires_at! * 1000));
+      console.log('CSRF token present:', !!csrfToken);
+      console.log('Using FormData for large file upload');
+      console.log('FormData entries:', Array.from(formData.keys()));
       
       const response = await fetch('/api/media/upload', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentSession.access_token}`,
+          'x-csrf-token': csrfToken,
+          // Don't set Content-Type - let browser set it with boundary for FormData
+        },
         body: formData,
       });
+      
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      console.log('Auth header sent:', `Bearer ${currentSession.access_token.substring(0, 20)}...`);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || errorData.details || 'Upload failed');
+        const errorText = await response.text();
+        console.log('Raw error response text:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+          console.log('Parsed error response:', errorData);
+        } catch (parseError) {
+          console.log('Failed to parse error as JSON:', parseError);
+          errorData = { error: errorText };
+        }
+        
+        const errorMessage = 
+          (typeof errorData.error === 'string' ? errorData.error : null) ||
+          (typeof errorData.details === 'string' ? errorData.details : null) ||
+          (typeof errorData.message === 'string' ? errorData.message : null) ||
+          errorText ||
+          'Upload failed';
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -84,12 +160,12 @@ const MediaManager: React.FC<MediaManagerProps> = ({
                        file.type.startsWith('video/') ? 'video' : 'document';
 
       const mediaItem: MediaItem = {
-        id: result.id,
+        id: result.data?.publicId || result.id || `media-${Date.now()}`,
         type: mediaType,
-        url: result.url, // Keep the relative URL from upload API
+        url: result.data?.url || result.url || '',
         name: file.name,
         size: file.size,
-        alt: mediaType === 'image' ? file.name : undefined,
+        ...(mediaType === 'image' && file.name && { alt: file.name }),
       };
 
       setMediaFiles(prev => [...prev, mediaItem]);
@@ -190,7 +266,7 @@ const MediaManager: React.FC<MediaManagerProps> = ({
               {mediaFiles.map((media) => (
                 <div key={media.id} className="relative group border rounded-lg overflow-hidden">
                   <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                    {media.type === 'image' ? (
+                    {media.type === 'image' && media.url ? (
                       <Image
                         src={media.url}
                         alt={media.alt || media.name}

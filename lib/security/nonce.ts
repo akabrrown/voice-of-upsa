@@ -13,7 +13,12 @@ export function generateCSPNonce(): string {
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
-    return btoa(String.fromCharCode(...array));
+    // Convert Uint8Array to string without spreading
+    let result = '';
+    for (let i = 0; i < array.length; i++) {
+      result += String.fromCharCode(array[i] || 0);
+    }
+    return btoa(result);
   }
   
   // Last resort - use Math.random (not cryptographically secure but better than nothing)

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +17,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   try {
     // Try to get session directly from Supabase (no authentication required for token endpoint)
-    const { data: { session }, error } = await supabaseAdmin.auth.getSession();
+    const supabaseAdmin = await getSupabaseAdmin();
+    const { data: { session }, error } = await (await supabaseAdmin as any).auth.getSession();
 
     if (error) {
       console.error('Session error:', error);

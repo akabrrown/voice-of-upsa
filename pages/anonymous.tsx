@@ -103,10 +103,10 @@ const AnonymousPage: React.FC = () => {
               Your identity is completely protected. No personal information is ever collected or shared.
             </p>
             <Link 
-              href="/articles?category=anonymous"
+              href="/categories/anonymous"
               className="inline-flex items-center text-golden hover:text-yellow-600 font-medium"
             >
-              Learn More <FiArrowRight className="ml-2" />
+              View Stories <FiArrowRight className="ml-2" />
             </Link>
           </motion.div>
 
@@ -124,10 +124,10 @@ const AnonymousPage: React.FC = () => {
               All content is reviewed by admins to ensure a safe and respectful community environment.
             </p>
             <Link 
-              href="/articles?category=anonymous"
+              href="/categories/anonymous"
               className="inline-flex items-center text-golden hover:text-yellow-600 font-medium"
             >
-              How It Works <FiArrowRight className="ml-2" />
+              View Stories <FiArrowRight className="ml-2" />
             </Link>
           </motion.div>
         </div>

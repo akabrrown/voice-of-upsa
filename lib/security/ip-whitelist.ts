@@ -34,15 +34,19 @@ export function getIPWhitelistConfig(): IPWhitelistConfig {
       '127.0.0.1', // localhost
       '::1',       // IPv6 localhost
       // Add production admin IPs here
+      // Example: '203.0.113.1', // Admin office IP
+      // Example: '198.51.100.0/24', // Office network range
     ],
     allowedRanges: [
       // Add IP ranges if needed
+      // Example: '192.168.1.0/24', // Local network
+      // Example: '10.0.0.0/8',     // Private network range
       '10.0.0.0/8',    // Private network
       '172.16.0.0/12', // Private network
       '192.168.0.0/16', // Private network
     ],
-    adminOnly: true,
-    logAttempts: isProduction
+    adminOnly: isProduction,
+    logAttempts: true
   };
 }
 
@@ -51,9 +55,9 @@ export function getIPWhitelistConfig(): IPWhitelistConfig {
  */
 export function getClientIP(request: {
   headers: Record<string, string | string[] | undefined>;
-  connection?: { remoteAddress?: string };
-  socket?: { remoteAddress?: string };
-  ip?: string;
+  connection?: { remoteAddress?: string | undefined };
+  socket?: { remoteAddress?: string | undefined };
+  ip?: string | undefined;
 }): string {
   // Try various headers to get the real IP
   const forwardedFor = request.headers['x-forwarded-for'];
@@ -64,12 +68,24 @@ export function getClientIP(request: {
   if (forwardedFor) {
     // x-forwarded-for can contain multiple IPs, take the first one
     const forwardedStr = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
-    return forwardedStr.split(',')[0].trim();
+    if (forwardedStr) {
+      const splitResult = forwardedStr.split(',')[0];
+      return splitResult ? splitResult.trim() : 'unknown';
+    }
   }
   
-  if (realIP) return Array.isArray(realIP) ? realIP[0] : realIP;
-  if (cfConnectingIP) return Array.isArray(cfConnectingIP) ? cfConnectingIP[0] : cfConnectingIP;
-  if (xClientIP) return Array.isArray(xClientIP) ? xClientIP[0] : xClientIP;
+  if (realIP) {
+    const realIPStr = Array.isArray(realIP) ? realIP[0] : realIP;
+    return realIPStr || 'unknown';
+  }
+  if (cfConnectingIP) {
+    const cfIPStr = Array.isArray(cfConnectingIP) ? cfConnectingIP[0] : cfConnectingIP;
+    return cfIPStr || 'unknown';
+  }
+  if (xClientIP) {
+    const clientIPStr = Array.isArray(xClientIP) ? xClientIP[0] : xClientIP;
+    return clientIPStr || 'unknown';
+  }
   
   // Fallback to connection IP
   return request.connection?.remoteAddress || 
@@ -83,7 +99,7 @@ export function getClientIP(request: {
  */
 export function isIPInRange(ip: string, range: string): boolean {
   const [network, prefix] = range.split('/');
-  const prefixLength = parseInt(prefix, 10);
+  const prefixLength = prefix ? parseInt(prefix, 10) : NaN;
   
   if (!network || isNaN(prefixLength)) return false;
   
@@ -157,7 +173,12 @@ export function withIPWhitelist(
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     const config = getIPWhitelistConfig();
-    const clientIP = getClientIP(req);
+    const clientIP = getClientIP({
+      headers: req.headers,
+      ...(req.connection && { connection: { remoteAddress: req.connection.remoteAddress } }),
+      ...(req.socket && { socket: { remoteAddress: req.socket.remoteAddress } }),
+      ip: (req as NextApiRequest & { ip?: string }).ip || undefined
+    });
     
     const context: SecurityContext = {
       clientIP,

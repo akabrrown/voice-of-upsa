@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -50,8 +50,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
 
     // Get user's articles stats
     try {
+      const supabaseAdmin = await getSupabaseAdmin();
+      
       // Total articles
-      const { count: totalCount, error: totalError } = await supabaseAdmin
+      const { count: totalCount, error: totalError } = await (await supabaseAdmin as any)
         .from('articles')
         .select('*', { count: 'exact', head: true })
         .eq('author_id', user.id);
@@ -59,7 +61,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       if (!totalError) stats.totalArticles = totalCount || 0;
 
       // Published articles
-      const { count: publishedCount, error: publishedError } = await supabaseAdmin
+      const { count: publishedCount, error: publishedError } = await (await supabaseAdmin as any)
         .from('articles')
         .select('*', { count: 'exact', head: true })
         .eq('author_id', user.id)
@@ -68,7 +70,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       if (!publishedError) stats.publishedArticles = publishedCount || 0;
 
       // Draft articles
-      const { count: draftCount, error: draftError } = await supabaseAdmin
+      const { count: draftCount, error: draftError } = await (await supabaseAdmin as any)
         .from('articles')
         .select('*', { count: 'exact', head: true })
         .eq('author_id', user.id)
@@ -77,21 +79,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       if (!draftError) stats.draftArticles = draftCount || 0;
 
       // Total views (sum of all article views)
-      const { data: viewData, error: viewError } = await supabaseAdmin
+      const { data: viewData, error: viewError } = await (await supabaseAdmin as any)
         .from('articles')
         .select('view_count')
         .eq('author_id', user.id)
         .eq('status', 'published');
       
       if (!viewError && viewData) {
-        stats.totalViews = viewData.reduce((sum, article) => sum + (article.view_count || 0), 0);
+        stats.totalViews = viewData.reduce((sum: number, article: any) => sum + (article.view_count || 0), 0);
       }
 
       // Recent articles (last 7 days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       
-      const { count: recentCount, error: recentError } = await supabaseAdmin
+      const { count: recentCount, error: recentError } = await (await supabaseAdmin as any)
         .from('articles')
         .select('*', { count: 'exact', head: true })
         .eq('author_id', user.id)

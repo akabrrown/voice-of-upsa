@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // Update ad submission with payment information
+    // Update ad submission with payment information and publish it
     const { error: updateError } = await supabase
       .from('ad_submissions')
       .update({
@@ -62,6 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         payment_reference: reference,
         payment_amount: paymentData.amount / 100, // Convert back from kobo
         payment_date: new Date().toISOString(),
+        status: 'published', // Set status to published after successful payment
         updated_at: new Date().toISOString(),
       })
       .eq('payment_reference', reference);

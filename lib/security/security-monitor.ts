@@ -93,7 +93,7 @@ class SecurityMonitor {
   // Create security alerts
   private async createSecurityAlert(type: 'high' | 'medium' | 'low', message: string, details?: Record<string, unknown>) {
     try {
-      await supabaseAdmin
+      await (await supabaseAdmin as any)
         .from('security_alerts')
         .insert({
           type,
@@ -135,7 +135,7 @@ class SecurityMonitor {
     this.metrics.lastSecurityCheck = new Date().toISOString();
 
     try {
-      await supabaseAdmin
+      await (await supabaseAdmin as any)
         .from('security_metrics')
         .upsert({
           id: 'current',
@@ -150,7 +150,7 @@ class SecurityMonitor {
   // Get current security status
   async getSecurityStatus(): Promise<SecurityMetrics & { alerts: SecurityAlert[] }> {
     try {
-      const { data: alerts } = await supabaseAdmin
+      const { data: alerts } = await (await supabaseAdmin)
         .from('security_alerts')
         .select('*')
         .order('created_at', { ascending: false })

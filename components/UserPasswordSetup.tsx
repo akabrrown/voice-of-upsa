@@ -27,7 +27,7 @@ const UserPasswordSetup: React.FC<UserPasswordSetupProps> = ({
   const validatePassword = (pwd: string) => {
     const result = passwordSchema.safeParse(pwd);
     if (!result.success) {
-      return result.error.errors[0].message;
+      return result.error.errors[0]?.message || 'Password validation failed';
     }
     return '';
   };
@@ -231,7 +231,7 @@ function getPasswordStrength(password: string): { score: number; label: string }
   const labels = ['', 'Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
   const normalizedScore = Math.min(Math.floor(score * 5 / 6), 5);
   
-  return { score: normalizedScore, label: labels[normalizedScore] };
+  return { score: normalizedScore, label: labels[normalizedScore] || '' };
 }
 
 export default UserPasswordSetup;

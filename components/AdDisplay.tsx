@@ -14,6 +14,8 @@ const AdDisplay: React.FC<AdDisplayProps> = ({ adType, className = "" }) => {
   const { ads, loading, error } = useAds(adType);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
 
+  console.log(`AdDisplay (${adType}):`, { ads, loading, error, adsLength: ads.length });
+
   // Rotate through ads every 5 seconds if there are multiple ads
   useEffect(() => {
     if (ads.length <= 1) return;
@@ -34,19 +36,30 @@ const AdDisplay: React.FC<AdDisplayProps> = ({ adType, className = "" }) => {
   }
 
   if (error || ads.length === 0) {
-    return null; // Don't show anything if no ads are available
-  }
+  return (
+    <div className={`border-2 border-dashed border-gray-300 rounded-lg p-4 text-center text-gray-500 ${className}`}>
+      <div className="text-sm">
+        {error ? `Error: ${error}` : `No ads available for ${adType}`}
+      </div>
+    </div>
+  );
+}
 
   const ad = ads[currentAdIndex]; // Get the current ad
+  if (!ad) return null; // Safety check
+  
+
   const adData = {
-    title: ad.adTitle,
-    description: ad.adDescription,
-    imageUrl: ad.attachmentUrls?.[0],
-    linkUrl: ad.website,
-    company: ad.company,
+    id: ad.id,
+    title: ad.adTitle || '',
+    description: ad.adDescription || '',
+    ...(ad.attachmentUrls?.[0] && { imageUrl: ad.attachmentUrls[0] }),
+    ...(ad.website && { linkUrl: ad.website }),
+    ...(ad.company && { company: ad.company }),
   };
 
   const renderAdComponent = () => {
+
     switch (adType) {
       case 'banner':
         return <AdBanner ad={adData} className={className} />;

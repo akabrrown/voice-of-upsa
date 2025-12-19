@@ -64,15 +64,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({
             <CommentCard
               key={comment.id}
               comment={comment}
-              currentUser={currentUser}
-              onEdit={onEditComment}
-              onDelete={onDeleteComment}
-              onReply={() => handleReply(comment.id)}
-              isReplying={replyingTo === comment.id}
-              onSubmitReply={() => {
+              {...(currentUser && { currentUser })}
+              {...(onEditComment && { onEdit: onEditComment })}
+              {...(onDeleteComment && { onDelete: onDeleteComment })}
+              {...(handleReply && { onReply: () => handleReply(comment.id) })}
+              {...(replyingTo === comment.id && { isReplying: true })}
+              {...(replyingTo === comment.id && { onSubmitReply: () => {
                 // Handle reply submission
                 setReplyingTo(null);
-              }}
+              }})}
             />
           ))}
         </div>

@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { supabaseAdmin } from '@/lib/database-server';
+import { withErrorHandler } from '../../../lib/api/middleware/error-handler';
+import { getSupabaseClient } from '../../../lib/supabase/client';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -16,43 +16,42 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Get token from Authorization header
+    // Simple authentication check using Supabase
     const authHeader = req.headers.authorization;
-    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
         error: {
           code: 'UNAUTHORIZED',
           message: 'Authentication required',
-          details: 'Please provide a valid token'
+          details: null
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.substring(7);
+    const supabase = getSupabaseClient();
+
+    // Verify the JWT token
+    const { data: { user }, error } = await supabase.auth.getUser(token);
     
-    // Verify the token and get user
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (authError || !user) {
+    if (error || !user) {
+      console.log('Auth error:', error);
       return res.status(401).json({
         success: false,
         error: {
-          code: 'INVALID_TOKEN',
-          message: 'Invalid or expired authentication token',
-          details: 'Please sign in again'
+          code: 'UNAUTHORIZED',
+          message: 'Invalid authentication token',
+          details: null
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    // For now, return default preferences without querying database
-    // to avoid potential table/RLS issues
-    const preferences = null;
+    console.log('Notification preferences API - User authenticated:', user.email);
 
-    // Return default preferences if none exist
+    // Return default preferences
     const defaultPreferences = {
       email_notifications: true,
       push_notifications: true,
@@ -64,7 +63,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     return res.status(200).json({
       success: true,
-      data: preferences || defaultPreferences,
+      data: defaultPreferences,
       timestamp: new Date().toISOString()
     });
 

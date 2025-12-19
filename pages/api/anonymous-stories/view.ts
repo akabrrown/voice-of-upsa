@@ -1,13 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Check for environment variables
-  if (!supabaseAdmin) {
-    console.error('Missing Supabase environment variables');
-    return res.status(500).json({ error: 'Server configuration error' });
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -30,6 +24,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       (req.connection.remoteAddress as string) || 
                       'unknown';
 
+    const supabaseAdmin = await getSupabaseAdmin();
+
     // Try to record the view in story_views table
     // We strive for uniqueness:
     // 1. By Session ID (for same browser)
@@ -38,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Note: The database has unique indexes on (story_id, user_id), (story_id, session_id) AND (story_id, ip_address)
     // Inserting this will fail if ANY of these constraints are violated, which is exactly what we want (deduplication).
 
-    const { error: insertError } = await supabaseAdmin
+    const { error: insertError } = await (await supabaseAdmin as any)
       .from('story_views')
       .insert({
         story_id: storyId,
@@ -52,14 +48,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('New view recorded for story:', storyId);
       
       // Increment the counter since it's a new view
-      const { data: currentStory } = await supabaseAdmin
+      const { data: currentStory } = await (await supabaseAdmin as any)
         .from('anonymous_stories')
         .select('views_count')
         .eq('id', storyId)
         .single();
         
       if (currentStory) {
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await (await supabaseAdmin as any)
           .from('anonymous_stories')
           .update({ views_count: (currentStory.views_count || 0) + 1 })
           .eq('id', storyId);

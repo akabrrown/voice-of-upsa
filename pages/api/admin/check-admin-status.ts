@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { supabaseAdmin } from '@/lib/database-server';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -41,7 +42,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Step 1: Verify the JWT token
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error: authError } = await (await supabaseAdmin as any).auth.getUser(token);
     
     if (authError || !user) {
       return res.status(401).json({
@@ -56,7 +57,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Step 2: Try to get user role with admin client (bypasses RLS)
-    const { data: userData, error: userError } = await supabaseAdmin
+    const { data: userData, error: userError } = await (await supabaseAdmin as any)
       .from('users')
       .select('role, email, created_at')
       .eq('id', user.id)
@@ -81,7 +82,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       
       // Try alternative approach using raw SQL
       try {
-        const { data: sqlResult, error: sqlError } = await supabaseAdmin
+        const { data: sqlResult, error: sqlError } = await (await supabaseAdmin as any)
           .rpc('get_user_role', { user_id: user.id });
           
         if (!sqlError && sqlResult) {
@@ -100,7 +101,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Step 4: Check RLS status
     try {
-      const { data: rlsStatus } = await supabaseAdmin
+      const { data: rlsStatus } = await (await supabaseAdmin as any)
         .from('pg_tables')
         .select('rowsecurity')
         .eq('schemaname', 'public')
@@ -152,4 +153,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:access',
+  auditAction: 'admin_status_checked'
+}));

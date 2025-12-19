@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import FollowUs from '@/components/FollowUs';
@@ -13,6 +13,23 @@ const ContactPage: React.FC = () => {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch CSRF token on component mount
+  useEffect(() => {
+    const fetchCSRFToken = async () => {
+      try {
+        const response = await fetch('/api/csrf/token');
+        if (response.ok) {
+          // The token is set in HTTP-only cookie, which the browser will include automatically
+          await response.json();
+        }
+      } catch (error) {
+        console.error('Failed to fetch CSRF token:', error);
+      }
+    };
+    
+    fetchCSRFToken();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -30,18 +47,45 @@ const ContactPage: React.FC = () => {
     try {
       setIsSubmitting(true);
       
+      // Get CSRF token from cookies
+      const getCookie = (name: string): string | null => {
+        const value = `; ${document.cookie}`;
+        console.log('All cookies:', document.cookie);
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+        return null;
+      };
+      
+      const csrfTokenValue = getCookie('csrf-token-client');
+      console.log('CSRF token from cookie:', csrfTokenValue);
+      
+      if (!csrfTokenValue) {
+        throw new Error('CSRF token not found. Please refresh the page and try again.');
+      }
+      
       const response = await fetch('/api/contact/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(csrfTokenValue && { 'x-csrf-token': csrfTokenValue }),
         },
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Failed to parse response JSON:', parseError);
+        console.error('Response text:', await response.text());
+        throw new Error('Invalid response from server');
+      }
+
+      console.log('Contact form response:', { status: response.status, data });
 
       if (!response.ok) {
-        throw new Error(data.error?.message || 'Failed to send message');
+        console.error('Contact form submission failed:', data);
+        throw new Error(data?.error?.message || data?.message || data?.error || 'Failed to send message');
       }
 
       toast.success('Message sent successfully! We\'ll get back to you soon.');

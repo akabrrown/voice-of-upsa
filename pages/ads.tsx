@@ -10,6 +10,7 @@ import Button from '../components/Button';
 import { uploadAdFile } from '@/lib/ads-client';
 import { loadFormData, clearFormData, createAutoSave } from '@/lib/form-persistence';
 import AdSpaceMap from '@/components/AdSpaceMap';
+import { getCurrentSession } from '@/lib/supabase/client';
 
 // Form validation schema
 const adSubmissionSchema = z.object({
@@ -56,6 +57,8 @@ const AdsPage: React.FC = () => {
   const [customDuration, setCustomDuration] = useState('');
   const [adLocations, setAdLocations] = useState<AdLocation[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const { register, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<AdSubmissionForm>({
@@ -73,8 +76,27 @@ const AdsPage: React.FC = () => {
   const autoSave = createAutoSave(FORM_KEY);
 
 
-  // Load saved form data on mount
+  // Check authentication status on mount
   useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const session = await getCurrentSession();
+        const isAuth = !!session?.access_token;
+        setIsAuthenticated(isAuth);
+        setUserEmail(session?.user?.email || null);
+        
+        if (!isAuth) {
+          console.log('User not authenticated - ads submission requires sign-in');
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuth();
+
+    // Load saved form data on mount
     const savedData = loadFormData(FORM_KEY);
     if (Object.keys(savedData).length > 0) {
       // Restore form values
@@ -202,17 +224,60 @@ const AdsPage: React.FC = () => {
         attachmentUrls,
       };
 
+      // Get current session token
+      let session;
+      console.log('=== Ads Submission Debug ===');
+      console.log('Attempting to get current session...');
+      
+      try {
+        session = await getCurrentSession();
+        console.log('Session retrieved:', session ? 'Session exists' : 'No session');
+        console.log('Session access_token:', session?.access_token ? 'Token exists' : 'No token');
+        console.log('Session user:', session?.user ? 'User exists' : 'No user');
+        console.log('Full session object:', session);
+      } catch (error) {
+        console.error('Error getting session:', error);
+        session = null;
+      }
+      
+      if (!session?.access_token) {
+        console.log('No valid session found, redirecting to sign-in');
+        toast.error('Please sign in to submit an ad');
+        router.push('/auth/sign-in');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      console.log('Submitting ad with session token...');
+      console.log('Submission data:', submissionData);
+      
       const response = await fetch('/api/ads/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(submissionData),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error('Failed to submit ad');
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error('Ads submission error:', errorData);
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          const responseText = await response.text();
+          console.error('Raw response text:', responseText);
+          errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        throw new Error(errorData.message || 'Failed to submit ad');
       }
+      
+      console.log('Ads submission successful!');
       
       toast.success('Ad submitted successfully! Our team will review it within 24-48 hours.');
       
@@ -260,6 +325,55 @@ const AdsPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Authentication Status */}
+          {isAuthenticated === false && (
+            <div className="max-w-4xl mx-auto mb-8">
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                      <strong>Authentication Required:</strong> You need to sign in to submit an advertisement.
+                    </p>
+                    <div className="mt-2">
+                      <Link href="/auth/sign-in">
+                        <Button variant="primary" size="sm">
+                          Sign In to Continue
+                        </Button>
+                      </Link>
+                      <span className="ml-3 text-sm text-yellow-600">
+                        Don&apos;t have an account? <Link href="/auth/sign-up" className="underline">Sign up here</Link>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isAuthenticated === true && (
+            <div className="max-w-4xl mx-auto mb-8">
+              <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-lg">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-green-700">
+                      <strong>Signed in as:</strong> {userEmail}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Available Ad Spaces */}
           <div className="max-w-4xl mx-auto mb-12">
             <AdSpaceMap />
@@ -267,7 +381,17 @@ const AdsPage: React.FC = () => {
 
           {/* Ad Submission Form */}
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden">
+            <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden relative ${isAuthenticated === false ? 'opacity-50 pointer-events-none' : ''}`}>
+              {isAuthenticated === false && (
+                <div className="absolute inset-0 bg-white bg-opacity-50 z-10 flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-gray-600 mb-4">Please sign in to access the submission form</p>
+                    <Link href="/auth/sign-in">
+                      <Button variant="primary">Sign In</Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                 {/* Personal Information */}
                 <div className="space-y-6">

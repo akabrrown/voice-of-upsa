@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { z } from 'zod';
@@ -31,11 +31,6 @@ interface Article {
     name: string;
     avatar_url?: string;
   };
-  category: {
-    name: string;
-    slug: string;
-    color: string;
-  } | null;
 }
 
 interface Comment {
@@ -105,7 +100,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Validate search parameters
     const validatedQuery = searchQuerySchema.parse(req.query);
-    const { q, type, page, limit, category, sort } = validatedQuery;
+    const { q, type, page, limit, sort } = validatedQuery;
 
     const searchTerm = q.trim();
     const pageNum = Number(page);
@@ -127,23 +122,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Search published articles only
     if (type === 'all' || type === 'articles') {
-      let articlesQuery = supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let articlesQuery = (await supabaseAdmin as any)
         .from('articles')
         .select(`
           id, title, slug, excerpt, featured_image, published_at,
           views_count, likes_count, comments_count,
           author:users(name, avatar_url),
-          category:categories(name, slug, color)
+          contributor_name
         `, { count: 'exact' })
         .eq('status', 'published');
 
       // Apply search filter
       articlesQuery = articlesQuery.or(`title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%,excerpt.ilike.%${searchTerm}%`);
-
-      // Add category filter if provided
-      if (category) {
-        articlesQuery = articlesQuery.eq('category.slug', category);
-      }
 
       // Apply sorting
       if (sort === 'date') {
@@ -164,7 +156,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       if (!articlesError && articles) {
         // Sanitize article data for public consumption
-        results.articles = articles.map(article => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        results.articles = articles.map((article: any) => ({
           id: article.id,
           title: article.title,
           slug: article.slug,
@@ -175,15 +168,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           likes_count: article.likes_count || 0,
           comments_count: article.comments_count || 0,
           bookmarks_count: 0, // Not exposed to public
-          author: article.author && Array.isArray(article.author) && article.author.length > 0 ? {
+          author: article.contributor_name ? {
+            name: article.contributor_name,
+            avatar_url: undefined
+          } : (article.author && Array.isArray(article.author) && article.author.length > 0 ? {
             name: article.author[0].name,
             avatar_url: article.author[0].avatar_url
-          } : { name: 'UPSA Contributor' },
-          category: article.category && Array.isArray(article.category) && article.category.length > 0 ? {
-            name: article.category[0].name,
-            slug: article.category[0].slug,
-            color: article.category[0].color
-          } : null
+          } : { name: 'UPSA Contributor' })
         }));
         totalResults += articlesCount || 0;
       }
@@ -223,6 +214,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
+// Search handler with CMS security
+const handlerWithCMS = withCMSSecurity(
+  handler,
+  { requirePermission: 'view:content', auditAction: 'search_content' }
+);
+
 // Apply enhanced error handler
-export default withErrorHandler(handler);
+export default withErrorHandler(handlerWithCMS);
                     

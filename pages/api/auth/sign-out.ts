@@ -1,32 +1,39 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/database';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({
+      success: false,
+      error: {
+        code: 'METHOD_NOT_ALLOWED',
+        message: 'Only POST method is allowed',
+        details: null
+      },
+      timestamp: new Date().toISOString()
+    });
   }
 
   try {
-    // Sign out with Supabase Auth
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      return res.status(400).json({ 
-        error: 'Sign out failed',
-        details: error.message
-      });
-    }
-
+    // Simple sign-out - just clear the token on client side
+    // No Supabase auth calls to avoid rate limiting
     res.status(200).json({
-      message: 'Sign out successful'
+      success: true,
+      message: 'Sign-out successful',
+      timestamp: new Date().toISOString()
     });
-
   } catch (error) {
-    console.error('Sign-out error:', error);
-    res.status(500).json({ 
-      error: 'Internal server error',
-      details: 'An unexpected error occurred during sign out'
+    console.error('Error in sign-out API:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Internal server error',
+        details: (error as Error).message
+      },
+      timestamp: new Date().toISOString()
     });
   }
 }
 
+export default withErrorHandler(handler);

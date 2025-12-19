@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { requireAdminOrEditor } from '@/lib/auth-helpers';
 import { securityTester } from '@/lib/security/security-tester';
 
@@ -71,4 +72,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:security',
+  auditAction: 'security_tests_run'
+}));

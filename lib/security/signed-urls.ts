@@ -40,6 +40,7 @@ class SignedURLManager {
     const apiKey = process.env.CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
+    // Only check credentials when the function is actually called, not at module load
     if (!cloudName || !apiKey || !apiSecret) {
       throw new Error('Cloudinary credentials not configured');
     }
@@ -87,7 +88,7 @@ class SignedURLManager {
     const { expiresIn = this.DEFAULT_EXPIRY } = options;
 
     try {
-      const { data, error } = await supabaseAdmin.storage
+      const { data, error } = await (await supabaseAdmin).storage
         .from(bucket)
         .createSignedUrl(path, expiresIn);
 
@@ -165,9 +166,9 @@ class SignedURLManager {
       
       case 'supabase':
         // For Supabase, identifier should be "bucket/path"
-        const [bucket, ...pathParts] = identifier.split('/');
-        const path = pathParts.join('/');
-        return this.generateSupabaseURL(bucket, path, options);
+        const [bucket, ...pathParts] = identifier.split('/') || [];
+        const path = pathParts.join('/') || '';
+        return this.generateSupabaseURL(bucket || '', path, options);
       
       default:
         throw new Error(`Unsupported media type: ${mediaType}`);

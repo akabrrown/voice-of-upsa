@@ -1,0 +1,11 @@
+@echo off
+cd /d "c:\Users\akaye\Desktop\voiceofupsa"
+powershell -Command "(Get-Content 'pages\api\admin\articles\[id]\category.ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\articles\[id]\category.ts'"
+powershell -Command "(Get-Content 'pages\api\admin\articles\[id]\display-location.ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\articles\[id]\display-location.ts'"
+powershell -Command "(Get-Content 'pages\api\admin\articles\[id]\featured.ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\articles\[id]\featured.ts'"
+powershell -Command "(Get-Content 'pages\api\admin\articles\[id]\schedule.ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\articles\[id]\schedule.ts'"
+powershell -Command "(Get-Content 'pages\api\admin\articles\[id]\settings.ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\articles\[id]\settings.ts'"
+powershell -Command "(Get-Content 'pages\api\admin\comments\[id].ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\comments\[id].ts'"
+powershell -Command "(Get-Content 'pages\api\admin\messages\[id]\index.ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\messages\[id]\index.ts'"
+powershell -Command "(Get-Content 'pages\api\admin\messages\[id]\reply.ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\messages\[id]\reply.ts'"
+powershell -Command "(Get-Content 'pages\api\admin\users\[id].ts') -replace 'await supabaseAdmin', 'await (await supabaseAdmin as any)' | Set-Content 'pages\api\admin\users\[id].ts'"

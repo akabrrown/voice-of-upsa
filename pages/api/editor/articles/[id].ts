@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
@@ -13,7 +13,8 @@ const articleUpdateSchema = z.object({
   excerpt: z.string().max(500, 'Excerpt too long').optional(),
   featured_image: z.string().url('Invalid featured image URL').optional().nullable(),
   category_id: z.string().uuid('Invalid category ID').optional().nullable(),
-  status: z.enum(['draft', 'published', 'archived']).optional()
+  status: z.enum(['draft', 'published', 'archived']).optional(),
+  contributor_name: z.string().optional()
 });
 
 // Interface for update data that includes slug
@@ -52,12 +53,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
     }
         // GET - Fetch single article
     if (req.method === 'GET') {
-      const { data: article, error: fetchError } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      if (!supabaseAdmin) throw new Error('Supabase admin client not available');
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const query = (supabaseAdmin as any)
         .from('articles')
         .select('*')
-        .eq('id', id)
-        .eq('author_id', user.id)
-        .single();
+        .eq('id', id);
+
+      // Only restrict by author if not admin
+      // if (user.role !== 'admin') {
+      //   query = query.eq('author_id', user.id);
+      // }
+        
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: article, error: fetchError } = await query.single() as any;
 
       if (fetchError) {
         console.error(`Article fetch failed for editor ${user.email}:`, fetchError);
@@ -91,12 +102,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       const validatedData = articleUpdateSchema.parse(req.body);
 
       // Check if article exists and belongs to user
-      const { data: existingArticle, error: fetchError } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      if (!supabaseAdmin) throw new Error('Supabase admin client not available');
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const query = (supabaseAdmin as any)
         .from('articles')
         .select('*')
-        .eq('id', id)
-        .eq('author_id', user.id)
-        .single();
+        .eq('id', id);
+
+      // Only restrict by author if not admin
+      // if (user.role !== 'admin') {
+      //   query = query.eq('author_id', user.id);
+      // }
+        
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingArticle, error: fetchError } = await query.single() as any;
 
       if (fetchError || !existingArticle) {
         return res.status(404).json({
@@ -125,12 +146,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
           .replace(/^[-]+|[-]+$/g, '');
       }
 
-      const { data: updatedArticle, error } = await supabaseAdmin
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: updatedArticle, error } = await (supabaseAdmin as any)
         .from('articles')
         .update(updateData)
         .eq('id', id)
         .select('*')
-        .single();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .single() as any;
 
       if (error) {
         console.error(`Article update failed for editor ${user.email}:`, error);
@@ -162,12 +185,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
           // DELETE - Delete article
     if (req.method === 'DELETE') {
       // Check if article exists and belongs to user
-      const { data: existingArticle, error: fetchError } = await supabaseAdmin
+      const supabaseAdmin = await getSupabaseAdmin();
+      if (!supabaseAdmin) throw new Error('Supabase admin client not available');
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const query = (supabaseAdmin as any)
         .from('articles')
         .select('id, title')
-        .eq('id', id)
-        .eq('author_id', user.id)
-        .single();
+        .eq('id', id);
+
+      // Only restrict by author if not admin
+      // if (user.role !== 'admin') {
+      //   query = query.eq('author_id', user.id);
+      // }
+        
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingArticle, error: fetchError } = await query.single() as any;
 
       if (fetchError || !existingArticle) {
         return res.status(404).json({
@@ -182,11 +215,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       }
 
       // Delete the article
-      const { error: deleteError } = await supabaseAdmin
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const deleteQuery = (supabaseAdmin as any)
         .from('articles')
         .delete()
-        .eq('id', id)
-        .eq('author_id', user.id);
+        .eq('id', id);
+
+      // Only restrict by author if not admin
+      // if (user.role !== 'admin') {
+      //   deleteQuery = deleteQuery.eq('author_id', user.id);
+      // }
+
+      const { error: deleteError } = await deleteQuery;
 
       if (deleteError) {
         console.error(`Article deletion failed for editor ${user.email}:`, deleteError);

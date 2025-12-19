@@ -107,7 +107,7 @@ class FieldEncryption {
       }
       
       // Update user with encrypted fields
-      const { error } = await supabaseAdmin
+      const { error } = await (await supabaseAdmin as any)
         .from('users')
         .update(encryptedFields)
         .eq('id', userId);
@@ -150,7 +150,7 @@ class FieldEncryption {
     
     try {
       // Get all users with sensitive fields that aren't encrypted
-      const { data: users, error } = await supabaseAdmin
+      const { data: users, error } = await (await supabaseAdmin)
         .from('users')
         .select('id, phone, address, emergency_contact, bio')
         .or('phone.not.is.null,address.not.is.null,emergency_contact.not.is.null,bio.not.is.null');
@@ -160,29 +160,29 @@ class FieldEncryption {
         return { migrated: 0, errors };
       }
       
-      for (const user of users || []) {
-        try {
-          const fieldsToEncrypt: Record<string, string> = {};
-          
-          if (user.phone && !this.isEncrypted(user.phone)) {
-            fieldsToEncrypt.phone = user.phone;
-          }
-          if (user.address && !this.isEncrypted(user.address)) {
-            fieldsToEncrypt.address = user.address;
-          }
-          if (user.emergency_contact && !this.isEncrypted(user.emergency_contact)) {
-            fieldsToEncrypt.emergency_contact = user.emergency_contact;
-          }
-          if (user.bio && !this.isEncrypted(user.bio)) {
-            fieldsToEncrypt.bio = user.bio;
-          }
-          
-          if (Object.keys(fieldsToEncrypt).length > 0) {
+      for (const user of (users as any[]) || []) {
+        const fieldsToEncrypt: Record<string, string> = {};
+        
+        if (user.phone && !this.isEncrypted(user.phone)) {
+          fieldsToEncrypt.phone = user.phone;
+        }
+        if (user.address && !this.isEncrypted(user.address)) {
+          fieldsToEncrypt.address = user.address;
+        }
+        if (user.emergency_contact && !this.isEncrypted(user.emergency_contact)) {
+          fieldsToEncrypt.emergency_contact = user.emergency_contact;
+        }
+        if (user.bio && !this.isEncrypted(user.bio)) {
+          fieldsToEncrypt.bio = user.bio;
+        }
+        
+        if (Object.keys(fieldsToEncrypt).length > 0) {
+          try {
             await this.encryptUserFields(user.id, fieldsToEncrypt);
             migrated++;
+          } catch (encryptError) {
+            errors.push(`Failed to migrate user ${user.id}: ${encryptError instanceof Error ? encryptError.message : 'Unknown error'}`);
           }
-        } catch (error) {
-          errors.push(`Failed to migrate user ${user.id}: ${(error as Error).message}`);
         }
       }
       

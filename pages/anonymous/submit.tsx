@@ -68,8 +68,8 @@ const AnonymousSubmitPage: React.FC = () => {
       return;
     }
     
-    if (formData.content.trim().length < 50) {
-      toast.error('Your story must be at least 50 characters long');
+    if (formData.content.trim().length < 10) {
+      toast.error('Your story must be at least 10 characters long');
       return;
     }
 
@@ -232,7 +232,7 @@ const AnonymousSubmitPage: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent transition-colors resize-none"
                 />
                 <p className="text-sm text-gray-500 mt-1">
-                  Minimum 50 characters. Be respectful and constructive.
+                  Minimum 10 characters. Be respectful and constructive.
                 </p>
               </div>
 
