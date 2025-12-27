@@ -1,11 +1,4 @@
 import { Html, Head, Main, NextScript } from 'next/document';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800'],
-  display: 'swap',
-});
 
 export default function Document() {
   return (
@@ -31,7 +24,7 @@ export default function Document() {
         <meta name="apple-mobile-web-app-title" content="VOU" />
         
       </Head>
-      <body className={inter.className}>
+      <body>
         <Main />
         <NextScript />
       </body>
