@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { requireAdminOrEditor } from '@/lib/auth-helpers';
 import { supabaseAdmin } from '@/lib/database-server';
+import { createClient } from '@/lib/supabase/server';
 
 interface SecurityTest {
   name: string;
@@ -228,26 +229,40 @@ class SecurityTester {
   // Test 6: RLS Policy Effectiveness
   async testRLSPolicies(): Promise<TestResult> {
     try {
-      // Test RLS on users table
-      const { data: userData, error: userError } = await (await supabaseAdmin)
+      // Use a standard non-privileged client (anon role) to test RLS
+      const supabaseAnon = createClient();
+      
+      const { data: userData, error: userError } = await supabaseAnon
         .from('users')
         .select('id, email, role')
         .limit(1);
 
-      if (userError && userError.message.includes('permission denied')) {
+      // If we got a permission denied error, RLS is definitely working
+      if (userError && userError.message.toLowerCase().includes('permission denied')) {
         return {
           passed: true,
-          message: 'RLS policies are working correctly',
+          message: 'RLS policies are working correctly (Access Denied)',
           details: { error: userError.message },
           recommendations: ['Continue monitoring RLS effectiveness']
         };
       }
 
+      // If we got no data (empty array), RLS is working (filtering out all rows for anonymous user)
+      if (!userError && (!userData || userData.length === 0)) {
+        return {
+          passed: true,
+          message: 'RLS policies are working correctly (Data Filtered)',
+          details: { rowCount: 0 },
+          recommendations: ['Continue monitoring RLS effectiveness']
+        };
+      }
+
+      // If we actually got data as an anonymous user, that's a security failure
       return {
         passed: false,
-        message: 'RLS policies may not be properly configured',
-        details: { userData, userError },
-        recommendations: ['Review RLS policies', 'Test with different user roles']
+        message: 'RLS policies may not be properly configured - Sensitive data leaked to anonymous user',
+        details: { rowCount: userData?.length || 0, leakedData: userData },
+        recommendations: ['Critical: Review RLS policies on the users table', 'Ensure ALL tables have RLS enabled']
       };
     } catch (error) {
       return {

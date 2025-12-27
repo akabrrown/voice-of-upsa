@@ -15,7 +15,8 @@ const sanitizeHTML = (html: string): string => {
     .replace(/javascript:/gi, '')
     .replace(/on\w+\s*=/gi, '')
     .replace(/<[^>]*>/g, '') // Remove all remaining HTML tags
-    .trim();
+    .replace(/\r\n/g, '\n') // Normalize line endings
+    .replace(/\r/g, '\n'); // Normalize remaining carriage returns
 };
 
 // Define type for user data
@@ -104,13 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Story must be at least 10 characters' });
       }
 
-      if (sanitizedContent.length > 2000) {
-        return res.status(400).json({ error: 'Story must be less than 2000 characters' });
-      }
 
-      if (title.trim().length > 200) {
-        return res.status(400).json({ error: 'Title must be less than 200 characters' });
-      }
 
       // Validate category
       const validCategories = ['general', 'campus-life', 'academics', 'relationships', 'personal-growth', 'struggles', 'achievements'];

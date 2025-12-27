@@ -182,7 +182,16 @@ const CreateArticlePage: React.FC = () => {
           const data = await response.json();
           console.log('Categories API response:', data);
           // Handle the correct response structure: { success: true, data: { categories: [...] } }
-          setCategories(data.data?.categories || []);
+          const fetchedCategories = data.data?.categories || [];
+          setCategories(fetchedCategories);
+          
+          // Set default category to 'News' if it's currently empty
+          if (!formData.category && fetchedCategories.length > 0) {
+            const newsCategory = fetchedCategories.find((cat: Category) => cat.slug === 'news');
+            if (newsCategory) {
+              setFormData((prev: ArticleFormData) => ({ ...prev, category: newsCategory.id }));
+            }
+          }
         } else {
           console.error('Categories API error:', response.status);
         }

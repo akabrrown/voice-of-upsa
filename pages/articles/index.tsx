@@ -104,6 +104,23 @@ const ArticlesPage: React.FC = () => {
       }
     }
   }, [router.isReady, router.query, router.asPath]);
+
+  // Resolve category slug to ID once categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && selectedCategory !== 'all' && selectedCategory !== 'anonymous') {
+      // Check if selectedCategory is currently a slug (not a UUID)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedCategory);
+      if (!isUuid) {
+        const foundCategory = categories.find(c => c.slug === selectedCategory);
+        if (foundCategory) {
+          console.log('Resolving category slug to ID:', selectedCategory, '->', foundCategory.id);
+          setSelectedCategory(foundCategory.id);
+        } else {
+          console.warn('Could not find category with slug:', selectedCategory);
+        }
+      }
+    }
+  }, [categories, selectedCategory]);
   console.log('ArticlesPage component rendering');
   console.log('Current loading state:', loading);
   console.log('Current articles state:', articles);
@@ -293,7 +310,18 @@ const ArticlesPage: React.FC = () => {
 
       const articlesData = data.data?.articles || data.articles || [];
       setArticles(articlesData);
-      console.log('Articles set successfully, count:', articlesData.length);
+      
+      const paginationData = data.data?.pagination || data.pagination;
+      if (paginationData) {
+        setPagination({
+          currentPage: paginationData.page || currentPage,
+          totalPages: paginationData.totalPages || 0,
+          totalArticles: paginationData.total || 0,
+          hasNextPage: (paginationData.page || currentPage) < (paginationData.totalPages || 0),
+          hasPreviousPage: (paginationData.page || currentPage) > 1
+        });
+      }
+      console.log('Articles and pagination set successfully');
     } catch (error) {
       console.error('Error fetching articles:', error);
       toast.error('Failed to load articles');

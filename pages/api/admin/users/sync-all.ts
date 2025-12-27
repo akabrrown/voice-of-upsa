@@ -27,21 +27,50 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const adminClient: any = await supabaseAdmin;
 
     // Get all users from Supabase auth
-    const { data: authUsers, error: authError } = await adminClient.auth.admin.listUsers();
+    // Pagination variables
+    let page = 1;
+    const perPage = 50;
+    let hasMore = true;
+    let allAuthUsers: Array<{
+      id: string;
+      email?: string;
+      user_metadata?: { full_name?: string; avatar_url?: string };
+      created_at?: string;
+    }> = [];
     
-    if (authError) {
-      console.error('Error fetching auth users:', authError);
-      throw new Error('Failed to fetch auth users');
+    // Fetch all users with pagination
+    while (hasMore) {
+      console.log(`Fetching page ${page} of users...`);
+      const { data, error: authError } = await adminClient.auth.admin.listUsers({
+        page: page,
+        perPage: perPage
+      });
+
+      if (authError) {
+        console.error('Error fetching auth users:', authError);
+        throw new Error('Failed to fetch auth users');
+      }
+
+      const users = data.users || [];
+      allAuthUsers = [...allAuthUsers, ...users];
+      
+      console.log(`Fetched ${users.length} users on page ${page}`);
+      
+      if (users.length < perPage) {
+        hasMore = false;
+      } else {
+        page++;
+      }
     }
 
-    console.log(`📊 Found ${authUsers.users.length} users in auth system`);
+    console.log(`📊 Found total ${allAuthUsers.length} users in auth system`);
 
     let syncedCount = 0;
     let updatedCount = 0;
     let errorCount = 0;
 
     // Sync each auth user to our users table
-    for (const authUser of authUsers.users) {
+    for (const authUser of allAuthUsers) {
       try {
         const { data: existingUser, error: fetchError } = await adminClient
           .from('users')
@@ -66,6 +95,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
               role: 'user',
               avatar_url: authUser.user_metadata?.avatar_url || null,
               status: 'active',
+              // Use created_at from auth user if available, otherwise current time
               created_at: authUser.created_at || new Date().toISOString(),
               updated_at: new Date().toISOString(),
             });
@@ -117,7 +147,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       data: {
         message: 'User sync completed',
         stats: {
-          totalAuthUsers: authUsers.users.length,
+          totalAuthUsers: allAuthUsers.length,
           syncedCount,
           updatedCount,
           errorCount

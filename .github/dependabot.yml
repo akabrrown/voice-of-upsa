@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    allow:
+     -dependency-type:"direct"
+    groups:
+      all-dependencies:
+    patterns:
+      - "*"
+    ignore:
+  - dependency-name: "*"
+    update-types: ["version-update:semver-major"]

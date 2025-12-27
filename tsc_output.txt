@@ -1,0 +1,1 @@
+pages/api/anonymous-stories/admin/moderate.ts(59,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.

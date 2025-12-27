@@ -27,6 +27,7 @@ const HomePage: React.FC = () => {
   const [featuredArticles, setFeaturedArticles] = useState<Article[]>([]);
   const [latestNews, setLatestNews] = useState<Article[]>([]);
   const [isAdmin, setIsAdmin] = useState(false); // Represents admin OR editor access
+  const [articlesLimit, setArticlesLimit] = useState(6); // Start with 6 articles
   
   // Use the modern API client
   const { loading, execute } = useApi<ArticlesListData>();
@@ -113,7 +114,7 @@ const HomePage: React.FC = () => {
   // Initial data fetch
   useEffect(() => {
     execute(
-      () => ArticlesApi.getArticles({ limit: 20, status: 'published' }),
+      () => ArticlesApi.getArticles({ limit: 50, status: 'published' }), // Fetch more than we display
       (data: ArticlesListData) => {
         console.log('Homepage: Received articles data:', data);
         if (data && data.articles && data.articles.length > 0) {
@@ -135,11 +136,16 @@ const HomePage: React.FC = () => {
     );
   }, [execute]);
 
+  // Handler for Load More button
+  const handleLoadMore = () => {
+    setArticlesLimit(prev => prev + 6);
+  };
+
   // Auto-refresh every 5 minutes
   useEffect(() => {
     const interval = setInterval(() => {
       execute(
-        () => ArticlesApi.getArticles({ limit: 20, status: 'published' }),
+        () => ArticlesApi.getArticles({ limit: 50, status: 'published' }),
         (data: ArticlesListData) => {
           if (data && data.articles && data.articles.length > 0) {
             // Separate featured articles from regular articles
@@ -158,6 +164,10 @@ const HomePage: React.FC = () => {
 
     return () => clearInterval(interval);
   }, [execute]);
+
+  // Get visible articles based on limit
+  const visibleArticles = latestNews.slice(0, articlesLimit);
+  const hasMoreArticles = latestNews.length > articlesLimit;
 
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'Date not available';
@@ -342,14 +352,15 @@ const HomePage: React.FC = () => {
                   ))}
                 </div>
               </div>
-            ) : latestNews.length > 0 ? (
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              >
-                {latestNews.map((article: Article, index: number) => (
+            ) : visibleArticles.length > 0 ? (
+              <>
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                >
+                  {visibleArticles.map((article: Article, index: number) => (
                   <motion.div
                     key={article.id}
                     variants={itemVariants}
@@ -416,23 +427,24 @@ const HomePage: React.FC = () => {
                       </div>
                     </Link>
                   </motion.div>
-                ))}
-              </motion.div>
-            ) : loading ? (
-              <div className="animate-pulse">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden">
-                      <div className="h-48 bg-gray-300"></div>
-                      <div className="p-6">
-                        <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                        <div className="h-4 bg-gray-300 rounded w-3/4 mb-4"></div>
-                        <div className="h-3 bg-gray-300 rounded w-1/2"></div>
-                      </div>
-                    </div>
                   ))}
-                </div>
-              </div>
+                </motion.div>
+
+                {/* Load More Button */}
+                {hasMoreArticles && (
+                  <div className="mt-12 text-center">
+                    <button
+                      onClick={handleLoadMore}
+                      className="bg-golden text-navy px-8 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition-colors duration-200 inline-flex items-center space-x-2"
+                    >
+                      <span>Load More Articles</span>
+                    </button>
+                    <p className="text-sm text-gray-600 mt-3">
+                      Showing {visibleArticles.length} of {latestNews.length} articles
+                    </p>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg">No articles available yet.</p>

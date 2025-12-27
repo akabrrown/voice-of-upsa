@@ -557,16 +557,22 @@ function getRolePermissions(role: string): string[] {
       'read:all', 'write:all', 'delete:all',
       'manage:users', 'manage:settings', 'manage:content',
       'manage:ads', 'view:analytics', 'export:data', 'import:data',
-      'edit:articles', 'manage:articles', 'manage:comments'
+      'edit:articles', 'manage:articles', 'manage:comments',
+      'manage:messages', 'upload:media', 'upload:logo',
+      'admin:security', 'admin:maintenance', 'admin:setup',
+      'admin:emergency', 'admin:debug', 'admin:access',
+      'manage:notifications', 'manage:system', 'view:content',
+      'comment:create', 'delete:account'
     ],
     editor: [
       'read:content', 'write:content', 'delete:own_content',
       'manage:articles', 'manage:comments', 'upload:media', 'manage:content',
-      'manage:messages', 'view:analytics', 'upload:logo', 'manage:ads', 'edit:articles',
-      'manage:settings', 'manage:users'
+      'manage:messages', 'view:analytics', 'edit:articles',
+      'export:data', 'view:content', 'comment:create'
     ],
     user: [
-      'read:public', 'write:comments', 'manage:profile', 'upload:media', 'view:bookmarks'
+      'read:public', 'write:comments', 'manage:profile', 'upload:media', 'view:bookmarks',
+      'view:content', 'comment:create', 'delete:account'
     ]
   };
 

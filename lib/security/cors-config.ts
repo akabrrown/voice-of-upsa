@@ -36,7 +36,7 @@ export function getCORSConfig(): CORSConfig {
         siteURL,
         'https://voiceofupsa.com',
         'https://www.voiceofupsa.com',
-        // Add your production domains here
+        'https://*.vercel.app'
       ],
       allowedMethods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowedHeaders: [
@@ -138,10 +138,10 @@ export function buildCORSHeaders(
   // Validate origin
   if (validateOrigin(context.origin, config.allowedOrigins)) {
     headers['Access-Control-Allow-Origin'] = context.origin;
-  } else if (!config.strictMode) {
-    // In non-strict mode, allow the origin but log warning
+  } else if (process.env.NODE_ENV !== 'production') {
+    // In non-production only, allow the origin for debugging
     headers['Access-Control-Allow-Origin'] = context.origin;
-    console.warn('CORS: Allowing origin in non-strict mode:', context.origin);
+    console.warn('CORS: Allowing origin in development mode:', context.origin);
   }
   
   // Allow credentials
@@ -182,7 +182,7 @@ export function withCORS(
       origin: req.headers.origin || req.headers.referer || '',
       method: req.method || 'GET',
       headers: Object.fromEntries(
-        Object.entries(req.headers).filter(([_, value]) => typeof value === 'string')
+        Object.entries(req.headers).filter(([unusedKey, value]) => typeof value === 'string' && unusedKey)
       ) as Record<string, string>,
       endpoint: req.url || 'unknown'
     };

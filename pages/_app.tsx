@@ -37,6 +37,16 @@ function MyApp({ Component, pageProps, router }: AppProps) {
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/* Standard Meta Tags */}
+        {pageProps?.fetchError && (
+          <meta name="ssr-fetch-error" content={JSON.stringify(pageProps.fetchError)} />
+        )}
+        {pageProps?.ssrError && (
+          <meta name="ssr-error" content={typeof pageProps.ssrError === 'string' ? pageProps.ssrError : JSON.stringify(pageProps.ssrError)} />
+        )}
+        {pageProps?.initialArticle && (
+          <meta name="ssr-article-slug" content={pageProps.initialArticle.slug} />
+        )}
       </Head>
       <SpeedInsights />
       <SupabaseProvider>

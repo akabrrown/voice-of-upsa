@@ -172,6 +172,7 @@ const AdminSettingsPage: React.FC = () => {
       const data = await response.json();
       if (data.success && data.data) {
         setSettings(data.data);
+        originalSettingsRef.current = data.data;
       }
       } catch (error) {
         console.error('Error fetching settings:', error);
@@ -230,6 +231,14 @@ const AdminSettingsPage: React.FC = () => {
       supabase.removeChannel(settingsChannel);
     };
   }, [supabase, user]);
+
+  // Check for changes
+  useEffect(() => {
+    if (originalSettingsRef.current) {
+      const isDirty = JSON.stringify(settings) !== JSON.stringify(originalSettingsRef.current);
+      setHasChanges(isDirty);
+    }
+  }, [settings]);
 
   const handleSave = async () => {
     try {
@@ -393,8 +402,14 @@ const AdminSettingsPage: React.FC = () => {
 
       const data = await response.json();
       
-      // Update the settings with the new logo URL
-      setSettings(prev => ({ ...prev, site_logo: data.data.logo_url }));
+      // Update settings state directly without resetting the original reference
+      // This allows change detection to work correctly
+      setSettings(prev => ({
+        ...prev,
+        site_logo: data.data.logo_url,
+        updated_at: data.data.settings.updated_at,
+        updated_by: data.data.settings.updated_by
+      }));
       
       toast.success('Logo uploaded successfully');
     } catch (error) {

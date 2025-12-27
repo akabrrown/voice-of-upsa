@@ -32,35 +32,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const authHeader = req.headers.authorization;
   let userId: string | undefined;
 
+  const supabaseAdmin = await getSupabaseAdmin();
+  
   if (authHeader) {
     const token = authHeader.replace('Bearer ', '');
-    const supabaseAdmin = await getSupabaseAdmin() as unknown as { auth: { getUser: (token: string) => Promise<{ data: { user?: { id: string } }, error?: unknown }> } };
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (!authError && user) {
       userId = user.id;
     }
   }
-
-  const supabaseAdmin = await getSupabaseAdmin() as unknown as {
-  from: (table: string) => {
-    select: (columns: string) => {
-      eq: (column: string, value: string) => {
-        order: (column: string, options?: { ascending?: boolean }) => {
-          limit: (count: number) => Promise<{ data: unknown[]; error: unknown }>;
-        };
-        single: () => Promise<{ data: unknown; error: unknown }>;
-      };
-      insert: (data: unknown) => {
-        select: (columns: string) => {
-          single: () => Promise<{ data: unknown; error: unknown }>;
-        };
-      };
-    };
-  };
-  auth: {
-    getUser: (token: string) => Promise<{ data: { user?: { id: string } }; error?: unknown }>;
-  };
-};
 
   // Resolve article ID from slug/id
   const { data: article, error: articleError } = await supabaseAdmin
@@ -81,11 +61,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  const articleId = (article as { id: string }).id;
+  const articleId: string = (article as { id: string }).id;
 
   switch (req.method) {
     case 'GET':
-      return await handleGet(req, res, articleId);
+      return await handleGet(req, res, articleId, supabaseAdmin);
     case 'POST':
       if (!userId) {
         return res.status(401).json({
@@ -98,7 +78,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           timestamp: new Date().toISOString()
         });
       }
-      return await handlePost(req, res, articleId, userId);
+      return await handlePost(req, res, articleId, userId, supabaseAdmin);
     default:
       return res.status(405).json({
         success: false,
@@ -116,7 +96,8 @@ async function handlePost(
   req: NextApiRequest, 
   res: NextApiResponse, 
   articleId: string, 
-  userId: string
+  userId: string,
+  supabaseAdmin: Awaited<ReturnType<typeof getSupabaseAdmin>>
 ) {
   const { content, parent_id } = req.body;
   
@@ -133,27 +114,6 @@ async function handlePost(
       timestamp: new Date().toISOString()
     });
   }
-
-  const supabaseAdmin = await getSupabaseAdmin() as unknown as {
-  from: (table: string) => {
-    select: (columns: string) => {
-      eq: (column: string, value: string) => {
-        order: (column: string, options?: { ascending?: boolean }) => {
-          limit: (count: number) => Promise<{ data: unknown[]; error: unknown }>;
-        };
-        single: () => Promise<{ data: unknown; error: unknown }>;
-      };
-      insert: (data: unknown) => {
-        select: (columns: string) => {
-          single: () => Promise<{ data: unknown; error: unknown }>;
-        };
-      };
-    };
-  };
-  auth: {
-    getUser: (token: string) => Promise<{ data: { user?: { id: string } }; error?: unknown }>;
-  };
-};
 
   // If this is a reply, validate that the parent comment exists and belongs to the same article
   if (parent_id) {
@@ -188,22 +148,16 @@ async function handlePost(
     }
   }
 
-  // Add new comment (insert without join)
-  const { data: newComment, error: insertError } = await (supabaseAdmin as unknown as {
-    from: (table: string) => {
-      insert: (data: unknown) => {
-        select: (columns: string) => {
-          single: () => Promise<{ data: unknown; error: unknown }>;
-        };
-      };
-    };
-  }).from('comments')
+  // Add new comment
+  const { data: newComment, error: insertError } = await supabaseAdmin
+    .from('comments')
     .insert({
       article_id: articleId,
       user_id: userId,
       content,
       parent_id: parent_id || null,
-    })
+      status: 'approved', // Auto-approve comments (can be changed to 'pending' if moderation is needed)
+    } as any)
     .select('*')
     .single();
 
@@ -224,12 +178,7 @@ async function handlePost(
 
   if (fetchError || !comment) {
     console.error('Error fetching comment with author:', fetchError);
-    // Return comment without author info if join fails
-    return res.status(200).json({
-      success: true,
-      data: { comment: newComment },
-      timestamp: new Date().toISOString()
-    });
+    throw fetchError || new Error('Failed to fetch comment details');
   }
 
   return res.status(200).json({
@@ -242,39 +191,19 @@ async function handlePost(
 async function handleGet(
   req: NextApiRequest, 
   res: NextApiResponse, 
-  articleId: string
+  articleId: string,
+  supabaseAdmin: Awaited<ReturnType<typeof getSupabaseAdmin>>
 ) {
   // Fetch all comments for the article (both top-level and replies)
-  const supabaseAdmin = await getSupabaseAdmin() as unknown as {
-  from: (table: string) => {
-    select: (columns: string) => {
-      eq: (column: string, value: string) => {
-        order: (column: string, options?: { ascending?: boolean }) => {
-          limit: (count: number) => Promise<{ data: unknown[]; error: unknown }>;
-        };
-        single: () => Promise<{ data: unknown; error: unknown }>;
-      };
-      insert: (data: unknown) => {
-        select: (columns: string) => {
-          single: () => Promise<{ data: unknown; error: unknown }>;
-        };
-      };
-    };
-  };
-  auth: {
-    getUser: (token: string) => Promise<{ data: { user?: { id: string } }; error?: unknown }>;
-  };
-};
-  const result = await supabaseAdmin
+  const { data: comments, error } = await supabaseAdmin
     .from('comments')
     .select(`
       *,
       author:users(id, name, avatar_url)
     `)
     .eq('article_id', articleId)
+    .eq('status', 'approved') // Only show approved comments
     .order('created_at', { ascending: false });
-
-  const { data: comments, error } = result as unknown as { data: unknown[]; error: unknown };
 
   if (error) {
     console.error('Error fetching comments:', error);

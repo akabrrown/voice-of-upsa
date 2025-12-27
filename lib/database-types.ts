@@ -104,8 +104,8 @@ export interface Database {
           user_agent: string | null;
           created_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['article_views']['Row'], 'id' | 'created_at'>;
-        Update: Partial<Database['public']['Tables']['article_views']['Insert']>;
+        Insert: Omit<Database['public']['Tables']['reactions']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['reactions']['Insert']>;
       };
       article_views: {
         Row: {
@@ -182,7 +182,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
         };
-        Insert: Omit<Database['public']['Tables']['anonymous_stories']['Row'], 'id' | 'created_at' | 'updated_at' | 'reports_count' | 'featured' | 'views_count' | 'likes_count'>;
+        Insert: Omit<Database['public']['Tables']['anonymous_stories']['Row'], 'id' | 'created_at' | 'reports_count' | 'views_count' | 'likes_count'>;
         Update: Partial<Database['public']['Tables']['anonymous_stories']['Insert']>;
       };
       story_reports: {
@@ -261,7 +261,7 @@ export interface Database {
     };
     Enums: {
       user_role: 'user' | 'admin' | 'editor';
-      article_status: 'draft' | 'published' | 'archived';
+      article_status: 'draft' | 'published' | 'archived' | 'scheduled';
       comment_status: 'pending' | 'approved' | 'rejected';
       message_status: 'new' | 'read' | 'in_progress' | 'resolved';
       display_location: 'homepage' | 'category_page' | 'both' | 'none';

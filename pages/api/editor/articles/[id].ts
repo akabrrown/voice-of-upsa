@@ -13,12 +13,15 @@ const articleUpdateSchema = z.object({
   excerpt: z.string().max(500, 'Excerpt too long').optional(),
   featured_image: z.string().url('Invalid featured image URL').optional().nullable(),
   category_id: z.string().uuid('Invalid category ID').optional().nullable(),
-  status: z.enum(['draft', 'published', 'archived']).optional(),
+  category: z.string().optional().nullable(),
+  status: z.enum(['draft', 'published', 'archived', 'pending_review', 'scheduled']).optional(),
+  published_at: z.string().nullable().optional(),
   contributor_name: z.string().optional()
 });
 
-// Interface for update data that includes slug
-interface ArticleUpdateData extends z.infer<typeof articleUpdateSchema> {
+// Interface for update data that includes slug and db-specific fields
+interface ArticleUpdateData extends Omit<z.infer<typeof articleUpdateSchema>, 'category'> {
+  category_id?: string | null;
   updated_at: string;
   slug?: string;
 }
@@ -131,11 +134,28 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
         });
       }
 
+      // Process category update
+      const categoryId = validatedData.category_id || validatedData.category;
+      const validCategoryId = categoryId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId) 
+        ? categoryId 
+        : (categoryId === null ? null : undefined);
+
       // Update article
       const updateData: ArticleUpdateData = {
         ...validatedData,
         updated_at: new Date().toISOString()
       };
+
+      // Ensure published_at is set if publishing
+      if (validatedData.status === 'published' && !updateData.published_at) {
+        (updateData as any).published_at = new Date().toISOString();
+      }
+
+      // Clean up updateData to match DB schema
+      if (validCategoryId !== undefined) {
+        updateData.category_id = validCategoryId;
+      }
+      delete (updateData as any).category; // Explicitly remove alias field
 
       // Update slug if title changed
       if (validatedData.title && validatedData.title !== existingArticle.title) {

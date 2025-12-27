@@ -16,8 +16,17 @@ interface ArticleFormData {
   content: string;
   excerpt: string;
   featured_image: string | null;
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'scheduled';
+  category_id: string;
+  display_location: 'homepage' | 'category_page' | 'both' | 'none';
   contributor_name?: string;
+  published_at?: string | null;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 const EditArticlePage: React.FC = () => {
@@ -38,6 +47,8 @@ const EditArticlePage: React.FC = () => {
     excerpt: '',
     featured_image: null,
     status: 'draft',
+    category_id: '',
+    display_location: 'category_page',
     contributor_name: ''
   };
 
@@ -57,6 +68,23 @@ const EditArticlePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.data?.categories || []);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Load article data
   const loadArticle = useCallback(async () => {
@@ -86,7 +114,10 @@ const EditArticlePage: React.FC = () => {
             excerpt: data.article.excerpt || '',
             featured_image: data.article.featured_image,
             status: data.article.status,
-            contributor_name: data.article.contributor_name || ''
+            category_id: data.article.category_id || '',
+            display_location: data.article.display_location || 'category_page',
+            contributor_name: data.article.contributor_name || '',
+            published_at: data.article.published_at
           };
           
           // Only update if no local changes exist or if user explicitly wants to reload
@@ -378,8 +409,60 @@ const EditArticlePage: React.FC = () => {
                     >
                       <option value="draft">Draft</option>
                       <option value="published">Published</option>
+                      <option value="scheduled">Scheduled</option>
                     </select>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </label>
+                    <select
+                      name="category_id"
+                      value={formData.category_id}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent"
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Display Location
+                    </label>
+                    <select
+                      name="display_location"
+                      value={formData.display_location}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent"
+                    >
+                      <option value="homepage">Homepage Only</option>
+                      <option value="category_page">Category Page Only</option>
+                      <option value="both">Both Homepage and Category Page</option>
+                      <option value="none">Hidden (None)</option>
+                    </select>
+                  </div>
+
+                  {formData.status === 'scheduled' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Publish Date
+                      </label>
+                      <input
+                        type="datetime-local"
+                        name="published_at"
+                        value={formData.published_at || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6">

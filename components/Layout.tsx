@@ -11,6 +11,7 @@ interface LayoutProps {
   description?: string;
   ogImage?: string;
   ogDescription?: string;
+  ogUrl?: string;
 }
 
 interface SiteSettings {
@@ -26,11 +27,12 @@ interface SiteSettings {
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
-  children, 
+  children,
   title = 'Voice of UPSA', 
   description = 'News and updates from UPSA',
   ogImage,
-  ogDescription = description 
+  ogDescription = description,
+  ogUrl
 }) => {
   const router = useRouter();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -64,25 +66,8 @@ const Layout: React.FC<LayoutProps> = ({
     fetchSettings();
   }, []);
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Check if current page is admin page
   const isAdminPage = router.pathname.startsWith('/admin');
-
-  // Show maintenance mode if enabled and not on admin page
-  if (settings?.maintenance_mode && !isAdminPage) {
-    return <MaintenanceMode settings={settings} />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -92,12 +77,13 @@ const Layout: React.FC<LayoutProps> = ({
         <link rel="icon" href="/favicon.ico" />
         
         {/* Open Graph Meta Tags */}
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={ogDescription} />
-        <meta property="og:type" content={router.pathname.startsWith('/articles/') ? 'article' : 'website'} />
+        <meta key="og:title" property="og:title" content={title} />
+        <meta key="og:description" property="og:description" content={ogDescription} />
+        <meta key="og:type" property="og:type" content={router.pathname.startsWith('/articles/') ? 'article' : 'website'} />
         {(() => {
           // Determine the final OG image
           let finalImageUrl = '';
+          const siteUrl = 'https://voiceofupsa.com'; // Hardcode for stability in production
           
           if (ogImage) {
             // If ogImage is already absolute (starts with http/https), use it as is
@@ -105,67 +91,70 @@ const Layout: React.FC<LayoutProps> = ({
               finalImageUrl = ogImage;
             } else {
               // If relative, prepend the site URL
-              const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-              finalImageUrl = `${baseUrl}${ogImage.startsWith('/') ? ogImage : '/' + ogImage}`;
+              finalImageUrl = `${siteUrl}${ogImage.startsWith('/') ? ogImage : '/' + ogImage}`;
             }
           } else {
             // Use default OG image
-            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-            finalImageUrl = `${baseUrl}/images/og-default.jpg`;
+            finalImageUrl = `${siteUrl}/images/og-default.jpg`;
           }
           
-          console.log('Final OG image URL:', finalImageUrl);
-          
-          return (
-            <>
-              <meta property="og:image" content={finalImageUrl} />
-              <meta property="og:image:width" content="1200" />
-              <meta property="og:image:height" content="630" />
-              <meta property="og:image:alt" content={title} />
-              <meta property="og:image:type" content="image/jpeg" />
-            </>
-          );
+          return [
+            <meta key="og:image" property="og:image" content={finalImageUrl} />,
+            <meta key="og:image:secure_url" property="og:image:secure_url" content={finalImageUrl} />,
+            <meta key="og:image:width" property="og:image:width" content="1200" />,
+            <meta key="og:image:height" property="og:image:height" content="630" />,
+            <meta key="og:image:alt" property="og:image:alt" content={title} />,
+            <meta key="og:image:type" property="og:image:type" content="image/jpeg" />
+          ];
         })()}
-        <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
-        <meta property="og:site_name" content={settings?.site_name || 'Voice of UPSA'} />
+        <meta key="og:url" property="og:url" content={ogUrl || (typeof window !== 'undefined' ? window.location.href : 'https://voiceofupsa.com')} />
+        <meta key="og:site_name" property="og:site_name" content={settings?.site_name || 'Voice of UPSA'} />
         
         {/* Twitter Card Meta Tags */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={title} />
-        <meta name="twitter:description" content={ogDescription} />
+        <meta key="twitter:card" name="twitter:card" content="summary_large_image" />
+        <meta key="twitter:title" name="twitter:title" content={title} />
+        <meta key="twitter:description" name="twitter:description" content={ogDescription} />
         {(() => {
           // Use the same logic as OG image for Twitter
           let finalImageUrl = '';
+          const siteUrl = 'https://voiceofupsa.com';
           
           if (ogImage) {
             if (ogImage.startsWith('http://') || ogImage.startsWith('https://')) {
               finalImageUrl = ogImage;
             } else {
-              const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-              finalImageUrl = `${baseUrl}${ogImage.startsWith('/') ? ogImage : '/' + ogImage}`;
+              finalImageUrl = `${siteUrl}${ogImage.startsWith('/') ? ogImage : '/' + ogImage}`;
             }
           } else {
-            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-            finalImageUrl = `${baseUrl}/images/og-default.jpg`;
+            finalImageUrl = `${siteUrl}/images/og-default.jpg`;
           }
           
-          return (
-            <>
-              <meta name="twitter:image" content={finalImageUrl} />
-              <meta name="twitter:image:alt" content={title} />
-            </>
-          );
+          return [
+            <meta key="twitter:image" name="twitter:image" content={finalImageUrl} />,
+            <meta key="twitter:image:alt" name="twitter:image:alt" content={title} />
+          ];
         })()}
       </Head>
 
-      <Header />
-
-      {/* Main Content */}
-      <main className="flex-grow pt-16">
-        {children}
-      </main>
-
-      <Footer />
+      {loading ? (
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      ) : settings?.maintenance_mode && !isAdminPage ? (
+        <MaintenanceMode settings={settings} />
+      ) : (
+        <>
+          <Header />
+          {/* Main Content */}
+          <main className="flex-grow pt-16">
+            {children}
+          </main>
+          <Footer />
+        </>
+      )}
     </div>
   );
 };

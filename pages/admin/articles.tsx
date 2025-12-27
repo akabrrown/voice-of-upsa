@@ -8,6 +8,7 @@ import { CMSButton } from '@/components/ui/CMSGuard';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiEdit2, FiTrash2, FiEye, FiSearch, FiCalendar, FiUser, FiFileText, FiCheck, FiArchive } from 'react-icons/fi';
+import Pagination from '@/components/Pagination';
 import toast from 'react-hot-toast';
 // Type assertion for Next.js Link component
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,6 +66,8 @@ const AdminArticlesPage: React.FC = () => {
   const [publicationModal, setPublicationModal] = useState(false);
   const [featuredModal, setFeaturedModal] = useState(false);
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const articlesPerPage = 10;
 
   // Check if user has required permissions based on role
   // Only admins can manage articles in admin panel
@@ -464,9 +467,29 @@ const AdminArticlesPage: React.FC = () => {
     
     return matchesSearch && matchesFilter;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+  const startIndex = (currentPage - 1) * articlesPerPage;
+  const endIndex = startIndex + articlesPerPage;
+  const paginatedArticles = filteredArticles.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm]);
+
+  // Page change handler
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   
   console.log('Debug - Articles in state:', articles.length);
   console.log('Debug - Filtered articles:', filteredArticles.length);
+  console.log('Debug - Paginated articles:', paginatedArticles.length);
+  console.log('Debug - Current page:', currentPage);
+  console.log('Debug - Total pages:', totalPages);
   console.log('Debug - Search term:', searchTerm);
   console.log('Debug - Status filter:', filter);
 
@@ -681,8 +704,8 @@ const AdminArticlesPage: React.FC = () => {
               animate="visible"
               className="space-y-4"
             >
-              {filteredArticles.length > 0 ? (
-                filteredArticles.map((article) => (
+              {paginatedArticles.length > 0 ? (
+                paginatedArticles.map((article) => (
                   <MotionDiv
                     key={article.id}
                     variants={itemVariants}
@@ -837,12 +860,26 @@ const AdminArticlesPage: React.FC = () => {
                     <FiFileText className="text-5xl mx-auto" />
                   </div>
                   <h3 className="text-xl font-semibold text-navy mb-2">No articles found</h3>
-                  <p className="text-gray-600">
-                    {searchTerm ? 'Try adjusting your search terms' : 'No articles match the current filter'}
+                  <p className="text-gray-600 text-center">
+                    No articles found. {filter !== 'all' ? 'Try changing the filter.' : 'Create your first article!'}
                   </p>
                 </MotionDiv>
               )}
             </MotionDiv>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex flex-col items-center space-y-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+                <p className="text-sm text-gray-600">
+                  Showing {startIndex + 1}-{Math.min(endIndex, filteredArticles.length)} of {filteredArticles.length} articles
+                </p>
+              </div>
+            )}
           </div>
         </section>
 

@@ -5,6 +5,7 @@ import { useSupabase } from '@/components/SupabaseProvider';
 import CreateRoleModal from '@/components/CreateRoleModal';
 import UserInvitationModal from '@/components/UserInvitationModal';
 import DeleteUserModal from '@/components/DeleteUserModal';
+import Pagination from '@/components/Pagination';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 import { FiShield, FiEdit2, FiUsers, FiSearch, FiMail, FiCalendar, FiUserPlus, FiKey, FiArchive, FiTrash2, FiRefreshCw } from 'react-icons/fi';
@@ -37,6 +38,9 @@ const AdminUsersPage: React.FC = () => {
   const [deleteUserModal, setDeleteUserModal] = useState<User | null>(null);
   const [permanentDeleteModal, setPermanentDeleteModal] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
 
   // Helper function to get Supabase session token
   const getAuthToken = useCallback(async () => {
@@ -92,6 +96,7 @@ const AdminUsersPage: React.FC = () => {
       if (roleFilter !== 'all') params.append('role', roleFilter);
       if (statusFilter !== 'all') params.append('status', statusFilter);
       if (searchTerm) params.append('search', searchTerm);
+      params.append('page', currentPage.toString());
       
       const url = `/api/admin/users${params.toString() ? '?' + params.toString() : ''}`;
       
@@ -100,6 +105,7 @@ const AdminUsersPage: React.FC = () => {
         roleFilter,
         statusFilter,
         searchTerm,
+        currentPage,
         hasToken: !!token,
         tokenLength: token?.length,
         tokenStart: token?.substring(0, 20),
@@ -128,15 +134,15 @@ const AdminUsersPage: React.FC = () => {
       const data = await response.json();
       console.log('Admin users frontend: Received response:', data);
       console.log('Admin users frontend: Users array:', data.data?.users);
-      console.log('Admin users frontend: Alternative paths:', {
-        'data.users': data.data?.users,
-        'users': data.users,
-        'data.data': data.data?.data
-      });
+      console.log('Admin users frontend: Pagination:', data.data?.pagination);
       
       const usersArray = data.data?.users || [];
+      const pagination = data.data?.pagination || {};
+      
       console.log('fetchUsers: Setting users array with length:', usersArray.length);
       setUsers(usersArray);
+      setTotalPages(pagination.totalPages || 0);
+      setTotalUsers(pagination.totalUsers || 0);
       console.log('fetchUsers: Users after update should trigger re-render');
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -145,7 +151,7 @@ const AdminUsersPage: React.FC = () => {
       setLoading(false);
       console.log('fetchUsers completed, loading set to false');
     }
-  }, [roleFilter, statusFilter, searchTerm, getAuthToken]);
+  }, [roleFilter, statusFilter, searchTerm, currentPage, getAuthToken]);
 
   useEffect(() => {
     console.log('Admin users: useEffect triggered', { user: !!user, userEmail: user?.email, authLoading });
@@ -377,22 +383,24 @@ const AdminUsersPage: React.FC = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && user.is_active === true) ||
-                         (statusFilter === 'archived' && user.is_active === false);
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  // Page change handler
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [roleFilter, statusFilter, searchTerm]);
 
   // Debug logging
   console.log('Admin users page debug:', {
     loading,
     usersCount: users.length,
-    filteredUsersCount: filteredUsers.length,
+    currentPage,
+    totalPages,
+    totalUsers,
     roleFilter,
     statusFilter,
     searchTerm,
@@ -575,8 +583,8 @@ const AdminUsersPage: React.FC = () => {
               animate="visible"
               className="space-y-4"
             >
-              {filteredUsers.length > 0 ? (
-                filteredUsers.map((userItem) => (
+              {users.length > 0 ? (
+                users.map((userItem) => (
                   <motion.div
                     key={userItem.id}
                     variants={itemVariants}
@@ -687,6 +695,20 @@ const AdminUsersPage: React.FC = () => {
                 </motion.div>
               )}
             </motion.div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex flex-col items-center space-y-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+                <p className="text-sm text-gray-600">
+                  Showing page {currentPage} of {totalPages} ({totalUsers} total users)
+                </p>
+              </div>
+            )}
           </div>
         </section>
 

@@ -188,11 +188,7 @@ const AnonymousSubmitPage: React.FC = () => {
                   placeholder="Give your story a title..."
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent transition-colors"
-                  maxLength={100}
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Maximum 100 characters
-                </p>
               </div>
 
               {/* Category */}
@@ -226,10 +222,11 @@ const AnonymousSubmitPage: React.FC = () => {
                   name="content"
                   value={formData.content}
                   onChange={handleChange}
-                  placeholder="Share your story anonymously..."
+                  placeholder="Share your story anonymously...&#10;&#10;Press Enter for new lines, and Enter twice for paragraph breaks."
                   rows={8}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent transition-colors resize-none"
+                  style={{ whiteSpace: 'pre-wrap' }}
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Minimum 10 characters. Be respectful and constructive.

@@ -1,9 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getCMSRateLimit } from '@/lib/security/cms-security';
-import { getClientIP } from '@/lib/security/auth-security';
-import { withRateLimit } from '@/lib/api/middleware/auth';
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
 import { z } from 'zod';
 
 // Enhanced validation schema for messages query
@@ -33,7 +31,7 @@ interface MessageData {
   updated_at: string;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
@@ -47,12 +45,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Apply rate limiting
-    const rateLimit = getCMSRateLimit('GET');
-    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
-      getClientIP(req)
-    );
-    rateLimitMiddleware(req);
+    // Rate limiting is now handled by withCMSSecurity middleware
 
     // Validate query parameters
     const validatedParams = messagesQuerySchema.parse(req.query);
@@ -141,5 +134,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Apply enhanced error handler
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:messages',
+  auditAction: 'messages_list_accessed'
+}));

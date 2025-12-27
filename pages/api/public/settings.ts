@@ -31,7 +31,12 @@ export default async function handler(
         allowed_image_types: settings.allowed_image_types,
       };
       
-      return res.status(200).json(publicSettings);
+      return res.status(200).json({
+        success: true,
+        data: {
+          settings: publicSettings
+        }
+      });
     } catch {
       // File doesn't exist, return default settings
       const defaultSettings = {
@@ -46,7 +51,12 @@ export default async function handler(
         allowed_image_types: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
       };
       
-      return res.status(200).json(defaultSettings);
+      return res.status(200).json({
+        success: true,
+        data: {
+          settings: defaultSettings
+        }
+      });
     }
   } catch (error) {
     console.error('Error fetching settings:', error);

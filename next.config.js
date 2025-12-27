@@ -52,11 +52,6 @@ const nextConfig = {
             key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin',
           },
-          // Content Security Policy (Production ready with proper sources)
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://fonts.googleapis.com https://va.vercel-scripts.com https://upload-widget.cloudinary.com https://vercel.live blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://api.vercel.com https://*.supabase.co https://va.vercel-scripts.com https://api.cloudinary.com https://www.google-analytics.com wss://*.supabase.co; frame-src 'self' https://upload-widget.cloudinary.com https://vercel.live; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
-          },
         ],
       },
       {
@@ -92,6 +87,14 @@ const nextConfig = {
       {
         source: '/api/(.*)',
         headers: [
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
           {
             key: 'Cross-Origin-Resource-Policy',
             value: 'same-origin',

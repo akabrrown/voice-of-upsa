@@ -1,16 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getCMSRateLimit } from '@/lib/security/cms-security';
-import { getClientIP } from '@/lib/security/auth-security';
-import { withRateLimit } from '@/lib/api/middleware/auth';
-import { createClient } from '@supabase/supabase-js';
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
 import { z } from 'zod';
 
 // Enhanced validation schemas with security constraints
 const adsQuerySchema = z.object({
   search: z.string().max(100, 'Search term too long').optional(),
-  status: z.enum(['all', 'pending', 'approved', 'rejected', 'archived']).default('all'),
+  status: z.enum(['all', 'pending', 'approved', 'rejected', 'published', 'archived']).default('all'),
   page: z.coerce.number().min(1).max(100, 'Page number too high').default(1)
 });
 
@@ -44,69 +41,34 @@ interface AdSubmission {
   updated_at: string;
 }
 
-async function handleStatusUpdate(req: NextApiRequest, res: NextApiResponse) {
-  try {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
+  const supabaseAdmin = await getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    throw new Error('Database connection failed');
+  }
+
+  // Handle PUT - Status Update
+  if (req.method === 'PUT') {
     const { id } = req.query;
     const { status, adminNotes } = req.body;
 
     if (!id || typeof id !== 'string') {
       return res.status(400).json({
         success: false,
-        error: {
-          code: 'INVALID_REQUEST',
-          message: 'Ad ID is required',
-          details: null
-        },
+        error: { code: 'INVALID_REQUEST', message: 'Ad ID is required' },
         timestamp: new Date().toISOString()
       });
     }
 
-    if (!status || !['pending', 'approved', 'rejected', 'published'].includes(status)) {
+    if (!status || !['pending', 'approved', 'rejected', 'published', 'archived'].includes(status)) {
       return res.status(400).json({
         success: false,
-        error: {
-          code: 'INVALID_REQUEST',
-          message: 'Valid status is required',
-          details: null
-        },
+        error: { code: 'INVALID_REQUEST', message: 'Valid status is required' },
         timestamp: new Date().toISOString()
       });
     }
 
-    // Authenticate user
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authorization token required'
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or expired token'
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Update ad submission
-    const supabaseAdmin = getSupabaseAdmin();
-    const { error: updateError } = await (await (await supabaseAdmin as any) as any)
+    const { error: updateError } = await (supabaseAdmin as any)
       .from('ad_submissions')
       .update({
         status,
@@ -130,89 +92,13 @@ async function handleStatusUpdate(req: NextApiRequest, res: NextApiResponse) {
 
     return res.status(200).json({
       success: true,
-      data: {
-        message: 'Ad submission updated successfully'
-      },
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('Status update error:', error);
-    return res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred',
-        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
-      },
-      timestamp: new Date().toISOString()
-    });
-  }
-}
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'PUT') {
-    // Handle status update
-    return handleStatusUpdate(req, res);
-  }
-
-  if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only GET and PUT methods are allowed',
-        details: null
-      },
+      data: { message: 'Ad submission updated successfully' },
       timestamp: new Date().toISOString()
     });
   }
 
-  try {
-    // Authenticate user for GET requests
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authorization token required'
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or expired token'
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Apply rate limiting for ads access
-    const rateLimit = getCMSRateLimit('GET');
-    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
-      getClientIP(req)
-    );
-    rateLimitMiddleware(req);
-
-    // Log ads access
-    console.log('Admin ads API: Access request received', {
-      timestamp: new Date().toISOString(),
-      userId: user.id
-    });
-
+  // Handle GET - List Ads
+  if (req.method === 'GET') {
     // Validate query parameters
     const validatedParams = adsQuerySchema.parse(req.query);
     const { search, status, page } = validatedParams;
@@ -221,13 +107,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const limit = 20;
     const offset = (pageNum - 1) * limit;
 
-    // Get supabase admin client
-    const supabaseAdmin = getSupabaseAdmin();
-    if (!supabaseAdmin) {
-      throw new Error('Database connection failed');
-    }
-
-    let query = (await (await supabaseAdmin as any) as any)
+    let query = (supabaseAdmin as any)
       .from('ad_submissions')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
@@ -280,17 +160,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       website: ad.website,
       status: ad.status,
       created_at: ad.created_at,
-      updated_at: ad.updated_at,
-      // Remove sensitive fields
-      attachment_urls: undefined,
-      ip_address: undefined,
-      user_agent: undefined
+      updated_at: ad.updated_at
     }));
-
-    console.log('Ads list returned:', {
-      adCount: sanitizedAds.length,
-      timestamp: new Date().toISOString()
-    });
 
     return res.status(200).json({
       success: true,
@@ -305,19 +176,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       },
       timestamp: new Date().toISOString()
     });
-  } catch (error) {
-    console.error('Ads API error:', error);
-    return res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred while fetching ads',
-        details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
-      },
-      timestamp: new Date().toISOString()
-    });
   }
+
+  return res.status(405).json({
+    success: false,
+    error: {
+      code: 'METHOD_NOT_ALLOWED',
+      message: 'Only GET and PUT methods are allowed'
+    },
+    timestamp: new Date().toISOString()
+  });
 }
 
-// Wrap with error handler only - temporarily disable CMS security to stop authentication issues
-export default withErrorHandler(handler);
+// Apply enhanced CMS security middleware and error handler
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:ads',
+  auditAction: 'ads_accessed'
+}));

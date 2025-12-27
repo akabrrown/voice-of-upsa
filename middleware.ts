@@ -45,24 +45,23 @@ const publicRoutes = [
   '/api/search'
 ];
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('auth-token')?.value;
 
   // Check if route is public
   if (publicRoutes.some(route => pathname.startsWith(route))) {
-    // Apply security headers to public routes too
     const response = NextResponse.next();
-    return applySecurityHeadersAndNonce(response);
+    return applySecurityHeadersAndNonce(request, response);
   }
 
   // Check if route is protected and user is not authenticated
-  const protectedRoute = Object.keys(protectedRoutes).find(route => pathname.startsWith(route));
+  const protectedRoute = Object.keys(protectedRoutes).find(route => pathname.startsWith(route)) as keyof typeof protectedRoutes | undefined;
   
   if (protectedRoute && !token) {
-    const loginUrl = new URL(protectedRoutes[protectedRoute as keyof typeof protectedRoutes].redirectTo, request.url);
+    const loginUrl = new URL(protectedRoutes[protectedRoute].redirectTo, request.url);
     const response = NextResponse.redirect(loginUrl);
-    return applySecurityHeadersAndNonce(response);
+    return applySecurityHeadersAndNonce(request, response);
   }
 
   // For protected routes, we need to verify the token and user role
@@ -79,23 +78,23 @@ export async function proxy(request: NextRequest) {
 
       if (!authResponse.ok) {
         // Invalid token - redirect to login
-        const loginUrl = new URL(protectedRoutes[protectedRoute as keyof typeof protectedRoutes].redirectTo, request.url);
+        const loginUrl = new URL(protectedRoutes[protectedRoute].redirectTo, request.url);
         const response = NextResponse.redirect(loginUrl);
-        return applySecurityHeadersAndNonce(response);
+        return applySecurityHeadersAndNonce(request, response);
       }
 
       const data = await authResponse.json() as { success: boolean; user?: { id: string; role: string; permissions: string[] } };
       
       if (data.success && data.user) {
         // Check if user has required role for this route
-        const requiredRoles = protectedRoutes[protectedRoute as keyof typeof protectedRoutes].roles;
+        const requiredRoles = protectedRoutes[protectedRoute].roles;
         const userRole = data.user.role;
         
         if (!requiredRoles.includes(userRole)) {
           // Insufficient permissions - redirect to dashboard
           const dashboardUrl = new URL('/dashboard', request.url);
           const response = NextResponse.redirect(dashboardUrl);
-          return applySecurityHeadersAndNonce(response);
+          return applySecurityHeadersAndNonce(request, response);
         }
 
         // User has required role - allow access
@@ -106,38 +105,37 @@ export async function proxy(request: NextRequest) {
         response.headers.set('x-user-id', data.user.id);
         response.headers.set('x-user-permissions', JSON.stringify(data.user.permissions));
         
-        return applySecurityHeadersAndNonce(response);
+        return applySecurityHeadersAndNonce(request, response);
       } else {
         // Invalid user data - redirect to login
-        const loginUrl = new URL(protectedRoutes[protectedRoute as keyof typeof protectedRoutes].redirectTo, request.url);
+        const loginUrl = new URL(protectedRoutes[protectedRoute].redirectTo, request.url);
         const response = NextResponse.redirect(loginUrl);
-        return applySecurityHeadersAndNonce(response);
+        return applySecurityHeadersAndNonce(request, response);
       }
     } catch (error) {
-      console.error('Proxy middleware auth error:', error);
+      console.error('Middleware auth error:', error);
       // On error, allow access but let frontend handle auth
       const response = NextResponse.next();
-      return applySecurityHeadersAndNonce(response);
+      return applySecurityHeadersAndNonce(request, response);
     }
   }
 
   // Default case - apply security headers and continue
   const response = NextResponse.next();
-  return applySecurityHeadersAndNonce(response);
+  return applySecurityHeadersAndNonce(request, response);
 }
 
 /**
  * Helper function to apply security headers and nonce
  */
-function applySecurityHeadersAndNonce(response: NextResponse): NextResponse {
+function applySecurityHeadersAndNonce(request: NextRequest, response: NextResponse): NextResponse {
   // Force HTTPS in production
   if (process.env.NODE_ENV === 'production') {
-    const protocol = response.headers.get('x-forwarded-proto') || 'http';
-    const host = response.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+    const host = request.headers.get('host');
     
-    if (protocol === 'http' && host) {
-      const pathname = response.headers.get('x-pathname') || '/';
-      const httpsUrl = `https://${host}${pathname}`;
+    if (protocol === 'http' && host && !host.includes('localhost')) {
+      const httpsUrl = `https://${host}${request.nextUrl.pathname}${request.nextUrl.search}`;
       return NextResponse.redirect(httpsUrl, 301);
     }
   }
@@ -147,24 +145,30 @@ function applySecurityHeadersAndNonce(response: NextResponse): NextResponse {
   
   // Generate nonce for CSP
   const nonce = generateCSPNonce();
-  response.headers.set('X-CSP-Nonce', nonce);
   
-  const securedResponse = applySecurityHeadersToResponse(response, isProduction);
+  // Set nonce on request and response so it's available in _document or other SSR components
+  response.headers.set('X-Nonce', nonce); 
+  request.headers.set('X-Nonce', nonce); 
   
-  // Ensure we return a NextResponse
-  return securedResponse instanceof NextResponse ? securedResponse : response;
+  const securedResponse = applySecurityHeadersToResponse(response, isProduction, nonce);
+  
+  // Explicitly set HSTS in middleware as a fail-safe
+  if (isProduction) {
+    securedResponse.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+  
+  return securedResponse as NextResponse;
 }
 
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 };

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { GetServerSideProps } from 'next';
-import { getSupabaseAdmin } from '@/lib/database-server';
+import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { useSupabase } from '@/components/SupabaseProvider';
+import { Database } from '@/lib/database-types';
+import { SupabaseClient } from '@supabase/supabase-js';
 import Layout from '@/components/Layout';
 import ArticleView from '@/components/ArticleView';
 import { useRouter } from 'next/router';
@@ -75,17 +77,10 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
   const { slug } = router.query;
   const { user, supabase } = useSupabase();
   
-  // Redirect to home if slug is missing
-  useEffect(() => {
-    if (!slug && router.isReady) {
-      router.push('/');
-    }
-  }, [slug, router.isReady, router]);
-  
   const [article, setArticle] = useState<Article | null>(initialArticle || null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
-  const [loading, setLoading] = useState(!initialArticle); // Set loading based on initialArticle
+  const [loading, setLoading] = useState(!initialArticle);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [userReaction, setUserReaction] = useState<string | null>(null);
@@ -97,6 +92,13 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
   const [replyText, setReplyText] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [cachedSession, setCachedSession] = useState<{ access_token?: string } | null>(null);
+
+  // Redirect to home if slug is missing
+  useEffect(() => {
+    if (!slug && router.isReady) {
+      router.push('/');
+    }
+  }, [slug, router.isReady, router]);
 
   // Cache session to reduce API calls
   useEffect(() => {
@@ -792,39 +794,85 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
     return reaction ? reaction.count : 0;
   };
 
+  const siteUrl = 'https://voiceofupsa.com';
+  // Use initialArticle for SSR metadata
+  const metaArticle = article || initialArticle;
+  const articleTitle = metaArticle ? `${metaArticle.title} | Voice of UPSA` : 'Voice of UPSA';
+  const articleDesc = metaArticle?.excerpt || 'Read this article on Voice of UPSA';
+  const articleUrl = metaArticle ? `${siteUrl}/articles/${metaArticle.slug}` : siteUrl;
+  const articleImage = metaArticle?.featured_image?.startsWith('http') 
+    ? metaArticle.featured_image 
+    : metaArticle?.featured_image 
+      ? `${siteUrl}${metaArticle.featured_image.startsWith('/') ? metaArticle.featured_image : '/' + metaArticle.featured_image}`
+      : `${siteUrl}/images/og-default.jpg`;
+
+  const headContent = (
+    <Head>
+      <title>{articleTitle}</title>
+      <meta name="description" content={articleDesc} />
+      
+      {/* Open Graph / Facebook */}
+      <meta key="og:type" property="og:type" content="article" />
+      <meta key="og:url" property="og:url" content={articleUrl} />
+      <meta key="og:title" property="og:title" content={articleTitle} />
+      <meta key="og:description" property="og:description" content={articleDesc} />
+      <meta key="og:image" property="og:image" content={articleImage} />
+      <meta key="og:image:secure_url" property="og:image:secure_url" content={articleImage} />
+      <meta key="og:image:width" property="og:image:width" content="1200" />
+      <meta key="og:image:height" property="og:image:height" content="630" />
+      <meta key="og:image:alt" property="og:image:alt" content={articleTitle} />
+      <meta key="og:image:type" property="og:image:type" content="image/jpeg" />
+
+      {/* Twitter */}
+      <meta key="twitter:card" name="twitter:card" content="summary_large_image" />
+      <meta key="twitter:url" name="twitter:url" content={articleUrl} />
+      <meta key="twitter:title" name="twitter:title" content={articleTitle} />
+      <meta key="twitter:description" name="twitter:description" content={articleDesc} />
+      <meta key="twitter:image" name="twitter:image" content={articleImage} />
+    </Head>
+  );
+
   if (loading) {
     console.log('Still loading, article state:', article);
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-golden"></div>
-        </div>
-      </Layout>
+      <>
+        {headContent}
+        <Layout>
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-golden"></div>
+          </div>
+        </Layout>
+      </>
     );
   }
 
   if (!article) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Article not found</h1>
-            <Link href="/articles" className="text-golden hover:text-yellow-600">
-              Browse all articles
-            </Link>
+      <>
+        {headContent}
+        <Layout>
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Article not found</h1>
+              <Link href="/articles" className="text-golden hover:text-yellow-600">
+                Browse all articles
+              </Link>
+            </div>
           </div>
-        </div>
-      </Layout>
+        </Layout>
+      </>
     );
   }
 
   return (
-    <Layout 
-      title={article.title}
-      description={article.excerpt}
-      ogImage={article.featured_image}
-      ogDescription={article.excerpt}
-    >
+    <>
+      {headContent}
+      <Layout
+        title={articleTitle}
+        description={articleDesc}
+        ogImage={articleImage}
+        ogUrl={articleUrl}
+      >
       <ArticleView 
         article={article}
         isEditable={user?.role === 'admin' || user?.role === 'editor'}
@@ -1212,39 +1260,60 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
         </div>
       )}
     </Layout>
+    </>
   );
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { slug } = context.params || {};
+
   
   if (!slug || typeof slug !== 'string') {
-    return { props: { initialArticle: null } };
+    return { props: { initialArticle: null, ssrError: 'No slug provided' } };
   }
   
   try {
+    const { getSupabaseAdmin } = await import('@/lib/database-server');
     const supabase = await getSupabaseAdmin();
-    // Fetch article with category and author info
-    const { data: article, error } = await supabase
+    
+    
+    // Fetch article with author info using admin client to bypass RLS for public meta tags
+    const { data: article, error } = await (supabase as SupabaseClient<Database>)
       .from('articles')
-      .select('*, author:profiles(id, name, avatar_url), category:categories(id, name, slug)')
+      .select('*, author:users(id, name, avatar_url)')
       .eq('slug', slug)
       .eq('status', 'published')
       .single();
       
+    
+    
     if (error || !article) {
       console.error('Error fetching article for SSR:', error);
-      return { props: { initialArticle: null } };
+      return { 
+        props: { 
+          initialArticle: null,
+          ssrError: error ? { message: error.message, code: error.code } : 'Article not found',
+          
+        } 
+      };
     }
     
     return {
       props: {
-        initialArticle: article
+        initialArticle: article || null, 
       }
     };
-  } catch (error) {
-    console.error('Exception in getServerSideProps:', error);
-    return { props: { initialArticle: null } };
+  } catch (err: unknown) {
+    console.error('Exception in getServerSideProps:', err);
+    return { 
+      props: { 
+        initialArticle: null, 
+        ssrError: { 
+          message: err instanceof Error ? err.message : String(err), 
+          stack: (err instanceof Error && err.stack) ? 'present' : 'absent' 
+        },
+      } 
+    };
   }
 };
 

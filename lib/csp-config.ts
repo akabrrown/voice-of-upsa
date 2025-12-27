@@ -23,15 +23,23 @@ export interface SecurityHeaders {
   'Cross-Origin-Embedder-Policy'?: string;
   'Cross-Origin-Opener-Policy'?: string;
   'Cross-Origin-Resource-Policy'?: string;
+  'X-CSP-Nonce'?: string;
 }
 
 /**
  * Get production CSP configuration
  */
-export function getCSPConfig(reportOnly = false): CSPConfig {
+export function getCSPConfig(reportOnly = false, isProduction = false): CSPConfig {
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
-    'script-src': [
+    'script-src': isProduction ? [
+      "'self'",
+      'https://fonts.googleapis.com',
+      'https://va.vercel-scripts.com',
+      'https://upload-widget.cloudinary.com',
+      'https://vercel.live',
+      'blob:'
+    ] : [
       "'self'",
       "'unsafe-inline'",
       "'unsafe-eval'",
@@ -41,17 +49,27 @@ export function getCSPConfig(reportOnly = false): CSPConfig {
       'https://vercel.live',
       'blob:'
     ],
-    'style-src': [
+    'style-src': isProduction ? [
       "'self'",
-      "'unsafe-inline'", // Temporary fallback while nonce issues persist
+      'https://fonts.googleapis.com',
+      'https://fonts.gstatic.com'
+    ] : [
+      "'self'",
+      "'unsafe-inline'",
       'https://fonts.googleapis.com',
       'https://fonts.gstatic.com'
     ],
     'img-src': [
       "'self'",
       'data:',
-      'https:',
-      'blob:'
+      'blob:',
+      'https://res.cloudinary.com',
+      'https://*.supabase.co',
+      'https://voiceofupsa.com',
+      'https://*.vercel.app',
+      'https://vercel.com',
+      'https://fonts.gstatic.com',
+      'https://www.google-analytics.com'
     ],
     'font-src': [
       "'self'",
@@ -108,8 +126,21 @@ export function buildCSPHeader(config: CSPConfig): string {
 /**
  * Get comprehensive security headers for production
  */
-export function getSecurityHeaders(isProduction = false): SecurityHeaders {
-  const cspConfig = getCSPConfig(false);
+export function getSecurityHeaders(isProduction = false, nonce?: string): SecurityHeaders {
+  const cspConfig = getCSPConfig(false, isProduction);
+  
+  if (nonce && cspConfig.directives['script-src']) {
+    if (!cspConfig.directives['script-src'].includes(`'nonce-${nonce}'`)) {
+      cspConfig.directives['script-src'].push(`'nonce-${nonce}'`);
+    }
+  }
+
+  if (nonce && cspConfig.directives['style-src']) {
+    if (!cspConfig.directives['style-src'].includes(`'nonce-${nonce}'`)) {
+      cspConfig.directives['style-src'].push(`'nonce-${nonce}'`);
+    }
+  }
+
   const cspHeader = buildCSPHeader(cspConfig);
 
   const headers: SecurityHeaders = {};
@@ -118,8 +149,8 @@ export function getSecurityHeaders(isProduction = false): SecurityHeaders {
     // Content Security Policy
     headers['Content-Security-Policy'] = cspHeader;
 
-    // HTTPS enforcement
-    headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload';
+    // HTTPS enforcement - Handled by next.config.js/vercel.json for consistency
+    // headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload';
 
     // Clickjacking protection
     headers['X-Frame-Options'] = 'DENY';
@@ -173,12 +204,13 @@ export function applySecurityHeaders(
  */
 export function applySecurityHeadersToResponse(
   response: Response,
-  isProduction = false
+  isProduction = false,
+  nonce?: string
 ): Response {
-  const headers = getSecurityHeaders(isProduction);
+  const headers = getSecurityHeaders(isProduction, nonce);
 
   Object.entries(headers).forEach(([header, value]) => {
-    if (value) {
+    if (typeof value === 'string') {
       response.headers.set(header, value);
     }
   });

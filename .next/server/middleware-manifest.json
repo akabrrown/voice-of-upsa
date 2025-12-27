@@ -1,6 +1,33 @@
 {
   "version": 3,
-  "middleware": {},
-  "sortedMiddleware": [],
+  "middleware": {
+    "/": {
+      "files": [
+        "server/edge/chunks/Desktop_voiceofupsa_edge-wrapper_27e5a209.js",
+        "server/edge/chunks/[root-of-the-server]__7abe30ae._.js",
+        "server/edge/chunks/turbopack-Desktop_voiceofupsa_edge-wrapper_7391d978.js"
+      ],
+      "name": "middleware",
+      "page": "/",
+      "matchers": [
+        {
+          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/((?!_next\\/static|_next\\/image|favicon.ico|public).*))(\\\\.json)?[\\/#\\?]?$",
+          "originalSource": "/((?!_next/static|_next/image|favicon.ico|public).*)"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "qfNEKJ4q2hVTkmC1hgtIW",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "Ww2WIXIZIR6gNMwpv8bkZkHTvLWZuO/LeqrlTFwH6QM=",
+        "__NEXT_PREVIEW_MODE_ID": "b717b502d304055ae31167ec70f48c0d",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "f1dbc300dc768a14d309c9fa9c43d4324a57d76b907a4016f3c70c64fdc0c90a",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "91329910016af7902ac00a7db7b18e6b1a31fbc05e52ba9ed18da0e36e99f166"
+      }
+    }
+  },
+  "sortedMiddleware": [
+    "/"
+  ],
   "functions": {}
 }
