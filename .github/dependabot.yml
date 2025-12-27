@@ -5,11 +5,12 @@ updates:
     schedule:
       interval: "weekly"
     allow:
-     -dependency-type:"direct"
+      - dependency-type: "direct"
     groups:
       all-dependencies:
-    patterns:
-      - "*"
+        dependency-type: "direct"
+        patterns:
+          - "*"
     ignore:
-  - dependency-name: "*"
-    update-types: ["version-update:semver-major"]
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
