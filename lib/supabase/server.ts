@@ -22,10 +22,7 @@ export function createClient(
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
-              context.res.appendHeader(
-                'Set-Cookie',
-                `${name}=${value}; ${serializeOptions(options)}`
-              )
+              context.res.appendHeader('Set-Cookie', formatCookie(name, value, options))
             })
           },
         },
@@ -40,6 +37,31 @@ export function createClient(
   )
 }
 
+function formatCookie(name: string, value: string, options?: CookieOptions) {
+  const normalizedOptions = normalizeCookieOptions(options)
+  return `${name}=${value}${serializeOptions(normalizedOptions)}`
+}
+
+function normalizeCookieOptions(options?: CookieOptions): CookieOptions {
+  const resolved: CookieOptions = {
+    path: '/',
+    ...options,
+  }
+
+  const sameSite = (resolved.sameSite ?? 'Strict') as CookieOptions['sameSite']
+  resolved.sameSite = sameSite
+
+  const shouldForceSecure =
+    sameSite === 'None' ||
+    sameSite === 'none' ||
+    resolved.secure === true ||
+    (resolved.secure === undefined && process.env.NODE_ENV === 'production')
+
+  resolved.secure = shouldForceSecure
+
+  return resolved
+}
+
 function serializeOptions(options: CookieOptions) {
   let str = ''
   if (options.domain) str += `; Domain=${options.domain}`
@@ -47,9 +69,20 @@ function serializeOptions(options: CookieOptions) {
   if (options.httpOnly) str += `; HttpOnly`
   if (options.maxAge) str += `; Max-Age=${options.maxAge}`
   if (options.path) str += `; Path=${options.path}`
-  if (options.sameSite) str += `; SameSite=${options.sameSite}`
+  const sameSiteValue =
+    typeof options.sameSite === 'string'
+      ? capitalizeSameSite(options.sameSite)
+      : options.sameSite
+  if (sameSiteValue) str += `; SameSite=${sameSiteValue}`
   if (options.secure) str += `; Secure`
   return str
+}
+
+function capitalizeSameSite(value: string) {
+  const lower = value.toLowerCase()
+  if (lower === 'lax') return 'Lax'
+  if (lower === 'none') return 'None'
+  return 'Strict'
 }
 
 export async function createAdminClient() {
