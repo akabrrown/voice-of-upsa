@@ -28,16 +28,24 @@ export interface CORSContext {
 export function getCORSConfig(): CORSConfig {
   const isProduction = process.env.NODE_ENV === 'production';
   const siteURL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-  
+  const envAllowedOrigins = process.env.CORS_ALLOWED_ORIGINS
+    ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+    : [];
+  const vercelPreviewOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+  const baseAllowedOrigins = [
+    siteURL,
+    'https://voiceofupsa.com',
+    'https://www.voiceofupsa.com',
+  ];
+  if (vercelPreviewOrigin) {
+    baseAllowedOrigins.push(vercelPreviewOrigin);
+  }
+  const allowedOrigins = Array.from(new Set([...baseAllowedOrigins, ...envAllowedOrigins]));
+
   if (isProduction) {
     return {
       enabled: true,
-      allowedOrigins: [
-        siteURL,
-        'https://voiceofupsa.com',
-        'https://www.voiceofupsa.com',
-        'https://*.vercel.app'
-      ],
+      allowedOrigins,
       allowedMethods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowedHeaders: [
         'Content-Type',
@@ -78,24 +86,7 @@ export function getCORSConfig(): CORSConfig {
  */
 export function validateOrigin(origin: string, allowedOrigins: string[]): boolean {
   if (!origin) return false;
-  
-  // Exact match
-  if (allowedOrigins.includes(origin)) {
-    return true;
-  }
-  
-  // Check for wildcard subdomains (only in production with strict mode)
-  for (const allowedOrigin of allowedOrigins) {
-    if (allowedOrigin.includes('*')) {
-      const pattern = allowedOrigin.replace(/\*/g, '.*');
-      const regex = new RegExp(`^${pattern}$`);
-      if (regex.test(origin)) {
-        return true;
-      }
-    }
-  }
-  
-  return false;
+  return allowedOrigins.includes(origin);
 }
 
 /**
