@@ -48,11 +48,10 @@ function normalizeCookieOptions(options?: CookieOptions): CookieOptions {
     ...options,
   }
 
-  const sameSite = (resolved.sameSite ?? 'Strict') as CookieOptions['sameSite']
+  const sameSite = (resolved.sameSite ?? 'strict') as CookieOptions['sameSite']
   resolved.sameSite = sameSite
 
   const shouldForceSecure =
-    sameSite === 'None' ||
     sameSite === 'none' ||
     resolved.secure === true ||
     (resolved.secure === undefined && process.env.NODE_ENV === 'production')
