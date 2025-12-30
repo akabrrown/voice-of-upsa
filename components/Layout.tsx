@@ -37,6 +37,9 @@ const Layout: React.FC<LayoutProps> = ({
   const router = useRouter();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+
 
   // Debug logging for social sharing
   useEffect(() => {
@@ -64,6 +67,7 @@ const Layout: React.FC<LayoutProps> = ({
     };
 
     fetchSettings();
+    setIsMounted(true);
   }, []);
 
   // Check if current page is admin page
@@ -107,7 +111,7 @@ const Layout: React.FC<LayoutProps> = ({
             <meta key="og:image:type" property="og:image:type" content="image/jpeg" />
           ];
         })()}
-        <meta key="og:url" property="og:url" content={ogUrl || (typeof window !== 'undefined' ? window.location.href : 'https://voiceofupsa.com')} />
+        <meta key="og:url" property="og:url" content={ogUrl || 'https://voiceofupsa.com'} />
         <meta key="og:site_name" property="og:site_name" content={settings?.site_name || 'Voice of UPSA'} />
         
         {/* Twitter Card Meta Tags */}
@@ -136,25 +140,25 @@ const Layout: React.FC<LayoutProps> = ({
         })()}
       </Head>
 
-      {loading ? (
-        <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
+      <Header />
+      
+      {/* Main Content */}
+      <main className="flex-grow pt-16">
+        {(!isMounted || loading) ? (
+          <div className="flex-grow flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
           </div>
-        </div>
-      ) : settings?.maintenance_mode && !isAdminPage ? (
-        <MaintenanceMode settings={settings} />
-      ) : (
-        <>
-          <Header />
-          {/* Main Content */}
-          <main className="flex-grow pt-16">
-            {children}
-          </main>
-          <Footer />
-        </>
-      )}
+        ) : settings?.maintenance_mode && !isAdminPage ? (
+          <MaintenanceMode settings={settings} />
+        ) : (
+          children
+        )}
+      </main>
+
+      <Footer />
     </div>
   );
 };

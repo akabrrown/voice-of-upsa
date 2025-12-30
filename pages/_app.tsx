@@ -7,9 +7,11 @@ import { SupabaseProvider } from '@/components/SupabaseProvider';
 import { NotificationProvider } from '@/components/NotificationProvider';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import Head from 'next/head';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
 // Extend Window interface to include CSP nonce
+// Force rebuild to clear stale artifacts - 2025-12-30
 declare global {
   interface Window {
     __CSP_NONCE__?: string;
@@ -17,7 +19,45 @@ declare global {
   }
 }
 
-function MyApp({ Component, pageProps, router }: AppProps) {
+const RouteProgressBar = () => {
+  const router = useRouter();
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    const handleStart = () => setIsAnimating(true);
+    const handleStop = () => setIsAnimating(false);
+
+    router.events.on('routeChangeStart', handleStart);
+    router.events.on('routeChangeComplete', handleStop);
+    router.events.on('routeChangeError', handleStop);
+
+    return () => {
+      router.events.off('routeChangeStart', handleStart);
+      router.events.off('routeChangeComplete', handleStop);
+      router.events.off('routeChangeError', handleStop);
+    };
+  }, [router]);
+
+  return (
+    <AnimatePresence>
+      {isAnimating && (
+        <motion.div
+          key="progress-bar"
+          initial={{ width: "0%", opacity: 1 }}
+          animate={{ width: "70%" }} // Go to 70% and wait
+          exit={{ width: "100%", opacity: 0 }}
+          transition={{ 
+            width: { duration: 10, ease: "easeOut" },
+            opacity: { duration: 0.3 }
+          }}
+          className="fixed top-0 left-0 h-1 bg-golden z-[9999] shadow-[0_0_10px_rgba(255,215,0,0.5)]"
+        />
+      )}
+    </AnimatePresence>
+  );
+};
+
+function MyApp({ Component, pageProps }: AppProps) {
   useEffect(() => {
     // Ensure styled-components can access the nonce
     if (typeof window !== 'undefined' && window.__CSP_NONCE__) {
@@ -51,17 +91,8 @@ function MyApp({ Component, pageProps, router }: AppProps) {
       <SpeedInsights />
       <SupabaseProvider>
         <NotificationProvider>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={router.route}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Component {...pageProps} />
-            </motion.div>
-          </AnimatePresence>
+          <RouteProgressBar />
+          <Component {...pageProps} />
           <Toaster
             position="top-right"
             toastOptions={{
