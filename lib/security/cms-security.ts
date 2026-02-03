@@ -103,6 +103,11 @@ export async function verifyCMSAccess(req: NextApiRequest): Promise<CMSUser> {
     // Enhanced token validation with multiple approaches
     console.log('CMS SECURITY: Getting supabase admin client...');
     const supabase = await getSupabaseAdmin();
+    if (!supabase) {
+      console.log('CMS SECURITY: Supabase admin client not available');
+      logSecurityEvent('CMS access denied - admin client unavailable', securityContext, 'high');
+      throw new Error('Authentication service temporarily unavailable');
+    }
     console.log('CMS SECURITY: Supabase admin client obtained');
     
     console.log('CMS SECURITY: Validating token with supabase.auth.getUser...');
@@ -426,6 +431,11 @@ async function verifyIPWhitelist(userId: string, clientIP: string): Promise<bool
   
   try {
     const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      console.log('CMS Security: admin client unavailable, skipping IP whitelist check');
+      return true;
+    }
+    
     const { data: ipRecord, error: ipError } = await adminClient
       .from('ip_whitelist')
       .select('id, is_active')
@@ -454,6 +464,11 @@ async function verifyIPWhitelist(userId: string, clientIP: string): Promise<bool
 async function getActiveSessionCount(userId: string): Promise<number> {
   try {
     const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      console.warn('CMS Security: admin client unavailable, returning 0 active sessions');
+      return 0;
+    }
+    
     const { data: sessions } = await adminClient
       .from('user_sessions')
       .select('id')
@@ -480,6 +495,11 @@ async function verifyDeviceApproval(userId: string, deviceFingerprint: string): 
   
   try {
     const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      console.log('CMS Security: admin client unavailable, skipping device approval check');
+      return true;
+    }
+    
     const { data: deviceRecord, error: deviceError } = await adminClient
       .from('approved_devices')
       .select('id, is_active')
@@ -510,6 +530,11 @@ async function validateCMSession(userId: string, token: string): Promise<boolean
   // This allows production to work without the user_sessions table
   try {
     const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      console.log('CMS Security: admin client unavailable, skipping session validation');
+      return true;
+    }
+    
     const { data: sessionRecord, error: sessionError } = await adminClient
       .from('user_sessions')
       .select('expires_at, is_active')
@@ -551,14 +576,14 @@ async function validateCMSession(userId: string, token: string): Promise<boolean
 /**
  * Get role-based permissions
  */
-function getRolePermissions(role: string): string[] {
+export function getRolePermissions(role: string): string[] {
   const permissions = {
     admin: [
       'read:all', 'write:all', 'delete:all',
       'manage:users', 'manage:settings', 'manage:content',
       'manage:ads', 'view:analytics', 'export:data', 'import:data',
       'edit:articles', 'manage:articles', 'manage:comments',
-      'manage:messages', 'upload:media', 'upload:logo',
+      'manage:messages', 'upload:media', 'upload:logo', 'manage:team',
       'admin:security', 'admin:maintenance', 'admin:setup',
       'admin:emergency', 'admin:debug', 'admin:access',
       'manage:notifications', 'manage:system', 'view:content',
@@ -567,7 +592,7 @@ function getRolePermissions(role: string): string[] {
     editor: [
       'read:content', 'write:content', 'delete:own_content',
       'manage:articles', 'manage:comments', 'upload:media', 'manage:content',
-      'manage:messages', 'view:analytics', 'edit:articles',
+      'manage:messages', 'view:analytics', 'edit:articles', 'manage:team',
       'export:data', 'view:content', 'comment:create'
     ],
     user: [
@@ -799,6 +824,11 @@ async function logAdminAction(
 ): Promise<void> {
   try {
     const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      console.warn('Admin client unavailable - skipping audit log');
+      return;
+    }
+    
     const insertData = {
       admin_id: user.id,
       admin_email: user.email,
@@ -833,6 +863,10 @@ async function logUserAction(
 ): Promise<void> {
   try {
     const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      console.warn('Admin client unavailable - skipping user action log');
+      return;
+    }
     
     // Log to general audit log
     const insertData = {

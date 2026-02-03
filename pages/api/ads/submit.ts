@@ -69,6 +69,7 @@ const adSubmissionSchema = z.object({
   termsAccepted: z.boolean(),
   attachmentUrls: z.array(z.string()).optional(),
   customDuration: z.string().optional(),
+  reminderEnabled: z.boolean().default(false).optional(),
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -150,6 +151,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ...(validatedData.additionalInfo && { additional_info: validatedData.additionalInfo }),
       terms_accepted: validatedData.termsAccepted,
       attachment_urls: validatedData.attachmentUrls,
+      reminder_enabled: validatedData.reminderEnabled || false,
       status: 'pending',
       payment_status: 'pending',
       created_at: new Date().toISOString(),
@@ -210,6 +212,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           duration: validatedData.duration,
           start_date: validatedData.startDate,
           terms_accepted: validatedData.termsAccepted,
+          reminder_enabled: validatedData.reminderEnabled || false,
           status: 'pending',
           payment_status: 'pending',
           created_at: new Date().toISOString(),

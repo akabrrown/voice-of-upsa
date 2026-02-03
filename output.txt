@@ -1,0 +1,11 @@
+[dotenv@17.2.3] injecting env (24) from .env.local -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Searching for ads related to "LaundryVille"...
+
+--- Ad Found ---
+ID: f93c76a4-a9dc-42ee-a309-843b10a7ce24
+Title: LaundryVille 
+Company: Laundry ville 
+Status: published
+Ad Type: other
+Assigned Locations:
+ - Homepage Banner (homepage_banner) on homepage

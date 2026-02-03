@@ -52,6 +52,8 @@ interface Article {
   reading_time: number;
 }
 
+const ARTICLES_PAGE_SIZE = 1000;
+
 const AdminArticlesPage: React.FC = () => {
   const { user, supabase, userRole } = useSupabase();
   const { user: authUser, loading: authLoading } = useAuth();
@@ -67,7 +69,12 @@ const AdminArticlesPage: React.FC = () => {
   const [featuredModal, setFeaturedModal] = useState(false);
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const articlesPerPage = 10;
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalArticles: 0,
+    pageSize: ARTICLES_PAGE_SIZE,
+  });
 
   // Check if user has required permissions based on role
   // Only admins can manage articles in admin panel
@@ -81,11 +88,11 @@ const AdminArticlesPage: React.FC = () => {
     enabled: !!user && !isLoading && !!authUser,
     onArticleChange: () => {
       console.log('Article change detected, refreshing admin articles...');
-      fetchArticles();
+      fetchArticles(currentPage);
     }
   });
 
-  const fetchArticles = useCallback(async () => {
+  const fetchArticles = useCallback(async (pageToFetch = 1) => {
     // Wait for CMS auth to complete before checking permissions
     if (authLoading) {
       console.log('CMS auth still loading, skipping fetch');
@@ -122,7 +129,17 @@ const AdminArticlesPage: React.FC = () => {
       console.log('Making API request to /api/admin/articles...');
       console.log('Session access token:', session.access_token ? 'Present' : 'Missing');
       console.log('User role:', userRole);
-      const response = await fetch('/api/admin/articles', {
+      const params = new URLSearchParams();
+      params.set('page', pageToFetch.toString());
+      params.set('pageSize', ARTICLES_PAGE_SIZE.toString());
+      if (filter !== 'all') {
+        params.set('status', filter);
+      }
+      if (searchTerm.trim()) {
+        params.set('search', searchTerm.trim());
+      }
+
+      const response = await fetch(`/api/admin/articles?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -144,6 +161,18 @@ const AdminArticlesPage: React.FC = () => {
       console.log('Articles found:', data.data?.articles?.length || 0);
       
       setArticles(data.data?.articles || []);
+      if (data.data?.pagination) {
+        setPagination(data.data.pagination);
+        setCurrentPage(data.data.pagination.currentPage);
+      } else {
+        setPagination({
+          currentPage: pageToFetch,
+          totalPages: 1,
+          totalArticles: data.data?.articles?.length || 0,
+          pageSize: ARTICLES_PAGE_SIZE,
+        });
+        setCurrentPage(pageToFetch);
+      }
       console.log('Articles set in state:', data.data?.articles?.length || 0);
     } catch (error) {
       console.error('Error fetching articles:', error);
@@ -151,7 +180,7 @@ const AdminArticlesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [supabase, authUser, canManageArticles, authLoading, userRole]);
+  }, [supabase, authUser, canManageArticles, authLoading, userRole, filter, searchTerm]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -175,10 +204,22 @@ const AdminArticlesPage: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      fetchArticles();
+      fetchArticles(currentPage);
+    }
+  }, [user, currentPage, fetchArticles]);
+
+  useEffect(() => {
+    if (user) {
+      setCurrentPage(1);
+      fetchArticles(1);
+    }
+  }, [user, filter, searchTerm, fetchArticles]);
+
+  useEffect(() => {
+    if (user) {
       fetchCategories();
     }
-  }, [user, filter, fetchArticles, fetchCategories]);
+  }, [user, fetchCategories]);
 
   // Real-time subscription for article changes
   useEffect(() => {
@@ -458,38 +499,23 @@ const AdminArticlesPage: React.FC = () => {
     }
   };
 
-  const filteredArticles = articles.filter(article => {
-    const matchesSearch = searchTerm === '' || 
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.author_name.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = filter === 'all' || article.status === filter;
-    
-    return matchesSearch && matchesFilter;
-  });
+  const totalPages = pagination.totalPages || 1;
+  const totalArticles = pagination.totalArticles ?? articles.length;
+  const pageSize = pagination.pageSize || ARTICLES_PAGE_SIZE;
+  const showingFrom = totalArticles === 0 ? 0 : (pagination.currentPage - 1) * pageSize + 1;
+  const showingTo = totalArticles === 0 ? 0 : Math.min(showingFrom + pageSize - 1, totalArticles);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
-  const startIndex = (currentPage - 1) * articlesPerPage;
-  const endIndex = startIndex + articlesPerPage;
-  const paginatedArticles = filteredArticles.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter, searchTerm]);
-
-  // Page change handler
   const handlePageChange = (page: number) => {
+    if (page === currentPage) return;
     setCurrentPage(page);
+    fetchArticles(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
   console.log('Debug - Articles in state:', articles.length);
-  console.log('Debug - Filtered articles:', filteredArticles.length);
-  console.log('Debug - Paginated articles:', paginatedArticles.length);
   console.log('Debug - Current page:', currentPage);
   console.log('Debug - Total pages:', totalPages);
+  console.log('Debug - Total articles:', totalArticles);
   console.log('Debug - Search term:', searchTerm);
   console.log('Debug - Status filter:', filter);
 
@@ -704,8 +730,8 @@ const AdminArticlesPage: React.FC = () => {
               animate="visible"
               className="space-y-4"
             >
-              {paginatedArticles.length > 0 ? (
-                paginatedArticles.map((article) => (
+              {articles.length > 0 ? (
+                articles.map((article: Article) => (
                   <MotionDiv
                     key={article.id}
                     variants={itemVariants}
@@ -876,7 +902,7 @@ const AdminArticlesPage: React.FC = () => {
                   onPageChange={handlePageChange}
                 />
                 <p className="text-sm text-gray-600">
-                  Showing {startIndex + 1}-{Math.min(endIndex, filteredArticles.length)} of {filteredArticles.length} articles
+                  Showing {showingFrom}-{showingTo} of {totalArticles} articles
                 </p>
               </div>
             )}

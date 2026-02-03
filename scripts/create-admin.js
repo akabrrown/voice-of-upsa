@@ -1,7 +1,6 @@
 // scripts/create-admin.js
 import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import bcrypt from 'bcryptjs';
 import readline from 'readline';
 
 dotenv.config({ path: '.env.local' });
@@ -40,45 +39,62 @@ async function createAdmin() {
       throw new Error('Password must be at least 8 characters');
     }
     
-    // Check if admin already exists
-    const { data: existingUser, error: checkError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .single();
+    // Check if admin already exists in Auth
+    console.log('\nChecking if user already exists...');
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
     
-    if (checkError && checkError.code !== 'PGRST116') {
-      throw new Error(`Check failed: ${checkError.message}`);
+    if (listError) {
+      throw new Error(`Failed to check existing users: ${listError.message}`);
     }
     
-    if (existingUser) {
-      throw new Error('User with this email already exists');
+    const existingAuthUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    if (existingAuthUser) {
+      throw new Error('User with this email already exists in Auth');
     }
     
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 12);
+    // Create admin user in Supabase Auth (this will auto-create profile via trigger)
+    console.log('Creating admin account in Supabase Auth...');
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: email.toLowerCase(),
+      password: password,
+      email_confirm: true, // Auto-confirm admin accounts
+      user_metadata: {
+        full_name: name
+      }
+    });
     
-    // Create admin user
-    const { data: result, error: insertError } = await supabase
+    if (authError) {
+      throw new Error(`Auth account creation failed: ${authError.message}`);
+    }
+    
+    console.log('Auth account created successfully!');
+    
+    // Update the profile to set admin role
+    // The handle_new_user trigger already created the profile, we just need to update the role
+    console.log('Setting admin role...');
+    const { error: updateError } = await supabase
       .from('users')
-      .insert({
-        email: email.toLowerCase(),
-        password_hash: passwordHash,
-        name: name,
-        role: 'admin'
+      .update({ 
+        role: 'admin',
+        name: name
       })
-      .select('id, email, name, role')
-      .single();
+      .eq('id', authData.user.id);
     
-    if (insertError) {
-      throw new Error(`Insert failed: ${insertError.message}`);
+    if (updateError) {
+      console.warn('Warning: Failed to set admin role:', updateError.message);
+      console.warn('You may need to manually update the role in the database');
     }
     
-    console.log('\n Admin account created successfully!');
-    console.log('Details:', result);
+    console.log('\n✅ Admin account created successfully!');
+    console.log('Details:');
+    console.log('  Email:', email);
+    console.log('  Name:', name);
+    console.log('  Role: admin');
+    console.log('  ID:', authData.user.id);
+    console.log('\nThe admin can now sign in with the provided password.');
     
   } catch (error) {
-    console.error('\n Error creating admin:', error.message);
+    console.error('\n❌ Error creating admin:', error.message);
   } finally {
     rl.close();
   }

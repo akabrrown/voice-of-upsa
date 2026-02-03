@@ -21,6 +21,9 @@ export async function verifyAdmin(req: NextApiRequest): Promise<AdminUser> {
 
   // Verify token with Supabase
   const adminClient = await getSupabaseAdmin();
+  if (!adminClient) {
+    throw new Error('Admin service unavailable - missing configuration');
+  }
   const { data: { user }, error: authError } = await adminClient.auth.getUser(token);
   
   if (authError || !user) {
@@ -118,6 +121,10 @@ export async function logAdminAction(
 ): Promise<void> {
   try {
     const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      console.warn('Admin client unavailable - skipping audit log');
+      return;
+    }
     await (adminClient as any)
       .from('admin_audit_log')
       .insert({

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { Session, User, SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/router';
 import { getSupabaseClient } from '@/lib/supabase/client';
@@ -104,7 +104,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       
       setLoading(false);
       
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+        // If we're on the reset-password page, don't redirect on SIGNED_IN
+        // This allows the user to stay on the page to set their new password
+        if (router.pathname === '/auth/reset-password') {
+          return;
+        }
+
         // Only redirect if we're on auth pages to avoid redirect loops
         if (router.pathname.startsWith('/auth/')) {
           const redirectUrl = router.query.redirect_url as string || '/';
@@ -118,8 +124,17 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     };
   }, [router, fetchUserRole, supabase.auth]);
 
+  const contextValue = useMemo(() => ({
+    supabase,
+    session,
+    user,
+    userRole,
+    loading,
+    refreshUserRole
+  }), [supabase, session, user, userRole, loading, refreshUserRole]);
+
   return (
-    <Context.Provider value={{ supabase, session, user, userRole, loading, refreshUserRole }}>
+    <Context.Provider value={contextValue}>
       {children}
     </Context.Provider>
   );

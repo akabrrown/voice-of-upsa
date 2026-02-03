@@ -46,18 +46,21 @@ export function getCORSConfig(): CORSConfig {
     return {
       enabled: true,
       allowedOrigins,
-      allowedMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      // OWASP: Limit allowed headers to only what is necessary
       allowedHeaders: [
         'Content-Type',
         'Authorization',
-        'X-Requested-With'
+        'X-Requested-With',
+        'X-CSRF-Token',
+        'X-Nonce'
       ],
-      credentials: true,
+      credentials: true, // Required for cookie-based auth
       maxAge: 86400, // 24 hours
       strictMode: true
     };
   } else {
-    // Development - more permissive
+    // Development - more permissive for local tooling
     return {
       enabled: true,
       allowedOrigins: [
@@ -72,7 +75,8 @@ export function getCORSConfig(): CORSConfig {
         'Content-Type',
         'Authorization',
         'X-Requested-With',
-        'X-CSRF-Token'
+        'X-CSRF-Token',
+        'X-Nonce'
       ],
       credentials: true,
       maxAge: 3600, // 1 hour
@@ -285,4 +289,28 @@ export function shouldDisableCORS(endpoint: string): boolean {
   return NO_CORS_ENDPOINTS.some(noCors => 
     endpoint.startsWith(noCors) || endpoint === noCors
   );
+}
+
+/**
+ * Public CORS middleware - Allows access from any origin (*)
+ * but STRICTLY disables credentials (cookies/auth headers) for safety.
+ * OWASP: Do not allow credentials when Access-Control-Allow-Origin is *
+ */
+export function withPublicCORS(
+  handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void> | void
+) {
+  return async (req: NextApiRequest, res: NextApiResponse) => {
+    // OWASP: Allow public access but deny credentials
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', 'false');
+    
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    
+    return handler(req, res);
+  };
 }

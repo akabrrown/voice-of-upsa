@@ -1,6 +1,6 @@
 // Comprehensive Security Audit System
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 interface AuditFinding {
   severity: 'critical' | 'high' | 'medium' | 'low';
@@ -75,7 +75,7 @@ class SecurityAuditor {
       const criticalTables = ['users', 'articles', 'comments', 'settings'];
       
       for (const table of criticalTables) {
-        const { data: rlsStatus } = await (await supabaseAdmin as any)
+        const { data: rlsStatus } = await (await getSupabaseAdmin() as any)
           .from('pg_tables')
           .select('rowsecurity')
           .eq('tablename', table)
@@ -94,7 +94,7 @@ class SecurityAuditor {
       }
       
       // Check for exposed sensitive data
-      const { data: userColumns } = await (await supabaseAdmin as any)
+      const { data: userColumns } = await (await getSupabaseAdmin() as any)
         .from('information_schema.columns')
         .select('column_name, data_type')
         .eq('table_name', 'users');
@@ -194,7 +194,7 @@ class SecurityAuditor {
     
     try {
       // Check bucket security
-      const { data: buckets } = await (await supabaseAdmin as any)
+      const { data: buckets } = await (await getSupabaseAdmin() as any)
         .from('storage.buckets')
         .select('id, public, file_size_limit, allowed_mime_types');
       
@@ -304,7 +304,7 @@ class SecurityAuditor {
   // Save audit results
   private async saveAuditResults(report: SecurityAuditReport) {
     try {
-      await (await supabaseAdmin as any)
+      await (await getSupabaseAdmin() as any)
         .from('security_audits')
         .insert({
           overall_score: report.overallScore,

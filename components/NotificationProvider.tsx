@@ -163,7 +163,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
                 `${reactingUser?.name || 'Someone'} reacted ${emoji} to "${article?.title || 'your article'}"`,
                 {
                   duration: 5000,
-                  style: { cursor: 'pointer' },
+                  style: { 
+                    cursor: 'pointer',
+                    background: '#FFD700',
+                    color: '#001F3F'
+                  },
                 }
               );
             }
@@ -224,7 +228,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
                 `${bookmarkingUser?.name || 'Someone'} bookmarked "${article?.title || 'your article'}"`,
                 {
                   duration: 5000,
-                  style: { cursor: 'pointer' },
+                  style: { 
+                    cursor: 'pointer',
+                    background: '#FFD700',
+                    color: '#001F3F'
+                  },
                 }
               );
             }
@@ -288,7 +296,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
                 `${commentingUser?.name || 'Someone'} commented on "${article?.title || 'your article'}": "${preview}"`,
                 {
                   duration: 6000,
-                  style: { cursor: 'pointer' },
+                  style: { 
+                    cursor: 'pointer',
+                    background: '#FFD700',
+                    color: '#001F3F'
+                  },
                 }
               );
             }

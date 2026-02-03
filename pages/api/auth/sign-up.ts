@@ -153,46 +153,111 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       passwordScore: passwordValidation.score
     });
 
+
+
     // Check if user already exists
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: existingUser, error: checkError } = await (supabase as any)
       .from('users')
-      .select('id, email')
+      .select('id, email, role, name')
       .eq('email', email)
       .single();
 
-    if (existingUser && !checkError) {
-      logSecurityEvent('Duplicate registration attempt', securityContext, 'medium', {
-        existingUserId: existingUser.id
-      });
+    let isOrphaned = false;
+    let orphanedUserId: string | null = null;
 
-      return res.status(409).json({
-        success: false,
-        error: {
-          code: 'USER_EXISTS',
-          message: 'An account with this email already exists',
-          details: 'Please use a different email address or try to sign in'
-        },
-        timestamp: new Date().toISOString()
-      });
+    if (existingUser && !checkError) {
+      // User exists in public.users - check if they also exist in auth.users
+      try {
+        const { data: { users }, error: authError } = await (supabase as any).auth.admin.listUsers();
+        if (!authError && users) {
+          const authUser = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+          if (!authUser) {
+            isOrphaned = true;
+            orphanedUserId = existingUser.id;
+            console.log(`Orphaned user detected - will adopt: ${email} (ID: ${orphanedUserId}, Role: ${existingUser.role})`);
+          }
+        }
+      } catch (authCheckError) {
+        console.error('Error checking auth.users during sign-up:', authCheckError);
+      }
+
+      // Only block if user exists in BOTH public and auth
+      if (!isOrphaned) {
+        logSecurityEvent('Duplicate registration attempt', securityContext, 'medium', {
+          existingUserId: existingUser.id
+        });
+
+        return res.status(409).json({
+          success: false,
+          error: {
+            code: 'USER_EXISTS',
+            message: 'An account with this email already exists',
+            details: 'Please use a different email address or try to sign in'
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
     }
 
+
     // Create user with Supabase Auth
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: authData, error: authError } = await (supabase as any).auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
+    let authData;
+    let authError;
+
+    if (isOrphaned && orphanedUserId) {
+      // Adopt orphaned user - create Auth account with existing ID
+      console.log(`Adopting orphaned user ${email} with ID ${orphanedUserId}`);
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (supabase as any).auth.admin.createUser({
+        id: orphanedUserId,
+        email,
+        password,
+        email_confirm: true, // Auto-confirm to avoid double verification
+        user_metadata: {
           full_name: sanitizeInput(fullName),
           bio: bio ? sanitizeInput(bio) : null,
           website: website || null,
           location: location ? sanitizeInput(location) : null,
           device_fingerprint: deviceFingerprint,
-          registration_ip: clientIP
+          registration_ip: clientIP,
+          adopted_account: true
         }
+      });
+      
+      authData = result.data;
+      authError = result.error;
+
+      if (!authError) {
+        console.log(`Successfully adopted orphaned user: ${email}, preserving role: ${existingUser.role}`);
+        logSecurityEvent('Orphaned account adopted', securityContext, 'low', {
+          userId: orphanedUserId,
+          email,
+          preservedRole: existingUser.role
+        });
       }
-    });
+    } else {
+      // Normal sign-up flow
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await (supabase as any).auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: sanitizeInput(fullName),
+            bio: bio ? sanitizeInput(bio) : null,
+            website: website || null,
+            location: location ? sanitizeInput(location) : null,
+            device_fingerprint: deviceFingerprint,
+            registration_ip: clientIP
+          }
+        }
+      });
+      
+      authData = result.data;
+      authError = result.error;
+    }
 
     if (authError) {
       // Log security event
@@ -208,36 +273,43 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           message: 'Account creation failed',
           details: authError.message
         },
+
         timestamp: new Date().toISOString()
       });
     }
 
+
     if (authData.user) {
-      // Create user profile in database with enhanced security fields
-      const userProfile = {
-        id: authData.user.id,
-        email: authData.user.email,
-        name: sanitizeInput(fullName),
-        role: 'user',
-        avatar_url: authData.user.user_metadata?.avatar_url || null,
-        bio: bio ? sanitizeInput(bio) : null,
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        last_sign_in: new Date().toISOString(),
-      };
+      // Only create profile for new users, not orphaned ones (they already have a profile)
+      if (!isOrphaned) {
+        // Create user profile in database with enhanced security fields
+        const userProfile = {
+          id: authData.user.id,
+          email: authData.user.email,
+          name: sanitizeInput(fullName),
+          role: 'user',
+          avatar_url: authData.user.user_metadata?.avatar_url || null,
+          bio: bio ? sanitizeInput(bio) : null,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          last_sign_in: new Date().toISOString(),
+        };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: profileError } = await (supabase as any)
-        .from('users')
-        .insert(userProfile);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: profileError } = await (supabase as any)
+          .from('users')
+          .insert(userProfile);
 
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        logSecurityEvent('Profile creation failed', securityContext, 'high', {
-          userId: authData.user.id,
-          profileError: profileError.message
-        });
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          logSecurityEvent('Profile creation failed', securityContext, 'high', {
+            userId: authData.user.id,
+            profileError: profileError.message
+          });
+        }
+      } else {
+        console.log(`Skipping profile creation for adopted user ${authData.user.email} - profile already exists`);
       }
 
 

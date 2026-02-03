@@ -8,7 +8,18 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/sitemap.xml',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/xml',
+          },
+        ],
+      },
+      {
+        // Apply security headers to ALL routes EXCEPT sitemap.xml and robots.txt
+        // This prevents overrides of the correct Content-Type for these files
+        source: '/((?!sitemap\\.xml|robots\\.txt).*)',
         headers: [
           // HTTPS and Security Headers
           {
@@ -163,8 +174,10 @@ const nextConfig = {
       },
     ],
   },
-  // Add empty turbopack config to resolve webpack/turbopack conflict
-  turbopack: {},
+  // Add turbopack config to explicitly set project root
+  turbopack: {
+    root: process.cwd(),
+  },
   webpack: (config, { isServer }) => {
     // Apply Node.js module fallbacks for client-side builds
     if (!isServer) {

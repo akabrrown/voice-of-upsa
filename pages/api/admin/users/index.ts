@@ -53,7 +53,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
     const { role, status, page, search } = validatedParams;
 
     const pageNum = page;
-    const limitNum = 20;
+    const limitNum = 1000;
     const offset = (pageNum - 1) * limitNum;
 
     let data: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any

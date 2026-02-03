@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '../../../lib/database-server';
+import { getSupabaseAdmin } from '../../../lib/database-server';
 import { withErrorHandler } from '../../../lib/api/middleware/error-handler';
 // import { withCMSSecurity } from '../../../lib/security/cms-security';
 // import { getClientIP } from '../../../lib/security/auth-security';
@@ -75,7 +75,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   let user: UserWithMetadata;
   
   try {
-    const admin = await supabaseAdmin;
+    const admin = await getSupabaseAdmin();
+    if (!admin) throw new Error('Failed to initialize Supabase Admin client');
     const { data: { user: authUser }, error } = await admin.auth.getUser(token);
     
     if (error) {
@@ -107,7 +108,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Get user role from users table
     let userRole = 'user'; // default
     try {
-      const admin = await supabaseAdmin;
+      const admin = await getSupabaseAdmin();
+      if (!admin) throw new Error('Failed to initialize Supabase Admin client');
       const { data, error } = await admin
         .from('users')
         .select('role')
@@ -169,7 +171,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       
       let admin;
       try {
-        admin = await import('../../../lib/database-server').then(m => m.getSupabaseAdmin());
+        admin = await getSupabaseAdmin();
+        if (!admin) throw new Error('Failed to initialize Supabase Admin client');
         console.log('Profile API - Supabase admin client initialized successfully');
       } catch (adminError) {
         console.error('Profile API - Failed to initialize Supabase admin:', adminError);
@@ -227,7 +230,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           try {
             const result = await admin
               .from('user_profiles')
-              // @ts-expect-error - TypeScript inference issue with Supabase insert operation
               .insert({
                 user_id: user.id,
                 email: user.email,
@@ -326,11 +328,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const validatedData = profileUpdateSchema.parse(req.body);
 
       // Update profile
-      const admin = await import('../../../lib/database-server').then(m => m.getSupabaseAdmin());
+      const admin = await getSupabaseAdmin();
+      if (!admin) throw new Error('Failed to initialize Supabase Admin client');
       
       const { data: updatedProfile, error } = await admin
         .from('user_profiles')
-        // @ts-expect-error - TypeScript inference issue with Supabase update operation
         .update({
           name: validatedData.name,
           avatar_url: validatedData.avatar_url,

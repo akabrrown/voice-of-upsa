@@ -12,13 +12,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { submissionId, amount, email } = req.body;
+    const { submissionId, email } = req.body;
 
-    if (!submissionId || !amount || !email) {
+    if (!submissionId || !email) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Get submission details
+    // Get submission details to prevent price manipulation
     const { data: submission, error: fetchError } = await supabase
       .from('ad_submissions')
       .select('*')
@@ -30,13 +30,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Check if submission is approved
-    if (submission.status !== 'approved') {
+    if (submission.status !== 'approved' && submission.status !== 'published') {
       return res.status(400).json({ message: 'Ad submission must be approved first' });
     }
 
     // Check if payment already exists
     if (submission.payment_status === 'paid') {
       return res.status(400).json({ message: 'Payment already completed' });
+    }
+
+    // Server-side amount validation: Extract amount from budget string (e.g., "GHS 100" -> 100)
+    // This is the critical security fix to prevent client-side amount tampering
+    const budgetString = submission.budget || '';
+    const amountMatch = budgetString.match(/\d+/);
+    const amount = amountMatch ? parseInt(amountMatch[0]) : 0;
+
+    if (amount <= 0) {
+      console.error('Invalid budget amount found for submission:', submissionId, budgetString);
+      return res.status(400).json({ message: 'Invalid budget amount found for this submission' });
     }
 
     // Initialize Paystack transaction

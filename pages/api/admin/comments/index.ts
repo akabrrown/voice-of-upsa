@@ -1,9 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getCMSRateLimit } from '@/lib/security/cms-security';
-import { getClientIP } from '@/lib/security/auth-security';
-import { withRateLimit } from '@/lib/api/middleware/auth';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 import { z } from 'zod';
 
 // Enhanced validation schema with security constraints
@@ -49,22 +47,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Apply rate limiting for comments access
-    const rateLimit = getCMSRateLimit('GET');
-    const rateLimitMiddleware = withRateLimit(rateLimit.requests, rateLimit.window, (req: NextApiRequest) => 
-      getClientIP(req)
-    );
-    rateLimitMiddleware(req);
-
-  // Validate query parameters
+    // Validate query parameters
     const validatedParams = commentsQuerySchema.parse(req.query);
     const { search, status, page } = validatedParams;
 
     const pageNum = page;
-    const limit = 20;
+    const limit = 1000;
     const offset = (pageNum - 1) * limit;
 
     const supabaseAdmin = await getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new Error('Database connection failed');
+    }
+
     let query = supabaseAdmin
       .from('comments')
       .select(`
@@ -125,11 +120,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       user_agent: undefined
     }));
 
-    console.log('Comments list returned:', {
-      commentCount: sanitizedComments.length,
-      timestamp: new Date().toISOString()
-    });
-
     return res.status(200).json({
       success: true,
       data: {
@@ -143,7 +133,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       },
       timestamp: new Date().toISOString()
     });
-          } catch (error) {
+  } catch (error) {
     console.error('Comments API error:', error);
     return res.status(500).json({
       success: false,
@@ -157,5 +147,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Apply enhanced CMS security middleware and error handler
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:comments',
+  auditAction: 'comments_listed'
+}));

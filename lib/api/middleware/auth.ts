@@ -56,7 +56,15 @@ export async function authenticate(req: NextApiRequest): Promise<AuthenticatedUs
   const token = authHeader.replace('Bearer ', '');
 
   // Verify token with Supabase
-  const { data: { user }, error: authError } = await (await supabaseAdmin).auth.getUser(token);
+  const adminClient = await supabaseAdmin;
+  if (!adminClient) {
+    const error = new Error('Admin service unavailable') as Error & { statusCode?: number; code?: string };
+    error.statusCode = 500;
+    error.code = 'SERVICE_UNAVAILABLE';
+    throw error;
+  }
+  
+  const { data: { user }, error: authError } = await adminClient.auth.getUser(token);
 
   if (authError || !user) {
     const error = new Error('Invalid or expired token') as Error & { statusCode?: number; code?: string };
@@ -66,7 +74,7 @@ export async function authenticate(req: NextApiRequest): Promise<AuthenticatedUs
   }
 
   // Get user role from database
-  const { data: userData, error: userError } = await (await supabaseAdmin as any)
+  const { data: userData, error: userError } = await (adminClient as any)
     .from('users')
     .select('role')
     .eq('id', user.id)

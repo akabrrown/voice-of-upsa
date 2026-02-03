@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { createMiddlewareClient } from './lib/supabase/middleware-client';
 import { applySecurityHeadersToResponse } from './lib/csp-config';
 import { generateCSPNonce } from './lib/security/nonce';
 
@@ -12,26 +14,26 @@ import { generateCSPNonce } from './lib/security/nonce';
 const protectedRoutes = {
   '/admin': {
     roles: ['admin'],
-    redirectTo: '/auth/login'
+    redirectTo: '/auth/sign-in'
   },
   '/editor': {
     roles: ['admin', 'editor'],
-    redirectTo: '/auth/login'
+    redirectTo: '/auth/sign-in'
   },
   '/api/admin': {
     roles: ['admin'],
-    redirectTo: '/auth/login'
+    redirectTo: '/auth/sign-in'
   },
   '/api/editor': {
     roles: ['admin', 'editor'],
-    redirectTo: '/auth/login'
+    redirectTo: '/auth/sign-in'
   }
 };
 
 // Public routes that don't require authentication
 const publicRoutes = [
-  '/auth/login',
-  '/auth/register',
+  '/auth/sign-in',
+  '/auth/sign-up',
   '/auth/forgot-password',
   '/auth/reset-password',
   '/api/auth/sign-in',
@@ -47,82 +49,104 @@ const publicRoutes = [
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('auth-token')?.value;
+  
+  // Create Supabase middleware client
+  const { supabase, response } = await createMiddlewareClient(request);
+
+  // CRITICAL: Immediately skip all middleware logic for sitemap and robots
+  if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
+    return NextResponse.next();
+  }
 
   // Check if route is public
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
-    const response = NextResponse.next();
+  const isPublic = pathname === '/' || publicRoutes.some(route => {
+    if (route === '/') return false;
+    return pathname === route || pathname.startsWith(route + '/');
+  });
+
+  if (isPublic) {
     return applySecurityHeadersAndNonce(request, response);
   }
 
-  // Check if route is protected and user is not authenticated
+  // Check if route is protected
   const protectedRoute = Object.keys(protectedRoutes).find(route => pathname.startsWith(route)) as keyof typeof protectedRoutes | undefined;
   
-  if (protectedRoute && !token) {
-    const loginUrl = new URL(protectedRoutes[protectedRoute].redirectTo, request.url);
-    const response = NextResponse.redirect(loginUrl);
+  // If not protected, just continue
+  if (!protectedRoute) {
     return applySecurityHeadersAndNonce(request, response);
   }
 
-  // For protected routes, we need to verify the token and user role
-  if (protectedRoute && token) {
-    try {
-      // Verify token with Supabase
-      const authResponse = await fetch(`${request.nextUrl.origin}/api/auth/cms-user`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+  // Verify auth session
+  const { data: { user }, error } = await supabase.auth.getUser();
 
-      if (!authResponse.ok) {
-        // Invalid token - redirect to login
-        const loginUrl = new URL(protectedRoutes[protectedRoute].redirectTo, request.url);
-        const response = NextResponse.redirect(loginUrl);
-        return applySecurityHeadersAndNonce(request, response);
-      }
-
-      const data = await authResponse.json() as { success: boolean; user?: { id: string; role: string; permissions: string[] } };
-      
-      if (data.success && data.user) {
-        // Check if user has required role for this route
-        const requiredRoles = protectedRoutes[protectedRoute].roles;
-        const userRole = data.user.role;
-        
-        if (!requiredRoles.includes(userRole)) {
-          // Insufficient permissions - redirect to dashboard
-          const dashboardUrl = new URL('/dashboard', request.url);
-          const response = NextResponse.redirect(dashboardUrl);
-          return applySecurityHeadersAndNonce(request, response);
-        }
-
-        // User has required role - allow access
-        const response = NextResponse.next();
-        
-        // Add user info to headers for client-side access
-        response.headers.set('x-user-role', userRole);
-        response.headers.set('x-user-id', data.user.id);
-        response.headers.set('x-user-permissions', JSON.stringify(data.user.permissions));
-        
-        return applySecurityHeadersAndNonce(request, response);
-      } else {
-        // Invalid user data - redirect to login
-        const loginUrl = new URL(protectedRoutes[protectedRoute].redirectTo, request.url);
-        const response = NextResponse.redirect(loginUrl);
-        return applySecurityHeadersAndNonce(request, response);
-      }
-    } catch (error) {
-      console.error('Middleware auth error:', error);
-      // On error, allow access but let frontend handle auth
-      const response = NextResponse.next();
-      return applySecurityHeadersAndNonce(request, response);
-    }
+  if (error || !user) {
+    const loginUrl = new URL(protectedRoutes[protectedRoute].redirectTo, request.url);
+    // Preserve the original URL to redirect back after login
+    loginUrl.searchParams.set('redirectTo', pathname);
+    return applySecurityHeadersAndNonce(request, NextResponse.redirect(loginUrl));
   }
 
-  // Default case - apply security headers and continue
-  const response = NextResponse.next();
-  return applySecurityHeadersAndNonce(request, response);
+  // User is authenticated, now check role
+  try {
+    // strict check for admin/editor roles using service role to bypass RLS
+    // We create a lightweight admin client just for this check
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
+    // Try users table first
+    let userRole = 'user';
+
+    const { data: userProfile } = await adminClient
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (userProfile?.role) {
+      userRole = userProfile.role;
+    } else {
+      // Fallback to user_profiles
+      const { data: profileData } = await adminClient
+        .from('user_profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileData?.role) {
+        userRole = profileData.role;
+      }
+    }
+
+    // Check requirements
+    const requiredRoles = protectedRoutes[protectedRoute].roles;
+    if (!requiredRoles.includes(userRole)) {
+       // Insufficient permissions - redirect to dashboard or home
+       const dashboardUrl = new URL('/', request.url);
+       return applySecurityHeadersAndNonce(request, NextResponse.redirect(dashboardUrl));
+    }
+
+    // Grant access and set headers for downstream usage
+    response.headers.set('x-user-role', userRole);
+    response.headers.set('x-user-id', user.id);
+    // Note: Permissions might be too large for headers sometimes, but minimal set is fine
+    // We skip complex permissions logic here to keep middleware fast, 
+    // relying on the role for the main gatekeeping.
+    
+    return applySecurityHeadersAndNonce(request, response);
+
+  } catch (err) {
+    console.error('Middleware auth check failed:', err);
+    const loginUrl = new URL(protectedRoutes[protectedRoute].redirectTo, request.url);
+    return applySecurityHeadersAndNonce(request, NextResponse.redirect(loginUrl));
+  }
 }
 
 /**
@@ -169,6 +193,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|public|google3081f3b59c107589.html).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|google3081f3b59c107589.html).*)',
   ],
 };

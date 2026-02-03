@@ -21,7 +21,7 @@ export interface Database {
           contributor_name: string | null;
           author_id: string;
           category_id: string | null;
-          status: 'draft' | 'published' | 'archived';
+          status: 'draft' | 'published' | 'archived' | 'scheduled';
           display_location: 'homepage' | 'category_page' | 'both' | 'none';
           views_count: number;
           created_at: string;
@@ -251,6 +251,37 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['ad_submissions']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['ad_submissions']['Insert']>;
+      };
+      anonymous_story_comments: {
+        Row: {
+          id: string;
+          story_id: string;
+          content: string;
+          status: string;
+          session_fingerprint: string | null;
+          ip_hash: string | null;
+          user_agent: string | null;
+          metadata: Json | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['anonymous_story_comments']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['anonymous_story_comments']['Insert']>;
+      };
+      team_members: {
+        Row: {
+          id: string;
+          name: string;
+          role: string;
+          bio: string | null;
+          image_url: string | null;
+          order_index: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['team_members']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['team_members']['Insert']>;
       };
     };
     Views: {

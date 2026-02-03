@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/database';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { sanitizeInput } from '@/lib/api/middleware/validation';
@@ -38,32 +37,50 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     resetPasswordSchema.parse(req.body);
     const email = sanitizeInput(req.body.email);
 
-    // Log password reset attempt
-    console.info(`Password reset attempt for email: ${email}`, {
-      timestamp: new Date().toISOString(),
-      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
-    });
+    // Check if user exists first to give better feedback
+    const supabaseAdminClient = await getSupabaseAdmin();
+    if (!supabaseAdminClient) {
+      console.error('Supabase admin client not available - check environment variables');
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Password reset service is temporarily unavailable',
+          details: process.env.NODE_ENV === 'development' 
+            ? 'Missing SUPABASE_SERVICE_ROLE_KEY environment variable' 
+            : null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const { data: userData } = await (supabaseAdminClient as any).auth.admin.listUsers();
+    const userExists = userData?.users?.some((u: { email?: string }) => u.email === email);
+
+    if (!userExists) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'USER_NOT_FOUND',
+          message: 'No account found with this email address',
+          details: null
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Send password reset email
     console.log('Attempting to send password reset email to:', email);
-    console.log('Redirect URL:', `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`);
-    console.log('App URL:', process.env.NEXT_PUBLIC_APP_URL);
     
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
+    const { error: resetError } = await supabaseAdminClient.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password`,
     });
 
-    console.log('Supabase reset password response:', { data, error });
-
-    // In development, if email sending fails, provide a fallback
-    if (error && process.env.NODE_ENV === 'development') {
-      console.warn(`Email sending failed in development, but request was processed: ${error.message}`);
-      
-      // Try to generate a recovery link directly as fallback
+    // Always generate a recovery link in development for easier testing
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode: Generating fallback link');
       try {
-        const supabaseAdmin = await getSupabaseAdmin();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: recoveryData, error: recoveryError } = await (supabaseAdmin as any).auth.admin.generateLink({
+        const { data: recoveryData, error: recoveryError } = await (supabaseAdminClient as any).auth.admin.generateLink({
           type: 'recovery',
           email: email,
           options: {
@@ -72,15 +89,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         });
         
         if (!recoveryError && recoveryData?.properties?.action_link) {
-          console.log('🔗 DEVELOPMENT - Password Reset Link (copy this):');
-          console.log(recoveryData.properties.action_link);
+          console.log('🔗 DEVELOPMENT - Password Reset Link:', recoveryData.properties.action_link);
           
           return res.status(200).json({
             success: true,
             data: {
               message: 'Password reset instructions sent to your email',
               developmentLink: recoveryData.properties.action_link,
-              note: 'In development, check console for reset link if email is not received'
+              note: 'In development, use this link if email is not received'
             },
             timestamp: new Date().toISOString()
           });
@@ -90,11 +106,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
-    if (error) {
+    if (resetError) {
       // Log security event
       console.warn(`Password reset failure for email: ${email}`, {
-        error: error.message,
-        errorDetails: error,
+        error: resetError.message,
+        errorDetails: resetError,
         timestamp: new Date().toISOString(),
         ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
       });
@@ -104,7 +120,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         error: {
           code: 'PASSWORD_RESET_FAILED',
           message: 'Password reset failed',
-          details: error.message
+          details: resetError.message
         },
         timestamp: new Date().toISOString()
       });

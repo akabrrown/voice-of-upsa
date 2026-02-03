@@ -25,7 +25,8 @@ const sanitizeHTML = (html: string): string => {
 const articlesQuerySchema = z.object({
   search: z.string().max(100, 'Search term too long').optional(),
   status: z.enum(['all', 'draft', 'pending_review', 'published', 'archived']).default('all'),
-  page: z.coerce.number().min(1).max(100, 'Page number too high').default(1)
+  page: z.coerce.number().min(1).max(100, 'Page number too high').default(1),
+  pageSize: z.coerce.number().min(1).default(1000)
 });
 
 const articleCreateSchema = z.object({
@@ -89,11 +90,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       // Validate query parameters
       console.log('Validating query parameters...');
       const validatedParams = articlesQuerySchema.parse(req.query);
-      const { search, status, page } = validatedParams;
-      console.log('Validated params:', { search, status, page });
+      const { search, status, page, pageSize } = validatedParams;
+      console.log('Validated params:', { search, status, page, pageSize });
 
       const pageNum = page;
-      const limit = 12;
+      const limit = 1000; // Fixed limit for admin articles list
       const offset = (pageNum - 1) * limit;
       console.log('Pagination:', { pageNum, limit, offset });
 
@@ -159,7 +160,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
             totalPages: count ? Math.ceil(count / limit) : 0,
             totalArticles: count || 0,
             hasNextPage: (offset + limit) < (count || 0),
-            hasPreviousPage: pageNum > 1
+            hasPreviousPage: pageNum > 1,
+            pageSize: limit
           }
         },
         timestamp: new Date().toISOString()
@@ -186,10 +188,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       const { title, content, excerpt, featured_image, status, is_featured, featured_order, display_location } = req.body;
 
       // Generate slug
-      const slug = title
+      let slug = title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
+
+      // Check for slug uniqueness
+      const { data: slugCheck } = await (supabaseAdmin as any)
+        .from('articles')
+        .select('id')
+        .eq('slug', slug);
+      
+      if (slugCheck && slugCheck.length > 0) {
+        // If slug exists, append a unique suffix
+        slug = `${slug}-${Math.floor(Math.random() * 10000)}`;
+        console.log(`Slug conflict detected lure creation. Using alternative slug: ${slug}`);
+      }
 
       const articleData = {
         title,

@@ -37,6 +37,8 @@ const ArticleHero: React.FC<ArticleHeroProps> = ({
             src={featuredImage}
             alt={title}
             className="w-full h-64 object-cover"
+            loading="eager"
+            fetchPriority="high"
           />
         </div>
       )}

@@ -17,9 +17,6 @@ const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
         <div
           key={index}
           className={`${height} bg-gray-200 rounded animate-pulse`}
-          style={{
-            animationDelay: `${index * 0.1}s`,
-          }}
         />
       ))}
     </div>

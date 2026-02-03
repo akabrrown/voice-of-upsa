@@ -51,11 +51,13 @@ export function getCSPConfig(reportOnly = false, isProduction = false): CSPConfi
     ],
     'style-src': isProduction ? [
       "'self'",
+      // 'unsafe-inline' is removed in production to prevent CSS-based XSS attacks.
+      // We use a nonce-based system for necessary inline styles.
       'https://fonts.googleapis.com',
       'https://fonts.gstatic.com'
     ] : [
       "'self'",
-      "'unsafe-inline'",
+      "'unsafe-inline'", // Allowed in dev for faster iteration with styles
       'https://fonts.googleapis.com',
       'https://fonts.gstatic.com'
     ],
@@ -135,6 +137,13 @@ export function getSecurityHeaders(isProduction = false, nonce?: string): Securi
     }
   }
 
+  // We do NOT add nonce to style-src because we need 'unsafe-inline' to work for 
+  // style attributes (e.g. <div style="...">) which are common in React and 3rd party libs.
+  // Browsers ignore 'unsafe-inline' if a nonce is present.
+  // OWASP: Nonce-based CSP for styles
+  // Adding the nonce to style-src allows browsers that support nonces to execute 
+  // inline styles while blocking others. Browsers that support nonces automatically 
+  // ignore 'unsafe-inline' when a nonce is present.
   if (nonce && cspConfig.directives['style-src']) {
     if (!cspConfig.directives['style-src'].includes(`'nonce-${nonce}'`)) {
       cspConfig.directives['style-src'].push(`'nonce-${nonce}'`);

@@ -3,26 +3,26 @@
   "middleware": {
     "/": {
       "files": [
-        "server/edge/chunks/Desktop_voiceofupsa_edge-wrapper_27e5a209.js",
-        "server/edge/chunks/[root-of-the-server]__7abe30ae._.js",
-        "server/edge/chunks/turbopack-Desktop_voiceofupsa_edge-wrapper_7391d978.js"
+        "server/edge/chunks/node_modules_next_dist_esm_build_templates_edge-wrapper_3b93bb62.js",
+        "server/edge/chunks/[root-of-the-server]__6e3e9058._.js",
+        "server/edge/chunks/turbopack-node_modules_next_dist_esm_build_templates_edge-wrapper_93ee1a8d.js"
       ],
       "name": "middleware",
       "page": "/",
       "matchers": [
         {
-          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/((?!_next\\/static|_next\\/image|favicon.ico|public).*))(\\\\.json)?[\\/#\\?]?$",
-          "originalSource": "/((?!_next/static|_next/image|favicon.ico|public).*)"
+          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/((?!_next\\/static|_next\\/image|favicon.ico|sitemap.xml|robots.txt|google3081f3b59c107589.html).*))(\\\\.json)?[\\/#\\?]?$",
+          "originalSource": "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|google3081f3b59c107589.html).*)"
         }
       ],
       "wasm": [],
       "assets": [],
       "env": {
-        "__NEXT_BUILD_ID": "qfNEKJ4q2hVTkmC1hgtIW",
-        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "Ww2WIXIZIR6gNMwpv8bkZkHTvLWZuO/LeqrlTFwH6QM=",
-        "__NEXT_PREVIEW_MODE_ID": "b717b502d304055ae31167ec70f48c0d",
-        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "f1dbc300dc768a14d309c9fa9c43d4324a57d76b907a4016f3c70c64fdc0c90a",
-        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "91329910016af7902ac00a7db7b18e6b1a31fbc05e52ba9ed18da0e36e99f166"
+        "__NEXT_BUILD_ID": "YvyvNakEkQvhSpD0KFvfa",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "fGLnBkoVJ3vhoGwaNOxBsKJa9Uxju/p5xhyHuOMnMO0=",
+        "__NEXT_PREVIEW_MODE_ID": "6afab40d58dd1bbb792f1bbce5f10cc7",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "499f7a100ca253382fb738fb46d9111fc163277fa49ec7fe538de93eade2b41b",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "e8efae4868ca451dea46587a6756c687f5253b993aa2934e24cd6c2979ddc24a"
       }
     }
   },

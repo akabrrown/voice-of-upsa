@@ -1,0 +1,56 @@
+[dotenv@17.2.3] injecting env (24) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+Columns in settings table: [
+  'id',                 'site_name',
+  'site_description',   'site_url',
+  'logo_url',           'logo_upload_size',
+  'logo_allowed_types', 'contact_email',
+  'notification_email', 'social_facebook',
+  'social_twitter',     'social_instagram',
+  'social_youtube',     'social_tiktok',
+  'social_linkedin',    'maintenance_mode',
+  'allow_comments',     'moderate_comments',
+  'max_upload_size',    'allowed_image_types',
+  'ad_enabled',         'ad_auto_approve',
+  'ad_max_per_user',    'created_at',
+  'updated_at',         'site_logo'
+]
+Sample Data: {
+  "id": 1,
+  "site_name": "Voice of UPSA",
+  "site_description": "Official student publication of UPSA",
+  "site_url": "http://localhost:3000",
+  "logo_url": "/logo.jpg",
+  "logo_upload_size": 2097152,
+  "logo_allowed_types": [
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "webp"
+  ],
+  "contact_email": "voice.of.upsa.mail@gmail.com",
+  "notification_email": "voice.of.upsa.mail@gmail.com",
+  "social_facebook": "",
+  "social_twitter": "",
+  "social_instagram": "",
+  "social_youtube": "",
+  "social_tiktok": "",
+  "social_linkedin": "",
+  "maintenance_mode": false,
+  "allow_comments": true,
+  "moderate_comments": false,
+  "max_upload_size": 5242880,
+  "allowed_image_types": [
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "webp"
+  ],
+  "ad_enabled": true,
+  "ad_auto_approve": false,
+  "ad_max_per_user": 5,
+  "created_at": "2025-12-07T09:51:43.189643+00:00",
+  "updated_at": "2025-12-07T09:51:43.189643+00:00",
+  "site_logo": null
+}

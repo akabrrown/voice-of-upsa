@@ -1,3 +1,4 @@
+console.log('>>> LOADING: pages/api/admin/ad-locations.ts');
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
@@ -32,13 +33,9 @@ const deleteLocationSchema = z.object({
   locationId: z.string().uuid('Invalid location ID format')
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('=== AD-LOCATIONS API HANDLER START (AUTH BYPASSED) ===');
-  console.log('AD-LOCATIONS API: Request received', {
-    method: req.method,
-    url: req.url
-  });
-  
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
+
+async function handler(req: NextApiRequest, res: NextApiResponse, _user: CMSUser) {
   try {
     // Get supabase admin client
     const supabaseAdmin = await getSupabaseAdmin();
@@ -55,7 +52,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    console.log('AD-LOCATIONS API: Authentication bypassed for testing');
 
     // GET - Fetch ad locations
     if (req.method === 'GET') {
@@ -360,5 +356,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// TEMPORARY: Export without authentication middleware
-export default withErrorHandler(handler);
+// Export with CMS security middleware
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:ads',
+  auditAction: 'ad_locations_accessed'
+}));

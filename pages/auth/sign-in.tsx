@@ -5,45 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiArrowLeft, FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { getSupabaseClient } from '../../lib/supabase/client';
+import { getSupabaseClient, signInWithEmail } from '../../lib/supabase/client';
 
 // Debug: Check if imports are working
 console.log('Sign-in page loaded, getSupabaseClient:', typeof getSupabaseClient);
 
-// Local implementation of signInWithEmail to avoid import issues
-const signInWithEmailLocal = async (email: string, password: string) => {
-  try {
-    const supabase = getSupabaseClient();
-    
-    if (!supabase) {
-      throw new Error('Failed to initialize Supabase client');
-    }
-    
-    console.log('Attempting sign in for email:', email);
-    console.log('Supabase client initialized:', !!supabase.auth);
-    
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      console.error('Sign in error details:', {
-        message: error.message,
-        status: error.status,
-        name: error.name
-      });
-      throw error;
-    }
-
-    console.log('Sign in successful, user:', data.user?.email);
-    console.log('Sign in result data:', data);
-    return data;
-  } catch (error) {
-    console.error('signInWithEmail error:', error);
-    throw error;
-  }
-};
+// Remote implementation of signInWithEmail used from lib/supabase/client
 
 const SignInPage: React.FC = () => {
   const router = useRouter();
@@ -117,15 +84,33 @@ const SignInPage: React.FC = () => {
         toast.error('No account found with this email. Please sign up first.');
         return;
       }
+
+      // Check if user is orphaned (exists in public but not in auth)
+      if (checkData.isOrphaned) {
+        toast.error('Your registration is incomplete. Please complete the sign-up process.');
+        router.push({
+          pathname: '/auth/sign-up',
+          query: { email, orphaned: 'true' }
+        });
+        return;
+      }
       
       // User exists, attempt sign in
-      const signInResult = await signInWithEmailLocal(email, password);
+      const signInResult = await signInWithEmail(email, password, rememberMe);
       
       console.log('Sign in result:', signInResult);
       
-      if (signInResult && signInResult.user) {
+      if (signInResult && signInResult.user && signInResult.session) {
+        // Set auth-token cookie for middleware authentication
+        // The middleware checks for this cookie to authorize admin/editor access
+        const maxAge = rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60; // 7 days if remember me, else 1 day
+        document.cookie = `auth-token=${signInResult.session.access_token}; path=/; max-age=${maxAge}; samesite=strict; secure`;
+        
         toast.success('Signed in successfully!');
-        // Let SupabaseProvider handle the redirect
+        
+        // Redirect to intended destination or home
+        const redirectUrl = router.query.redirect_url as string || '/';
+        router.push(redirectUrl);
       } else {
         toast.error('Sign in failed: Invalid response');
         console.error('Invalid sign in result:', signInResult);

@@ -14,14 +14,23 @@ export interface SecurityEvent {
 }
 
 class SecurityMonitor {
-  private adminClient = getSupabaseAdmin();
+  private async getAdminClient() {
+    return await getSupabaseAdmin();
+  }
 
   /**
    * Log security event to database
    */
   async logEvent(event: SecurityEvent): Promise<void> {
     try {
-      await (await this.adminClient as any)
+      const adminClient = await this.getAdminClient();
+      if (!adminClient) {
+        console.warn('Admin client unavailable - logging to console only');
+        console.warn('Security event:', event);
+        return;
+      }
+      
+      await (adminClient as any)
         .from('security_events')
         .insert({
           event_type: event.type,
@@ -191,7 +200,13 @@ class SecurityMonitor {
    */
   async getRecentEvents(limit: number = 100): Promise<SecurityEvent[]> {
     try {
-      const { data } = await (await this.adminClient)
+      const adminClient = await this.getAdminClient();
+      if (!adminClient) {
+        console.warn('Admin client unavailable - cannot fetch security events');
+        return [];
+      }
+      
+      const { data } = await adminClient
         .from('security_events')
         .select('*')
         .order('created_at', { ascending: false })
@@ -216,7 +231,20 @@ class SecurityMonitor {
     eventsByType: Record<string, number>;
   }> {
     try {
-      const { data } = await (await this.adminClient)
+      const adminClient = await this.getAdminClient();
+      if (!adminClient) {
+        console.warn('Admin client unavailable - cannot fetch security stats');
+        return {
+          totalEvents: 0,
+          criticalEvents: 0,
+          highEvents: 0,
+          mediumEvents: 0,
+          lowEvents: 0,
+          eventsByType: {}
+        };
+      }
+      
+      const { data } = await adminClient
         .from('security_events')
         .select('severity, event_type');
 

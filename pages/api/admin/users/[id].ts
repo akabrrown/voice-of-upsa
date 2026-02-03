@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
 import { z } from 'zod';
 
 // Define Supabase client type for better type safety
@@ -34,73 +35,12 @@ interface UserUpdateData {
   [key: string]: unknown;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  
+async function handler(req: NextApiRequest, res: NextApiResponse, requesterUser: CMSUser) {
   try {
-    console.log(`=== ADMIN USER [${req.query.id}] API DEBUG START ===`);
-    console.log('Request details:', {
-      method: req.method,
-      url: req.url,
-      query: req.query,
-      headers: {
-        authorization: req.headers.authorization ? '[REDACTED]' : 'MISSING',
-        'content-type': req.headers['content-type'],
-        'user-agent': req.headers['user-agent']
-      },
-      body: req.body
-    });
-
-    // Use withCMSSecurity once we re-enable it, but for now let's at least get the session correctly
     const supabaseAdmin = await getSupabaseAdmin();
     if (!supabaseAdmin) {
       throw new Error('Failed to initialize Supabase admin client');
     }
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' }
-      });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !authUser) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid or expired session' }
-      });
-    }
-
-    // Get the user from our database to check their role
-    const { data: dbUser, error: dbError } = await (supabaseAdmin as unknown as TypedSupabaseClient)
-      .from('users')
-      .select('role')
-      .eq('id', authUser.id)
-      .single();
-
-    if (dbError || !dbUser) {
-      return res.status(403).json({
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Insufficient permissions or user not found' }
-      });
-    }
-
-    const userData = dbUser as { role: string };
-    if (userData.role !== 'admin' && userData.role !== 'editor') {
-      return res.status(403).json({
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Insufficient permissions' }
-      });
-    }
-
-    const user = {
-      id: authUser.id,
-      email: authUser.email!,
-      role: userData.role as 'admin' | 'editor' | 'user'
-    };
 
     // Validate user ID
     const { id } = req.query;
@@ -118,15 +58,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // GET - Fetch single user
     if (req.method === 'GET') {
-      const supabaseAdmin = await getSupabaseAdmin() as unknown as TypedSupabaseClient;
-      const { data, error } = await (supabaseAdmin as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabaseAdmin as unknown as TypedSupabaseClient)
         .from('users')
         .select('id, email, name, role, status, avatar_url, bio, last_sign_in, created_at, updated_at')
         .eq('id', id)
         .single();
 
       if (error) {
-        console.error(`User fetch failed for admin ${user.email}:`, error);
+        console.error(`User fetch failed for admin ${requesterUser.email}:`, error);
         return res.status(404).json({
           success: false,
           error: {
@@ -138,144 +77,79 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         });
       }
 
-      // Sanitize user data
-      const detailedUserData = data as {
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-        status: string;
-        avatar_url: string | null;
-        bio: string | null;
-        last_sign_in: string | null;
-        created_at: string;
-        updated_at: string;
-      };
-      const sanitizedUser = {
-        id: detailedUserData.id,
-        email: detailedUserData.email,
-        name: detailedUserData.name,
-        role: detailedUserData.role,
-        status: detailedUserData.status,
-        avatar_url: detailedUserData.avatar_url,
-        bio: detailedUserData.bio,
-        last_sign_in: detailedUserData.last_sign_in,
-        created_at: detailedUserData.created_at,
-        updated_at: detailedUserData.updated_at
-      };
-
-      console.log(`User [${id}] returned to admin: ${user.email}`, {
-        userEmail: detailedUserData.email,
-        role: detailedUserData.role,
-        timestamp: new Date().toISOString()
-      });
-
       return res.status(200).json({
         success: true,
-        data: { user: sanitizedUser },
+        data: { user: data },
         timestamp: new Date().toISOString()
       });
     }
 
     // PUT/PATCH - Update user role or status
     if (req.method === 'PUT' || req.method === 'PATCH') {
-      // TEMPORARILY BYPASS ADMIN ROLE CHECK FOR DEBUGGING
-      console.log('=== PATCH REQUEST: BYPASSING ADMIN ROLE CHECK ===');
-      
-      // Validate input based on request body
-      console.log('=== PATCH REQUEST: VALIDATING INPUT ===');
-      console.log('Request body:', req.body);
-      
       const validatedRole = roleUpdateSchema.safeParse(req.body);
       const validatedStatus = statusUpdateSchema.safeParse(req.body);
       
-      console.log('Validation results:', {
-        roleValidation: validatedRole.success,
-        statusValidation: validatedStatus.success,
-        roleData: validatedRole.data,
-        statusData: validatedStatus.data
-      });
-
       if (!validatedRole.success && !validatedStatus.success) {
-        console.log('=== PATCH REQUEST: VALIDATION FAILED ===');
         return res.status(400).json({
           success: false,
           error: {
             code: 'INVALID_INPUT',
-            message: 'Valid role or status field required',
-            details: {
-              roleError: validatedRole.error,
-              statusError: validatedStatus.error
-            }
+            message: 'Valid role or status field required'
           },
           timestamp: new Date().toISOString()
         });
       }
 
-      const updateData: UserUpdateData = {};
+      const updateData: UserUpdateData = {
+        updated_at: new Date().toISOString()
+      };
       
       if (validatedRole.success) {
-        const { role } = validatedRole.data;
-        console.log('=== PATCH REQUEST: UPDATING ROLE TO ===', role);
-        
-        // TEMPORARILY BYPASS SELF-ADMIN ROLE CHECK
-        console.log('=== PATCH REQUEST: BYPASSING SELF-ADMIN ROLE CHECK ===');
-        
-        updateData.role = role;
+        updateData.role = validatedRole.data.role;
       }
 
       if (validatedStatus.success) {
-        const { status } = validatedStatus.data;
-        console.log('=== PATCH REQUEST: UPDATING STATUS TO ===', status);
-        
-        // TEMPORARILY BYPASS SELF-DEACTIVATION CHECK
-        console.log('=== PATCH REQUEST: BYPASSING SELF-DEACTIVATION CHECK ===');
-        
-        updateData.status = status;
+        updateData.status = validatedStatus.data.status;
       }
       
-      console.log('=== PATCH REQUEST: UPDATE DATA ===', updateData);
-      
-      // TEMPORARILY BYPASS DATABASE OPERATIONS FOR DEBUGGING
-      console.log('=== PATCH REQUEST: BYPASSING DATABASE OPERATIONS ===');
-      console.log('=== PATCH REQUEST: RETURNING SUCCESS RESPONSE ===');
+      const { data: updatedUser, error } = await (supabaseAdmin as unknown as TypedSupabaseClient)
+        .from('users')
+        .update(updateData)
+        .eq('id', id)
+        .select('*')
+        .single();
+
+      if (error) {
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'UPDATE_FAILED',
+            message: 'Failed to update user',
+            details: error.message
+          },
+          timestamp: new Date().toISOString()
+        });
+      }
       
       return res.status(200).json({
         success: true,
         data: {
-          message: 'User updated successfully (DEBUG MODE)',
-          updateData: updateData,
-          userId: id,
-          updatedBy: user?.email
+          message: 'User updated successfully',
+          user: updatedUser
         },
         timestamp: new Date().toISOString()
       });
-
-      }
+    }
 
     // DELETE - Archive or permanently delete user
     if (req.method === 'DELETE') {
-      // Authorize admin access only
-      if (user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: {
-            code: 'FORBIDDEN',
-            message: 'Admin access required',
-            details: null
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
       // Prevent admin from deleting themselves
-      if (user.id === id) {
+      if (requesterUser.id === id) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'CANNOT_DELETE_SELF',
-            message: 'Cannot delete your own account',
-            details: null
+            message: 'Cannot delete your own account'
           },
           timestamp: new Date().toISOString()
         });
@@ -298,224 +172,98 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const { permanent, confirmation } = validatedData.data;
 
       // Get the user to be deleted
-      const supabaseAdmin = await getSupabaseAdmin() as unknown as TypedSupabaseClient;
-      const { data: userToDelete, error: fetchError } = await supabaseAdmin
+      const { data: userToDelete, error: fetchError } = await (supabaseAdmin as unknown as TypedSupabaseClient)
         .from('users')
         .select('*')
         .eq('id', id)
         .maybeSingle();
 
-      if (fetchError) {
-        console.error(`User fetch failed for admin ${user.email}:`, fetchError);
-        return res.status(500).json({
-          success: false,
-          error: {
-            code: 'USER_FETCH_FAILED',
-            message: 'Failed to fetch user information',
-            details: process.env.NODE_ENV === 'development' ? (fetchError as { message?: string }).message : null
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      if (!userToDelete) {
+      if (fetchError || !userToDelete) {
         return res.status(404).json({
           success: false,
           error: {
             code: 'USER_NOT_FOUND',
-            message: 'User not found',
-            details: null
+            message: 'User not found'
           },
           timestamp: new Date().toISOString()
         });
       }
 
-      // Cast userToDelete to proper type
-      const typedUserToDelete = userToDelete as {
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-        status: string;
-      };
-
-      // For permanent deletion, prevent deleting the last admin
-      if (permanent && typedUserToDelete.role === 'admin') {
-        const adminCountResult = await supabaseAdmin
-          .from('users')
-          .select('id')
-          .eq('role', 'admin')
-          .eq('status', 'active');
-        
-        const adminCountData = await adminCountResult as unknown as { data: unknown[]; error: unknown };
-        const { data: adminCount, error: adminCountError } = adminCountData;
-
-        if (adminCountError) {
-          console.error('Admin count check error:', adminCountError);
-          return res.status(500).json({
-            success: false,
-            error: {
-              code: 'ADMIN_COUNT_ERROR',
-              message: 'Failed to verify admin count',
-              details: process.env.NODE_ENV === 'development' ? (adminCountError as { message?: string }).message : null
-            },
-            timestamp: new Date().toISOString()
-          });
-        }
-
-        if (adminCount && adminCount.length <= 1) {
-          return res.status(400).json({
-            success: false,
-            error: {
-              code: 'LAST_ADMIN',
-              message: 'Cannot delete the last admin user',
-              details: 'At least one active admin user must remain in the system'
-            },
-            timestamp: new Date().toISOString()
-          });
-        }
-      }
+      const typedUserToDelete = userToDelete as { id: string; role: string; email: string };
 
       if (permanent) {
-        // Validate confirmation text for permanent deletion
         if (confirmation.toLowerCase() !== 'delete') {
           return res.status(400).json({
             success: false,
             error: {
               code: 'INVALID_CONFIRMATION',
-              message: 'Confirmation text must be "delete" for permanent deletion',
-              details: null
+              message: 'Confirmation text must be "delete" for permanent deletion'
             },
             timestamp: new Date().toISOString()
           });
         }
 
-        // Delete user from auth system first
-        try {
-          const supabaseAuth = await getSupabaseAdmin() as {
-            auth: {
-              admin: {
-                deleteUser: (userId: string) => Promise<{ error: unknown }>;
-              };
-            };
-          };
-          const { error: authDeleteError } = await supabaseAuth.auth.admin.deleteUser(id);
-          
-          if (authDeleteError) {
-            console.error('Auth deletion error:', authDeleteError);
-            return res.status(500).json({
+        // Prevent deleting the last admin
+        if (typedUserToDelete.role === 'admin') {
+          const { count } = await (supabaseAdmin as unknown as TypedSupabaseClient)
+            .from('users')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'admin');
+
+          if (count && count <= 1) {
+            return res.status(400).json({
               success: false,
               error: {
-                code: 'AUTH_DELETE_ERROR',
-                message: 'Failed to delete user from authentication system',
-                details: process.env.NODE_ENV === 'development' ? (authDeleteError as { message?: string }).message : null
+                code: 'LAST_ADMIN',
+                message: 'Cannot delete the last admin user'
               },
               timestamp: new Date().toISOString()
             });
           }
-        } catch (authError) {
-          console.error('Auth deletion error:', authError);
-          return res.status(500).json({
-            success: false,
-            error: {
-              code: 'AUTH_DELETE_ERROR',
-              message: 'Failed to delete user from authentication system',
-              details: process.env.NODE_ENV === 'development' ? (authError as Error).message : null
-            },
-            timestamp: new Date().toISOString()
-          });
         }
 
-        // Delete user from database
-        const deleteResult = await (supabaseAdmin as unknown as {
-          from: (table: string) => {
-            delete: () => {
-              eq: (column: string, value: string) => Promise<unknown>;
-            };
-          };
-        })
+        // Delete from auth system
+        const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+        if (authError) {
+          throw authError;
+        }
+
+        // Delete from DB
+        const { error: dbError } = await (supabaseAdmin as unknown as TypedSupabaseClient)
           .from('users')
           .delete()
           .eq('id', id);
         
-        const { error: deleteError } = await deleteResult as { error: unknown };
-
-        if (deleteError) {
-          console.error('Database deletion error:', deleteError);
-          return res.status(500).json({
-            success: false,
-            error: {
-              code: 'DELETE_ERROR',
-              message: 'Failed to delete user from database',
-              details: process.env.NODE_ENV === 'development' ? (deleteError as { message?: string }).message : null
-            },
-            timestamp: new Date().toISOString()
-          });
+        if (dbError) {
+          throw dbError;
         }
-
-        // Log permanent user deletion
-        console.info(`User permanently deleted by admin: ${user.email}`, {
-          targetUserId: id,
-          targetUserEmail: typedUserToDelete.email,
-          timestamp: new Date().toISOString()
-        });
 
         return res.status(200).json({
           success: true,
-          data: { 
-            message: 'User permanently deleted successfully',
-            deletedUser: typedUserToDelete
-          },
+          data: { message: 'User permanently deleted successfully' },
           timestamp: new Date().toISOString()
         });
       } else {
-        // Archive user by setting status to 'inactive'
-        const { data: archivedUser, error } = await supabaseAdmin
+        // Archive
+        const { data: archivedUser, error } = await (supabaseAdmin as unknown as TypedSupabaseClient)
           .from('users')
           .update({ 
             status: 'archived',
             updated_at: new Date().toISOString()
           })
           .eq('id', id)
-          .select('id, email, name, role, status, updated_at')
+          .select('*')
           .single();
 
         if (error) {
-          console.error(`User archive failed for admin ${user.email}:`, error);
-          return res.status(500).json({
-            success: false,
-            error: {
-              code: 'USER_ARCHIVE_FAILED',
-              message: 'Failed to archive user',
-              details: process.env.NODE_ENV === 'development' ? (error as { message?: string }).message : null
-            },
-            timestamp: new Date().toISOString()
-          });
+          throw error;
         }
-
-        // Cast archivedUser to proper type
-        const typedArchivedUser = archivedUser as {
-          id: string;
-          email: string;
-          name: string;
-          role: string;
-          status: string;
-          updated_at: string;
-        };
-
-        // Log user archiving
-        console.info(`User archived by admin: ${user.email}`, {
-          targetUserId: id,
-          targetUserEmail: typedArchivedUser.email,
-          reason: confirmation || 'No reason provided',
-          timestamp: new Date().toISOString()
-        });
 
         return res.status(200).json({
           success: true,
           data: { 
             message: 'User archived successfully',
-            user: typedArchivedUser
+            user: archivedUser
           },
           timestamp: new Date().toISOString()
         });
@@ -524,164 +272,64 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // POST - Restore user
     if (req.method === 'POST') {
-      // Authorize admin access only
-      if (user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: {
-            code: 'FORBIDDEN',
-            message: 'Admin access required',
-            details: null
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Restore user by setting status to 'active'
-      const supabaseAdmin = await getSupabaseAdmin() as unknown as TypedSupabaseClient;
-      const { data: restoredUser, error } = await supabaseAdmin
+      const { data: restoredUser, error } = await (supabaseAdmin as unknown as TypedSupabaseClient)
         .from('users')
         .update({ 
           status: 'active',
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
-        .select('id, email, name, role, status, updated_at')
+        .select('*')
         .single();
 
       if (error) {
-        console.error(`User restore failed for admin ${user.email}:`, error);
-        return res.status(500).json({
-          success: false,
-          error: {
-            code: 'USER_RESTORE_FAILED',
-            message: 'Failed to restore user',
-            details: process.env.NODE_ENV === 'development' ? (error as { message?: string }).message : null
-          },
-          timestamp: new Date().toISOString()
-        });
+        throw error;
       }
-
-      // Cast restoredUser to proper type
-      const typedRestoredUser = restoredUser as {
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-        status: string;
-        updated_at: string;
-      };
-
-      // Log user restoration
-      console.info(`User restored by admin: ${user.email}`, {
-        targetUserId: id,
-        targetUserEmail: typedRestoredUser.email,
-        timestamp: new Date().toISOString()
-      });
 
       return res.status(200).json({
         success: true,
         data: { 
           message: 'User restored successfully',
-          user: typedRestoredUser
+          user: restoredUser
         },
         timestamp: new Date().toISOString()
       });
     }
 
-    // PATCH - Set user password
-    if (req.method === 'PATCH') {
-      // Authorize admin access only
-      if (user.role !== 'admin') {
-        return res.status(403).json({
-          success: false,
-          error: {
-            code: 'FORBIDDEN',
-            message: 'Admin access required',
-            details: null
-          },
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Validate input for password setting
+    // POST - Set password (not standard but handled here in previous version)
+    // Actually the previous version had PATCH for password
+    if (req.method === 'PATCH' && req.body.password) {
       const validatedData = setPasswordSchema.safeParse(req.body);
       if (!validatedData.success) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'INVALID_INPUT',
-            message: 'Invalid password data',
-            details: validatedData.error.errors
+            message: 'Invalid password data'
           },
           timestamp: new Date().toISOString()
         });
       }
 
-      const { password } = validatedData.data;
+      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
+        id,
+        { password: validatedData.data.password }
+      );
 
-      // Set user password in auth system
-      try {
-        const supabaseAdmin = await getSupabaseAdmin() as {
-          auth: {
-            admin: {
-              updateUserById: (userId: string, data: { password: string }) => Promise<{ error: unknown }>;
-            };
-          };
-        };
-        const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
-          id,
-          { password }
-        );
-
-        if (authError) {
-          console.error('Password setting error:', authError);
-          return res.status(500).json({
-            success: false,
-            error: {
-              code: 'PASSWORD_SET_FAILED',
-              message: 'Failed to set user password',
-              details: process.env.NODE_ENV === 'development' ? (authError as { message?: string }).message : null
-            },
-            timestamp: new Date().toISOString()
-          });
-        }
-
-        // Log password setting
-        console.info(`User password set by admin: ${user.email}`, {
-          targetUserId: id,
-          timestamp: new Date().toISOString()
-        });
-
-        return res.status(200).json({
-          success: true,
-          data: { 
-            message: 'User password set successfully'
-          },
-          timestamp: new Date().toISOString()
-        });
-      } catch (error) {
-        console.error('Password setting error:', error);
-        return res.status(500).json({
-          success: false,
-          error: {
-            code: 'PASSWORD_SET_FAILED',
-            message: 'Failed to set user password',
-            details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
-          },
-          timestamp: new Date().toISOString()
-        });
+      if (authError) {
+        throw authError;
       }
+
+      return res.status(200).json({
+        success: true,
+        data: { message: 'User password set successfully' },
+        timestamp: new Date().toISOString()
+      });
     }
 
     return res.status(405).json({
       success: false,
-      error: {
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only GET, PUT, PATCH, DELETE, and POST methods are allowed',
-        details: null
-      },
-      timestamp: new Date().toISOString()
+      error: { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed' }
     });
 
   } catch (error) {
@@ -690,7 +338,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred while processing user request',
+        message: 'An unexpected error occurred',
         details: process.env.NODE_ENV === 'development' ? (error as Error).message : null
       },
       timestamp: new Date().toISOString()
@@ -698,5 +346,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Apply Supabase auth and error handler
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:users',
+  auditAction: 'user_management_action'
+}));

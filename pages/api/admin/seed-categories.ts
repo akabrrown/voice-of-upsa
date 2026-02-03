@@ -1,7 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -62,3 +64,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
+
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:setup',
+  auditAction: 'categories_seeded'
+}));

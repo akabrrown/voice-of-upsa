@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Header from './Header';
 import Footer from './Footer';
 import MaintenanceMode from './MaintenanceMode';
+import NewYearPopup from './NewYearPopup';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -154,7 +155,10 @@ const Layout: React.FC<LayoutProps> = ({
         ) : settings?.maintenance_mode && !isAdminPage ? (
           <MaintenanceMode settings={settings} />
         ) : (
-          children
+          <>
+            <NewYearPopup />
+            {children}
+          </>
         )}
       </main>
 

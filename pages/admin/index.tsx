@@ -246,9 +246,15 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   </NextLink>
                   <NextLink href="/admin/anonymous-messages">
-                    <div className="bg-navy text-white p-3 sm:p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer col-span-2 flex flex-col items-center sm:items-start">
+                    <div className="bg-navy text-white p-3 sm:p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer flex flex-col items-center sm:items-start">
                       <FiMessageCircle className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
-                      <p className="text-sm sm:font-semibold">Anonymous Messages</p>
+                      <p className="text-sm sm:font-semibold">Anonymous</p>
+                    </div>
+                  </NextLink>
+                  <NextLink href="/admin/team">
+                    <div className="bg-navy text-white p-3 sm:p-4 rounded-lg hover:bg-navy-dark transition-colors duration-200 cursor-pointer flex flex-col items-center sm:items-start">
+                      <FiUsers className="w-5 h-5 sm:w-6 sm:h-6 mb-2" />
+                      <p className="text-sm sm:font-semibold">Team Gallery</p>
                     </div>
                   </NextLink>
                 </div>

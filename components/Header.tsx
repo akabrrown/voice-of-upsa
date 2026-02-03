@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { useSupabase } from './SupabaseProvider';
 import { useCMSAuth } from '../hooks/useCMSAuth';
 import { useSiteSettings } from '../hooks/useSiteSettings';
-import { FiMenu, FiX, FiHome, FiFileText, FiInfo, FiMail, FiUser, FiSettings, FiEdit, FiUsers, FiBookmark, FiDollarSign, FiMessageCircle } from 'react-icons/fi';
+import { FiMenu, FiX, FiHome, FiFileText, FiInfo, FiMail, FiUser, FiSettings, FiEdit, FiUsers, FiBookmark, FiDollarSign, FiMessageCircle, FiBell } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 interface NavLink {
@@ -25,11 +25,59 @@ const Header: React.FC = () => {
     { href: '/contact', label: 'Contact', icon: FiMail },
   ];
 
-  const { user, userRole, supabase } = useSupabase();
+  const { user, userRole, supabase, session } = useSupabase();
   const { user: cmsUser } = useCMSAuth();
   const { settings: siteSettings } = useSiteSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
+
+  // Notification state
+  const [notifications, setNotifications] = useState({ stories: 0, messages: 0, comments: 0, total: 0 });
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Fetch notifications for internal staff
+  // TEMPORARILY DISABLED - API route has turbopack compilation issue
+  /*
+  React.useEffect(() => {
+    if (user && session && (userRole === 'admin' || userRole === 'editor')) {
+      const fetchNotifications = async () => {
+        try {
+          const res = await fetch('/api/admin/notifications/stats', {
+              headers: {
+                  'Authorization': `Bearer ${session.access_token}`
+              }
+          });
+          if (res.ok) {
+            const contentType = res.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const data = await res.json();
+              if (data.success) {
+                setNotifications(data.data);
+              }
+            }
+          } else if (res.status === 401 || res.status === 403) {
+            // Silently skip - user is not authenticated or not authorized
+            // This is expected when not logged in or when session expires
+            return;
+          } else {
+            console.error('Notification stats fetch failed:', res.status);
+          }
+        } catch (error) {
+          // Only log errors that aren't related to auth/JSON parsing
+          if (error instanceof Error && !error.message.includes('<!DOCTYPE')) {
+            console.error('Failed to fetch notifications:', error);
+          }
+        }
+      };
+
+      fetchNotifications();
+      // Poll every 60 seconds
+      const interval = setInterval(fetchNotifications, 60000);
+      return () => clearInterval(interval);
+    }
+    return;
+  }, [user, session, userRole]);
+  */
 
   // Use CMS user role if available, fallback to Supabase user role
   const currentUserRole = cmsUser?.role || userRole;
@@ -72,6 +120,7 @@ const Header: React.FC = () => {
         { href: '/admin', label: 'Admin Panel', icon: FiUsers },
         { href: '/admin/ads', label: 'Manage Ads', icon: FiDollarSign },
         { href: '/admin/users', label: 'Manage Users', icon: FiUsers },
+        { href: '/admin/team', label: 'Team Gallery', icon: FiUsers },
         { href: '/admin/settings', label: 'Site Settings', icon: FiSettings }
       );
     }
@@ -84,7 +133,7 @@ const Header: React.FC = () => {
   return (
     <header className="fixed top-0 left-0 right-0 bg-navy text-white shadow-md z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 relative">
           {/* Logo */}
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity flex-shrink-0">
             <Image
@@ -101,10 +150,15 @@ const Header: React.FC = () => {
               }}
             />
           </Link>
+
+          {/* Mobile Title - Centered */}
+          <div className="md:hidden absolute left-1/2 transform -translate-x-1/2 text-golden font-bold text-xl whitespace-nowrap">
+            Voice of UPSA
+          </div>
           
           {/* Desktop Navigation - Centered */}
           <nav className="hidden md:flex items-center space-x-6 flex-1 justify-center">
-            {navigationLinks.slice(0, 4).map((link) => (
+            {navigationLinks.slice(0, 6).map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -119,6 +173,77 @@ const Header: React.FC = () => {
           
           {/* Right side - Auth buttons */}
           <div className="hidden md:flex items-center space-x-4">
+            
+            {/* Admin Notifications */}
+            {(userRole === 'admin' || userRole === 'editor') && (
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 text-gray-300 hover:text-white transition-colors relative"
+                >
+                  <FiBell className="w-6 h-6" />
+                  {notifications.total > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
+                      {notifications.total}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white text-navy rounded-lg shadow-xl overflow-hidden z-50 transform origin-top-right transition-all">
+                    <div className="p-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                      <h3 className="font-semibold text-sm">Notifications</h3>
+                      <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600">
+                        <FiX className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {notifications.total === 0 ? (
+                      <div className="p-4 text-center text-gray-500 text-sm">
+                        No new notifications
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-100">
+                        {notifications.stories > 0 && (
+                          <Link href="/admin/anonymous-stories" className="block px-4 py-3 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{notifications.stories} Pending Stories</p>
+                                <p className="text-xs text-blue-600">Review submissions</p>
+                              </div>
+                            </div>
+                          </Link>
+                        )}
+                        {notifications.messages > 0 && (
+                          <Link href="/admin/messages" className="block px-4 py-3 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center">
+                              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{notifications.messages} New Messages</p>
+                                <p className="text-xs text-green-600">Check inbox</p>
+                              </div>
+                            </div>
+                          </Link>
+                        )}
+                         {notifications.comments > 0 && (
+                          <Link href="/admin/comments" className="block px-4 py-3 hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center">
+                              <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{notifications.comments} Pending Comments</p>
+                                <p className="text-xs text-yellow-600">Moderate comments</p>
+                              </div>
+                            </div>
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             
             {/* Dropdown for authenticated users */}
             {user && (
@@ -138,7 +263,7 @@ const Header: React.FC = () => {
                       )}
                     </div>
                     
-                    {navigationLinks.slice(4).map((link) => (
+                    {navigationLinks.slice(6).map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
@@ -171,18 +296,106 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-navy-light transition-colors"
-            aria-label="Toggle mobile menu"
-          >
-            {mobileMenuOpen ? (
-              <FiX className="w-6 h-6" />
-            ) : (
-              <FiMenu className="w-6 h-6" />
+          {/* Mobile Actions - Notification Bell + Menu Button */}
+          <div className="md:hidden flex items-center space-x-2">
+            {/* Admin Notifications (Mobile) */}
+            {(userRole === 'admin' || userRole === 'editor') && (
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 text-gray-300 hover:text-white transition-colors relative"
+                >
+                  <FiBell className="w-6 h-6" />
+                  {notifications.total > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
+                      {notifications.total}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown (Mobile) */}
+                {showNotifications && (
+                  <div className="fixed inset-x-4 top-16 mt-2 bg-white text-navy rounded-lg shadow-2xl overflow-hidden z-[60] transform origin-top transition-all">
+                    <div className="p-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                      <h3 className="font-semibold text-sm">Notifications</h3>
+                      <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600">
+                        <FiX className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="max-h-[60vh] overflow-y-auto">
+                      {notifications.total === 0 ? (
+                        <div className="p-4 text-center text-gray-500 text-sm">
+                          No new notifications
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-100">
+                          {notifications.stories > 0 && (
+                            <Link 
+                              href="/admin/anonymous-stories" 
+                              onClick={() => setShowNotifications(false)}
+                              className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center">
+                                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">{notifications.stories} Pending Stories</p>
+                                  <p className="text-xs text-blue-600">Review submissions</p>
+                                </div>
+                              </div>
+                            </Link>
+                          )}
+                          {notifications.messages > 0 && (
+                            <Link 
+                              href="/admin/messages" 
+                              onClick={() => setShowNotifications(false)}
+                              className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center">
+                                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">{notifications.messages} New Messages</p>
+                                  <p className="text-xs text-green-600">Check inbox</p>
+                                </div>
+                              </div>
+                            </Link>
+                          )}
+                          {notifications.comments > 0 && (
+                            <Link 
+                              href="/admin/comments" 
+                              onClick={() => setShowNotifications(false)}
+                              className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center">
+                                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">{notifications.comments} Pending Comments</p>
+                                  <p className="text-xs text-yellow-600">Moderate comments</p>
+                                </div>
+                              </div>
+                            </Link>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
-          </button>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg hover:bg-navy-light transition-colors"
+              aria-label="Toggle mobile menu"
+            >
+              {mobileMenuOpen ? (
+                <FiX className="w-6 h-6" />
+              ) : (
+                <FiMenu className="w-6 h-6" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -267,6 +480,7 @@ const Header: React.FC = () => {
                     { href: '/admin', label: 'Admin Panel', icon: FiUsers },
                     { href: '/admin/ads', label: 'Manage Ads', icon: FiDollarSign },
                     { href: '/admin/users', label: 'Manage Users', icon: FiUsers },
+                    { href: '/admin/team', label: 'Team Gallery', icon: FiUsers },
                     { href: '/admin/settings', label: 'Site Settings', icon: FiSettings }
                   ].map((link) => (
                     <Link

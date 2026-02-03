@@ -5,6 +5,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getClientIP } from '@/lib/security/auth-security';
 // import { withRateLimit } from '@/lib/api/middleware/auth';
 import { z } from 'zod';
+import { withPublicCORS } from '@/lib/security/cors-config';
 
 // Define category interface for type safety
 interface CategoryResult {
@@ -20,7 +21,7 @@ interface SupabaseResult<T> {
 // Enhanced validation schema for query parameters
 const articlesQuerySchema = z.object({
   page: z.string().transform(Number).default('1'),
-  limit: z.string().transform(Number).default('12'),
+  limit: z.string().transform(Number).default('1000'),
   search: z.string().regex(/^[^<>]*$/, 'Search term cannot contain HTML tags').optional(),
   status: z.enum(['published', 'draft', 'archived']).default('published'),
   category: z.string().regex(/^[^<>]*$/, 'Category cannot contain HTML tags').optional(),
@@ -276,8 +277,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user?: { id: s
   }
 }
 
-// Export handler directly (no CMS security - allows public access)
-export default handler;
+// Export handler with Public CORS (allows public access but no credentials)
+export default withPublicCORS(handler);
                                           
     
     

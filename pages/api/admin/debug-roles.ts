@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '../../../lib/database-server';
 import { withErrorHandler } from '../../../lib/api/middleware/error-handler';
+import { withCMSSecurity } from '../../../lib/security/cms-security';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -100,4 +101,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // Apply middleware
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:debug',
+  auditAction: 'roles_debugged'
+}));

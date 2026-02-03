@@ -1,7 +1,7 @@
 // Field Encryption for Sensitive User Data
 import crypto from 'crypto';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 interface EncryptionConfig {
   algorithm: string;
@@ -107,7 +107,12 @@ class FieldEncryption {
       }
       
       // Update user with encrypted fields
-      const { error } = await (await supabaseAdmin as any)
+      const adminClient = await getSupabaseAdmin();
+      if (!adminClient) {
+        throw new Error('Admin client unavailable');
+      }
+      
+      const { error } = await (adminClient as any)
         .from('users')
         .update(encryptedFields)
         .eq('id', userId);
@@ -150,7 +155,13 @@ class FieldEncryption {
     
     try {
       // Get all users with sensitive fields that aren't encrypted
-      const { data: users, error } = await (await supabaseAdmin)
+      const adminClient = await getSupabaseAdmin();
+      if (!adminClient) {
+        errors.push('Admin client unavailable');
+        return { migrated: 0, errors };
+      }
+      
+      const { data: users, error } = await adminClient
         .from('users')
         .select('id, phone, address, emergency_contact, bio')
         .or('phone.not.is.null,address.not.is.null,emergency_contact.not.is.null,bio.not.is.null');

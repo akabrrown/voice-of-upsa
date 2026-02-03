@@ -37,6 +37,9 @@ interface AdSubmission {
   payment_amount: number;
   payment_date: string;
   admin_notes: string;
+  custom_duration: string;
+  due_date: string;
+  reminder_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -50,7 +53,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
   // Handle PUT - Status Update
   if (req.method === 'PUT') {
     const { id } = req.query;
-    const { status, adminNotes } = req.body;
+    const { status, adminNotes, dueDate, reminderEnabled } = req.body;
 
     if (!id || typeof id !== 'string') {
       return res.status(400).json({
@@ -60,7 +63,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       });
     }
 
-    if (!status || !['pending', 'approved', 'rejected', 'published', 'archived'].includes(status)) {
+    if (!status || !['pending', 'under-review', 'approved', 'rejected', 'published', 'archived'].includes(status)) {
       return res.status(400).json({
         success: false,
         error: { code: 'INVALID_REQUEST', message: 'Valid status is required' },
@@ -73,6 +76,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       .update({
         status,
         admin_notes: adminNotes || null,
+        due_date: dueDate || null,
+        reminder_enabled: reminderEnabled ?? false,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
@@ -158,6 +163,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
       duration: ad.duration,
       startDate: ad.start_date,
       website: ad.website,
+      additionalInfo: ad.additional_info,
+      attachmentUrls: ad.attachment_urls,
+      termsAccepted: ad.terms_accepted,
+      adminNotes: ad.admin_notes,
+      customDuration: ad.custom_duration,
+      dueDate: ad.due_date,
+      reminderEnabled: ad.reminder_enabled,
       status: ad.status,
       created_at: ad.created_at,
       updated_at: ad.updated_at

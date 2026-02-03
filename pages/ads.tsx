@@ -30,6 +30,7 @@ const adSubmissionSchema = z.object({
   website: z.string().url('Please enter a valid website URL').optional().or(z.literal('')),
   additionalInfo: z.string().optional(),
   termsAccepted: z.boolean().refine(val => val === true, 'You must accept the terms and conditions'),
+  reminderEnabled: z.boolean(),
 });
 
 type AdSubmissionForm = z.infer<typeof adSubmissionSchema>;
@@ -61,13 +62,14 @@ const AdsPage: React.FC = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
-  const { register, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm<AdSubmissionForm>({
+  const { register, handleSubmit, formState: { errors }, watch, reset, setValue } = useForm({
     resolver: zodResolver(adSubmissionSchema),
     defaultValues: {
       businessType: 'individual',
       adLocations: [],
       duration: '1-week',
       termsAccepted: false,
+      reminderEnabled: false,
     },
   });
 
@@ -715,6 +717,18 @@ const AdsPage: React.FC = () => {
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent dark:bg-gray-700 dark:text-white"
                       placeholder="Any additional details or requirements..."
                     />
+                  </div>
+
+                  <div className="flex items-center space-x-3 bg-golden/5 p-4 rounded-lg border border-golden/20">
+                    <input
+                      {...register('reminderEnabled')}
+                      type="checkbox"
+                      id="reminderEnabled"
+                      className="h-5 w-5 text-golden border-gray-300 rounded focus:ring-golden"
+                    />
+                    <label htmlFor="reminderEnabled" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Receive resubscription reminders before your campaign ends
+                    </label>
                   </div>
                 </div>
 

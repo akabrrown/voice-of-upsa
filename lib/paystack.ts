@@ -33,7 +33,7 @@ export interface VerificationResponse {
 // Initialize payment with Paystack
 export async function initializePayment(paymentData: PaymentData): Promise<PaymentResponse> {
   try {
-    const response = await fetch('/api/ads/paystack/initialize', {
+    const response = await fetch('/api/ads/payment/initialize', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -63,12 +63,11 @@ export async function initializePayment(paymentData: PaymentData): Promise<Payme
 // Verify payment with Paystack
 export async function verifyPayment(reference: string): Promise<VerificationResponse> {
   try {
-    const response = await fetch('/api/ads/paystack/verify', {
-      method: 'POST',
+    const response = await fetch(`/api/ads/payment/verify?reference=${reference}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ reference }),
     });
 
     const data = await response.json();

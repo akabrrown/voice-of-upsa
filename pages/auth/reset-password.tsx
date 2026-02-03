@@ -6,10 +6,12 @@ import Image from 'next/image';
 import { FiArrowLeft, FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import Layout from '@/components/Layout';
 import toast from 'react-hot-toast';
-import { updatePassword } from '@/lib/supabase-client';
+import { useSupabase } from '@/components/SupabaseProvider';
+import { updatePassword, getSupabaseClient } from '@/lib/supabase/client';
 
 const ResetPasswordPage: React.FC = () => {
   const router = useRouter();
+  const { } = useSupabase();
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,9 +26,27 @@ const ResetPasswordPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Check if we're in reset mode (has access token in URL)
-    if (router.isReady && router.query.access_token) {
-      setIsResetMode(true);
+    // Check if we're in reset mode (has access token or type=recovery in hash or query)
+    if (router.isReady) {
+      const hash = window.location.hash;
+      const urlParams = new URLSearchParams(hash.substring(1));
+      
+      // Check hash parameters first
+      if (urlParams.get('type') === 'recovery' || urlParams.get('access_token')) {
+        setIsResetMode(true);
+      } 
+      // Then check query parameters
+      else if (router.query.access_token || router.query.type === 'recovery') {
+        setIsResetMode(true);
+      }
+      
+      // Log for debugging
+      console.log('Reset password page - URL params:', {
+        hash: hash,
+        urlParams: Object.fromEntries(urlParams.entries()),
+        query: router.query,
+        isResetMode: urlParams.get('type') === 'recovery' || urlParams.get('access_token') || router.query.access_token || router.query.type === 'recovery'
+      });
     }
   }, [router.isReady, router.query]);
 
@@ -109,13 +129,51 @@ const ResetPasswordPage: React.FC = () => {
     setLoading(true);
     
     try {
-      await updatePassword(newPassword);
+      const supabase = getSupabaseClient();
       
-      toast.success('Password updated successfully!');
-      router.push('/auth/sign-in');
-    } catch (error) {
-      toast.error('An unexpected error occurred');
+      // Extract the hash from the URL to get the recovery tokens
+      const hash = window.location.hash;
+      const urlParams = new URLSearchParams(hash.substring(1));
+      const accessToken = urlParams.get('access_token');
+      const refreshToken = urlParams.get('refresh_token');
+      
+      if (accessToken && refreshToken) {
+        // First, exchange the tokens to establish the session
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          throw new Error('Invalid or expired reset link. Please request a new password reset.');
+        }
+        
+        // Now update the password
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+        
+        if (error) {
+          console.error('Password update error:', error);
+          throw error;
+        }
+        
+        toast.success('Password updated successfully!');
+        
+        // Sign out and redirect to sign in
+        await supabase.auth.signOut();
+        router.push('/auth/sign-in');
+      } else {
+        // Fallback to the original method if no tokens in URL
+        await updatePassword(newPassword);
+        toast.success('Password updated successfully!');
+        router.push('/auth/sign-in');
+      }
+    } catch (error: unknown) {
       console.error('Update password error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

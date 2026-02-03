@@ -1,10 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getCMSRateLimit } from '@/lib/security/cms-security';
+import { withCMSSecurity, getCMSRateLimit, CMSUser } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
-import { requireAdminOrEditor } from '@/lib/auth-helpers';
 
 interface ActivityItem {
   type: 'article' | 'user';
@@ -20,7 +19,7 @@ interface MonthlyStats {
   views: number;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
   if (req.method !== 'GET') {
     return res.status(405).json({
       success: false,
@@ -41,8 +40,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     );
     rateLimitMiddleware(req);
 
-    // Apply authentication middleware
-    const user = await requireAdminOrEditor(req);
     console.log(`Dashboard stats: Admin access granted for ${user.email}`);
 
     // Get Supabase admin client
@@ -69,6 +66,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       .from('articles')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'published');
+
+    // Get ads nearing expiry (due date within 7 days)
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    
+    const { count: nearingExpiryAds } = await supabaseAdmin
+      .from('ad_submissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published')
+      .lte('due_date', sevenDaysFromNow.toISOString().split('T')[0])
+      .gte('due_date', new Date().toISOString().split('T')[0]);
 
     // Get total comments
     let totalComments = 0;
@@ -195,6 +203,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         publishedArticles: publishedArticles || 0,
         totalComments,
         totalViews,
+        nearingExpiryAds: nearingExpiryAds || 0,
         recentActivity,
         monthlyStats
       },
@@ -216,4 +225,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // Apply enhanced CMS security middleware and error handler
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'view:analytics',
+  auditAction: 'dashboard_stats_accessed'
+}));

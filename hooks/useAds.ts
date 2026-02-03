@@ -37,7 +37,7 @@ function transformAdRecord(record: any): Ad {
   };
 }
 
-export const useAds = (adType?: string): UseAdsResult => {
+export const useAds = (adType?: string, locationName?: string): UseAdsResult => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,22 +49,34 @@ export const useAds = (adType?: string): UseAdsResult => {
         setError(null);
 
         const supabase = getSupabaseClient();
-        console.log(`Fetching ads for type: ${adType || 'all'}`);
+        console.log(`Fetching ads for type: ${adType || 'all'}, location: ${locationName || 'all'}`);
         
-        let query = supabase
+        let queryBuilder = supabase
           .from('ad_submissions')
-          .select('*')
-          .in('status', ['published', 'approved']) // Fetch both published and approved ads
+          .select(`
+            *,
+            ad_submission_locations!inner (
+              ad_locations!inner (
+                name
+              )
+            )
+          `)
+          .in('status', ['published', 'approved'])
           .order('created_at', { ascending: false });
 
-        if (adType && adType !== 'all') {
-          console.log(`Filtering by ad_type: ${adType}`);
-          query = query.eq('ad_type', adType);
+        if (locationName && locationName !== 'all') {
+          console.log(`Filtering by location_name: ${locationName}`);
+          queryBuilder = queryBuilder.eq('ad_submission_locations.ad_locations.name', locationName);
         }
 
-        const { data, error: fetchError } = await query;
+        if (adType && adType !== 'all') {
+          console.log(`Filtering by ad_type: ${adType} (or fallback to 'other')`);
+          // Include both the specific type and 'other' ads that match the location
+          queryBuilder = queryBuilder.or(`ad_type.eq.${adType},ad_type.eq.other`);
+        }
 
-        console.log('Ads query result:', { data, fetchError });
+        const { data, error: fetchError } = await queryBuilder;
+        console.log('Ads query result:', { dataLength: data?.length, fetchError });
 
         if (fetchError) {
           // Check if table doesn't exist yet
@@ -73,7 +85,6 @@ export const useAds = (adType?: string): UseAdsResult => {
             fetchError.message.includes('does not exist') ||
             (fetchError as { code?: string }).code === '42P01'
           ) {
-            // Table doesn't exist yet, return empty array
             console.log('Ad submissions table does not exist yet');
             setAds([]);
             return;
@@ -83,26 +94,7 @@ export const useAds = (adType?: string): UseAdsResult => {
 
         // Transform from snake_case to camelCase
         const transformedAds = (data || []).map(transformAdRecord);
-        console.log('Transformed ads:', transformedAds);
-        
-        // If no ads found for specific type, include "other" type ads as fallback
-        if (adType && adType !== 'all' && adType !== 'other' && transformedAds.length === 0) {
-          console.log(`No ads found for type "${adType}", checking for "other" type ads as fallback`);
-          const { data: otherAds, error: otherError } = await supabase
-            .from('ad_submissions')
-            .select('*')
-            .in('status', ['published', 'approved'])
-            .eq('ad_type', 'other')
-            .order('created_at', { ascending: false });
-          
-          if (!otherError && otherAds) {
-            const otherTransformedAds = otherAds.map(transformAdRecord);
-            console.log('Using "other" type ads as fallback:', otherTransformedAds);
-            setAds(otherTransformedAds);
-            return;
-          }
-        }
-        
+        console.log('Transformed ads count:', transformedAds.length);
         setAds(transformedAds);
       } catch (err) {
         console.error('Error fetching ads:', err);
@@ -113,7 +105,7 @@ export const useAds = (adType?: string): UseAdsResult => {
     };
 
     fetchAds();
-  }, [adType]);
+  }, [adType, locationName]);
 
   return { ads, loading, error };
 };

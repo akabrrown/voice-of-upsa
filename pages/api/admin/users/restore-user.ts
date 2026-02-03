@@ -1,9 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, requesterUser: CMSUser) {
   try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new Error('Failed to initialize Supabase admin client');
+    }
     // Only allow POST method
     if (req.method !== 'POST') {
       return res.status(405).json({
@@ -17,52 +22,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Get Supabase admin client
-    const supabaseAdmin = await getSupabaseAdmin();
-    if (!supabaseAdmin) {
-      throw new Error('Failed to initialize Supabase admin client');
-    }
-
-    // Verify authentication
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' }
-      });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !authUser) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid or expired session' }
-      });
-    }
-
-    // Get the user from database to check their role
-    const { data: dbUser, error: dbError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', authUser.id)
-      .single();
-
-    if (dbError || !dbUser) {
-      return res.status(403).json({
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Insufficient permissions or user not found' }
-      });
-    }
-
-    const userData = dbUser as { role: string };
-    if (userData.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Admin access required' }
-      });
-    }
+    // SECURITY: withCMSSecurity already verified requester is an admin (see export at bottom)
+    console.log('Restore user API - Requester:', requesterUser.email);
 
     // Get userId from query parameter
     const { userId } = req.query;
@@ -91,7 +52,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       .single();
 
     if (error) {
-      console.error(`User restore failed for admin ${authUser.email}:`, error);
+      console.error(`User restore failed for admin ${requesterUser.email}:`, error);
       return res.status(500).json({
         success: false,
         error: {
@@ -104,7 +65,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Log user restoration
-    console.info(`User restored by admin: ${authUser.email}`, {
+    console.info(`User restored by admin: ${requesterUser.email}`, {
       targetUserId: userId,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       targetUserEmail: (restoredUser as any)?.email,
@@ -134,4 +95,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:users',
+  auditAction: 'user_restored'
+}));

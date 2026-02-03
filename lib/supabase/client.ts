@@ -1,11 +1,12 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '../../lib/database-types'
 
-export function createClient() {
+export function createClient(options?: Record<string, unknown>) {
   // Create a Supabase client for use in the browser
   return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    options
   )
 }
 
@@ -55,7 +56,7 @@ export async function checkUserExists(email: string) {
   }
 }
 
-export async function signInWithEmail(email: string, password: string) {
+export async function signInWithEmail(email: string, password: string, rememberMe: boolean = false) {
   try {
     const supabase = getSupabaseClient()
     
@@ -64,10 +65,13 @@ export async function signInWithEmail(email: string, password: string) {
     }
     
     // Add debugging to see what's happening
-    console.log('Attempting sign in for email:', email)
+    console.log('Attempting sign in for email:', email, 'Remember me:', rememberMe)
     console.log('Supabase client initialized:', !!supabase.auth)
     
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // Use the singleton client to avoid multiple instances fighting over tokens
+    const authClient = supabase;
+
+    const { data, error } = await authClient.auth.signInWithPassword({
       email,
       password,
     })

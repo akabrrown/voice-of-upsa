@@ -1,24 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { FiExternalLink, FiArrowLeft, FiClock, FiTarget, FiInfo, FiTag } from 'react-icons/fi';
+import { FiExternalLink, FiArrowLeft, FiClock, FiTarget, FiInfo, FiTag, FiPhone } from 'react-icons/fi';
 import Link from 'next/link';
 
+import { AdSubmission } from '@/lib/ads-client';
+
 interface AdDetailViewProps {
-  ad: {
-    id: string;
-    adTitle: string;
-    adDescription: string;
-    company?: string;
-    businessType?: string;
-    adType?: string;
-    website?: string;
-    attachmentUrls?: string[];
-    startDate?: string;
-    duration?: string;
-    targetAudience?: string;
-    additionalInfo?: string;
-  };
+  ad: AdSubmission;
 }
 
 const AdDetailView: React.FC<AdDetailViewProps> = ({ ad }) => {
@@ -66,7 +55,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad }) => {
               {ad.adTitle}
             </h1>
 
-            {ad.company && (
+            {ad.company && ad.company.length > 0 && (
               <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
                 <div className="w-12 h-12 bg-golden rounded-lg flex items-center justify-center text-navy font-bold text-xl shadow-lg">
                   {ad.company.charAt(0).toUpperCase()}
@@ -111,10 +100,11 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad }) => {
                 About This Offer
               </h2>
               <div className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                {ad.adDescription}
+                {ad.adDescription || 'No description available for this advertisement.'}
               </div>
             </div>
           </motion.div>
+
 
           {/* Additional Visuals Grid */}
           {ad.attachmentUrls && ad.attachmentUrls.length > 1 && (
@@ -150,7 +140,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad }) => {
                 Special Notes
               </h3>
               <p className="opacity-80 italic italic leading-relaxed">
-                "{ad.additionalInfo}"
+                &quot;{ad.additionalInfo}&quot;
               </p>
             </motion.div>
           )}
@@ -173,6 +163,21 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad }) => {
                 </p>
               </div>
             </div>
+            
+            {ad.phone && (
+              <div className="mb-8">
+                <h3 className="text-gray-400 text-xs uppercase font-black tracking-widest mb-6">Contact Information</h3>
+                <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                  <FiPhone className="text-golden mr-4 text-xl flex-shrink-0" />
+                  <a 
+                    href={`tel:${ad.phone}`} 
+                    className="text-sm font-bold text-navy dark:text-white hover:text-golden transition-colors"
+                  >
+                    {ad.phone}
+                  </a>
+                </div>
+              </div>
+            )}
 
             {ad.website && (
               <a

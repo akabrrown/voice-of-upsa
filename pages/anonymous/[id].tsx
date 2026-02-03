@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { FiMessageCircle, FiClock, FiShield, FiArrowLeft, FiHeart, FiFlag, FiEye } from 'react-icons/fi';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import AnonymousStoryComments from '@/components/AnonymousStoryComments';
 
 interface AnonymousStory {
   id: string;
@@ -28,6 +29,16 @@ const AnonymousStoryPage: React.FC = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [viewCount, setViewCount] = useState(0);
   const [isReporting, setIsReporting] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
+
+  useEffect(() => {
+    let sid = sessionStorage.getItem('anonymousSessionId');
+    if (!sid) {
+      sid = 'anon_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+      sessionStorage.setItem('anonymousSessionId', sid);
+    }
+    setSessionId(sid);
+  }, []);
 
   const trackView = useCallback(async (storyId: string) => {
     // Generate or get session ID for view tracking
@@ -358,6 +369,21 @@ const AnonymousStoryPage: React.FC = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Comments Section */}
+          {story && sessionId && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="mt-8"
+            >
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-navy mb-6">Discussion</h3>
+                <AnonymousStoryComments storyId={story.id} sessionId={sessionId} />
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </Layout>

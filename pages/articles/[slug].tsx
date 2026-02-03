@@ -8,10 +8,10 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import Layout from '@/components/Layout';
 import ArticleView from '@/components/ArticleView';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
-import Image from 'next/image';
+import NextLink from 'next/link';
+import NextImage from 'next/image';
 import toast from 'react-hot-toast';
-import { FiMessageCircle, FiX, FiHeart, FiBookmark, FiShare2 } from 'react-icons/fi';
+import { FiMessageCircle, FiX, FiHeart, FiBookmark, FiShare2, FiUser } from 'react-icons/fi';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import AdDisplay from '@/components/AdDisplay';
 
@@ -70,17 +70,37 @@ interface Bookmark {
   created_at: string;
 }
 
+import useSWR from 'swr';
+
+// Fetcher function for SWR
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) throw new Error('An error occurred while fetching the data.');
+  return res.json();
+});
+
 const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle }) => {
-  console.log('ArticlePage component rendering');
-  
   const router = useRouter();
   const { slug } = router.query;
   const { user, supabase } = useSupabase();
-  
-  const [article, setArticle] = useState<Article | null>(initialArticle || null);
+  const [cachedSession, setCachedSession] = useState<{ access_token?: string } | null>(null);
+
+  // SWR for Article Data
+  const { data: fetchResult, isLoading: articleLoading, mutate: mutateArticle } = useSWR(
+    slug ? `/api/articles/${slug}` : null,
+    fetcher,
+    {
+      fallbackData: initialArticle ? { success: true, data: { article: initialArticle } } : undefined,
+      revalidateOnFocus: false
+    }
+  );
+
+  const article = React.useMemo(() => {
+    if (!fetchResult) return null;
+    return fetchResult.data?.article || fetchResult.data?.data?.article || fetchResult.article || fetchResult.data;
+  }, [fetchResult]);
+
   const [comments, setComments] = useState<Comment[]>([]);
   const [reactions, setReactions] = useState<Reaction[]>([]);
-  const [loading, setLoading] = useState(!initialArticle);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [userReaction, setUserReaction] = useState<string | null>(null);
@@ -88,10 +108,11 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
   const [viewTracked, setViewTracked] = useState(false);
   const [viewTrackingCooldown, setViewTrackingCooldown] = useState(false);
   const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null);
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [replyText, setReplyText] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
-  const [cachedSession, setCachedSession] = useState<{ access_token?: string } | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+
+  const loading = articleLoading && !article;
 
   // Redirect to home if slug is missing
   useEffect(() => {
@@ -100,79 +121,22 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
     }
   }, [slug, router.isReady, router]);
 
-  // Cache session to reduce API calls
+  // Auth processing
   useEffect(() => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setCachedSession(session);
     };
     getSession();
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setCachedSession(session);
     });
-    
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  const fetchArticle = useCallback(async () => {
-    if (!slug) return;
-    
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/articles/${slug}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMessage = data.error?.message || data.error || 'Failed to fetch article';
-        const errorString = typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : String(errorMessage);
-        
-        console.log('Response status:', response.status);
-        console.log('Error data:', data);
-        console.log('Error message:', errorString);
-        
-        // Handle "not found" errors without throwing
-        if (errorString.includes('not found')) {
-          console.log('Article not found, will redirect');
-          setLoading(false);
-          // Use setTimeout to ensure redirect happens after render cycle
-          setTimeout(() => router.push('/articles'), 0);
-          return;
-        }
-        
-        throw new Error(errorString);
-      }
-
-      // API returns { success: true, data: { article } }
-      console.log('API Response Data:', data);
-      const articleData = data.data?.article || data.data?.data?.article || data.article || data.data;
-      console.log('Extracted Article Data:', articleData);
-      console.log('Setting article data, loading was:', loading);
-      setArticle(articleData);
-      console.log('Article data set');
-    } catch (error) {
-      console.error('Error fetching article:', error);
-      // Ensure loading is always turned off on error
-      setLoading(false);
-      
-      // Don't show toast for "not found" errors, just redirect
-      if (error instanceof Error && error.message.includes('not found')) {
-        console.log('Article not found in catch, redirecting to /articles');
-        setTimeout(() => router.push('/articles'), 0);
-      } else {
-        console.log('Other error occurred, redirecting to home');
-        toast.error('Failed to load article');
-        setTimeout(() => router.push('/'), 0);
-      }
-    } finally {
-      // Always ensure loading is turned off
-      setLoading(false);
-    }
-  }, [slug, router]); // eslint-disable-line react-hooks/exhaustive-deps
-
+  // Comments fetching (could also be SWR, but keeping as is for brevity unless needed)
   const fetchComments = useCallback(async () => {
     if (!slug) return;
-    
     try {
       const response = await fetch(`/api/articles/${slug}/comments`, {
         headers: {
@@ -181,22 +145,12 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
         },
       });
       const data = await response.json();
-
-      if (!response.ok) {
-        console.log('Comments endpoint not available, skipping');
-        return;
-      }
-
-      setComments(data.data?.comments || []);
-    } catch {
-      console.log('Comments fetch failed, continuing without comments');
-      // Don't show error toast for missing comments endpoint
-    }
+      if (response.ok) setComments(data.data?.comments || []);
+    } catch (e) { console.error('Comments fetch failed', e); }
   }, [slug, cachedSession]);
 
   const fetchReactions = useCallback(async () => {
     if (!slug) return;
-    
     try {
       const response = await fetch(`/api/articles/${slug}/reactions`, {
         headers: {
@@ -205,49 +159,36 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
         },
       });
       const data = await response.json();
-
-      if (!response.ok) {
-        console.log('Reactions endpoint not available, skipping');
-        return;
+      if (response.ok) {
+        const fetchedReactions: Reaction[] = data.data?.reactions || [];
+        setReactions(fetchedReactions);
+        const userReact = fetchedReactions.find(r => r.userReacted);
+        setUserReaction(userReact ? userReact.type : null);
       }
-
-      const fetchedReactions: Reaction[] = data.data?.reactions || [];
-      setReactions(fetchedReactions);
-      
-      // Check if current user has reacted
-      const userReact = fetchedReactions.find(r => r.userReacted);
-      setUserReaction(userReact ? userReact.type : null);
-    } catch {
-      console.log('Reactions fetch failed, continuing without reactions');
-      // Don't show error toast for missing reactions endpoint
-    }
+    } catch (e) { console.error('Reactions fetch failed', e); }
   }, [slug, cachedSession]);
 
- const trackView = useCallback(async () => {
-  if (!article || viewTracked || viewTrackingCooldown) return;
-
-  try {
-    setViewTrackingCooldown(true);
-    
-    const response = await fetch(`/api/articles/${article.id}/view`, {
-      method: 'POST',
-      headers: {
-        ...(cachedSession && { 'Authorization': `Bearer ${cachedSession.access_token}` }),
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setViewTracked(true);
-      setArticle(prev => prev ? { ...prev, views_count: data.data.views_count } : null);
+  const trackView = useCallback(async () => {
+    if (!article || viewTracked || viewTrackingCooldown) return;
+    try {
+      setViewTrackingCooldown(true);
+      const response = await fetch(`/api/articles/${article.id}/view`, {
+        method: 'POST',
+        headers: {
+          ...(cachedSession && { 'Authorization': `Bearer ${cachedSession.access_token}` }),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        setViewTracked(true);
+        mutateArticle(); // Refresh via SWR
+      }
+    } catch (error) {
+      console.error('Error tracking view:', error);
+    } finally {
+      setTimeout(() => setViewTrackingCooldown(false), 5000);
     }
-  } catch (error) {
-    console.error('Error tracking view:', error);
-  } finally {
-    setTimeout(() => setViewTrackingCooldown(false), 5000); // 5 second cooldown
-  }
-}, [article, cachedSession, viewTracked, viewTrackingCooldown]);
+  }, [article, cachedSession, viewTracked, viewTrackingCooldown, mutateArticle]);
 
   const checkBookmarkStatus = useCallback(async () => {
     if (!article || !user) return;
@@ -273,16 +214,11 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
   }, [article, user, cachedSession]);
 
   useEffect(() => {
-    console.log('useEffect triggered, slug:', slug);
     if (slug) {
-      console.log('Calling fetch functions');
-      fetchArticle();
       fetchComments();
       fetchReactions();
-    } else {
-      console.log('No slug available, skipping fetch');
     }
-  }, [slug, fetchArticle, fetchComments, fetchReactions]);
+  }, [slug, fetchComments, fetchReactions]);
 
   // Cleanup real-time subscriptions on unmount
   useEffect(() => {
@@ -323,14 +259,7 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
         },
         (payload) => {
           console.log('Article updated:', payload);
-          // Update view count if it changed
-          if (payload.new.views_count !== article.views_count) {
-            setArticle(prev => prev ? { ...prev, views_count: payload.new.views_count } : null);
-          }
-          // Update likes count if it changed and exists
-          if (payload.new.likes_count !== undefined && payload.new.likes_count !== article.likes_count) {
-            setArticle(prev => prev ? { ...prev, likes_count: payload.new.likes_count } : null);
-          }
+          mutateArticle(); // Simple re-fetch for real-time consistency
         }
       )
       .subscribe();
@@ -342,7 +271,7 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
         supabase.removeChannel(channel);
       }
     };
-  }, [article, supabase]);
+  }, [article, supabase, mutateArticle]);
 
   // Real-time subscription for reactions
   useEffect(() => {
@@ -832,35 +761,20 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
     </Head>
   );
 
-  if (loading) {
-    console.log('Still loading, article state:', article);
-    return (
-      <>
-        {headContent}
-        <Layout>
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-golden"></div>
-          </div>
-        </Layout>
-      </>
-    );
-  }
+  // REMOVED conditional loading return that was breaking hydration
 
   if (!article) {
     return (
-      <>
-        {headContent}
-        <Layout>
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Article not found</h1>
-              <Link href="/articles" className="text-golden hover:text-yellow-600">
-                Browse all articles
-              </Link>
-            </div>
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Article not found</h1>
+            <NextLink href="/articles" className="text-golden hover:text-yellow-600">
+              Browse all articles
+            </NextLink>
           </div>
-        </Layout>
-      </>
+        </div>
+      </Layout>
     );
   }
 
@@ -873,393 +787,329 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
         ogImage={articleImage}
         ogUrl={articleUrl}
       >
-      <ArticleView 
-        article={article}
-        isEditable={user?.role === 'admin' || user?.role === 'editor'}
-        onEdit={() => router.push(`/editor/articles/${article.id}/edit`)}
-      />
-
-      {/* In-Article Ad */}
-      <div className="my-8">
-        <AdDisplay adType="in-article" className="w-full" />
-      </div>
-
-      {/* Popup Ad */}
-      <div className="my-8">
-        <AdDisplay adType="popup" className="w-full" />
-      </div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <article>
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-4 py-6 border-y border-gray-200">
-            <button
-              onClick={() => handleReaction('heart')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                userReaction === 'heart'
-                  ? 'bg-red-100 text-red-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <FiHeart className="w-5 h-5" />
-              <span>{getReactionCount('heart')}</span>
-            </button>
-
-            <button
-              onClick={toggleBookmark}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                isBookmarked
-                  ? 'bg-yellow-100 text-yellow-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <FiBookmark className="w-5 h-5" />
-              <span>{isBookmarked ? 'Saved' : 'Save'}</span>
-            </button>
-
-            <button 
-              onClick={() => setShowShareModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-            >
-              <FiShare2 className="w-5 h-5" />
-              <span>Share</span>
-            </button>
+        {loading ? (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-golden"></div>
           </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              <div className="lg:col-span-3">
+              <ArticleView 
+                article={article}
+                isEditable={user?.role === 'admin' || user?.role === 'editor'}
+                onEdit={() => router.push(`/editor/articles/${article.id}/edit`)}
+              />
 
-          {/* Comments Section */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
-              <FiMessageCircle className="w-6 h-6" />
-              <span>Comments ({comments.length})</span>
-            </h2>
+              {/* In-Article Ad */}
+              <div className="my-12">
+                <AdDisplay adType="in-article" location="article_in_article" className="w-full" />
+              </div>
 
-            {/* Comment Form */}
-            {user && (
-              <form onSubmit={handleCommentSubmit} className="mb-8">
-                <div className="bg-white rounded-lg p-6 border border-gray-200">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-navy font-semibold flex-shrink-0 relative">
-                      {user.user_metadata?.avatar_url?.trim() ? (
-                        <Image 
-                          src={user.user_metadata.avatar_url} 
-                          alt={user.user_metadata?.name || user.email}
-                          fill
-                          className="rounded-full object-cover"
-                          sizes="40px"
-                        />
-                      ) : (
-                        (user.user_metadata?.name || user.email || 'Anonymous').charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div className="flex-1">
+              <article>
+                {/* Action Buttons */}
+                <div className="flex items-center space-x-4 py-8 border-y border-gray-100 mb-8">
+                  <button
+                    onClick={() => handleReaction('heart')}
+                    className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                      userReaction === 'heart'
+                        ? 'bg-red-50 text-red-600 ring-1 ring-red-200'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100 ring-1 ring-gray-100'
+                    }`}
+                  >
+                    <FiHeart className={`w-5 h-5 ${userReaction === 'heart' ? 'fill-current' : ''}`} />
+                    <span>{getReactionCount('heart')}</span>
+                  </button>
+
+                  <button
+                    onClick={toggleBookmark}
+                    className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                      isBookmarked
+                        ? 'bg-golden/10 text-golden ring-1 ring-golden/20'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100 ring-1 ring-gray-100'
+                    }`}
+                  >
+                    <FiBookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
+                    <span>{isBookmarked ? 'Saved' : 'Save'}</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setShowShareModal(true)}
+                    className="flex items-center space-x-2 px-6 py-2.5 rounded-xl font-semibold bg-navy text-white hover:bg-navy/90 transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <FiShare2 className="w-5 h-5" />
+                    <span>Share</span>
+                  </button>
+                </div>
+
+                {/* Tags */}
+                {article.tags && article.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-12">
+                    {article.tags.map((tag: string) => (
+                      <span 
+                        key={tag} 
+                        className="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors cursor-default"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Comments Section */}
+                <section className="mt-16 pt-16 border-t border-gray-100" id="comments">
+                  <h2 className="text-3xl font-bold text-navy mb-10 flex items-center">
+                    <FiMessageCircle className="mr-4 text-golden" />
+                    Comments ({comments.length})
+                  </h2>
+
+                  {/* Comment Form */}
+                  <form onSubmit={handleCommentSubmit} className="mb-16">
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden focus-within:ring-2 focus-within:ring-golden/20 transition-all">
                       <textarea
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Write a comment..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent resize-none"
-                        rows={3}
-                        maxLength={1000}
+                        placeholder={user ? "Share your thoughts on this story..." : "Please sign in to join the conversation"}
+                        disabled={!user || isSubmittingComment}
+                        className="w-full p-6 min-h-[140px] focus-ring-0 border-none resize-none disabled:bg-gray-50 text-gray-800"
                       />
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          {commentText.length}/1000 characters
-                        </span>
+                      <div className="px-6 py-4 bg-gray-50 flex items-center justify-between border-t border-gray-100">
+                        <p className="text-xs text-gray-500">
+                          {user ? 'Commenting as ' + (user.user_metadata?.name || user.email) : 'Sign in to comment'}
+                        </p>
                         <button
                           type="submit"
-                          disabled={isSubmittingComment || !commentText.trim()}
-                          className="px-6 py-2 bg-golden text-navy font-semibold rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={!user || !commentText.trim() || isSubmittingComment}
+                          className="px-8 py-2.5 bg-golden text-navy rounded-xl font-bold hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md active:transform active:scale-95"
                         >
                           {isSubmittingComment ? 'Posting...' : 'Post Comment'}
                         </button>
                       </div>
                     </div>
+                  </form>
+
+                  {/* Comments List */}
+                  <div className="space-y-10">
+                    {comments.filter(c => !c.parent_id).map((comment: Comment) => {
+                      const commentReplies = comments.filter(r => r.parent_id === comment.id);
+                      return (
+                        <div key={comment.id} className="group">
+                          <div className="flex space-x-5">
+                            <div className="flex-shrink-0">
+                              {comment.author?.avatar_url ? (
+                                <NextImage
+                                  src={comment.author.avatar_url}
+                                  alt={comment.author.name}
+                                  width={48}
+                                  height={48}
+                                  className="w-12 h-12 rounded-2xl object-cover shadow-sm ring-2 ring-white"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-navy/5 rounded-2xl flex items-center justify-center ring-2 ring-white">
+                                  <FiUser className="w-6 h-6 text-navy/30" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-grow">
+                              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-md transition-shadow">
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="font-bold text-navy text-lg">{comment.author?.name || 'Anonymous'}</h4>
+                                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{formatDate(comment.created_at)}</span>
+                                </div>
+                                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                              </div>
+                              
+                              <div className="mt-3 flex items-center space-x-4 px-2">
+                                <button
+                                  onClick={() => {
+                                    if (!user) {
+                                      toast.error('Sign in to reply');
+                                      return;
+                                    }
+                                    setReplyingTo(replyingTo === comment.id ? null : comment.id);
+                                    setReplyText('');
+                                  }}
+                                  className="text-sm font-bold text-gray-400 hover:text-golden transition-colors"
+                                >
+                                  {replyingTo === comment.id ? 'Cancel' : 'Reply'}
+                                </button>
+                              </div>
+                              
+                              {replyingTo === comment.id && (
+                                <form onSubmit={(e) => handleReplySubmit(e, comment.id)} className="mt-5 px-2">
+                                  <div className="bg-white rounded-xl shadow-lg border border-golden/20 overflow-hidden">
+                                    <textarea
+                                      value={replyText}
+                                      onChange={(e) => setReplyText(e.target.value)}
+                                      placeholder="Write your reply..."
+                                      className="w-full p-4 min-h-[100px] focus:ring-0 border-none resize-none text-gray-800"
+                                      autoFocus
+                                    />
+                                    <div className="px-4 py-2 bg-gray-50 flex justify-end border-t border-gray-100">
+                                      <button
+                                        type="submit"
+                                        disabled={!replyText.trim() || isSubmittingComment}
+                                        className="px-5 py-1.5 bg-golden text-navy rounded-lg font-bold text-sm hover:bg-yellow-400 disabled:opacity-50 transition-colors"
+                                      >
+                                        {isSubmittingComment ? 'Posting...' : 'Post Reply'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </form>
+                              )}
+
+                              {/* Nested Replies */}
+                              {commentReplies.length > 0 && (
+                                <div className="mt-6 space-y-6 pt-6 border-l-2 border-gray-50 pl-6">
+                                  {commentReplies.map((reply) => (
+                                    <div key={reply.id} className="flex space-x-4">
+                                      <div className="flex-shrink-0">
+                                        {reply.author?.avatar_url ? (
+                                          <NextImage
+                                            src={reply.author.avatar_url}
+                                            alt={reply.author.name}
+                                            width={36}
+                                            height={36}
+                                            className="w-9 h-9 rounded-xl object-cover ring-2 ring-white"
+                                          />
+                                        ) : (
+                                          <div className="w-9 h-9 bg-navy/5 rounded-xl flex items-center justify-center ring-2 ring-white">
+                                            <FiUser className="w-4 h-4 text-navy/30" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex-grow bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <h5 className="font-bold text-navy text-sm">{reply.author?.name || 'Anonymous'}</h5>
+                                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{formatDate(reply.created_at)}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{reply.content}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {comments.length === 0 && (
+                      <div className="text-center py-16 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
+                        <FiMessageCircle className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                        <p className="text-gray-400 font-medium">No comments yet. Be the first to start the discussion!</p>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </form>
-            )}
+                </section>
+              </article>
 
-            {/* Sign in prompt for non-users */}
-            {!user && (
-              <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                <FiMessageCircle className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">Join the conversation</h3>
-                <p className="text-blue-700 mb-4">Sign in to share your thoughts and engage with the community.</p>
-                <Link href="/auth/sign-in" className="inline-flex items-center px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                  Sign In to Comment
-                </Link>
+              {/* Popup Ad */}
+              <div className="mt-20">
+                <AdDisplay adType="popup" location="article_popup" className="w-full" />
               </div>
-            )}
+            </div>
 
-
-            {/* Comments List */}
-            <div className="space-y-6">
-              {comments
-                .filter(c => !!c && !c.parent_id)
-                .filter((comment, index, array) => 
-                  array.findIndex(c => c.id === comment.id) === index
-                )
-                .map((comment) => {
-                // Get replies for this comment
-                const replies = comments.filter(r => r.parent_id === comment.id);
+            {/* Sidebar Column */}
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="sticky top-24 space-y-8">
+                {/* Article Sidebar Ad */}
+                <AdDisplay adType="sidebar" location="article_sidebar" className="w-full" />
                 
-                return (
-                <div key={comment.id} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 bg-golden rounded-full flex items-center justify-center text-navy font-semibold flex-shrink-0 relative">
-                      {comment.author?.avatar_url?.trim() ? (
-                        <Image 
-                          src={comment.author.avatar_url} 
-                          alt={comment.author?.name || 'User'}
-                          fill
-                          className="rounded-full object-cover"
-                          sizes="40px"
+                {/* About Author Mini Card */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                  <h3 className="text-lg font-bold text-navy mb-4 border-b pb-2">About the Author</h3>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-golden/20 flex items-center justify-center">
+                      {article.author?.avatar_url ? (
+                        <NextImage
+                          src={article.author.avatar_url}
+                          alt={article.contributor_name || article.author.name || 'Author'}
+                          width={48}
+                          height={48}
+                          className="rounded-full"
                         />
                       ) : (
-                        (comment.author?.name || 'Anonymous').charAt(0).toUpperCase()
+                        <FiUser className="text-golden w-6 h-6" />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <p className="font-semibold text-gray-900">{comment.author?.name || 'Anonymous'}</p>
-                          <p className="text-sm text-gray-500">
-                            {formatDate(comment.created_at)}
-                            {comment.updated_at !== comment.created_at && (
-                              <span className="ml-2 text-blue-600">(edited)</span>
-                            )}
-                          </p>
-                        </div>
-                        {user && comment.author?.id && user.id === comment.author.id && (
-                          <div className="flex space-x-2">
-                            <button
-                              className="text-sm text-gray-500 hover:text-blue-600 transition-colors"
-                              onClick={() => {
-                                // Add edit functionality here
-                                toast('Edit feature coming soon!');
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="text-sm text-gray-500 hover:text-red-600 transition-colors"
-                              onClick={() => {
-                                // Add delete functionality here
-                                toast('Delete feature coming soon!');
-                              }}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div className="prose prose-sm max-w-none">
-                        <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
-                      </div>
-                      
-                      {/* Reply Button */}
-                      <div className="mt-3">
-                        <button
-                          className="text-sm text-golden hover:text-yellow-600 font-medium transition-colors"
-                          onClick={() => {
-                            if (!user) {
-                              toast.error('Please sign in to reply');
-                              return;
-                            }
-                            setReplyingTo(replyingTo === comment.id ? null : comment.id);
-                            setReplyText('');
-                          }}
-                        >
-                          {replyingTo === comment.id ? 'Cancel' : 'Reply'}
-                        </button>
-                      </div>
-
-                      {/* Reply Form */}
-                      {user && replyingTo === comment.id && (
-                        <form onSubmit={(e) => handleReplySubmit(e, comment.id)} className="mt-4">
-                          <div className="bg-white rounded-lg p-4 border border-gray-200">
-                            <div className="flex items-start space-x-3">
-                              <div className="w-8 h-8 bg-golden rounded-full flex items-center justify-center text-navy font-semibold flex-shrink-0 relative">
-                                {user.user_metadata?.avatar_url?.trim() ? (
-                                  <Image 
-                                    src={user.user_metadata.avatar_url} 
-                                    alt={user.user_metadata?.name || user.email}
-                                    fill
-                                    className="rounded-full object-cover"
-                                    sizes="32px"
-                                  />
-                                ) : (
-                                  (user.user_metadata?.name || user.email || 'Anonymous').charAt(0).toUpperCase()
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <textarea
-                                  value={replyText}
-                                  onChange={(e) => setReplyText(e.target.value)}
-                                  placeholder="Write a reply..."
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent resize-none text-sm"
-                                  rows={2}
-                                  maxLength={1000}
-                                  autoFocus
-                                />
-                                <div className="mt-2 flex items-center justify-between">
-                                  <span className="text-xs text-gray-500">
-                                    {replyText.length}/1000 characters
-                                  </span>
-                                  <button
-                                    type="submit"
-                                    disabled={isSubmittingComment || !replyText.trim()}
-                                    className="px-4 py-1.5 bg-golden text-navy font-semibold rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                  >
-                                    {isSubmittingComment ? 'Posting...' : 'Post Reply'}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </form>
-                      )}
-
-                      {/* Display Replies */}
-                      {replies.length > 0 && (
-                        <div className="mt-4 space-y-4 pl-8 border-l-2 border-gray-200">
-                          {replies.map((reply) => (
-                            <div key={reply.id} className="bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                              <div className="flex items-start space-x-3">
-                                <div className="w-8 h-8 bg-golden rounded-full flex items-center justify-center text-navy font-semibold flex-shrink-0 relative">
-                                  {reply.author?.avatar_url?.trim() ? (
-                                    <Image 
-                                      src={reply.author.avatar_url} 
-                                      alt={reply.author?.name || 'User'}
-                                      fill
-                                      className="rounded-full object-cover"
-                                      sizes="32px"
-                                    />
-                                  ) : (
-                                    (reply.author?.name || 'Anonymous').charAt(0).toUpperCase()
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <div>
-                                      <p className="font-semibold text-gray-900 text-sm">{reply.author?.name || 'Anonymous'}</p>
-                                      <p className="text-xs text-gray-500">
-                                        {formatDate(reply.created_at)}
-                                      </p>
-                                    </div>
-                                    {user && reply.author?.id && user.id === reply.author.id && (
-                                      <div className="flex space-x-2">
-                                        <button
-                                          className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
-                                          onClick={() => toast('Edit feature coming soon!')}
-                                        >
-                                          Edit
-                                        </button>
-                                        <button
-                                          className="text-xs text-gray-500 hover:text-red-600 transition-colors"
-                                          onClick={() => toast('Delete feature coming soon!')}
-                                        >
-                                          Delete
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="prose prose-sm max-w-none">
-                                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{reply.content}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                    <div>
+                      <h4 className="font-bold text-gray-900">
+                        {article.contributor_name && article.contributor_name.trim() 
+                          ? article.contributor_name 
+                          : article.author?.name || 'Anonymous Author'}
+                      </h4>
+                      <p className="text-xs text-gray-500">UPSA Contributor</p>
                     </div>
                   </div>
                 </div>
-              )})}
-
-
-              {comments.length === 0 && (
-                <p className="text-center text-gray-500 py-8">
-                  No comments yet. Be the first to comment!
-                </p>
-              )}
+              </div>
             </div>
           </div>
-      </article>
-      </motion.div>
+        </motion.div>
+        )}
 
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+        {/* Share Modal */}
+        {showShareModal && (
+          <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl relative"
             >
-              <FiX className="w-5 h-5" />
-            </button>
-            
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Share Article</h3>
-            
-            <div className="space-y-3">
               <button
-                onClick={() => shareOnSocial('whatsapp')}
-                className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                onClick={() => setShowShareModal(false)}
+                className="absolute top-6 right-6 p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded-xl transition-all"
               >
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">W</span>
-                </div>
-                <span className="text-gray-700">WhatsApp</span>
+                <FiX className="w-6 h-6" />
               </button>
               
-              <button
-                onClick={() => shareOnSocial('facebook')}
-                className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">f</span>
-                </div>
-                <span className="text-gray-700">Facebook</span>
-              </button>
+              <h3 className="text-2xl font-black text-navy mb-2">Spread the Word</h3>
+              <p className="text-gray-500 mb-8 text-sm">Share this interesting story from UPSA with your friends.</p>
               
-              <button
-                onClick={() => shareOnSocial('twitter')}
-                className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">X</span>
-                </div>
-                <span className="text-gray-700">Twitter/X</span>
-              </button>
-              
-              <button
-                onClick={() => shareOnSocial('instagram')}
-                className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">IG</span>
-                </div>
-                <span className="text-gray-700">Instagram</span>
-              </button>
-              
-              <button
-                onClick={copyNextLink}
-                className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">🔗</span>
-                </div>
-                <span className="text-gray-700">Copy NextLink</span>
-              </button>
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => shareOnSocial('whatsapp')}
+                  className="flex items-center justify-center space-x-3 p-4 rounded-2xl bg-green-50 text-green-700 hover:bg-green-100 transition-all font-bold"
+                >
+                  <span className="text-xl">W</span>
+                  <span>WhatsApp</span>
+                </button>
+                
+                <button
+                  onClick={() => shareOnSocial('facebook')}
+                  className="flex items-center justify-center space-x-3 p-4 rounded-2xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all font-bold"
+                >
+                  <span className="text-xl">F</span>
+                  <span>Facebook</span>
+                </button>
+                
+                <button
+                  onClick={() => shareOnSocial('twitter')}
+                  className="flex items-center justify-center space-x-3 p-4 rounded-2xl bg-gray-900 text-white hover:bg-black transition-all font-bold"
+                >
+                  <span className="text-xl">X</span>
+                  <span>Twitter</span>
+                </button>
+                
+                <button
+                  onClick={copyNextLink}
+                  className="flex items-center justify-center space-x-3 p-4 rounded-2xl bg-golden text-navy hover:bg-yellow-400 transition-all font-bold"
+                >
+                  <span className="text-xl">🔗</span>
+                  <span>Copy Link</span>
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
-    </Layout>
+        )}
+      </Layout>
     </>
   );
 };

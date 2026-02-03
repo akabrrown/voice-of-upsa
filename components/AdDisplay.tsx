@@ -7,11 +7,12 @@ import useAds from '../hooks/useAds';
 
 interface AdDisplayProps {
   adType: 'banner' | 'sidebar' | 'in-article' | 'popup' | 'sponsored-content' | 'other';
+  location?: string;
   className?: string;
 }
 
-const AdDisplay: React.FC<AdDisplayProps> = ({ adType, className = "" }) => {
-  const { ads, loading, error } = useAds(adType);
+const AdDisplay: React.FC<AdDisplayProps> = ({ adType, location, className = "" }) => {
+  const { ads, loading, error } = useAds(adType, location);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
 
   console.log(`AdDisplay (${adType}):`, { ads, loading, error, adsLength: ads.length });

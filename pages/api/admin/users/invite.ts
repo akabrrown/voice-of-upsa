@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { withCMSSecurity } from '@/lib/security/cms-security';
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
 import { z } from 'zod';
 
 // Enhanced validation schema for user invitation
@@ -11,7 +11,7 @@ const inviteUserSchema = z.object({
   message: z.string().max(500, 'Message too long').optional()
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: string; email: string; securityLevel?: string }) {
+async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser) {
   try {
     // Only allow POST for user invitations
     if (req.method !== 'POST') {
@@ -154,7 +154,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: { id: st
 }
 
 // Apply CMS security middleware and enhanced error handler
-export default withErrorHandler(withCMSSecurity(handler));
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:users',
+  auditAction: 'user_invited'
+}));
 
                                       
                   

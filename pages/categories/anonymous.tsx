@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
-import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { FiSend, FiBookOpen, FiThumbsUp, FiFlag } from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { FiSend, FiBookOpen, FiThumbsUp, FiFlag, FiMessageSquare, FiExternalLink } from 'react-icons/fi';
+import Link from 'next/link';
+import AdDisplay from '@/components/AdDisplay';
+
 
 interface AnonymousStory {
   id: string;
@@ -15,6 +18,7 @@ interface AnonymousStory {
   likes_count?: number;
   featured?: boolean;
 }
+
 
 const AnonymousPage: React.FC = () => {
   const [stories, setStories] = useState<AnonymousStory[]>([]);
@@ -271,10 +275,6 @@ const AnonymousPage: React.FC = () => {
   return (
     <Layout title="Anonymous Stories - Voice of UPSA">
       <div className="min-h-screen bg-gray-50">
-        {/* Debug Info */}
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          <strong>DEBUG:</strong> stories.length = {stories.length}, loading = {loading.toString()}
-        </div>
         {/* Header */}
         <div className="bg-navy text-white">
           <div className="max-w-4xl mx-auto px-4 py-12 text-center">
@@ -291,6 +291,11 @@ const AnonymousPage: React.FC = () => {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 py-8">
+          {/* Anonymous Stories Page Banner Ad */}
+          <div className="mb-8">
+            <AdDisplay adType="banner" location="anonymous_stories_banner" className="w-full" />
+          </div>
+
           {/* Story Submission Form */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -417,8 +422,13 @@ const AnonymousPage: React.FC = () => {
                           {formatDate(story.created_at)}
                         </span>
                       </div>
-                      <h3 className="text-xl font-bold text-navy mb-3">{story.title}</h3>
-                      <p className="text-gray-800 leading-relaxed">{story.content}</p>
+                      <Link href={`/anonymous/${story.id}`}>
+                        <h3 className="text-xl font-bold text-navy mb-3 hover:text-golden transition-colors flex items-center group">
+                          {story.title}
+                          <FiExternalLink className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </h3>
+                      </Link>
+                      <p className="text-gray-800 leading-relaxed line-clamp-3">{story.content}</p>
                     </div>
                   </div>
 
@@ -443,6 +453,14 @@ const AnonymousPage: React.FC = () => {
                       <span>Report</span>
                     </button>
                   </div>
+
+                    <Link 
+                      href={`/anonymous/${story.id}`}
+                      className="flex items-center space-x-1 text-gray-500 hover:text-navy transition-colors"
+                    >
+                      <FiMessageSquare className="w-4 h-4" />
+                      <span>Comment</span>
+                    </Link>
                 </motion.div>
               ))
             )}
@@ -498,3 +516,4 @@ const AnonymousPage: React.FC = () => {
 };
 
 export default AnonymousPage;
+

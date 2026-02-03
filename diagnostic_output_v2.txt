@@ -1,0 +1,15 @@
+[dotenv@17.2.3] injecting env (24) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+Checking for user: akayetb@gmail.com
+
+--- Checking auth.users via admin.listUsers() ---
+Found in auth.users list: NO
+Total users in auth list returned: 50
+
+--- Checking auth.users via getUserByEmail ---
+
+--- Checking public.users table ---
+
+--- Checking auth.users via admin.getUserById() ---
+Found in auth.users by ID: YES
+Auth User Email: akayetb@gmail.com
+Auth User ID: 34e22590-8a37-4d29-9267-7932836f4a1e

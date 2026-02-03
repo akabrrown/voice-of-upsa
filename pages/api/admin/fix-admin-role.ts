@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '../../../lib/database-server';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 
 // Type for exec_sql RPC parameters
 interface ExecSqlParams {
@@ -12,14 +14,16 @@ interface ExecSqlResult {
   error?: { message: string } | null;
 }
 
-// Temporary endpoint to fix admin role
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
     const admin = await getSupabaseAdmin();
+    if (!admin) {
+      throw new Error('Database connection failed');
+    }
     
     // Create temporary function that bypasses all triggers and RLS
     const { error: funcError } = await (admin as unknown as { rpc: (name: string, params?: ExecSqlParams) => Promise<ExecSqlResult> })
@@ -100,3 +104,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
+
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:setup',
+  auditAction: 'admin_role_fixed'
+}));

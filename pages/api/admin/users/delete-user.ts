@@ -1,9 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, requesterUser: CMSUser) {
   try {
+    const supabaseAdmin = await getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new Error('Failed to initialize Supabase admin client');
+    }
     // Only allow DELETE method
     if (req.method !== 'DELETE') {
       return res.status(405).json({
@@ -17,52 +22,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    // Get Supabase admin client
-    const supabaseAdmin = await getSupabaseAdmin();
-    if (!supabaseAdmin) {
-      throw new Error('Failed to initialize Supabase admin client');
-    }
-
-    // Verify authentication
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' }
-      });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !authUser) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid or expired session' }
-      });
-    }
-
-    // Get the user from database to check their role
-    const { data: dbUser, error: dbError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', authUser.id)
-      .single();
-
-    if (dbError || !dbUser) {
-      return res.status(403).json({
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Insufficient permissions or user not found' }
-      });
-    }
-
-    const userData = dbUser as { role: string };
-    if (userData.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Admin access required' }
-      });
-    }
+    // SECURITY: withCMSSecurity already verified requester is an admin (see export at bottom)
+    console.log('Delete user API - Requester:', requesterUser.email);
 
     // Get userId from query parameter
     const { userId } = req.query;
@@ -79,7 +40,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Prevent admin from deleting themselves
-    if (authUser.id === userId) {
+    if (requesterUser.id === userId) {
       return res.status(400).json({
         success: false,
         error: {
@@ -100,7 +61,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       .single();
 
     if (fetchError) {
-      console.error(`User fetch failed for admin ${authUser.email}:`, fetchError);
+      console.error(`User fetch failed for admin ${requesterUser.email}:`, fetchError);
       return res.status(500).json({
         success: false,
         error: {
@@ -160,33 +121,47 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
-    // Delete user from auth system first
+    // Delete user from auth system first (if they exist in auth)
+    // Note: Some users may be "orphaned" - they exist in public.users but not in auth.users
     try {
       const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
       
       if (authDeleteError) {
-        console.error('Auth deletion error:', authDeleteError);
+        // Check if the error is because the user doesn't exist in auth
+        if (authDeleteError.message?.includes('not found') || authDeleteError.message?.includes('User not found')) {
+          console.warn(`User ${userId} not found in auth system (orphaned user), continuing with database deletion`);
+        } else {
+          // For other errors, fail the request
+          console.error('Auth deletion error:', authDeleteError);
+          return res.status(500).json({
+            success: false,
+            error: {
+              code: 'AUTH_DELETE_ERROR',
+              message: 'Failed to delete user from authentication system',
+              details: process.env.NODE_ENV === 'development' ? authDeleteError.message : null
+            },
+            timestamp: new Date().toISOString()
+          });
+        }
+      } else {
+        console.log(`User ${userId} successfully deleted from auth system`);
+      }
+    } catch (authError) {
+      console.error('Auth deletion exception:', authError);
+      // Check if it's a "user not found" error
+      if ((authError as Error).message?.includes('not found')) {
+        console.warn(`User ${userId} not found in auth system (orphaned user), continuing with database deletion`);
+      } else {
         return res.status(500).json({
           success: false,
           error: {
             code: 'AUTH_DELETE_ERROR',
             message: 'Failed to delete user from authentication system',
-            details: process.env.NODE_ENV === 'development' ? authDeleteError.message : null
+            details: process.env.NODE_ENV === 'development' ? (authError as Error).message : null
           },
           timestamp: new Date().toISOString()
         });
       }
-    } catch (authError) {
-      console.error('Auth deletion error:', authError);
-      return res.status(500).json({
-        success: false,
-        error: {
-          code: 'AUTH_DELETE_ERROR',
-          message: 'Failed to delete user from authentication system',
-          details: process.env.NODE_ENV === 'development' ? (authError as Error).message : null
-        },
-        timestamp: new Date().toISOString()
-      });
     }
 
     // Delete user from database
@@ -195,7 +170,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       .from('users')
       .delete()
       .eq('id', userId);
-
     if (deleteError) {
       console.error('Database deletion error:', deleteError);
       return res.status(500).json({
@@ -210,7 +184,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Log permanent user deletion
-    console.info(`User permanently deleted by admin: ${authUser.email}`, {
+    console.info(`User permanently deleted by admin: ${requesterUser.email}`, {
       targetUserId: userId,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       targetUserEmail: (userToDelete as any)?.email,
@@ -240,4 +214,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:users',
+  auditAction: 'user_deleted'
+}));

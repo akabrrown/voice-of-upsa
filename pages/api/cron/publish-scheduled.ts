@@ -50,7 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const updateResult = await supabaseAdmin
       .from('articles')
-      // @ts-expect-error - Supabase types don't properly infer the update parameter type
       .update({ status: 'published' })
       .in('id', articleIds);
     

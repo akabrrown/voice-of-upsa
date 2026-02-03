@@ -1,7 +1,7 @@
 // Signed URLs for Secure Media Access
 import crypto from 'crypto';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 
 interface SignedURLOptions {
@@ -88,7 +88,7 @@ class SignedURLManager {
     const { expiresIn = this.DEFAULT_EXPIRY } = options;
 
     try {
-      const { data, error } = await (await supabaseAdmin).storage
+      const { data, error } = await (await getSupabaseAdmin()).storage
         .from(bucket)
         .createSignedUrl(path, expiresIn);
 

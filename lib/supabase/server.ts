@@ -88,9 +88,17 @@ export async function createAdminClient() {
   // Create admin client with service role key for server-side operations
   const { createClient } = await import('@supabase/supabase-js')
   
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('Missing Supabase environment variables for admin client');
+    return null;
+  }
+  
   return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    supabaseUrl,
+    serviceRoleKey,
     {
       auth: {
         autoRefreshToken: false,

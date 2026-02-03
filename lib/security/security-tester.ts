@@ -2,7 +2,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { requireAdminOrEditor } from '@/lib/auth-helpers';
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 import { createClient } from '@/lib/supabase/server';
 
 interface SecurityTest {
@@ -44,7 +44,7 @@ class SecurityTester {
     try {
       for (const input of maliciousInputs) {
         // Test on a safe endpoint
-        const { data, error } = await (await supabaseAdmin)
+        const { data, error } = await (await getSupabaseAdmin())
           .from('articles')
           .select('id, title')
           .limit(1);
@@ -126,7 +126,7 @@ class SecurityTester {
       ];
 
       for (const token of invalidTokens) {
-        const { data, error } = await (await supabaseAdmin).auth.getUser(token || '');
+        const { data, error } = await (await getSupabaseAdmin()).auth.getUser(token || '');
         
         if (data.user && !error) {
           return {

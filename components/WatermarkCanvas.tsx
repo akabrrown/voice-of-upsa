@@ -99,8 +99,7 @@ const WatermarkCanvas: React.FC<WatermarkCanvasProps> = ({
     <div className={`relative ${className}`}>
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        style={{ zIndex: 1 }}
+        className="absolute inset-0 w-full h-full pointer-events-none z-[1]"
       />
       <div className="relative z-10">
         {children}

@@ -44,7 +44,11 @@ export async function validateRLSPolicies(): Promise<DBSecurityResult> {
   const recommendations: string[] = [];
   
   try {
-    const adminClient = getSupabaseAdmin();
+    const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      issues.push('Admin client unavailable - cannot validate RLS policies');
+      return { isSecure: false, issues, recommendations };
+    }
     
     // Check if RLS is enabled on critical tables
     const criticalTables = [
@@ -58,7 +62,7 @@ export async function validateRLSPolicies(): Promise<DBSecurityResult> {
 
     for (const table of criticalTables) {
       try {
-        await (await adminClient)
+        await adminClient
           .from(table)
           .select('count')
           .limit(1);
@@ -102,11 +106,15 @@ export async function checkDatabasePermissions(): Promise<DBSecurityResult> {
   const recommendations: string[] = [];
   
   try {
-    const adminClient = getSupabaseAdmin();
+    const adminClient = await getSupabaseAdmin();
+    if (!adminClient) {
+      issues.push('Admin client unavailable - cannot check database permissions');
+      return { isSecure: false, issues, recommendations };
+    }
     
     // Test if service role key has appropriate permissions
     try {
-      await (await adminClient)
+      await adminClient
         .from('users')
         .select('id')
         .limit(1);

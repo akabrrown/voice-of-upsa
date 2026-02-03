@@ -56,9 +56,7 @@ const PaymentPage: React.FC = () => {
     try {
       setProcessing(true);
       
-      // Extract amount from budget string (e.g., "GHS 100" -> 100)
-      const amountMatch = submission.budget.match(/\d+/);
-      const amount = amountMatch ? parseInt(amountMatch[0]) : 100;
+      // Note: amount is now fetched server-side from the database to prevent tampering
 
       const response = await fetch('/api/ads/payment/initialize', {
         method: 'POST',
@@ -67,7 +65,6 @@ const PaymentPage: React.FC = () => {
         },
         body: JSON.stringify({
           submissionId: submission.id,
-          amount: amount,
           email: submission.email,
         }),
       });

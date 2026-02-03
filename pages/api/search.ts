@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { withCMSSecurity, getCMSRateLimit } from '@/lib/security/cms-security';
+import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { z } from 'zod';
@@ -214,12 +214,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Search handler with CMS security
-const handlerWithCMS = withCMSSecurity(
-  handler,
-  { requirePermission: 'view:content', auditAction: 'search_content' }
-);
 
-// Apply enhanced error handler
-export default withErrorHandler(handlerWithCMS);
+// Apply enhanced error handler (removed withCMSSecurity to allow public access)
+export default withErrorHandler(handler);
                     

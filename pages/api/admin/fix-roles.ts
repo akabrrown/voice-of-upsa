@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getSupabaseAdmin } from '../../../lib/database-server';
-import { withErrorHandler } from '../../../lib/api/middleware/error-handler';
+import { getSupabaseAdmin } from '@/lib/database-server';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
 
 // Define types for user records
 interface UserRecord {
@@ -9,7 +10,7 @@ interface UserRecord {
   name: string | null;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse, requesterUser: CMSUser) {
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -23,38 +24,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Basic authentication check - verify user is logged in
     const admin = await getSupabaseAdmin();
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'AUTHENTICATION_REQUIRED',
-          message: 'Authentication token required',
-          details: 'Please provide a valid Bearer token'
-        },
-        timestamp: new Date().toISOString()
-      });
+    if (!admin) {
+      throw new Error('Failed to initialize Supabase admin client');
     }
 
-    const token = authHeader.substring(7);
-    const { data: { user }, error: authError } = await admin.auth.getUser(token);
-    
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'INVALID_TOKEN',
-          message: 'Invalid or expired authentication token',
-          details: authError?.message
-        },
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    console.log('Role fix API: Authenticated user:', user.email);
+    console.log('Role fix API - Requester:', requesterUser.email);
     console.log('Role fix API: Starting role data investigation and repair...');
     
     // Step 1: Check current state of all tables
@@ -199,5 +174,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Apply middleware - just error handling, no special permissions required
-export default withErrorHandler(handler);
+// Apply middleware
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'manage:users',
+  auditAction: 'roles_repaired'
+}));

@@ -58,7 +58,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (fetchError || !submission) {
+      console.error('Submission not found for reference:', reference);
       return res.status(404).json({ message: 'Submission not found for this payment' });
+    }
+
+    // SECURITY CHECK: Verify the amount paid matches the ad budget
+    const budgetString = submission.budget || '';
+    const amountMatch = budgetString.match(/\d+/);
+    const expectedAmount = amountMatch ? parseInt(amountMatch[0]) : 0;
+    const paidAmount = paymentData.amount / 100;
+
+    if (Math.abs(paidAmount - expectedAmount) > 0.01) { // Use small delta for decimal comparison if needed
+      console.error('PAYMENT AMOUNT MISMATCH:', {
+        submissionId: submission.id,
+        expected: expectedAmount,
+        paid: paidAmount
+      });
+      return res.status(400).json({ 
+        message: 'Payment amount mismatch. Security verification failed.',
+        expected: expectedAmount,
+        actual: paidAmount
+      });
     }
 
     // Update submission with payment details

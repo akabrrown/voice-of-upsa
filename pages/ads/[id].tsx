@@ -4,21 +4,9 @@ import Head from 'next/head';
 import Layout from '@/components/Layout';
 import AdDetailView from '@/components/AdDetailView';
 import { LoadingSpinner } from '@/components/LoadingSkeletons';
+import { transformAdRecord, AdSubmission as Advertisement } from '@/lib/ads-client';
 
-interface Advertisement {
-  id: string;
-  adTitle: string;
-  adDescription: string;
-  company?: string;
-  businessType?: string;
-  adType?: string;
-  website?: string;
-  attachmentUrls?: string[];
-  startDate?: string;
-  duration?: string;
-  targetAudience?: string;
-  additionalInfo?: string;
-}
+// Interface moved and aliased from AdSubmission in @/lib/ads-client
 
 const AdDetailPage: React.FC = () => {
   const router = useRouter();
@@ -35,14 +23,19 @@ const AdDetailPage: React.FC = () => {
         setLoading(true);
         const response = await fetch(`/api/ads/${id}`);
         const data = await response.json();
+        
+        console.log('Ad Detail API Response:', { ok: response.ok, status: response.status, data });
 
         if (response.ok) {
-          setAd(data.ad);
+          // Transform database record (snake_case) to frontend model (camelCase)
+          const transformedAd = transformAdRecord(data.ad);
+          console.log('Transformed Ad:', transformedAd);
+          setAd(transformedAd as any);
         } else {
           setError(data.message || 'Failed to load advertisement');
         }
       } catch (err) {
-        console.error('Error fetching ad:', err);
+        console.error('Error fetching ad detail:', err);
         setError('An unexpected error occurred');
       } finally {
         setLoading(false);
@@ -89,7 +82,7 @@ const AdDetailPage: React.FC = () => {
   }
 
   const pageTitle = `${ad.adTitle} - ${ad.company || 'Advertisement'} | Voice of UPSA`;
-  const metaDescription = ad.adDescription.substring(0, 160);
+  const metaDescription = ad.adDescription ? ad.adDescription.substring(0, 160) : '';
 
   return (
     <Layout title={pageTitle} description={metaDescription}>

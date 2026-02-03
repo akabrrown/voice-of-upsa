@@ -5,6 +5,7 @@ import { getCMSRateLimit } from '@/lib/security/cms-security';
 import { getClientIP } from '@/lib/security/auth-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { z } from 'zod';
+import { withPublicCORS } from '@/lib/security/cors-config';
 
 // Enhanced validation schemas
 const articleSlugSchema = z.string().regex(/^[a-z0-9-]+$/, 'Invalid slug format');
@@ -140,5 +141,5 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Apply enhanced error handler
-export default withErrorHandler(handler);
+// Apply enhanced error handler and Public CORS
+export default withErrorHandler(withPublicCORS(handler));

@@ -52,7 +52,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
     const { status, priority, page, search } = validatedParams;
 
     const pageNum = page;
-    const limit = 20;
+    const limit = 1000;
     const offset = (pageNum - 1) * limit;
 
     const supabaseAdmin = await getSupabaseAdmin();

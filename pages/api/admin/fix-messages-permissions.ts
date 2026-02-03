@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,20 +18,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   try {
     const supabaseAdmin = await getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new Error('Database connection failed');
+    }
     
     console.log('=== FIXING MESSAGES TABLE PERMISSIONS ===');
     
     // Test current permissions first
-    console.log('Testing current permissions...');
     const { data: testData, error: testError } = await supabaseAdmin
       .from('contact_messages')
       .select('*', { count: 'exact' })
       .limit(1);
     
     if (!testError) {
-      console.log('Permissions are already working!');
-      console.log('Test result:', testData);
-      
       return res.status(200).json({
         success: true,
         message: 'Contact messages permissions are already working',
@@ -38,11 +38,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         timestamp: new Date().toISOString()
       });
     }
-    
-    console.log('Permission test failed, attempting to fix:', testError.message);
-    
-    // Since we can't use exec_sql RPC, we'll provide the SQL commands needed
-    console.log('Generating SQL commands for manual execution...');
     
     const sqlCommands = [
       '-- Disable RLS temporarily',
@@ -64,8 +59,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     ];
     
     const fullSQL = sqlCommands.join('\n');
-    
-    console.log('SQL commands generated for manual execution');
     
     return res.status(200).json({
       success: true,
@@ -92,4 +85,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'admin:setup',
+  auditAction: 'messages_permissions_fixed'
+}));

@@ -27,6 +27,40 @@ export const adSubmissionSchema = z.object({
 
 export type AdSubmission = z.infer<typeof adSubmissionSchema>;
 
+/**
+ * Transforms a snake_case database record from the ad_submissions table 
+ * to a camelCase object used by the frontend.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function transformAdRecord(record: any): AdSubmission {
+  if (!record) return record;
+  
+  return {
+    id: record.id,
+    firstName: record.first_name,
+    lastName: record.last_name,
+    email: record.email,
+    phone: record.phone,
+    company: record.company,
+    businessType: record.business_type,
+    adType: record.ad_type,
+    adTitle: record.ad_title,
+    adDescription: record.ad_description,
+    targetAudience: record.target_audience,
+    budget: record.budget,
+    duration: record.duration,
+    startDate: record.start_date,
+    website: record.website,
+    additionalInfo: record.additional_info,
+    termsAccepted: record.terms_accepted,
+    attachmentUrls: record.attachment_urls,
+    status: record.status,
+    created_at: record.created_at,
+    updated_at: record.updated_at,
+  };
+}
+
+
 // Upload file to Cloudinary
 export async function uploadAdFile(file: File): Promise<string> {
   const formData = new FormData();
@@ -50,45 +84,4 @@ export async function uploadAdFile(file: File): Promise<string> {
   return data.secure_url;
 }
 
-// Initialize Paystack payment
-export async function initializePaystackPayment(amount: number, email: string, reference?: string) {
-  const response = await fetch('/api/ads/paystack/initialize', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      amount,
-      email,
-      reference,
-      callback_url: `${window.location.origin}/ads/payment/verify`,
-    }),
-  });
 
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to initialize payment');
-  }
-
-  return data;
-}
-
-// Verify Paystack payment
-export async function verifyPaystackPayment(reference: string) {
-  const response = await fetch('/api/ads/paystack/verify', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ reference }),
-  });
-
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to verify payment');
-  }
-
-  return data;
-}

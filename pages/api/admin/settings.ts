@@ -1,11 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { z } from 'zod';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
 import { withCMSSecurity } from '@/lib/security/cms-security';
 import { withRateLimit } from '@/lib/api/middleware/auth';
 import { getClientIP } from '@/lib/security/auth-security';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 const settingsSchema = z.object({
   site_name: z.string().min(1, 'Site name is required').max(100, 'Site name too long'),
@@ -29,23 +28,11 @@ const settingsSchema = z.object({
   allowed_image_types: z.array(z.string().regex(/^[a-z]+$/, 'Invalid image type')).max(10, 'Too many image types'),
 });
 
-const SETTINGS_FILE = path.join(process.cwd(), 'data', 'settings.json');
-
-// Ensure data directory exists
-async function ensureDataDir() {
-  const dataDir = path.dirname(SETTINGS_FILE);
-  try {
-    await fs.access(dataDir);
-  } catch {
-    await fs.mkdir(dataDir, { recursive: true });
-  }
-}
-
 // Default settings
 const defaultSettings = {
   site_name: 'Voice of UPSA',
   site_description: 'Official student publication of UPSA',
-  site_url: 'http://localhost:3000',
+  site_url: 'https://voiceofupsa.com',
   site_logo: '/logo.jpg',
   contact_email: 'voice.of.upsa.mail@gmail.com',
   notification_email: 'voice.of.upsa.mail@gmail.com',
@@ -65,41 +52,42 @@ const defaultSettings = {
 };
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await ensureDataDir();
-
-  // Apply rate limiting based on method - increased temporarily to prevent rate limit errors
-  const rateLimitMiddleware = withRateLimit(1000, 60000, getClientIP); // 1000 requests per minute
+  // Apply rate limiting based on method
+  const rateLimitMiddleware = withRateLimit(1000, 60000, getClientIP);
   rateLimitMiddleware(req);
+
+  const supabaseAdmin = await getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    throw new Error('Database connection failed');
+  }
 
   if (req.method === 'GET') {
     try {
-      try {
-        const data = await fs.readFile(SETTINGS_FILE, 'utf-8');
-        const settings = JSON.parse(data);
-        
-        // Log settings access
-        console.log('Settings accessed via admin API');
-        
-        return res.status(200).json({
-          success: true,
-          data: settings,
-          timestamp: new Date().toISOString()
-        });
-      } catch (error) {
-        const nodeError = error as NodeJS.ErrnoException;
-        if (nodeError.code === 'ENOENT') {
-          // File doesn't exist, return default settings
+      console.log('Fetching settings from database...');
+      const { data: settings, error } = await (supabaseAdmin as any)
+        .from('settings')
+        .select('*')
+        .eq('id', 1)
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') { // Row not found
           return res.status(200).json({
             success: true,
             data: defaultSettings,
             timestamp: new Date().toISOString()
           });
-        } else {
-          throw error;
         }
+        throw error;
       }
+      
+      return res.status(200).json({
+        success: true,
+        data: settings,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
-      console.error('Error reading settings:', error);
+      console.error('Error reading settings from database:', error);
       return res.status(500).json({ 
         success: false,
         error: 'Failed to read settings',
@@ -110,46 +98,44 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === 'PUT') {
     try {
-      console.log('Settings PUT request received. Body:', JSON.stringify(req.body, null, 2));
+      console.log('Updating settings in database. Body:', JSON.stringify(req.body, null, 2));
       
-      // Validate input with settingsSchema
       const validationResult = settingsSchema.safeParse(req.body);
       if (!validationResult.success) {
-        console.error('Validation failed. Issues:', validationResult.error.issues);
-        console.error('Received data:', JSON.stringify(req.body, null, 2));
         return res.status(400).json({
           success: false,
           error: 'Validation failed',
-          details: validationResult.error.issues.map(issue => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-            code: issue.code
-          })),
+          details: validationResult.error.issues,
           timestamp: new Date().toISOString()
         });
       }
 
       const settings = validationResult.data;
-      console.log('Validation passed. Cleaned data:', JSON.stringify(settings, null, 2));
       
-      // Log settings update attempt
-      console.log('Settings update attempted via admin API');
+      const { data: updatedSettings, error: dbError } = await (supabaseAdmin as any)
+        .from('settings')
+        .upsert({ 
+          id: 1,
+          ...settings,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
       
-      // Save to file
-      await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2));
-      
-      // Log successful update
-      console.log('Settings updated successfully via admin API');
+      if (dbError) {
+        console.error('Database update error:', dbError);
+        throw new Error('Failed to update settings in database');
+      }
       
       return res.status(200).json({ 
         success: true,
         message: 'Settings saved successfully',
-        data: settings,
+        data: updatedSettings,
         timestamp: new Date().toISOString()
       });
 
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Error saving settings to database:', error);
       return res.status(500).json({ 
         success: false,
         error: 'Failed to save settings',
@@ -165,7 +151,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   });
 }
 
-// Apply enhanced CMS security middleware and error handler
 export default withErrorHandler(withCMSSecurity(handler, {
   requirePermission: 'manage:settings',
   auditAction: 'admin_settings_updated'

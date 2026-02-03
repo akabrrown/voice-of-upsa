@@ -1,10 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import { withErrorHandler } from '@/lib/api/middleware/error-handler';
-import { getCMSRateLimit } from '@/lib/security/cms-security';
-import { getClientIP } from '@/lib/security/auth-security';
-import { withRateLimit } from '@/lib/api/middleware/auth';
-import { requireAdminOrEditor } from '@/lib/auth-helpers';
+import { withCMSSecurity } from '@/lib/security/cms-security';
 
 interface ArticleUpdate {
   is_featured: boolean;
@@ -26,17 +23,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Apply rate limiting
-    const rateLimitConfig = getCMSRateLimit('PUT');
-    const rateLimitMiddleware = withRateLimit(rateLimitConfig.requests, rateLimitConfig.window, (req: NextApiRequest) => 
-      getClientIP(req)
-    );
-    rateLimitMiddleware(req);
-
-    // Apply authentication middleware
-    const user = await requireAdminOrEditor(req);
-    console.log(`Featured API: Admin access granted for ${user.email}`);
-
     const { id } = req.query;
     if (!id || typeof id !== 'string') {
       return res.status(400).json({
@@ -54,6 +40,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Get Supabase admin client
     const supabaseAdmin = await getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new Error('Database connection failed');
+    }
 
     // Update article featured status
     const updateData: ArticleUpdate = {
@@ -62,7 +51,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       updated_at: new Date().toISOString()
     };
     
-  
     const { error } = await supabaseAdmin
       .from('articles')
       .update(updateData as never)
@@ -101,13 +89,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    console.info(`Article featured status updated by ${user.email}:`, {
-      articleId: id,
-      is_featured,
-      featured_order,
-      timestamp: new Date().toISOString()
-    });
-
     res.status(200).json({
       success: true,
       data: updatedArticle,
@@ -129,5 +110,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-// Apply enhanced CMS security middleware and error handler
-export default withErrorHandler(handler);
+export default withErrorHandler(withCMSSecurity(handler, {
+  requirePermission: 'edit:articles',
+  auditAction: 'article_featured_updated'
+}));

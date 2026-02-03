@@ -1,5 +1,5 @@
 // Log Rotation and Purge System
-import { supabaseAdmin } from '@/lib/database-server';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 interface LogRotationConfig {
   retentionDays: number;
@@ -35,7 +35,7 @@ class LogRotationManager {
       cutoffDate.setDate(cutoffDate.getDate() - this.config.retentionDays);
 
       // Count old logs
-      const { data: oldLogs, error: countError } = await (await supabaseAdmin)
+      const { data: oldLogs, error: countError } = await (await getSupabaseAdmin())
         .from('audit_logs')
         .select('id', { count: 'exact' })
         .lt('created_at', cutoffDate.toISOString());
@@ -55,7 +55,7 @@ class LogRotationManager {
       const batchesToProcess = Math.ceil(oldLogCount / this.config.batchSize);
       
       for (let batch = 0; batch < batchesToProcess; batch++) {
-        const { data: logsToDelete, error: fetchError } = await (await supabaseAdmin)
+        const { data: logsToDelete, error: fetchError } = await (await getSupabaseAdmin())
           .from('audit_logs')
           .select('id')
           .lt('created_at', cutoffDate.toISOString())
@@ -71,7 +71,7 @@ class LogRotationManager {
         }
 
         // Delete the batch
-        const { error: deleteError } = await (await supabaseAdmin as any)
+        const { error: deleteError } = await (await getSupabaseAdmin() as any)
           .from('audit_logs')
           .delete()
           .in('id', (logsToDelete as any[]).map(log => log.id));
@@ -105,7 +105,7 @@ class LogRotationManager {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - this.config.retentionDays);
 
-      const { data: oldAlerts, error: countError } = await (await supabaseAdmin)
+      const { data: oldAlerts, error: countError } = await (await getSupabaseAdmin())
         .from('security_alerts')
         .select('id', { count: 'exact' })
         .lt('created_at', cutoffDate.toISOString());
@@ -125,7 +125,7 @@ class LogRotationManager {
       const batchesToProcess = Math.ceil(oldAlertCount / this.config.batchSize);
       
       for (let batch = 0; batch < batchesToProcess; batch++) {
-        const { data: alertsToDelete, error: fetchError } = await (await supabaseAdmin)
+        const { data: alertsToDelete, error: fetchError } = await (await getSupabaseAdmin())
           .from('security_alerts')
           .select('id')
           .lt('created_at', cutoffDate.toISOString())
@@ -140,7 +140,7 @@ class LogRotationManager {
           continue;
         }
 
-        const { error: deleteError } = await (await supabaseAdmin as any)
+        const { error: deleteError } = await (await getSupabaseAdmin() as any)
           .from('security_alerts')
           .delete()
           .in('id', (alertsToDelete as any[]).map(alert => alert.id));
@@ -172,13 +172,13 @@ class LogRotationManager {
   }> {
     try {
       // Get audit log statistics
-      const { data: auditStats, error: auditError } = await (await supabaseAdmin)
+      const { data: auditStats, error: auditError } = await (await getSupabaseAdmin())
         .from('audit_logs')
         .select('id, created_at')
         .limit(1);
 
       // Get security alert statistics
-      const { data: alertStats, error: alertError } = await (await supabaseAdmin)
+      const { data: alertStats, error: alertError } = await (await getSupabaseAdmin())
         .from('security_alerts')
         .select('id, created_at')
         .limit(1);

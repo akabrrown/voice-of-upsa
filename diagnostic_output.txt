@@ -1,0 +1,42 @@
+[dotenv@17.2.3] injecting env (24) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+Checking for user: akayetb@gmail.com
+
+--- Checking auth.users via admin.listUsers() ---
+Found in auth.users list: NO
+Total users in auth list returned: 50
+
+--- Checking auth.users via getUserByEmail ---
+
+--- Checking public.users table ---
+Found in public.users: YES
+Public User Data: {
+  "id": "34e22590-8a37-4d29-9267-7932836f4a1e",
+  "email": "akayetb@gmail.com",
+  "name": "akayete benedict ",
+  "bio": null,
+  "avatar_url": null,
+  "website": null,
+  "location": null,
+  "social_links": {},
+  "preferences": {},
+  "role": "admin",
+  "email_verified": true,
+  "last_sign_in_at": null,
+  "created_at": "2025-12-14T16:05:43.20274+00:00",
+  "updated_at": "2025-12-17T02:42:24.840959+00:00",
+  "is_active": true,
+  "last_login_at": null,
+  "last_sign_in": null,
+  "status": "active",
+  "archived_at": null,
+  "archived_by": null,
+  "archive_reason": null,
+  "password_hash": null,
+  "verification_token": null,
+  "reset_token": null,
+  "reset_token_expiry": null,
+  "must_reset_password": false,
+  "failed_login_attempts": 0,
+  "account_locked_until": null,
+  "last_login": null
+}

@@ -136,9 +136,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
 
       // Process category update
       const categoryId = validatedData.category_id || validatedData.category;
-      const validCategoryId = categoryId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId) 
-        ? categoryId 
-        : (categoryId === null ? null : undefined);
+      let validCategoryId: string | null | undefined = undefined;
+      
+      if (categoryId === null || categoryId === '') {
+        validCategoryId = null;
+      } else if (categoryId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId)) {
+        validCategoryId = categoryId;
+      }
 
       // Update article
       const updateData: ArticleUpdateData = {
@@ -159,11 +163,25 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
 
       // Update slug if title changed
       if (validatedData.title && validatedData.title !== existingArticle.title) {
-        updateData.slug = validatedData.title.toLowerCase()
+        let slug = validatedData.title.toLowerCase()
           .replace(/[^a-z0-9\s-]/g, '')
           .replace(/\s+/g, '-')
           .replace(/-+/g, '-')
           .replace(/^[-]+|[-]+$/g, '');
+        
+        // Check for slug uniqueness
+        const { data: slugCheck } = await (supabaseAdmin as any)
+          .from('articles')
+          .select('id')
+          .eq('slug', slug)
+          .neq('id', id); // Note: single() might error if count is 0, just checking data
+          
+        if (slugCheck && slugCheck.length > 0) {
+          // If slug exists, append a unique suffix
+          slug = `${slug}-${Math.floor(Math.random() * 10000)}`;
+          console.log(`Slug conflict detected. Using alternative slug: ${slug}`);
+        }
+        updateData.slug = slug;
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

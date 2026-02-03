@@ -1,13 +1,47 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
+import { withErrorHandler } from '@/lib/api/middleware/error-handler';
+import { withCMSSecurity, CMSUser } from '@/lib/security/cms-security';
+
+interface UserData {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
+interface SupabaseOperationResult<T> {
+  data: T | null;
+  error: { message: string } | null;
+}
 
 /**
- * API endpoint to sync the current authenticated user to the users table
- * and optionally set them as admin (for initial setup only).
- * 
- * This endpoint should be secured or removed after initial setup.
+ * Interface to describe the specific subset of Supabase functionality used here.
+ * This helps avoid 'any' and complex inline assertions.
  */
-async function handler(req: NextApiRequest, res: NextApiResponse) {
+interface SupabaseUsersProxy {
+  from(table: 'users'): {
+    update(data: { role: string; updated_at: string }): {
+      eq(column: 'id', value: string): {
+        select(): {
+          single(): Promise<SupabaseOperationResult<UserData>>;
+        };
+      };
+    };
+    insert(data: { id: string; email: string; name: string; role: string; created_at: string; updated_at: string }): {
+      select(): {
+        single(): Promise<SupabaseOperationResult<UserData>>;
+      };
+    };
+  };
+}
+async function handler(req: NextApiRequest, res: NextApiResponse, requesterUser: CMSUser) {
+  // Get Supabase admin client
+  const supabaseAdmin = await getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    throw new Error('Database connection failed');
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -16,45 +50,30 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    // Get authorization header
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Authentication required' }
-      });
+    // Get target role and target userId from body (default to requester if not provided)
+    const { role = 'user', userId = requesterUser.id } = req.body;
+
+    // SECURITY: Only admins can assign roles to others OR set a role other than 'user'
+    if (requesterUser.role !== 'admin' && (userId !== requesterUser.id || role !== 'user')) {
+      // Allow elevation ONLY if no admins exist yet (initial setup)
+      const { count } = await supabaseAdmin
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'admin');
+        
+      if (count && count > 0) {
+        return res.status(403).json({
+          success: false,
+          error: { code: 'FORBIDDEN', message: 'Only admins can manage roles' }
+        });
+      }
     }
-
-    const token = authHeader.substring(7);
-    
-    // Get Supabase admin client
-    const supabaseAdmin = await getSupabaseAdmin();
-    if (!supabaseAdmin) {
-      throw new Error('Database connection failed');
-    }
-
-    // Verify the Supabase token
-    const { data: { user: authUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-    if (authError || !authUser) {
-      console.error('Sync user API - Token validation error:', authError);
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid token' }
-      });
-    }
-
-    console.log('Sync user API - Authenticated user:', authUser.email);
-
-    // Get role from request body (default to 'admin' for initial setup)
-    const { role = 'admin' } = req.body;
 
     // Check if user already exists in users table
     const { data: existingUser, error: fetchError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('id', authUser.id)
+      .eq('id', requesterUser.id)
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
@@ -65,23 +84,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       // Update existing user's role
       console.log('Sync user API - Updating existing user role to:', role);
       
-      const { data: updatedUser, error: updateError } = await (supabaseAdmin as unknown as { 
-        from: (table: string) => { 
-          update: (data: { role: string; updated_at: string }) => { 
-            eq: (column: string, value: string) => { 
-              select: () => { 
-                single: () => Promise<{ data: { id: string; email: string; role: string } | null; error: { message: string } | null }> 
-              } 
-            } 
-          } 
-        } 
-      })
-        .from('users')
+      const usersTable = (supabaseAdmin as unknown as SupabaseUsersProxy).from('users');
+      const { data: updatedUser, error: updateError } = await usersTable
         .update({ 
           role: role,
           updated_at: new Date().toISOString()
         })
-        .eq('id', authUser.id)
+        .eq('id', requesterUser.id)
         .select()
         .single();
 
@@ -106,7 +115,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       // Insert new user
       console.log('Sync user API - Creating new user with role:', role);
       
-      if (!authUser.email) {
+      if (!requesterUser.email) {
         return res.status(400).json({
           success: false,
           error: { 
@@ -115,21 +124,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           }
         });
       }
+
+      // Safe name extraction
+      const userName = (requesterUser as CMSUser & { name?: string }).name || 
+                       requesterUser.email.split('@')[0] || 
+                       'User';
       
-      const { data: newUser, error: insertError } = await (supabaseAdmin as unknown as { 
-        from: (table: string) => { 
-          insert: (data: { id: string; email: string; name: string; role: string; created_at: string; updated_at: string }) => { 
-            select: () => { 
-              single: () => Promise<{ data: { id: string; email: string; role: string } | null; error: { message: string } | null }> 
-            } 
-          } 
-        } 
-      })
-        .from('users')
+      const usersTable = (supabaseAdmin as unknown as SupabaseUsersProxy).from('users');
+      const { data: newUser, error: insertError } = await usersTable
         .insert({
-          id: authUser.id,
-          email: authUser.email,
-          name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+          id: requesterUser.id,
+          email: requesterUser.email,
+          name: userName,
           role: role,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -169,4 +175,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default handler;
+export default withErrorHandler(withCMSSecurity(handler, {
+  auditAction: 'user_sync'
+}));
