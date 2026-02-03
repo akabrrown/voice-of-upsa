@@ -36,8 +36,6 @@ const Header: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Fetch notifications for internal staff
-  // TEMPORARILY DISABLED - API route has turbopack compilation issue
-  /*
   React.useEffect(() => {
     if (user && session && (userRole === 'admin' || userRole === 'editor')) {
       const fetchNotifications = async () => {
@@ -77,7 +75,6 @@ const Header: React.FC = () => {
     }
     return;
   }, [user, session, userRole]);
-  */
 
   // Use CMS user role if available, fallback to Supabase user role
   const currentUserRole = cmsUser?.role || userRole;

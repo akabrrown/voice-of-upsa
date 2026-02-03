@@ -213,10 +213,21 @@ const AdsPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       // Validate custom duration if selected
-      if (data.duration === 'custom' && !customDuration.trim()) {
-        toast.error('Please specify the custom duration');
-        setIsSubmitting(false);
-        return;
+      // Validate custom duration if selected
+      if (data.duration === 'custom') {
+        if (!customDuration.trim()) {
+          toast.error('Please specify the custom duration');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Prevent users from entering just a number (e.g. "3")
+        // They must specify units like "3 Months"
+        if (!isNaN(Number(customDuration.trim()))) {
+          toast.error('Please specify the time unit (e.g., 3 Months, 5 Days)');
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       // Submit the ad for approval
@@ -606,10 +617,10 @@ const AdsPage: React.FC = () => {
                             value={customDuration}
                             onChange={(e) => setCustomDuration(e.target.value)}
                             className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent dark:bg-gray-700 dark:text-white"
-                            placeholder="e.g., 45 days, 2 weeks, 8 months"
+                            placeholder="e.g., 45 days (please specify units)"
                           />
                           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Please specify your preferred duration (e.g., 45 days, 2 weeks, 8 months)
+                            Please specify the duration with units (e.g., 45 days, 8 months)
                           </p>
                         </div>
                       )}
