@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { GetServerSideProps } from 'next';
+import { GetStaticProps, GetStaticPaths } from 'next';
 import Head from 'next/head';
-import { motion } from 'framer-motion';
 import { useSupabase } from '@/components/SupabaseProvider';
 import { Database } from '@/lib/database-types';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -792,10 +791,7 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-golden"></div>
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+          <div
             className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
           >
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -1052,15 +1048,13 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
               </div>
             </div>
           </div>
-        </motion.div>
+          </div>
         )}
 
         {/* Share Modal */}
         {showShareModal && (
           <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+            <div 
               className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl relative"
             >
               <button
@@ -1106,7 +1100,7 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
                   <span>Copy Link</span>
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
       </Layout>
@@ -1114,20 +1108,22 @@ const ArticlePage: React.FC<{ initialArticle?: Article }> = ({ initialArticle })
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+
+export const getStaticProps: GetStaticProps = async (context) => {
   const { slug } = context.params || {};
 
-  
   if (!slug || typeof slug !== 'string') {
-    return { props: { initialArticle: null, ssrError: 'No slug provided' } };
+    return { 
+      props: { initialArticle: null },
+      revalidate: 60
+    };
   }
   
   try {
     const { getSupabaseAdmin } = await import('@/lib/database-server');
     const supabase = await getSupabaseAdmin();
     
-    
-    // Fetch article with author info using admin client to bypass RLS for public meta tags
+    // Fetch article with author info
     const { data: article, error } = await (supabase as SupabaseClient<Database>)
       .from('articles')
       .select('*, author:users(id, name, avatar_url)')
@@ -1135,34 +1131,54 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .eq('status', 'published')
       .single();
       
-    
-    
     if (error || !article) {
-      console.error('Error fetching article for SSR:', error);
       return { 
-        props: { 
-          initialArticle: null,
-          ssrError: error ? { message: error.message, code: error.code } : 'Article not found',
-          
-        } 
+        props: { initialArticle: null },
+        revalidate: 60
       };
     }
     
     return {
       props: {
         initialArticle: article || null, 
-      }
+      },
+      revalidate: 60
     };
   } catch (err: unknown) {
-    console.error('Exception in getServerSideProps:', err);
+    console.error('Exception in getStaticProps:', err);
     return { 
-      props: { 
-        initialArticle: null, 
-        ssrError: { 
-          message: err instanceof Error ? err.message : String(err), 
-          stack: (err instanceof Error && err.stack) ? 'present' : 'absent' 
-        },
-      } 
+      props: { initialArticle: null },
+      revalidate: 60
+    };
+  }
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  try {
+    const { getSupabaseAdmin } = await import('@/lib/database-server');
+    const supabase = await getSupabaseAdmin();
+    
+    // Predetermine the most recent articles for the fastest cold start
+    const { data: articles } = await (supabase as SupabaseClient<Database>)
+      .from('articles')
+      .select('slug')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(20);
+
+    const paths = (articles as { slug: string }[] | null)?.map((article) => ({
+      params: { slug: article.slug },
+    })) || [];
+
+    return {
+      paths,
+      fallback: 'blocking', // New articles will be generated on-demand
+    };
+  } catch (error) {
+    console.error('Error in getStaticPaths:', error);
+    return {
+      paths: [],
+      fallback: 'blocking',
     };
   }
 };

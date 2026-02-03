@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { FiTarget, FiUsers, FiBook, FiAward, FiHeart, FiMail, FiTwitter, FiLinkedin } from 'react-icons/fi';
 import Image from 'next/image';
@@ -40,26 +39,7 @@ const AboutPage: React.FC = () => {
     fetchTeam();
   }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-      },
-    },
-  };
 
   return (
     <Layout title="About Us - Voice of UPSA" description="Learn more about Voice of UPSA, our mission, values, and the team behind the news.">
@@ -67,21 +47,16 @@ const AboutPage: React.FC = () => {
         {/* Hero Section */}
         <section className="bg-navy py-20 text-white relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <motion.h1 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
+            <h1 
               className="text-4xl md:text-5xl font-bold mb-6"
             >
               Empowering the UPSA Community
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+            </h1>
+            <p 
               className="text-xl text-gray-300 max-w-3xl mx-auto"
             >
               The leading student-led media organization dedicated to excellence in journalism and community service.
-            </motion.p>
+            </p>
           </div>
         </section>
 
@@ -89,29 +64,22 @@ const AboutPage: React.FC = () => {
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <motion.h2 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+              <h2 
                 className="text-4xl font-bold text-navy mb-4"
               >
                 Our Mission & Values
-              </motion.h2>
+              </h2>
               <div className="w-20 h-1 bg-golden mx-auto mb-6"></div>
               <p className="text-gray-600 max-w-3xl mx-auto text-lg">
                 Voice of UPSA is dedicated to providing accurate, timely, and relevant news to the University of Professional Studies community. We strive to be the trusted source of information that connects students, faculty, and staff.
               </p>
             </div>
 
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
+            <div
               className="grid grid-cols-1 lg:grid-cols-3 gap-8"
             >
               {/* Mission Content */}
-              <motion.div variants={itemVariants} className="lg:col-span-2">
+              <div className="lg:col-span-2">
                 <div className="bg-gray-50 rounded-2xl p-8 h-full">
                   <h3 className="text-2xl font-bold text-navy mb-6 flex items-center">
                     <div className="w-12 h-12 bg-golden/10 rounded-full flex items-center justify-center mr-4">
@@ -139,10 +107,10 @@ const AboutPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
               
               {/* Values */}
-              <motion.div variants={itemVariants}>
+              <div>
                 <div className="bg-navy rounded-2xl p-8 text-white shadow-xl h-full">
                   <h3 className="text-2xl font-bold mb-8 flex items-center">
                     <span className="w-8 h-1 bg-golden mr-4"></span>
@@ -178,8 +146,8 @@ const AboutPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -187,36 +155,21 @@ const AboutPage: React.FC = () => {
         <section className="py-20 bg-white border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
              <div className="text-center mb-12">
-               <motion.div
-                 initial={{ opacity: 0, y: 20 }}
-                 whileInView={{ opacity: 1, y: 0 }}
-                 viewport={{ once: true }}
-                 className="inline-block"
-               >
+               <div className="inline-block">
                  <div className="bg-golden/10 rounded-full px-6 py-2 text-golden text-sm font-bold mb-4">
                    TRANSPARENCY
                  </div>
-               </motion.div>
-               <motion.h2 
-                 initial={{ opacity: 0, y: 20 }}
-                 whileInView={{ opacity: 1, y: 0 }}
-                 viewport={{ once: true }}
-                 className="text-3xl md:text-4xl font-bold text-navy mb-4"
-               >
+               </div>
+               <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
                  Documents & Reports
-               </motion.h2>
+               </h2>
                <div className="w-20 h-1 bg-golden mx-auto mb-6"></div>
                <p className="text-gray-600 max-w-2xl mx-auto">
                  Access our annual reports and official documents to stay informed about our progress and activities.
                </p>
              </div>
 
-             <motion.div
-               initial={{ opacity: 0, y: 20 }}
-               whileInView={{ opacity: 1, y: 0 }}
-               viewport={{ once: true }}
-               className="bg-gray-50 rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100"
-             >
+             <div className="bg-gray-50 rounded-2xl p-6 md:p-10 shadow-sm border border-gray-100">
                <div className="flex flex-col items-center mb-8">
                   <div className="w-16 h-16 bg-navy/5 rounded-full flex items-center justify-center mb-4">
                      <FiFileText className="text-3xl text-navy" />
@@ -230,7 +183,7 @@ const AboutPage: React.FC = () => {
                <div className="w-full">
                   <PdfViewer url="/Voice_Of_UPSA_2025_Annual_Report.pdf" />
                </div>
-             </motion.div>
+             </div>
           </div>
         </section>
 
@@ -238,36 +191,18 @@ const AboutPage: React.FC = () => {
         <section className="py-24 bg-gradient-to-br from-gray-50 to-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-20">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="inline-block"
-              >
+              <div className="inline-block">
                 <div className="bg-navy rounded-full px-6 py-2 text-golden text-sm font-bold mb-4">
                   MEET THE TEAM
                 </div>
-              </motion.div>
-              <motion.h2 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="text-5xl font-bold text-navy mb-6"
-              >
-                The People Behind
-                <span className="text-golden"> Voice of UPSA</span>
-              </motion.h2>
+              </div>
+              <h2 className="text-5xl font-bold text-navy mb-6">
+                The People Behind <span className="text-golden">Voice of UPSA</span>
+              </h2>
               <div className="w-24 h-1 bg-golden mx-auto mb-8"></div>
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="text-gray-600 max-w-3xl mx-auto text-xl leading-relaxed"
-              >
+              <p className="text-gray-600 max-w-3xl mx-auto text-xl leading-relaxed">
                 Meet the talented and dedicated individuals working behind the scenes to bring you the best campus news experience.
-              </motion.p>
+              </p>
             </div>
 
             {loading ? (
@@ -280,19 +215,13 @@ const AboutPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <motion.div 
-                variants={containerVariants}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
+              <div 
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
               >
-                {team.map((member, index) => (
-                  <motion.div
+                {team.map((member) => (
+                  <div
                     key={member.id}
-                    variants={itemVariants}
                     className="group"
-                    style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="bg-white rounded-3xl shadow-lg overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:shadow-2xl border border-gray-100">
                       <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
@@ -335,9 +264,9 @@ const AboutPage: React.FC = () => {
                         )}
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
-              </motion.div>
+              </div>
             )}
             
             {!loading && team.length === 0 && (

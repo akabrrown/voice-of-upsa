@@ -4,6 +4,7 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  swcMinify: true,
   // Security headers and configuration
   async headers() {
     return [

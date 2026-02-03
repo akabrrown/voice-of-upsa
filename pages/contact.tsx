@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import FollowUs from '@/components/FollowUs';
 import toast from 'react-hot-toast';
@@ -98,26 +97,7 @@ const ContactPage: React.FC = () => {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-      },
-    },
-  };
 
   return (
     <Layout>
@@ -127,17 +107,14 @@ const ContactPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Contact Form */}
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
+              <div
                 className="bg-white rounded-lg shadow-lg p-8"
               >
-                <motion.h2 variants={itemVariants} className="text-2xl font-bold text-navy mb-6">
+                <h2 className="text-2xl font-bold text-navy mb-6">
                   Send us a Message
-                </motion.h2>
+                </h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <motion.div variants={itemVariants}>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Name *
                     </label>
@@ -153,9 +130,9 @@ const ContactPage: React.FC = () => {
                         required
                       />
                     </div>
-                  </motion.div>
+                  </div>
 
-                  <motion.div variants={itemVariants}>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email *
                     </label>
@@ -171,9 +148,9 @@ const ContactPage: React.FC = () => {
                         required
                       />
                     </div>
-                  </motion.div>
+                  </div>
 
-                  <motion.div variants={itemVariants}>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Subject
                     </label>
@@ -185,9 +162,9 @@ const ContactPage: React.FC = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-golden focus:border-transparent"
                       placeholder="What's this about?"
                     />
-                  </motion.div>
+                  </div>
 
-                  <motion.div variants={itemVariants}>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Message *
                     </label>
@@ -203,9 +180,9 @@ const ContactPage: React.FC = () => {
                         required
                       />
                     </div>
-                  </motion.div>
+                  </div>
 
-                  <motion.div variants={itemVariants}>
+                  <div>
                     <button
                       type="submit"
                       disabled={isSubmitting}
@@ -223,20 +200,17 @@ const ContactPage: React.FC = () => {
                         </div>
                       )}
                     </button>
-                  </motion.div>
+                  </div>
                 </form>
-              </motion.div>
+              </div>
 
               {/* Contact Information */}
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
+              <div
                 className="space-y-8"
               >
 
                 {/* Office Hours */}
-                <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-lg p-8">
+                <div className="bg-white rounded-lg shadow-lg p-8">
                   <h3 className="text-xl font-bold text-navy mb-6">Office Hours</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
@@ -252,17 +226,17 @@ const ContactPage: React.FC = () => {
                       <span className="font-semibold">Closed</span>
                     </div>
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Social Media */}
-                <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-lg p-8">
+                <div className="bg-white rounded-lg shadow-lg p-8">
                   <h3 className="text-xl font-bold text-navy mb-6">Follow Us</h3>
                   <p className="text-gray-600 mb-6">
                     Stay connected with us on social media for the latest updates and behind-the-scenes content.
                   </p>
                   <FollowUs />
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             </div>
           </div>
         </section>

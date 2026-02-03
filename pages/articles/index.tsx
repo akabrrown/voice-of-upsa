@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,6 +8,8 @@ import { FiSearch, FiFilter, FiCalendar, FiEye, FiMessageCircle, FiChevronLeft, 
 import { useSupabase } from '@/components/SupabaseProvider';
 import AdDisplay from '@/components/AdDisplay';
 import useSWR, { preload } from 'swr';
+import { GetStaticProps } from 'next';
+import { getSupabaseAdmin } from '@/lib/database-server';
 
 // Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then(res => {
@@ -21,8 +22,6 @@ const fetcher = (url: string) => fetch(url).then(res => {
 const NextLink = Link as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const NextImage = Image as any;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MotionDiv = motion.div as any;
 
 interface AnonymousStory {
   id: string;
@@ -74,7 +73,12 @@ interface Article {
 // Constants moved outside the component for stable references
 const EMPTY_CATEGORIES: Category[] = [];
 
-const ArticlesPage: React.FC = () => {
+interface ArticlesPageProps {
+  initialArticles?: Article[];
+  initialPagination?: any;
+}
+
+const ArticlesPage: React.FC<ArticlesPageProps> = ({ initialArticles, initialPagination }) => {
   const router = useRouter();
   const { supabase, session } = useSupabase();
 
@@ -123,7 +127,10 @@ const ArticlesPage: React.FC = () => {
 
   const { data: fetchResult, error: fetchError, isLoading, mutate } = useSWR(swrKey, fetcher, {
     revalidateOnFocus: false,
-    keepPreviousData: true
+    keepPreviousData: true,
+    fallbackData: (initialArticles && currentPage === 1 && selectedCategory === 'all' && !searchTerm) 
+      ? { success: true, data: { articles: initialArticles, pagination: initialPagination } } 
+      : undefined
   });
 
   // Transform Data Logic
@@ -310,26 +317,7 @@ const ArticlesPage: React.FC = () => {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-      },
-    },
-  };
 
   if (loading) {
     console.log('Loading state is true, showing loader');
@@ -421,13 +409,10 @@ const ArticlesPage: React.FC = () => {
             <div className="lg:col-span-3">
               {articles.length > 0 ? (
                 <div>
-                  <MotionDiv
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
+                  <div
                     className="grid grid-cols-1 md:grid-cols-2 gap-8"
                   >
-                      {articles.map((article: Article, index: number) => {
+                      {articles.map((article: Article) => {
                         if (!article || !article.id) return null;
                         
                         const isLinkable = article.isAnonymous 
@@ -439,10 +424,8 @@ const ArticlesPage: React.FC = () => {
                           : `/articles/${article.slug}`;
 
                         return (
-                          <MotionDiv
+                          <div
                             key={article.id}
-                            variants={itemVariants}
-                            transition={{ delay: index * 0.1 }}
                           >
                             {isLinkable ? (
                               <NextLink 
@@ -517,17 +500,14 @@ const ArticlesPage: React.FC = () => {
                                 <p className="text-gray-600">Article content currently unavailable.</p>
                               </div>
                             )}
-                          </MotionDiv>
+                          </div>
                         );
                       })}
-                    </MotionDiv>
+                    </div>
 
                   {/* Pagination */}
                   {pagination && pagination.totalPages > 1 && (
-                    <MotionDiv
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.4 }}
+                    <div
                       className="mt-12 flex justify-center"
                     >
                       <div className="flex items-center space-x-2">
@@ -557,15 +537,12 @@ const ArticlesPage: React.FC = () => {
                           <FiChevronRight className="w-5 h-5" />
                         </button>
                       </div>
-                    </MotionDiv>
+                    </div>
                   )}
 
                   {/* Results Info */}
                   {pagination && (
-                    <MotionDiv
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 0.2 }}
+                    <div
                       className="mt-8 text-center text-gray-600"
                     >
                       <p>
@@ -573,7 +550,7 @@ const ArticlesPage: React.FC = () => {
                         {searchTerm && (` for "${searchTerm}"`)}
                         {selectedCategory !== 'all' && (` in ${categories.find(c => c.id === selectedCategory)?.name || ''}`)}
                       </p>
-                    </MotionDiv>
+                    </div>
                   )}
                 </div>
               ) : (
@@ -593,6 +570,54 @@ const ArticlesPage: React.FC = () => {
       </div>
     </Layout>
   );
+};
+
+
+export const getStaticProps: GetStaticProps = async () => {
+  try {
+    const supabase = await getSupabaseAdmin();
+    if (!supabase) {
+      return { 
+        props: { initialArticles: [] },
+        revalidate: 60
+      };
+    }
+
+    const { data: articles, error } = await supabase
+      .from('articles')
+      .select('*, author:users(id, name, avatar_url)')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(10);
+
+    const { count } = await supabase
+      .from('articles')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published');
+
+    if (error) {
+      console.error('Articles ISR Fetch Error:', error);
+      return { props: { initialArticles: [] }, revalidate: 60 };
+    }
+
+    const totalArticles = count || 0;
+    const totalPages = Math.ceil(totalArticles / 10);
+
+    return {
+      props: {
+        initialArticles: articles || [],
+        initialPagination: {
+          page: 1,
+          totalPages,
+          total: totalArticles,
+        }
+      },
+      revalidate: 60,
+    };
+  } catch (error) {
+    console.error('ISR error:', error);
+    return { props: { initialArticles: [] }, revalidate: 60 };
+  }
 };
 
 export default ArticlesPage;

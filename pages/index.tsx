@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import LayoutSupabase from '@/components/LayoutSupabase';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,7 +7,7 @@ import { FiCalendar, FiUser, FiEye, FiChevronLeft, FiChevronRight } from 'react-
 import { useApi } from '@/lib/api-client';
 import { ArticlesApi, Article } from '@/lib/api/articles-api';
 import { useSupabase } from '@/components/SupabaseProvider';
-import { GetServerSideProps } from 'next';
+import { GetStaticProps } from 'next';
 import { getSupabaseAdmin } from '@/lib/database-server';
 import AdDisplay from '@/components/AdDisplay';
 
@@ -137,7 +136,9 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
     };
   }, [execute, supabase]);
 
-  // Initial data fetch
+  // Initial data fetch - REMOVED for ISR Optimization
+  // We rely on the initialArticles passed from getStaticProps (which are fresh enough)
+  /*
   useEffect(() => {
     execute(
       () => ArticlesApi.getArticles({ limit: 50, status: 'published' }), // Fetch more than we display
@@ -161,6 +162,7 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
       }
     );
   }, [execute]);
+  */
 
   // Handler for Load More button
   const handleLoadMore = () => {
@@ -237,26 +239,7 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
     });
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-      },
-    },
-  };
 
   const featuredArticle = featuredArticles[currentSlide];
 
@@ -278,10 +261,7 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
         ) : featuredArticles.length > 0 && (
           <section className="py-12 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+              <div
               >
                 <h2 className="text-2xl lg:text-3xl font-bold text-navy mb-6 sm:mb-8">Featured Articles</h2>
                 
@@ -292,13 +272,7 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
                   onMouseLeave={() => setIsPaused(false)}
                 >
                   {/* Article Display */}
-                  <motion.div
-                    key={currentSlide}
-                    initial={{ opacity: 0, x: 100 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    transition={{ duration: 0.5 }}
-                  >
+                  <div>
                     {featuredArticle && (
                       <Link 
                         href={featuredArticle.slug && featuredArticle.slug.trim() ? `/articles/${featuredArticle.slug}` : '#'} 
@@ -374,7 +348,7 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
                         </div>
                       </Link>
                     )}
-                  </motion.div>
+                  </div>
 
                   {/* Navigation Arrows - Only show if more than 1 article */}
                   {featuredArticles.length > 1 && (
@@ -414,7 +388,7 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             </div>
           </section>
         )}
@@ -441,10 +415,7 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
         {/* Latest News */}
         <section className="py-12 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+            <div
               className="flex justify-between items-center mb-8"
             >
               <h2 className="text-2xl sm:text-3xl font-bold text-navy">Latest News</h2>
@@ -454,7 +425,7 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
               >
                 View All
               </Link>
-            </motion.div>
+            </div>
 
             {loading && latestNews.length === 0 ? (
               <div className="animate-pulse">
@@ -481,17 +452,12 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
             ) : visibleArticles.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                 <div className="lg:col-span-3">
-                  <motion.div
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
+                  <div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                   >
-                    {visibleArticles.map((article: Article, index: number) => (
-                    <motion.div
+                    {visibleArticles.map((article: Article) => (
+                    <div
                       key={article.id}
-                      variants={itemVariants}
-                      transition={{ delay: index * 0.1 }}
                     >
                       <Link 
                         href={article.slug && article.slug.trim() ? `/articles/${article.slug}` : '#'} 
@@ -556,9 +522,9 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
                           </div>
                         </div>
                       </Link>
-                    </motion.div>
+                    </div>
                     ))}
-                  </motion.div>
+                  </div>
 
                   {/* Load More Button moved inside span */}
                   {hasMoreArticles && (
@@ -596,11 +562,15 @@ const HomePage: React.FC<HomePageProps> = ({ initialArticles }) => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = async () => {
+
+export const getStaticProps: GetStaticProps = async () => {
   try {
     const supabase = await getSupabaseAdmin();
     if (!supabase) {
-      return { props: { initialArticles: [] } };
+      return { 
+        props: { initialArticles: [] },
+        revalidate: 60 // Try again in 60 seconds
+      };
     }
 
     const { data: articles, error } = await supabase
@@ -631,10 +601,14 @@ export const getServerSideProps: GetServerSideProps = async () => {
       props: {
         initialArticles: articles || [],
       },
+      revalidate: 60, // Revalidate every 60 seconds (ISR)
     };
   } catch (error) {
-    console.error('SSR error:', error);
-    return { props: { initialArticles: [] } };
+    console.error('ISR error:', error);
+    return { 
+      props: { initialArticles: [] },
+      revalidate: 60 
+    };
   }
 };
 
