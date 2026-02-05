@@ -108,10 +108,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse, user: CMSUser)
   if (req.method === 'POST') {
     const validatedData = articleCreateSchema.parse(req.body);
     
-    const slug = validatedData.title.toLowerCase()
+    let slug = validatedData.title.toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .substring(0, 100);
+    
+    // Check for slug collision
+    const { data: existingArticle } = await supabase
+      .from('articles')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (existingArticle) {
+      // Append random string to ensure uniqueness
+      const randomStr = Math.random().toString(36).substring(2, 7);
+      slug = `${slug}-${randomStr}`;
+      console.log(`Slug collision detected. Generated new slug: ${slug}`);
+    }
     
     const categoryId = validatedData.category_id || validatedData.category || null;
     const validCategoryId = categoryId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId) 

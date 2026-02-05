@@ -51,13 +51,13 @@ export function getCSPConfig(reportOnly = false, isProduction = false): CSPConfi
     ],
     'style-src': isProduction ? [
       "'self'",
-      // 'unsafe-inline' is removed in production to prevent CSS-based XSS attacks.
-      // We use a nonce-based system for necessary inline styles.
+      "'unsafe-inline'", // Added for style attributes (React)
+      "'unsafe-hashes'", // Added to allow specific hashes for inline styles
       'https://fonts.googleapis.com',
       'https://fonts.gstatic.com'
     ] : [
       "'self'",
-      "'unsafe-inline'", // Allowed in dev for faster iteration with styles
+      "'unsafe-inline'",
       'https://fonts.googleapis.com',
       'https://fonts.gstatic.com'
     ],
@@ -86,6 +86,12 @@ export function getCSPConfig(reportOnly = false, isProduction = false): CSPConfi
       'https://api.cloudinary.com',
       'https://www.google-analytics.com',
       'wss://*.supabase.co'
+    ],
+    'media-src': [
+      "'self'",
+      'data:',
+      'blob:',
+      'https://res.cloudinary.com'
     ],
     'frame-src': [
       "'self'",

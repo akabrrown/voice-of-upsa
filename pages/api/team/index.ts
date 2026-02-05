@@ -19,14 +19,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq('is_active', true)
       .order('order_index', { ascending: true });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Database error fetching team members:', error);
+      throw error;
+    }
 
     return res.status(200).json({
       success: true,
       data: data
     });
   } catch (error: unknown) {
-    console.error('Upload error:', error);
-    return res.status(500).json({ success: false, error: 'Failed to upload image' });
+    console.error('API Error in /api/team:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch team members',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
+    });
   }
 }
