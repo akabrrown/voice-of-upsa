@@ -145,16 +145,10 @@ export function getSecurityHeaders(isProduction = false, nonce?: string): Securi
 
   // We do NOT add nonce to style-src because we need 'unsafe-inline' to work for 
   // style attributes (e.g. <div style="...">) which are common in React and 3rd party libs.
-  // Browsers ignore 'unsafe-inline' if a nonce is present.
-  // OWASP: Nonce-based CSP for styles
-  // Adding the nonce to style-src allows browsers that support nonces to execute 
-  // inline styles while blocking others. Browsers that support nonces automatically 
-  // ignore 'unsafe-inline' when a nonce is present.
-  if (nonce && cspConfig.directives['style-src']) {
-    if (!cspConfig.directives['style-src'].includes(`'nonce-${nonce}'`)) {
-      cspConfig.directives['style-src'].push(`'nonce-${nonce}'`);
-    }
-  }
+  // Browsers ignore 'unsafe-inline' if a nonce is present, so adding a nonce would
+  // cause CSP violations for all inline styles in the application.
+  // This is a deliberate trade-off: we maintain nonce protection for scripts while
+  // allowing inline styles to support React and third-party components.
 
   const cspHeader = buildCSPHeader(cspConfig);
 
