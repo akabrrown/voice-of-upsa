@@ -1,0 +1,101 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn {
+  border: none;
+  border-radius: 9999px;
+  height: 42px;
+  width: 42px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s ease,
+              transform 0.25s ease;
+}
+
+.btn:hover {
+  width: 120px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.svgIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: #ffffff;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.svgIcon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.text {
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-left: 8px;
+  opacity: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  transform: translateX(6px);
+  transition: opacity 0.25s ease 0.08s,
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.08s;
+}
+
+.btn:hover .text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Individual Platform Brand Colors */
+.instagram {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+}
+
+.youtube {
+  background-color: #e60000;
+}
+
+.twitter {
+  background-color: #000000;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.facebook {
+  background-color: #1877f2;
+}
+
+.tiktok {
+  background-color: #010101;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.linkedin {
+  background-color: #0a66c2;
+}
