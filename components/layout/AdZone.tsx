@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 
 interface AdZoneProps {
@@ -8,20 +8,22 @@ interface AdZoneProps {
 }
 
 export async function AdZone({ type, className }: AdZoneProps) {
-  // Use service role to bypass RLS since public read policy is missing
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  let ad: any = null;
 
-  const { data: ads } = await supabase
-    .from("advertisements")
-    .select("*")
-    .eq("ad_type", type)
-    .eq("status", "active")
-    .limit(1);
+  try {
+    const supabase = getAdminClient();
+    const { data: ads } = await supabase
+      .from("advertisements")
+      .select("*")
+      .eq("ad_type", type)
+      .eq("status", "active")
+      .limit(1);
 
-  const ad = ads?.[0];
+    ad = ads?.[0] || null;
+  } catch (err) {
+    // Graceful fallback to default banner placeholder during build time or missing credentials
+    ad = null;
+  }
 
   const dimensions = {
     leaderboard: "728 x 90",

@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/supabase/admin";
 
-// Service role client to guarantee notification delivery across all admin accounts
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
+    const supabaseAdmin = getAdminClient();
     // 1. Verify user session via server auth cookies
     const supabase = await createServerClient();
     const {

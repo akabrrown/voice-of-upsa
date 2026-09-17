@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/supabase/admin";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const supabaseAdmin = getAdminClient();
     const { data, error } = await supabaseAdmin
       .from("editorial_team")
       .select("*")
@@ -68,6 +66,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const supabaseAdmin = getAdminClient();
     const body = await request.json();
     const { name, role, bio, image_url, email, social_links, display_order, is_active } = body;
 
@@ -104,6 +103,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const supabaseAdmin = getAdminClient();
     const body = await request.json();
     const { id, name, role, bio, image_url, email, social_links, display_order, is_active } = body;
 
@@ -146,6 +146,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const supabaseAdmin = getAdminClient();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 

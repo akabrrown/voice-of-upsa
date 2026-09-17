@@ -1,15 +1,10 @@
 import type { MetadataRoute } from "next";
-import { createClient } from "@supabase/supabase-js";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 export const revalidate = 3600; // revalidate sitemap every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://voiceofupsa.com";
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-  );
 
   // 1. Static Core Routes
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -45,35 +40,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // 2. Dynamic Categories
-  const { data: categories } = await supabase
-    .from("categories")
-    .select("slug, created_at");
+  try {
+    const supabase = getAdminClient();
 
-  const categoryRoutes: MetadataRoute.Sitemap = (categories || []).map((cat) => ({
-    url: `${siteUrl}/categories/${cat.slug}`,
-    lastModified: cat.created_at ? new Date(cat.created_at) : new Date(),
-    changeFrequency: "daily",
-    priority: 0.8,
-  }));
+    // 2. Dynamic Categories
+    const { data: categories } = await supabase
+      .from("categories")
+      .select("slug, created_at");
 
-  // 3. Dynamic Published Articles
-  const { data: articles } = await supabase
-    .from("articles")
-    .select("slug, updated_at, published_at")
-    .eq("status", "published")
-    .order("published_at", { ascending: false });
+    const categoryRoutes: MetadataRoute.Sitemap = (categories || []).map((cat) => ({
+      url: `${siteUrl}/categories/${cat.slug}`,
+      lastModified: cat.created_at ? new Date(cat.created_at) : new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    }));
 
-  const articleRoutes: MetadataRoute.Sitemap = (articles || []).map((article) => ({
-    url: `${siteUrl}/articles/${article.slug}`,
-    lastModified: article.updated_at
-      ? new Date(article.updated_at)
-      : article.published_at
-      ? new Date(article.published_at)
-      : new Date(),
-    changeFrequency: "weekly",
-    priority: 0.9,
-  }));
+    // 3. Dynamic Published Articles
+    const { data: articles } = await supabase
+      .from("articles")
+      .select("slug, updated_at, published_at")
+      .eq("status", "published")
+      .order("published_at", { ascending: false });
 
-  return [...staticRoutes, ...categoryRoutes, ...articleRoutes];
+    const articleRoutes: MetadataRoute.Sitemap = (articles || []).map((article) => ({
+      url: `${siteUrl}/articles/${article.slug}`,
+      lastModified: article.updated_at
+        ? new Date(article.updated_at)
+        : article.published_at
+        ? new Date(article.published_at)
+        : new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    }));
+
+    return [...staticRoutes, ...categoryRoutes, ...articleRoutes];
+  } catch (err) {
+    // Return core static routes safely if database credentials are not present during static generation
+    return staticRoutes;
+  }
 }
