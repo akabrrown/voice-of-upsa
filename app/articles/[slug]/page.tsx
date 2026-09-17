@@ -205,8 +205,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <article className="pt-10 pb-20">
           <div className="container mx-auto px-4 max-w-7xl">
             {/* Header: Breadcrumbs, Badge, Title & Meta */}
-            <div className="max-w-4xl mx-auto mb-10 space-y-4 text-center md:text-left">
-              <nav className="flex items-center justify-center md:justify-start space-x-2 text-sm text-gray-400">
+            <div className="max-w-4xl mx-auto mb-10 space-y-4 text-left">
+              <nav className="flex items-center justify-start space-x-2 text-sm text-gray-400">
                 <Link href="/" className="hover:text-upsa-navy transition-colors">Home</Link>
                 <span>/</span>
                 <Link href={`/categories/${article.categorySlug}`} className="hover:text-upsa-navy transition-colors">{article.category}</Link>
@@ -216,11 +216,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 {article.category}
               </Badge>
 
-              <h1 className="text-3xl md:text-5xl font-black text-upsa-navy leading-tight tracking-tight text-justify [text-align-last:left]">
+              <h1 className="text-3xl md:text-5xl font-black text-upsa-navy leading-tight tracking-tight text-left">
                 {article.title}
               </h1>
 
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6 pt-2 text-sm text-gray-500 border-b border-gray-100 pb-6">
+              <div className="flex flex-wrap items-center justify-start gap-4 sm:gap-6 pt-2 text-sm text-gray-500 border-b border-gray-100 pb-6">
                 <div className="flex items-center">
                   <div className="relative h-10 w-10 rounded-full overflow-hidden mr-3 border border-gray-200">
                     <Image src={article.author.avatar} alt={article.author.name} fill sizes="40px" className="object-cover" />
