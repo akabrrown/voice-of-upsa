@@ -195,7 +195,16 @@ async function migrateCategories() {
   const newCatsToInsert = [];
 
   for (const cat of oldCats) {
-    const matchedId = existingNameMap[cat.name.toLowerCase()] || existingSlugMap[cat.slug.toLowerCase()];
+    const slugLower = (cat.slug || "").toLowerCase();
+    const nameLower = (cat.name || "").toLowerCase();
+
+    // STRICT RULE: Exclude any anonymous categories
+    if (slugLower.includes("anon") || nameLower.includes("anon") || nameLower.includes("confession")) {
+      console.log(`🛡️ Excluding anonymous category: "${cat.name}" (${cat.slug})`);
+      continue;
+    }
+
+    const matchedId = existingNameMap[nameLower] || existingSlugMap[slugLower];
     if (matchedId) {
       categoryIdMap[cat.id] = matchedId;
     } else {
@@ -228,8 +237,34 @@ async function migrateArticles() {
 
   let resolvedAuthorCount = 0;
   let fallbackAuthorCount = 0;
+  let skippedAnonCount = 0;
 
-  const newArts = oldArts.map(art => {
+  // STRICT RULE: Exclude any anonymous stories or posts
+  const filteredArts = oldArts.filter(art => {
+    const titleLower = (art.title || '').toLowerCase();
+    const slugLower = (art.slug || '').toLowerCase();
+    const contribLower = (art.contributor_name || '').toLowerCase();
+    
+    const isAnon = 
+      titleLower.includes('anonymous story') || 
+      titleLower.includes('anonymous post') || 
+      slugLower.includes('anonymous-stor') ||
+      contribLower === 'anonymous' ||
+      contribLower.includes('anonymous contributor') ||
+      art.is_anonymous === true;
+
+    if (isAnon) {
+      skippedAnonCount++;
+      return false;
+    }
+    return true;
+  });
+
+  if (skippedAnonCount > 0) {
+    console.log(`🛡️ Filtered out ${skippedAnonCount} anonymous posts from migration.`);
+  }
+
+  const newArts = filteredArts.map(art => {
     let newStatus = art.status;
     if (newStatus === 'pending_review') newStatus = 'review';
     if (newStatus === 'scheduled') newStatus = 'draft';
@@ -312,6 +347,37 @@ async function migrateComments() {
   console.log(`✅ Migrated ${newComms.length} comments.`);
 }
 
+async function purgeAnonymousPosts() {
+  console.log('🧹 Ensuring zero anonymous stories or categories exist in the target database...');
+  // 1. Delete category if any
+  const { data: catData } = await newSupabase
+    .from('categories')
+    .select('id, name')
+    .or('slug.ilike.%anon%,name.ilike.%anon%');
+
+  if (catData && catData.length > 0) {
+    for (const c of catData) {
+      console.log(`Removing leftover anonymous category: "${c.name}" (${c.id})...`);
+      await newSupabase.from('articles').delete().eq('category_id', c.id);
+      await newSupabase.from('categories').delete().eq('id', c.id);
+    }
+  }
+
+  // 2. Delete any articles with anon in slug or title
+  const { data: anonArticles } = await newSupabase
+    .from('articles')
+    .select('id, title')
+    .or('slug.ilike.%anonymous-stor%,title.ilike.%anonymous story%');
+
+  if (anonArticles && anonArticles.length > 0) {
+    for (const a of anonArticles) {
+      console.log(`Removing leftover anon article: "${a.title}" (${a.id})...`);
+      await newSupabase.from('articles').delete().eq('id', a.id);
+    }
+  }
+  console.log('✅ Anonymous content purge verification complete.');
+}
+
 async function runMigration() {
   try {
     console.log('🚀 Starting Data Migration...');
@@ -319,7 +385,8 @@ async function runMigration() {
     await migrateCategories();
     await migrateArticles();
     await migrateComments();
-    console.log('🎉 Migration completed successfully!');
+    await purgeAnonymousPosts();
+    console.log('🎉 Migration completed successfully with zero anonymous posts!');
   } catch (error) {
     console.error('❌ Migration failed:', error);
   }
