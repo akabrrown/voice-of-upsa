@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/server-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -101,6 +102,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if (auth.errorResponse) {
+      return auth.errorResponse;
+    }
+
     const supabaseAdmin = getAdminClient();
     const body = await request.json();
     const { id, name, price, period, description, features, highlight, button_text, sort_order, is_active } = body;
@@ -150,6 +156,11 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if (auth.errorResponse) {
+      return auth.errorResponse;
+    }
+
     const supabaseAdmin = getAdminClient();
     const body = await request.json();
     const { id, name, price, period, description, features, highlight, button_text, sort_order, is_active } = body;
@@ -195,6 +206,11 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if (auth.errorResponse) {
+      return auth.errorResponse;
+    }
+
     const supabaseAdmin = getAdminClient();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

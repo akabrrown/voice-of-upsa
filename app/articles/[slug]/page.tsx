@@ -19,6 +19,7 @@ import { TrendingSidebar } from "@/components/articles/TrendingSidebar";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import DOMPurify from "isomorphic-dompurify";
 
 interface RelatedArticleRaw {
   id: string;
@@ -251,7 +252,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 {/* Article Content */}
                 <div 
                   className="prose prose-lg max-w-none whitespace-pre-wrap prose-headings:text-upsa-navy prose-headings:font-black prose-p:text-gray-600 prose-p:leading-relaxed prose-a:text-upsa-gold prose-strong:text-upsa-navy prose-blockquote:border-upsa-gold prose-blockquote:bg-gray-50 prose-blockquote:rounded-r-xl"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: DOMPurify.sanitize(article.content, {
+                      ADD_TAGS: ["iframe"],
+                      ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling", "target"],
+                    }) 
+                  }}
                 />
 
                 {/* Article Reactions */}

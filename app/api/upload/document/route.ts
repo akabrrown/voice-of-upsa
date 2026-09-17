@@ -1,15 +1,31 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+import { getAdminClient } from "@/lib/supabase/admin";
+import { requireStaff } from "@/lib/auth/server-auth";
 
 export const maxDuration = 120; // 2 minutes timeout for large file uploads
 
+const ALLOWED_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+  "application/rtf",
+]);
+
+const ALLOWED_EXTENSIONS = new Set(["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf"]);
+
 export async function POST(request: Request) {
   try {
+    const auth = await requireStaff();
+    if (auth.errorResponse) {
+      return auth.errorResponse;
+    }
+
+    const supabaseAdmin = getAdminClient();
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const title = (formData.get("title") as string || "").trim();
@@ -21,6 +37,22 @@ export async function POST(request: Request) {
 
     if (!title) {
       return NextResponse.json({ error: "Document title is required" }, { status: 400 });
+    }
+
+    // Validate file extension and MIME type
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!ALLOWED_EXTENSIONS.has(fileExt)) {
+      return NextResponse.json(
+        { error: `File extension .${fileExt} is not permitted. Only documents (PDF, DOCX, XLSX, PPTX, TXT) are accepted.` },
+        { status: 400 }
+      );
+    }
+
+    if (file.type && !ALLOWED_MIME_TYPES.has(file.type.toLowerCase())) {
+      return NextResponse.json(
+        { error: `File MIME type (${file.type}) is not permitted.` },
+        { status: 400 }
+      );
     }
 
     // 100MB file size safeguard on API layer

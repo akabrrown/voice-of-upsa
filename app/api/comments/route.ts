@@ -33,9 +33,38 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
+  const { article_id, content } = body;
+
+  if (!article_id || typeof article_id !== "string") {
+    return NextResponse.json({ success: false, error: "Valid article ID is required" }, { status: 400 });
+  }
+
+  if (!content || typeof content !== "string" || !content.trim()) {
+    return NextResponse.json({ success: false, error: "Comment content cannot be empty" }, { status: 400 });
+  }
+
+  const cleanContent = content.trim().slice(0, 2000);
+
+  // Check if user is an editor or admin to optionally auto-approve
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isStaff = profile && ["admin", "editor"].includes(profile.role);
+
+  // Whitelisted database payload preventing mass assignment of is_approved or unauthorized columns
   const { data, error } = await supabase
     .from("comments")
-    .insert([{ ...body, user_id: user.id }])
+    .insert([
+      {
+        article_id,
+        content: cleanContent,
+        user_id: user.id,
+        is_approved: isStaff ? true : false,
+      },
+    ])
     .select()
     .single();
 

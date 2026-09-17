@@ -57,6 +57,21 @@ export async function POST(request: Request) {
       );
     }
 
+    try {
+      const parsedUrl = new URL(target_url.trim());
+      if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+        return NextResponse.json(
+          { success: false, error: "Target URL must begin with http:// or https://" },
+          { status: 400 }
+        );
+      }
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid target click-through URL format." },
+        { status: 400 }
+      );
+    }
+
     // 3. Insert advertisement into database
     const { data: adData, error: adError } = await supabaseAdmin
       .from("advertisements")

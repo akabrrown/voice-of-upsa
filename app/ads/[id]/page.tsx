@@ -1,10 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ExternalLink, Mail, Building, User as UserIcon, Phone } from "lucide-react";
+import { ExternalLink, Mail, Building, User as UserIcon, Phone } from "lucide-react";
+import { createClient as createServerClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 
 interface AdDetailsProps {
   params: {
@@ -12,15 +13,34 @@ interface AdDetailsProps {
   };
 }
 
+function isSafeUrl(url?: string | null): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url.trim());
+    return ["http:", "https:"].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
 export default async function AdDetailsPage({ params }: AdDetailsProps) {
   const resolvedParams = await params;
   
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: ad, error } = await supabase
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    isAdmin = profile?.role === "admin";
+  }
+
+  const supabaseAdmin = getAdminClient();
+  const { data: ad, error } = await supabaseAdmin
     .from("advertisements")
     .select("*")
     .eq("id", resolvedParams.id)
@@ -29,6 +49,13 @@ export default async function AdDetailsPage({ params }: AdDetailsProps) {
   if (error || !ad) {
     notFound();
   }
+
+  // Prevent unauthorized access to non-active ads (protects advertiser contact PII)
+  if (ad.status !== "active" && !isAdmin && ad.submitted_by !== user?.id) {
+    notFound();
+  }
+
+  const safeTargetUrl = isSafeUrl(ad.target_url) ? ad.target_url.trim() : null;
 
   return (
     <>
@@ -91,9 +118,9 @@ export default async function AdDetailsPage({ params }: AdDetailsProps) {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                {ad.target_url && (
+                {safeTargetUrl && (
                   <a 
-                    href={ad.target_url} 
+                    href={safeTargetUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy rounded-xl transition-all shadow-lg shadow-upsa-navy/20"

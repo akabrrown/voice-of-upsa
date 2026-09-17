@@ -72,6 +72,29 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // 1b. Protected Admin API routes (Defense-in-Depth edge check)
+  if (request.nextUrl.pathname.startsWith("/api/admin")) {
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Administrator credentials required." },
+        { status: 401 }
+      );
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden. Administrator role required." },
+        { status: 403 }
+      );
+    }
+  }
+
   // 2. Auth routes redirect if logged in
   if (request.nextUrl.pathname.startsWith("/auth") && user) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -84,10 +107,10 @@ export async function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   
-  // Content Security Policy (Basic - needs refinement based on environment)
+  // Content Security Policy (allows OneSignal, Cloudinary, and Supabase)
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com data:; connect-src 'self' https://*.supabase.co ws: wss:; frame-ancestors 'none'; frame-src 'self' https://www.google.com https://maps.google.com;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.onesignal.com https://onesignal.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com https://onesignal.com https://*.onesignal.com data:; connect-src 'self' https://*.supabase.co https://onesignal.com https://*.onesignal.com ws: wss:; worker-src 'self' blob:; frame-ancestors 'none'; frame-src 'self' https://www.google.com https://maps.google.com;"
   );
 
   return response;
@@ -95,6 +118,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/upload|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|OneSignalSDKWorker.js|api/upload|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

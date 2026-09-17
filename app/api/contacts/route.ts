@@ -1,21 +1,53 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(request: Request) {
-  const body = await request.json();
-  const supabase = await createClient();
+  try {
+    const body = await request.json();
+    const { name, email, subject, message } = body;
 
-  const { data, error } = await supabase
-    .from("contacts")
-    .insert([body])
-    .select()
-    .single();
+    if (!name?.trim() || typeof name !== "string") {
+      return NextResponse.json({ success: false, error: "Name is required" }, { status: 400 });
+    }
 
-  if (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    if (!email?.trim() || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
+      return NextResponse.json({ success: false, error: "A valid email address is required" }, { status: 400 });
+    }
+
+    if (!subject?.trim() || typeof subject !== "string") {
+      return NextResponse.json({ success: false, error: "Subject is required" }, { status: 400 });
+    }
+
+    if (!message?.trim() || typeof message !== "string") {
+      return NextResponse.json({ success: false, error: "Message content is required" }, { status: 400 });
+    }
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("contacts")
+      .insert([
+        {
+          name: name.trim().slice(0, 150),
+          email: email.trim().toLowerCase().slice(0, 255),
+          subject: subject.trim().slice(0, 200),
+          message: message.trim().slice(0, 5000),
+          status: "unread",
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: "Invalid request payload" }, { status: 400 });
   }
-
-  return NextResponse.json({ success: true, data }, { status: 201 });
 }
 
 export async function GET() {
