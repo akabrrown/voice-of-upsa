@@ -10,9 +10,9 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const { data: comments, error } = await supabase
     .from("comments")
-    .select("*, user:profiles(full_name, avatar_url)")
+    .select("*")
     .eq("article_id", articleId)
     .eq("is_approved", true)
     .order("created_at", { ascending: true });
@@ -21,7 +21,33 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ success: true, data });
+  if (!comments || comments.length === 0) {
+    return NextResponse.json({ success: true, data: [] });
+  }
+
+  // Hydrate user profiles without relying on PostgREST schema cache foreign keys
+  const userIds = Array.from(new Set(comments.map((c) => c.user_id).filter(Boolean)));
+  let profileMap: Record<string, { full_name: string; avatar_url: string | null }> = {};
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", userIds);
+
+    if (profiles && profiles.length > 0) {
+      for (const p of profiles) {
+        profileMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+      }
+    }
+  }
+
+  const hydrated = comments.map((c) => ({
+    ...c,
+    user: profileMap[c.user_id] || { full_name: "Community Member", avatar_url: null },
+  }));
+
+  return NextResponse.json({ success: true, data: hydrated });
 }
 
 export async function POST(request: Request) {

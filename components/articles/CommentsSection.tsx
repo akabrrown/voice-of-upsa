@@ -52,7 +52,8 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
       if (payload.success) {
         setComments(payload.data || []);
       } else {
-        throw new Error(payload.error);
+        console.warn("Unable to load comments:", payload.error);
+        setComments([]);
       }
 
       // 2. Fetch logged-in user
