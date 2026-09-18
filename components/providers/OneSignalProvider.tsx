@@ -1,6 +1,5 @@
 "use client";
 
-import Script from "next/script";
 import { useEffect, useState } from "react";
 import { Bell, BellRing, X } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -42,10 +41,14 @@ export default function OneSignalProvider() {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async function (OneSignal) {
         try {
-          await OneSignal.init({
-            appId,
-            allowLocalhostAsSecureOrigin: true,
-          });
+          try {
+            await OneSignal.init({
+              appId,
+              allowLocalhostAsSecureOrigin: true,
+            });
+          } catch (initErr: any) {
+            // Gracefully proceed if already initialized by the <head> tag
+          }
 
           setIsInitialized(true);
 
@@ -172,12 +175,6 @@ export default function OneSignalProvider() {
 
   return (
     <>
-      <Script
-        id="onesignal-sdk"
-        src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-        strategy="afterInteractive"
-      />
-
       {/* Floating Permission Trigger to guarantee user-gesture activation for SDK validation */}
       {!isSubscribed && (
         <div className="fixed bottom-5 right-5 z-40">

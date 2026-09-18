@@ -18,69 +18,121 @@ export default function UpdatePasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
+  const [hasValidSession, setHasValidSession] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
     let isMounted = true;
+    let sessionEstablished = false;
 
-    const verifySession = async () => {
-      // 1. If code query param is present on direct landing, exchange it
-      if (typeof window !== "undefined") {
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get("code");
-        if (code) {
-          try {
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            if (!error && data.session) {
-              if (isMounted) setIsVerifying(false);
-              return;
-            }
-          } catch (e) {
-            console.warn("Client exchange code check:", e);
+    const markSessionValid = () => {
+      sessionEstablished = true;
+      if (isMounted) {
+        setHasValidSession(true);
+        setIsVerifying(false);
+      }
+    };
+
+    const checkAndEstablishSession = async () => {
+      if (typeof window === "undefined") return;
+
+      // 1. Check if error was passed in URL query or hash
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+      const errorDescription =
+        urlParams.get("error_description") ||
+        hashParams.get("error_description") ||
+        urlParams.get("error");
+
+      // 2. Direct PKCE code exchange if landed directly with ?code=
+      const code = urlParams.get("code");
+      if (code) {
+        try {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (!error && data?.session) {
+            markSessionValid();
+            return;
           }
+        } catch (e) {
+          console.warn("[UpdatePassword] Code exchange check:", e);
         }
       }
 
-      // 2. Check if a valid session already exists
+      // 3. Hash parameters (implicit recovery tokens)
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        try {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (!error && data?.session) {
+            markSessionValid();
+            return;
+          }
+        } catch (e) {
+          console.warn("[UpdatePassword] Set session from hash:", e);
+        }
+      }
+
+      // 4. Check existing session from cookies (set by callback route)
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        if (isMounted) setIsVerifying(false);
+        markSessionValid();
         return;
       }
 
-      // 3. Listen for auth state change
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (session || event === "PASSWORD_RECOVERY") {
-          if (isMounted) setIsVerifying(false);
+      // 5. Listen for auth state change
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+        if (newSession || event === "PASSWORD_RECOVERY") {
+          markSessionValid();
         }
       });
 
-      // 4. Grace period before concluding the link is invalid
-      const timer = setTimeout(async () => {
+      // 6. If an explicit error was passed and no session exists, display it
+      if (errorDescription && !sessionEstablished) {
+        const decoded = decodeURIComponent(errorDescription.replace(/\+/g, " "));
+        setErrorMessage(decoded);
+        toast.error(decoded, { duration: 6000 });
         if (isMounted) {
-          const { data: { session: finalCheck } } = await supabase.auth.getSession();
-          if (!finalCheck) {
-            toast.error("Invalid or expired password reset link. Please request a new one.");
-            router.push("/auth/forgot-password");
-          } else {
-            setIsVerifying(false);
-          }
+          setIsVerifying(false);
+          setHasValidSession(false);
+        }
+        return;
+      }
+
+      // 7. Grace period for slower mobile network hydration
+      setTimeout(async () => {
+        if (!isMounted || sessionEstablished) return;
+        const { data: { session: finalSession } } = await supabase.auth.getSession();
+        if (finalSession) {
+          markSessionValid();
+        } else {
+          setHasValidSession(false);
+          setErrorMessage(
+            errorDescription
+              ? decodeURIComponent(errorDescription.replace(/\+/g, " "))
+              : "This password reset link has expired or has already been used."
+          );
+          setIsVerifying(false);
         }
       }, 2000);
 
       return () => {
         subscription.unsubscribe();
-        clearTimeout(timer);
       };
     };
 
-    const cleanupPromise = verifySession();
+    checkAndEstablishSession();
+
     return () => {
       isMounted = false;
-      cleanupPromise.then((cleanup) => cleanup && cleanup());
     };
-  }, [router, supabase]);
+  }, [supabase]);
 
   const {
     register,
@@ -92,7 +144,7 @@ export default function UpdatePasswordPage() {
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
     setIsLoading(true);
-    
+
     try {
       const { error } = await supabase.auth.updateUser({
         password: data.password,
@@ -103,10 +155,16 @@ export default function UpdatePasswordPage() {
         return;
       }
 
-      toast.success("Password updated successfully!");
-      router.push("/dashboard");
-    } catch (error) {
-      toast.error("An unexpected error occurred. Please try again.");
+      toast.success("Password updated successfully! Redirecting to login...");
+
+      // Clear the temporary recovery session so user logs in fresh with new password
+      await supabase.auth.signOut();
+
+      setTimeout(() => {
+        router.push("/auth/login?reset=success");
+      }, 1200);
+    } catch (error: any) {
+      toast.error(error?.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -122,6 +180,38 @@ export default function UpdatePasswordPage() {
           <div className="flex items-center justify-center space-x-2 text-upsa-navy">
             <span className="h-4 w-4 border-2 border-upsa-navy/30 border-t-upsa-navy rounded-full animate-spin"></span>
             <span className="text-sm font-semibold">Verifying recovery link...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasValidSession) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl border border-gray-100 text-center space-y-6">
+          <div className="relative h-20 w-20 mx-auto rounded-full overflow-hidden border-4 border-upsa-gold/20 shadow-lg mb-2">
+            <Image src="/logo.jpg" alt="Voice of UPSA" fill sizes="80px" className="object-cover" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-upsa-navy">Reset Link Expired or Invalid</h3>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              {errorMessage || "This password reset link has either expired, already been used, or was opened in an invalid session."}
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col gap-3">
+            <Link
+              href="/auth/forgot-password"
+              className="w-full bg-upsa-navy text-white hover:bg-upsa-navy/90 py-3 rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center space-x-2"
+            >
+              <span>Request a New Reset Link</span>
+            </Link>
+            <Link
+              href="/auth/login"
+              className="text-xs font-semibold text-gray-500 hover:text-upsa-navy transition-colors py-2"
+            >
+              Return to Login
+            </Link>
           </div>
         </div>
       </div>
