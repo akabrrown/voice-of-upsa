@@ -24,7 +24,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Sparkles, Loader2, Trash2 } from "lucide-react";
+import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Zap, Loader2, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 
@@ -304,14 +304,12 @@ export default function NewArticlePage() {
     setIsGeneratingSEO(true);
 
     setTimeout(() => {
-      // 1. Generate Meta Title: "Title | Voice of UPSA"
       let metaTitle = `${title.trim()} | Voice of UPSA`;
       if (metaTitle.length > 60) {
         metaTitle = title.trim().slice(0, 57) + "...";
       }
       form.setValue("meta_title", metaTitle, { shouldValidate: true });
 
-      // 2. Generate Meta Description: Excerpt or snippet of content
       let metaDesc = "";
       if (excerpt && excerpt.trim() !== "") {
         metaDesc = excerpt.trim();
@@ -328,7 +326,6 @@ export default function NewArticlePage() {
         form.setValue("meta_description", metaDesc, { shouldValidate: true });
       }
 
-      // 3. Generate Meta Keywords
       const stopWords = new Set([
         "the", "a", "an", "and", "or", "but", "for", "with", "about", "against", "between", 
         "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", 
@@ -342,7 +339,6 @@ export default function NewArticlePage() {
       ]);
 
       const sourceText = `${title} ${excerpt || ""}`.toLowerCase();
-      // Find all alphanumeric words of length >= 3
       const words = sourceText.match(/[a-z0-9]+/g) || [];
       const keywordsMap: { [key: string]: number } = {};
 
@@ -352,7 +348,6 @@ export default function NewArticlePage() {
         }
       });
 
-      // Sort keywords by frequency
       const sortedKeywords = Object.keys(keywordsMap)
         .sort((a, b) => keywordsMap[b] - keywordsMap[a])
         .slice(0, 8);
@@ -375,7 +370,6 @@ export default function NewArticlePage() {
 
     setIsGenerating(true);
 
-    // Strip HTML tags to get plain text
     const tmp = document.createElement("div");
     tmp.innerHTML = rawContent;
     const plainText = (tmp.textContent || tmp.innerText || "").trim();
@@ -386,9 +380,7 @@ export default function NewArticlePage() {
       return;
     }
 
-    // Simulate a brief generation delay for UX polish
     setTimeout(() => {
-      // Split into sentences and take the first 2-3 (max ~200 chars)
       const sentences = plainText.match(/[^.!?]+[.!?]+/g) || [plainText];
       let excerpt = "";
       for (const sentence of sentences) {
@@ -396,7 +388,6 @@ export default function NewArticlePage() {
         excerpt += (excerpt ? " " : "") + sentence.trim();
       }
 
-      // Fallback: if no sentence boundaries found, take first 200 chars
       if (!excerpt) {
         excerpt = plainText.slice(0, 200).trim();
         if (plainText.length > 200) excerpt += "...";
@@ -430,7 +421,6 @@ export default function NewArticlePage() {
             variant="outline" 
             type="button"
             onClick={() => {
-              // Draft creation allows incomplete data, so bypass Zod validation constraint checks here
               const data = form.getValues();
               submitArticle(data, "draft");
             }}
@@ -486,7 +476,7 @@ export default function NewArticlePage() {
                     onClick={generateExcerpt}
                     disabled={isGenerating}
                   >
-                    <Sparkles className={`h-3.5 w-3.5 ${isGenerating ? "animate-spin" : ""}`} />
+                    <Zap className={`h-3.5 w-3.5 ${isGenerating ? "animate-pulse" : ""}`} />
                     {isGenerating ? "Generating..." : "Generate Summary"}
                   </Button>
                 </div>
@@ -692,7 +682,7 @@ export default function NewArticlePage() {
                 onClick={generateSEO}
                 disabled={isGeneratingSEO}
               >
-                <Sparkles className={`h-3 w-3 ${isGeneratingSEO ? "animate-spin" : ""}`} />
+                <Zap className={`h-3 w-3 ${isGeneratingSEO ? "animate-pulse" : ""}`} />
                 {isGeneratingSEO ? "Generating..." : "Generate SEO"}
               </Button>
             </CardHeader>

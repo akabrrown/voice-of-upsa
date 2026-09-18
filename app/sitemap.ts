@@ -1,12 +1,12 @@
 import type { MetadataRoute } from "next";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { getSiteUrl } from "@/lib/auth/urls";
 
-export const revalidate = 3600; // revalidate sitemap every hour
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://voiceofupsa.com";
+  const siteUrl = getSiteUrl();
 
-  // 1. Static Core Routes
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${siteUrl}`,
@@ -43,7 +43,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const supabase = getAdminClient();
 
-    // 2. Dynamic Categories
     const { data: categories } = await supabase
       .from("categories")
       .select("slug, created_at");
@@ -55,7 +54,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    // 3. Dynamic Published Articles
     const { data: articles } = await supabase
       .from("articles")
       .select("slug, updated_at, published_at")
@@ -74,8 +72,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     return [...staticRoutes, ...categoryRoutes, ...articleRoutes];
-  } catch (err) {
-    // Return core static routes safely if database credentials are not present during static generation
+  } catch {
     return staticRoutes;
   }
 }

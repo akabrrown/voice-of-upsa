@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { 
   CalendarHeart, 
-  Sparkles, 
+  Church, 
   Moon, 
   Award, 
   Send, 
@@ -131,7 +131,7 @@ export default function AdminHolidaysPage() {
       case "laurel":
         return <Award className="h-4 w-4 text-upsa-gold" />;
       case "festive":
-        return <Sparkles className="h-4 w-4 text-amber-500 fill-amber-500" />;
+        return <Church className="h-4 w-4 text-amber-500 fill-amber-500" />;
       default:
         return <CalendarHeart className="h-4 w-4 text-upsa-gold" />;
     }

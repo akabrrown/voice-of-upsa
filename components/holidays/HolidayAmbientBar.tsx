@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sparkles, Moon, Award, CalendarHeart, X, Share2, ArrowRight } from "lucide-react";
+import { Church, Moon, Award, CalendarHeart, X, Share2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { ComputedHoliday, HolidayThemeAccent } from "@/lib/holidays/types";
 
@@ -57,7 +57,7 @@ export function HolidayAmbientBar({ initialHoliday = null }: HolidayAmbientBarPr
       case "laurel":
         return <Award className="h-3.5 w-3.5 text-upsa-gold" />;
       case "festive":
-        return <Sparkles className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />;
+        return <Church className="h-3.5 w-3.5 text-amber-300 fill-amber-300" />;
       default:
         return <CalendarHeart className="h-3.5 w-3.5 text-upsa-gold" />;
     }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Printer, Share2, Check, Copy } from "lucide-react";
+import { Printer, Share2, Check, Copy, Send } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { getSiteUrl } from "@/lib/auth/urls";
 
 interface ArticleActionsProps {
   slug: string;
@@ -12,16 +13,40 @@ interface ArticleActionsProps {
 export function ArticleActions({ slug, title }: ArticleActionsProps) {
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setShareUrl(`${window.location.origin}/articles/${slug}`);
+      const base = window.location.origin || getSiteUrl();
+      setShareUrl(`${base}/articles/${slug}`);
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        setCanNativeShare(true);
+      }
     }
   }, [slug]);
 
   const handlePrint = () => {
     if (typeof window !== "undefined") {
       window.print();
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share && shareUrl) {
+      try {
+        await navigator.share({
+          title,
+          text: title,
+          url: shareUrl,
+        });
+      } catch (err: any) {
+        // User cancelled or share aborted - ignore AbortError
+        if (err.name !== "AbortError") {
+          handleCopyLink();
+        }
+      }
+    } else {
+      handleCopyLink();
     }
   };
 
@@ -37,14 +62,26 @@ export function ArticleActions({ slug, title }: ArticleActionsProps) {
   };
 
   const shareLinks = {
-    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareUrl}\n\n*${title}*`)}`,
+    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${title}\n${shareUrl}`)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
     twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(title)}`,
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+    telegram: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(title)}`,
   };
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center space-x-2 sm:space-x-3">
+      {/* Native Web Share button (Mobile & supported browsers) */}
+      {canNativeShare && (
+        <button
+          onClick={handleNativeShare}
+          className="p-2 hover:bg-blue-50 rounded-full text-gray-400 hover:text-upsa-blue transition-all duration-200 hover:scale-110 active:scale-95 flex items-center gap-1.5"
+          title="Share article"
+        >
+          <Share2 className="h-4 w-4" />
+        </button>
+      )}
+
       {/* Share on WhatsApp */}
       <a
         href={shareLinks.whatsapp}
@@ -63,7 +100,7 @@ export function ArticleActions({ slug, title }: ArticleActionsProps) {
         href={shareLinks.facebook}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-upsa-navy transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-blue-50 rounded-full text-gray-400 hover:text-[#1877F2] transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on Facebook"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -76,7 +113,7 @@ export function ArticleActions({ slug, title }: ArticleActionsProps) {
         href={shareLinks.twitter}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-upsa-navy transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black dark:hover:text-white transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on X"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -89,12 +126,23 @@ export function ArticleActions({ slug, title }: ArticleActionsProps) {
         href={shareLinks.linkedin}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-upsa-navy transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-blue-50 rounded-full text-gray-400 hover:text-[#0A66C2] transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on LinkedIn"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
           <path d="M19 0h-14c-2.8 0-5 2.2-5 5v14c0 2.8 2.2 5 5 5h14c2.8 0 5-2.2 5-5v-14c0-2.8-2.2-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.3c-.9 0-1.7-.8-1.7-1.7s.8-1.7 1.7-1.7 1.7.8 1.7 1.7-.8 1.7-1.7 1.7zm13.5 12.3h-3v-5.6c0-3.4-4-3.1-4 0v5.6h-3v-11h3v1.8c1.4-2.6 7-2.8 7 2.5v6.7z" />
         </svg>
+      </a>
+
+      {/* Share on Telegram */}
+      <a
+        href={shareLinks.telegram}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-2 hover:bg-sky-50 rounded-full text-gray-400 hover:text-[#229ED9] transition-all duration-200 hover:scale-110 active:scale-95"
+        title="Share on Telegram"
+      >
+        <Send className="h-4 w-4" />
       </a>
 
       {/* Copy Link Button */}

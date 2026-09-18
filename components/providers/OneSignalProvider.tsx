@@ -3,13 +3,7 @@
 import { useEffect, useState } from "react";
 import { Bell, BellRing, X } from "lucide-react";
 import { toast } from "react-hot-toast";
-
-declare global {
-  interface Window {
-    OneSignalDeferred?: Array<(OneSignal: any) => void | Promise<void>>;
-    OneSignal?: any;
-  }
-}
+import OneSignal from 'react-onesignal';
 
 const DEFAULT_APP_ID = "7f22b994-e03e-4e3f-b141-6ab398cbcdd0";
 
@@ -25,83 +19,52 @@ export default function OneSignalProvider() {
       return;
     }
 
-    if ((window as any).__onesignal_initialized) {
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+      setIsInitialized(true);
       return;
     }
-    (window as any).__onesignal_initialized = true;
 
-    // Check if browser native notification permission is already granted
-    if (typeof Notification !== "undefined") {
-      if (Notification.permission === "granted") {
-        setIsSubscribed(true);
+    async function initOneSignal() {
+      try {
+        if (!OneSignal.initialized) {
+          await OneSignal.init({
+            appId,
+            allowLocalhostAsSecureOrigin: true,
+          });
+        }
+
+
+        const isOptedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
+        
+        if (isOptedIn) {
+          setIsSubscribed(true);
+        } else if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          // If browser already granted permission, attempt opt in
+          OneSignal.User?.PushSubscription?.optIn?.().catch(() => {});
+        }
+
+        OneSignal.User?.PushSubscription?.addEventListener("change", (event: any) => {
+          if (event?.current?.optedIn) {
+            setIsSubscribed(true);
+            toast.success("Subscribed to Voice of UPSA alerts! SDK verified.");
+          }
+        });
+
+      } catch (e: any) {
+        console.error("[OneSignal] Init error:", e);
+        if (e?.message?.includes("Can only be used on")) {
+          console.warn("OneSignal is restricted to production domain. Local testing is disabled in the OneSignal dashboard.");
+        }
+      } finally {
+        setIsInitialized(true);
       }
     }
 
-    try {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function (OneSignal) {
-        try {
-          try {
-            await OneSignal.init({
-              appId,
-              allowLocalhostAsSecureOrigin: true,
-            });
-          } catch (initErr: any) {
-            // Gracefully proceed if already initialized by the <head> tag
-          }
-
-          setIsInitialized(true);
-
-          // In OneSignal v16 User Model, check PushSubscription.optedIn
-          const isOptedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
-          const hasPerm = Boolean(OneSignal.Notifications?.permission);
-
-          if (isOptedIn) {
-            setIsSubscribed(true);
-          } else if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-            // Browser already granted permission: auto opt-in to register subscription with OneSignal backend
-            OneSignal.User?.PushSubscription?.optIn?.().then(() => {
-              setIsSubscribed(true);
-            }).catch(() => {});
-          }
-
-          // Listen for push subscription changes
-          OneSignal.User?.PushSubscription?.addEventListener("change", (event: any) => {
-            if (event?.current?.optedIn) {
-              setIsSubscribed(true);
-              toast.success("Subscribed to Voice of UPSA alerts! SDK verified.");
-            }
-          });
-
-          // Listen for notification permission changes
-          OneSignal.Notifications?.addEventListener("permissionChange", (permission: boolean) => {
-            if (permission) {
-              OneSignal.User?.PushSubscription?.optIn?.().catch(() => {});
-              setIsSubscribed(true);
-            }
-          });
-
-          // Attempt prompt with force flag if permission is not yet decided
-          if (!hasPerm && typeof Notification !== "undefined" && Notification.permission === "default") {
-            setTimeout(() => {
-              try {
-                OneSignal.Slidedown?.promptPush?.({ force: true })?.catch(() => {});
-              } catch {
-                // ignore
-              }
-            }, 1500);
-          }
-        } catch (err) {
-          console.warn("[OneSignal] Init error:", err);
-        }
-      });
-    } catch (e) {
-      console.error("[OneSignal] Client setup error:", e);
-    }
+    initOneSignal();
   }, [appId]);
 
   const handleRequestPermission = async () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !isInitialized) return;
 
     if (typeof Notification === "undefined") {
       toast.error("Push notifications are not supported on this browser.");
@@ -118,48 +81,31 @@ export default function OneSignalProvider() {
 
     setIsRequesting(true);
 
+    if (!OneSignal.initialized) {
+      toast.error("OneSignal is disabled for localhost in your dashboard. Test this in production or update your OneSignal settings.");
+      setIsRequesting(false);
+      return;
+    }
+
     toast("Opening notification prompt... Click 'Allow' when asked.", {
       icon: "🔔",
       duration: 4000,
     });
 
     try {
-      // 1. Primary: Use OneSignal v16 User PushSubscription optIn API
-      if (window.OneSignal?.User?.PushSubscription?.optIn) {
-        await window.OneSignal.User.PushSubscription.optIn();
-        const optedIn = Boolean(window.OneSignal.User?.PushSubscription?.optedIn);
-        if (optedIn) {
-          setIsSubscribed(true);
-          toast.success("Subscribed to Voice of UPSA alerts! SDK verified.");
-          return;
-        }
-      }
-
-      // 2. Secondary: Trigger in-page slidedown
-      if (window.OneSignal?.Slidedown?.promptPush) {
-        window.OneSignal.Slidedown.promptPush({ force: true }).catch(() => {});
-      }
-
-      // 3. Fallback: Direct native browser permission request
-      const permissionPromise = Notification.requestPermission();
-      const timeoutPromise = new Promise<NotificationPermission>((resolve) =>
-        setTimeout(() => resolve(Notification.permission), 5000)
-      );
-
-      const result = await Promise.race([permissionPromise, timeoutPromise]);
-
-      if (result === "granted") {
-        if (window.OneSignal?.User?.PushSubscription?.optIn) {
-          await window.OneSignal.User.PushSubscription.optIn();
-        }
-        setIsSubscribed(true);
-        toast.success("Subscribed to Voice of UPSA alerts! SDK verified.");
-      } else if (result === "denied") {
-        toast.error("Notification permission was denied.");
+      // 1. Primary: Trigger in-page slidedown
+      if (OneSignal.Slidedown?.promptPush) {
+        await OneSignal.Slidedown.promptPush({ force: true });
       } else {
-        toast("If prompt did not show, check the bell or lock icon in your address bar.", {
-          duration: 5000,
-        });
+        // Fallback: Direct native browser permission request opt in
+        if (OneSignal.User?.PushSubscription?.optIn) {
+          await OneSignal.User.PushSubscription.optIn();
+        }
+      }
+      
+      const optedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
+      if (optedIn) {
+        setIsSubscribed(true);
       }
     } catch (err: any) {
       console.error("[OneSignal] Opt-in error:", err);
@@ -210,7 +156,7 @@ export default function OneSignalProvider() {
                 <button
                   type="button"
                   onClick={handleRequestPermission}
-                  disabled={isRequesting}
+                  disabled={isRequesting || !isInitialized}
                   className="flex-1 bg-upsa-navy hover:bg-upsa-navy/90 text-white text-xs font-semibold py-2 px-3 rounded-xl transition-all shadow-xs hover:shadow flex items-center justify-center space-x-1.5 active:scale-98 disabled:opacity-85"
                 >
                   {isRequesting ? (
@@ -221,7 +167,7 @@ export default function OneSignalProvider() {
                   ) : (
                     <>
                       <Bell className="h-3.5 w-3.5" />
-                      <span>Enable Alerts</span>
+                      <span>{isInitialized ? 'Enable Alerts' : 'Loading...'}</span>
                     </>
                   )}
                 </button>
@@ -238,14 +184,21 @@ export default function OneSignalProvider() {
             <button
               type="button"
               onClick={handleRequestPermission}
+              disabled={isRequesting || !isInitialized}
               title="Enable Voice of UPSA News Alerts"
-              className="group relative flex items-center justify-center h-12 w-12 rounded-full bg-upsa-navy text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-white focus:outline-none focus:ring-2 focus:ring-upsa-gold"
+              className="group relative flex items-center justify-center h-12 w-12 rounded-full bg-upsa-navy text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-white focus:outline-none focus:ring-2 focus:ring-upsa-gold disabled:opacity-80"
             >
-              <Bell className="h-5 w-5 group-hover:animate-swing" />
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-upsa-gold opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-upsa-gold"></span>
-              </span>
+              {isRequesting ? (
+                <span className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              ) : (
+                <>
+                  <Bell className="h-5 w-5 group-hover:animate-swing" />
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-upsa-gold opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-upsa-gold"></span>
+                  </span>
+                </>
+              )}
             </button>
           )}
         </div>
@@ -253,4 +206,3 @@ export default function OneSignalProvider() {
     </>
   );
 }
-

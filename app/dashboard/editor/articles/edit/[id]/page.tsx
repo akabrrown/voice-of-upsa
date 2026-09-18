@@ -23,7 +23,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Sparkles, Loader2, Undo2 } from "lucide-react";
+import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Zap, Loader2, Undo2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { FormShadowLoader } from "@/components/ui/shadow-loaders";
@@ -81,7 +81,6 @@ export default function EditArticlePage({ params }: EditArticleProps) {
     },
   });
 
-  // Fetch Categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -100,7 +99,6 @@ export default function EditArticlePage({ params }: EditArticleProps) {
     fetchCategories();
   }, [supabase]);
 
-  // Fetch the user's role to determine publish capabilities
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
@@ -122,7 +120,6 @@ export default function EditArticlePage({ params }: EditArticleProps) {
     fetchUserRole();
   }, [supabase]);
 
-  // Fetch existing Article details
   useEffect(() => {
     const fetchArticleDetails = async () => {
       try {
@@ -136,7 +133,6 @@ export default function EditArticlePage({ params }: EditArticleProps) {
         if (data) {
           setOriginalArticle(data);
           
-          // Try loading a draft from local storage first
           const savedDraft = localStorage.getItem(`vou_draft_edit_${id}`);
           if (savedDraft) {
             try {
@@ -149,7 +145,6 @@ export default function EditArticlePage({ params }: EditArticleProps) {
               console.error("Error loading draft edits:", e);
             }
           } else {
-            // Populate form with database values
             form.reset({
               title: data.title || "",
               slug: data.slug || "",
@@ -179,7 +174,6 @@ export default function EditArticlePage({ params }: EditArticleProps) {
     fetchArticleDetails();
   }, [id, supabase, router, form]);
 
-  // Save edits draft to localStorage on value change
   const watchedValues = form.watch();
   useEffect(() => {
     if (isSubmitted) return;
@@ -547,7 +541,7 @@ export default function EditArticlePage({ params }: EditArticleProps) {
                     onClick={generateExcerpt}
                     disabled={isGenerating}
                   >
-                    <Sparkles className={`h-3.5 w-3.5 ${isGenerating ? "animate-spin" : ""}`} />
+                    <Zap className={`h-3.5 w-3.5 ${isGenerating ? "animate-pulse" : ""}`} />
                     {isGenerating ? "Generating..." : "Generate Summary"}
                   </Button>
                 </div>
@@ -744,7 +738,7 @@ export default function EditArticlePage({ params }: EditArticleProps) {
                 onClick={generateSEO}
                 disabled={isGeneratingSEO}
               >
-                <Sparkles className={`h-3 w-3 ${isGeneratingSEO ? "animate-spin" : ""}`} />
+                <Zap className={`h-3 w-3 ${isGeneratingSEO ? "animate-pulse" : ""}`} />
                 {isGeneratingSEO ? "Generating..." : "Generate SEO"}
               </Button>
             </CardHeader>

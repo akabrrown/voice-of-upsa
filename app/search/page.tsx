@@ -8,6 +8,7 @@ import { Search as SearchIcon, Filter, SlidersHorizontal } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ArticleGridShadowLoader } from "@/components/ui/shadow-loaders";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -15,7 +16,16 @@ export default function SearchPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState("Anytime");
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const supabase = createClient();
+  const limit = 12;
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [query, selectedCategories, dateRange]);
 
   useEffect(() => {
     const handleSearch = async () => {
@@ -28,7 +38,7 @@ export default function SearchPage() {
       try {
         let queryBuilder = supabase
           .from("articles")
-          .select("*, categories(name)")
+          .select("*, categories(name)", { count: "exact" })
           .eq("status", "published")
           .or(`title.ilike.%${query}%,excerpt.ilike.%${query}%,content.ilike.%${query}%`);
 
@@ -57,11 +67,18 @@ export default function SearchPage() {
           queryBuilder = queryBuilder.gte("published_at", filterDate.toISOString());
         }
 
-        const { data, error } = await queryBuilder.order("published_at", { ascending: false });
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, count, error } = await queryBuilder
+          .order("published_at", { ascending: false })
+          .range(from, to);
 
         if (error) throw error;
 
         if (data) {
+          setTotalCount(count || 0);
+          setTotalPages(Math.ceil((count || 0) / limit));
           const mapped = data.map((art: any) => ({
             title: art.title,
             excerpt: art.excerpt || "",
@@ -72,7 +89,7 @@ export default function SearchPage() {
               year: "numeric"
             }) : "Recent",
             readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
-            image: art.cover_image_url || "https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?q=80&w=800",
+            image: art.cover_image_url || "/campus.png",
             slug: art.slug,
           }));
           setSearchResults(mapped);
@@ -89,7 +106,7 @@ export default function SearchPage() {
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [query, selectedCategories, dateRange, supabase]);
+  }, [query, selectedCategories, dateRange, page, supabase]);
 
   const handleCategoryChange = (catName: string) => {
     setSelectedCategories(prev => 
@@ -173,18 +190,25 @@ export default function SearchPage() {
                 </h2>
                 <div className="flex items-center space-x-2 text-xs text-gray-400 font-bold">
                   <SlidersHorizontal className="h-3 w-3" />
-                  <span>{searchResults.length} results found</span>
+                  <span>{totalCount} results found</span>
                 </div>
               </div>
 
               {isLoading ? (
                 <ArticleGridShadowLoader count={4} />
               ) : searchResults.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {searchResults.map((res) => (
-                    <ArticleCard key={res.slug} {...res} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {searchResults.map((res) => (
+                      <ArticleCard key={res.slug} {...res} />
+                    ))}
+                  </div>
+                  <Pagination 
+                    currentPage={page} 
+                    totalPages={totalPages} 
+                    onPageChange={(p) => setPage(p)} 
+                  />
+                </>
               ) : (
                 <div className="py-20 text-center">
                   <p className="text-gray-400 italic">

@@ -10,9 +10,13 @@ import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 
+import { getSiteUrl } from "@/lib/auth/urls";
+import { getOptimizedOgImage } from "@/lib/utils/og-image";
+
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://voiceofupsa.com";
+const siteUrl = getSiteUrl();
+const defaultOgImage = getOptimizedOgImage(null, "Voice of UPSA", siteUrl);
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -29,11 +33,12 @@ export const metadata: Metadata = {
     siteName: "Voice of UPSA",
     images: [
       {
-        url: "/og-image.jpg",
+        url: defaultOgImage.url,
+        secureUrl: defaultOgImage.secureUrl,
         width: 1200,
         height: 630,
-        type: "image/jpeg",
         alt: "Voice of UPSA",
+        type: defaultOgImage.type,
       },
     ],
     locale: "en_GH",
@@ -43,7 +48,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Voice of UPSA | Official Communications Hub",
     description: "The official digital news and communications platform for the University of Professional Studies, Accra (UPSA).",
-    images: ["/og-image.jpg"],
+    images: [defaultOgImage.url],
+    site: "@voiceofupsa",
+    creator: "@voiceofupsa",
   },
   icons: {
     icon: [
@@ -67,10 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("h-full antialiased", "font-sans", geist.variable)} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-background text-foreground font-arial" suppressHydrationWarning>
-        <Script
-          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-          strategy="afterInteractive"
-        />
+
         <ToastProvider />
         <OneSignalProvider />
         <HolidayAmbientBar />

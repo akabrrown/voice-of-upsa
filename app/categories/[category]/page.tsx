@@ -5,6 +5,7 @@ import { TrendingSidebar } from "@/components/articles/TrendingSidebar";
 import { AdZone } from "@/components/layout/AdZone";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import { Pagination } from "@/components/ui/pagination";
 
 interface CategoryInfo {
   name: string;
@@ -67,9 +68,69 @@ const categoryConfigs: Record<string, { name: string; description: string; banne
   }
 };
 
-export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+import type { Metadata } from "next";
+import { getSiteUrl } from "@/lib/auth/urls";
+import { getOptimizedOgImage } from "@/lib/utils/og-image";
+
+export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category: categorySlug } = await params;
+  const slug = categorySlug.toLowerCase();
+  const config = categoryConfigs[slug];
+  const siteUrl = getSiteUrl();
+
+  const title = config ? `${config.name} | Voice of UPSA` : `${categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)} | Voice of UPSA`;
+  const description = config?.description || `Browse the latest ${categorySlug} articles and stories on Voice of UPSA.`;
+  const bannerUrl = config?.banner_url || `${siteUrl}/og-image.jpg`;
+  const ogImage = getOptimizedOgImage(bannerUrl, title, siteUrl);
+  const pageUrl = `${siteUrl}/categories/${slug}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: pageUrl,
+      siteName: "Voice of UPSA",
+      locale: "en_GH",
+      type: "website",
+      images: [
+        {
+          url: ogImage.url,
+          secureUrl: ogImage.secureUrl,
+          width: ogImage.width,
+          height: ogImage.height,
+          alt: title,
+          type: ogImage.type,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage.url],
+      site: "@voiceofupsa",
+      creator: "@voiceofupsa",
+    },
+  };
+}
+
+export default async function CategoryPage({ params, searchParams }: { params: Promise<{ category: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const { category: categorySlug } = await params;
+  const searchParamsData = await searchParams;
   const supabase = await createClient();
+  
+  const pageStr = searchParamsData.page;
+  const currentPage = typeof pageStr === "string" ? parseInt(pageStr, 10) : 1;
+  const limit = 12;
+  const from = (currentPage - 1) * limit;
+  const to = from + limit - 1;
+  
+  let totalCount = 0;
 
   const slug = categorySlug.toLowerCase();
   const config = categoryConfigs[slug];
@@ -80,22 +141,26 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   if (slug === "all") {
     dbCategory = config;
 
-    const { data } = await supabase
+    const { data, count } = await supabase
       .from("articles")
-      .select("*, categories(name)")
+      .select("*, categories(name)", { count: "exact" })
       .eq("status", "published")
-      .order("published_at", { ascending: false });
+      .order("published_at", { ascending: false })
+      .range(from, to);
     dbArticles = data || [];
+    totalCount = count || 0;
   } else if (slug === "featured") {
     dbCategory = config;
 
-    const { data } = await supabase
+    const { data, count } = await supabase
       .from("articles")
-      .select("*, categories(name)")
+      .select("*, categories(name)", { count: "exact" })
       .eq("status", "published")
       .eq("is_featured", true)
-      .order("published_at", { ascending: false });
+      .order("published_at", { ascending: false })
+      .range(from, to);
     dbArticles = data || [];
+    totalCount = count || 0;
   } else {
     const { data } = await supabase
       .from("categories")
@@ -119,14 +184,18 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       return null;
     }
 
-    const { data: articles } = await supabase
+    const { data: articles, count } = await supabase
       .from("articles")
-      .select("*, categories(name)")
+      .select("*, categories(name)", { count: "exact" })
       .eq("category_id", dbCategory.id || '')
       .eq("status", "published")
-      .order("published_at", { ascending: false });
+      .order("published_at", { ascending: false })
+      .range(from, to);
     dbArticles = articles || [];
+    totalCount = count || 0;
   }
+
+  const totalPages = Math.ceil(totalCount / limit);
 
   if (!dbCategory) {
     notFound();
@@ -149,7 +218,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       year: "numeric"
     }) : "Recent",
     readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
-    image: art.cover_image_url || "https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?q=80&w=800",
+    image: art.cover_image_url || "/campus.png",
     slug: art.slug,
   }));
 
@@ -184,11 +253,18 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <div className="flex flex-col lg:flex-row gap-12">
             <div className="flex-1 space-y-12">
               {categoryArticles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {categoryArticles.map((article) => (
-                    <ArticleCard key={article.slug} {...article} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {categoryArticles.map((article) => (
+                      <ArticleCard key={article.slug} {...article} />
+                    ))}
+                  </div>
+                  <Pagination 
+                    currentPage={currentPage} 
+                    totalPages={totalPages} 
+                    baseHref={`/categories/${slug}`} 
+                  />
+                </>
               ) : (
                 <div className="py-24 text-center max-w-md mx-auto space-y-4">
                   <p className="text-gray-400 italic text-lg">No articles found in this category.</p>

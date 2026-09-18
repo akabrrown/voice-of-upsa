@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Share2, Check, CalendarHeart, Sparkles, Moon, Award } from "lucide-react";
+import { X, Share2, Check, CalendarHeart, Church, Moon, Award } from "lucide-react";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { ComputedHoliday, HolidayThemeAccent } from "@/lib/holidays/types";
@@ -87,7 +87,7 @@ export function HolidayGreetingModal({ forcePreviewHoliday, onClosePreview }: Ho
       case "laurel":
         return <Award className="h-6 w-6 text-upsa-gold" />;
       case "festive":
-        return <Sparkles className="h-6 w-6 text-amber-300 fill-amber-300" />;
+        return <Church className="h-6 w-6 text-amber-300 fill-amber-300" />;
       default:
         return <CalendarHeart className="h-6 w-6 text-upsa-gold" />;
     }

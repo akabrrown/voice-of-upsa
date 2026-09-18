@@ -22,6 +22,9 @@ import type { Metadata } from "next";
 import { ArticleContent } from "@/components/articles/ArticleContent";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
+import { getSiteUrl } from "@/lib/auth/urls";
+import { getOptimizedOgImage } from "@/lib/utils/og-image";
+
 interface RelatedArticleRaw {
   id: string;
   title: string;
@@ -39,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const { data: article } = await supabase
     .from("articles")
-    .select("title, excerpt, cover_image_url, published_at, profiles:profiles!author_id(full_name)")
+    .select("title, excerpt, cover_image_url, published_at, updated_at, profiles:profiles!author_id(full_name), categories(name)")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -50,52 +53,56 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://voiceofupsa.com";
+  const siteUrl = getSiteUrl();
   const articleUrl = `${siteUrl}/articles/${slug}`;
-  
-  // WhatsApp crawler strictly requires images < 300KB and prefers 1200x630 JPEG
-  let ogImageUrl = article.cover_image_url || `${siteUrl}/og-image.jpg`;
-  if (article.cover_image_url) {
-    if (article.cover_image_url.includes("res.cloudinary.com") && article.cover_image_url.includes("/image/upload/")) {
-      ogImageUrl = article.cover_image_url.replace(
-        "/image/upload/",
-        "/image/upload/c_fill,w_1200,h_630,q_auto:good,f_jpg/"
-      );
-    }
-  }
-
+  const ogImage = getOptimizedOgImage(article.cover_image_url, article.title, siteUrl);
   const authorName = (article.profiles as any)?.full_name || "Voice of UPSA Editorial Team";
+  const categoryName = (article.categories as any)?.name || "News";
+  const description =
+    article.excerpt?.trim() ||
+    "Read the full story on Voice of UPSA, the official student and campus news publication of the University of Professional Studies, Accra.";
 
   return {
     title: `${article.title} | Voice of UPSA`,
-    description: article.excerpt || "Read the full story on Voice of UPSA, the official student and campus news publication of the University of Professional Studies, Accra.",
+    description,
     alternates: {
       canonical: articleUrl,
     },
     openGraph: {
       title: article.title,
-      description: article.excerpt || "Read the latest campus news from University of Professional Studies, Accra.",
+      description,
       url: articleUrl,
       siteName: "Voice of UPSA",
-      images: [
-        {
-          url: ogImageUrl,
-          secureUrl: ogImageUrl,
-          width: 1200,
-          height: 630,
-          type: "image/jpeg",
-          alt: article.title,
-        },
-      ],
+      locale: "en_GH",
       type: "article",
       publishedTime: article.published_at || undefined,
+      modifiedTime: (article as any).updated_at || undefined,
+      section: categoryName,
       authors: [authorName],
+      images: [
+        {
+          url: ogImage.url,
+          secureUrl: ogImage.secureUrl,
+          width: ogImage.width,
+          height: ogImage.height,
+          alt: article.title,
+          type: ogImage.type,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: article.title,
-      description: article.excerpt || "Read the latest news on Voice of UPSA.",
-      images: [ogImageUrl],
+      description,
+      images: [ogImage.url],
+      site: "@voiceofupsa",
+      creator: "@voiceofupsa",
+    },
+    other: {
+      "og:image:secure_url": ogImage.secureUrl,
+      "og:image:type": ogImage.type,
+      "og:image:width": String(ogImage.width),
+      "og:image:height": String(ogImage.height),
     },
   };
 }
@@ -174,7 +181,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       year: "numeric"
     }) : "Recent",
     readTime: rel.reading_time_minutes ? `${rel.reading_time_minutes} min read` : "3 min read",
-    image: rel.cover_image_url || "https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?q=80&w=800",
+    image: rel.cover_image_url || "/campus.png",
     slug: rel.slug,
   })) || [];
 

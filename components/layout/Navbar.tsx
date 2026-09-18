@@ -38,6 +38,7 @@ export function Navbar() {
   const [user, setUser] = React.useState<AuthenticatedUser | null>(null);
   const [unreadNotifications, setUnreadNotifications] = React.useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [showCategories, setShowCategories] = React.useState(false);
   const supabase = createClient();
   const router = useRouter();
 
@@ -153,25 +154,16 @@ export function Navbar() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
+
+
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors gap-1.5">
+                <button 
+                  onClick={() => setShowCategories(!showCategories)}
+                  className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors flex items-center gap-1.5 cursor-pointer", showCategories && "bg-upsa-gold text-upsa-navy")}
+                >
                   <Layers className="h-4 w-4" />
                   Categories
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-2 p-3 md:w-[500px] md:grid-cols-2 lg:w-[650px] bg-white rounded-xl shadow-xl border border-gray-100">
-                    {categories.map((category) => (
-                      <ListItem
-                        key={category.title}
-                        title={category.title}
-                        href={category.href}
-                        icon={category.icon}
-                      >
-                        {category.description}
-                      </ListItem>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
+                </button>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
@@ -272,6 +264,26 @@ export function Navbar() {
           </Button>
         </div>
       </div>
+
+      {/* Secondary Navigation for Categories (FT Style) */}
+      {showCategories && (
+        <div className="hidden lg:block w-full bg-gray-50 border-t border-gray-200 border-b shadow-sm overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] animate-in slide-in-from-top-2 duration-200">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-start md:justify-center space-x-6 md:space-x-8 h-11 min-w-max md:min-w-0 mx-auto">
+              {categories.map((c) => (
+                <Link 
+                  key={c.href} 
+                  href={c.href} 
+                  className="flex items-center gap-1.5 text-[11px] font-black text-slate-800 uppercase tracking-[0.1em] whitespace-nowrap hover:text-upsa-gold transition-colors py-2"
+                >
+                  <c.icon className="h-3.5 w-3.5" />
+                  <span>{c.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Drawer Overlay & Content */}
       {mobileMenuOpen && (

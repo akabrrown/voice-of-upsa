@@ -5,27 +5,39 @@
  */
 
 export function getSiteUrl(): string {
-  // 1. Current browser window origin if accessed from a real public domain (prioritize active domain)
+  // 1. Current browser window origin if accessed in client environment
   if (typeof window !== "undefined") {
     const origin = window.location.origin;
-    if (!origin.includes("localhost") && !origin.includes("127.0.0.1")) {
+    if (origin && !origin.includes("localhost") && !origin.includes("127.0.0.1")) {
       return origin.replace(/\/$/, "");
     }
   }
 
-  // 2. Explicit site URL configured in environment (production domain)
+  // 2. Explicit site URL configured in environment (production custom domain)
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
-    return envUrl.replace(/\/$/, "");
+    const formatted = envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
+    return formatted.replace(/\/$/, "");
   }
 
-  // 3. Vercel deployment URL (provided in preview/production builds)
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL.replace(/\/$/, "")}`;
+  // 3. Vercel deployment URLs (provided in preview/production builds)
+  const vercelProjectUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProjectUrl) {
+    return `https://${vercelProjectUrl.replace(/\/$/, "")}`;
+  }
+
+  const vercelPublicUrl = process.env.NEXT_PUBLIC_VERCEL_URL;
+  if (vercelPublicUrl) {
+    return `https://${vercelPublicUrl.replace(/\/$/, "")}`;
+  }
+
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) {
+    return `https://${vercelUrl.replace(/\/$/, "")}`;
   }
 
   // 4. Fallback production canonical domain
-  return "https://www.voiceofupsa.com";
+  return "https://voiceofupsa.com";
 }
 
 /**

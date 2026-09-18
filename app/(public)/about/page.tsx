@@ -66,7 +66,7 @@ export default async function AboutPage() {
               </div>
               <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
                 <Image
-                  src="https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?q=80&w=1200"
+                  src="/campus.png"
                   alt="UPSA Campus"
                   fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-cover"

@@ -63,13 +63,14 @@ export async function POST(request: Request) {
     }
 
     // 4. Handle specific DB cases
-    // Code 23505: Unique violation (already viewed by this user or visitor)
-    if (insertError.code === "23505") {
+    const isDuplicate = insertError.code === "23505" || insertError.message?.includes("duplicate");
+    const isMissingTable = insertError.code === "42P01" || insertError.code === "PGRST205" || insertError.message?.includes("schema cache");
+
+    if (isDuplicate) {
       return NextResponse.json({ success: true, message: "Duplicate view ignored" });
     }
 
-    // Code 42P01: Table does not exist (fallback to cookie-only tracking)
-    if (insertError.code === "42P01") {
+    if (isMissingTable) {
       let viewedCookie = cookieStore.get("vou_viewed_articles")?.value;
       let viewedArticles: string[] = [];
       if (viewedCookie) {
@@ -82,16 +83,22 @@ export async function POST(request: Request) {
 
       if (!viewedArticles.includes(articleId)) {
         // First time viewing in this browser
-        const { data: art } = await supabase
-          .from("articles")
-          .select("view_count")
-          .eq("id", articleId)
-          .single();
+        const { error: rpcError } = await adminSupabase.rpc("increment_article_view", {
+          target_article_id: articleId,
+        });
 
-        await supabase
-          .from("articles")
-          .update({ view_count: (art?.view_count || 0) + 1 })
-          .eq("id", articleId);
+        if (rpcError) {
+          const { data: art } = await adminSupabase
+            .from("articles")
+            .select("view_count")
+            .eq("id", articleId)
+            .single();
+
+          await adminSupabase
+            .from("articles")
+            .update({ view_count: (art?.view_count || 0) + 1 })
+            .eq("id", articleId);
+        }
 
         viewedArticles.push(articleId);
         if (viewedArticles.length > 50) {
