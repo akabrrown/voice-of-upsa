@@ -3,64 +3,75 @@
 import { useEffect, useState } from "react";
 import { Bell, BellRing, X } from "lucide-react";
 import { toast } from "react-hot-toast";
-import OneSignal from 'react-onesignal';
+import OneSignal from "react-onesignal";
 
 const DEFAULT_APP_ID = "7f22b994-e03e-4e3f-b141-6ab398cbcdd0";
+
+// Module-level cache to prevent multiple init calls in React StrictMode
+let initPromise: Promise<void> | null = null;
 
 export default function OneSignalProvider() {
   const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || DEFAULT_APP_ID;
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
   const [isPromptDismissed, setIsPromptDismissed] = useState<boolean>(false);
+  const [isSdkReady, setIsSdkReady] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [isRequesting, setIsRequesting] = useState<boolean>(false);
+  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !appId || appId === "your-onesignal-app-id") {
-      return;
-    }
-
-    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
       setIsInitialized(true);
       return;
     }
 
-    async function initOneSignal() {
+    // Check if user is already granted or subscribed in browser
+    if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+      setIsSubscribed(true);
+    }
+
+    async function setupOneSignal() {
       try {
-        if (!(OneSignal as any).initialized) {
-          await OneSignal.init({
+        if (!initPromise) {
+          initPromise = OneSignal.init({
             appId,
             allowLocalhostAsSecureOrigin: true,
           });
         }
+        await initPromise;
+        setIsSdkReady(true);
+        setInitError(null);
 
-
+        // Check OneSignal subscription state
         const isOptedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
-        
         if (isOptedIn) {
           setIsSubscribed(true);
         } else if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-          // If browser already granted permission, attempt opt in
           OneSignal.User?.PushSubscription?.optIn?.().catch(() => {});
         }
 
         OneSignal.User?.PushSubscription?.addEventListener("change", (event: any) => {
           if (event?.current?.optedIn) {
             setIsSubscribed(true);
-            toast.success("Subscribed to Voice of UPSA alerts! SDK verified.");
+            toast.success("Subscribed to Voice of UPSA alerts!");
           }
         });
-
-      } catch (e: any) {
-        console.error("[OneSignal] Init error:", e);
-        if (e?.message?.includes("Can only be used on")) {
-          console.warn("OneSignal is restricted to production domain. Local testing is disabled in the OneSignal dashboard.");
+      } catch (err: any) {
+        const message = err?.message || String(err);
+        if (message.includes("already initialized")) {
+          setIsSdkReady(true);
+          setInitError(null);
+        } else {
+          console.warn("[OneSignal] Initialization notice:", message);
+          setInitError(message);
+          setIsSdkReady(false);
         }
       } finally {
         setIsInitialized(true);
       }
     }
 
-    initOneSignal();
+    setupOneSignal();
   }, [appId]);
 
   const handleRequestPermission = async () => {
@@ -73,7 +84,7 @@ export default function OneSignalProvider() {
 
     if (Notification.permission === "denied") {
       toast.error(
-        "Notifications are blocked in your browser settings. Click the lock/settings icon in your address bar to allow them.",
+        "Notifications are blocked in your browser settings. Click the lock icon in your address bar to allow them.",
         { duration: 6000 }
       );
       return;
@@ -81,39 +92,84 @@ export default function OneSignalProvider() {
 
     setIsRequesting(true);
 
-    if (!(OneSignal as any).initialized) {
-      toast.error(
-        window.location.hostname === "localhost" 
-          ? "OneSignal is disabled on localhost. Test in production or update OneSignal settings." 
-          : "OneSignal failed to initialize. Please ensure you are on the main domain (voiceofupsa.com) and disable any ad-blockers."
-      );
+    // If permission is already granted in the browser, ensure opt-in and sync
+    if (Notification.permission === "granted") {
+      if (isSdkReady) {
+        try {
+          await OneSignal.User?.PushSubscription?.optIn?.();
+        } catch (e) {
+          console.warn("[OneSignal] Opt-in sync error:", e);
+        }
+      }
+      setIsSubscribed(true);
+      toast.success("Push alerts are already enabled!");
       setIsRequesting(false);
       return;
     }
 
-    toast("Opening notification prompt... Click 'Allow' when asked.", {
-      icon: "🔔",
-      duration: 4000,
-    });
+    // Attempt subscription via OneSignal SDK if ready
+    if (isSdkReady) {
+      toast("Opening notification prompt... Click 'Allow' when asked.", {
+        icon: "🔔",
+        duration: 4000,
+      });
 
-    try {
-      // 1. Primary: Trigger in-page slidedown
-      if (OneSignal.Slidedown?.promptPush) {
-        await OneSignal.Slidedown.promptPush({ force: true });
-      } else {
-        // Fallback: Direct native browser permission request opt in
-        if (OneSignal.User?.PushSubscription?.optIn) {
+      try {
+        if (OneSignal.Notifications?.requestPermission) {
+          const granted = await OneSignal.Notifications.requestPermission();
+          if (granted) {
+            setIsSubscribed(true);
+            toast.success("Subscribed to Voice of UPSA alerts!");
+            return;
+          }
+        } else if (OneSignal.Slidedown?.promptPush) {
+          await OneSignal.Slidedown.promptPush({ force: true });
+        } else if (OneSignal.User?.PushSubscription?.optIn) {
           await OneSignal.User.PushSubscription.optIn();
         }
+
+        const optedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
+        if (optedIn) {
+          setIsSubscribed(true);
+        }
+      } catch (err: any) {
+        console.warn("[OneSignal] SDK permission request issue, attempting native fallback:", err);
+        // Fallback to native browser prompt
+        try {
+          const perm = await Notification.requestPermission();
+          if (perm === "granted") {
+            setIsSubscribed(true);
+            OneSignal.User?.PushSubscription?.optIn?.().catch(() => {});
+            toast.success("Subscribed to Voice of UPSA alerts!");
+          }
+        } catch (nativeErr) {
+          console.error("[OneSignal] Native permission failed:", nativeErr);
+        }
+      } finally {
+        setIsRequesting(false);
       }
-      
-      const optedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
-      if (optedIn) {
+      return;
+    }
+
+    // Fallback: If OneSignal SDK is not ready (e.g., origin mismatch on preview/localhost or ad-blocker)
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm === "granted") {
         setIsSubscribed(true);
+        if (window.location.hostname !== "voiceofupsa.com") {
+          toast.success("Browser notifications enabled! (Push delivery syncs on voiceofupsa.com)");
+        } else {
+          toast.success("Browser notifications enabled!");
+        }
+      } else if (perm === "denied") {
+        toast.error("Notifications were declined.");
       }
-    } catch (err: any) {
-      console.error("[OneSignal] Opt-in error:", err);
-      toast.error(err?.message || "Failed to subscribe. Please try again.");
+    } catch {
+      if (initError?.includes("Can only be used on")) {
+        toast.error("OneSignal push requires the main domain: voiceofupsa.com");
+      } else {
+        toast.error("Could not enable notifications. Please check browser settings.");
+      }
     } finally {
       setIsRequesting(false);
     }

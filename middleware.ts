@@ -2,6 +2,14 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const host = request.headers.get("host") || "";
+  if (host === "www.voiceofupsa.com") {
+    const canonicalUrl = request.nextUrl.clone();
+    canonicalUrl.host = "voiceofupsa.com";
+    canonicalUrl.protocol = "https:";
+    return NextResponse.redirect(canonicalUrl, 301);
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
