@@ -110,7 +110,7 @@ export async function middleware(request: NextRequest) {
   // Content Security Policy (allows OneSignal, Cloudinary, and Supabase)
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.onesignal.com https://onesignal.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com https://onesignal.com https://*.onesignal.com https://*.os.tc data:; connect-src 'self' https://*.supabase.co https://onesignal.com https://*.onesignal.com https://api.onesignal.com https://*.os.tc ws: wss:; worker-src 'self' blob:; frame-ancestors 'none'; frame-src 'self' https://www.google.com https://maps.google.com;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com https://api.onesignal.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com https://onesignal.com https://*.onesignal.com https://*.os.tc data:; connect-src 'self' https://*.supabase.co https://onesignal.com https://*.onesignal.com https://api.onesignal.com https://*.os.tc ws: wss:; worker-src 'self' blob:; frame-ancestors 'none'; frame-src 'self' https://www.google.com https://maps.google.com;"
   );
 
   return response;
