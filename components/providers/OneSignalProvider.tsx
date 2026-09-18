@@ -45,28 +45,41 @@ export default function OneSignalProvider() {
           await OneSignal.init({
             appId,
             allowLocalhostAsSecureOrigin: true,
-            serviceWorkerParam: { scope: "/" },
-            serviceWorkerPath: "/OneSignalSDKWorker.js",
           });
 
           setIsInitialized(true);
 
-          // In OneSignal v16, Notifications.permission is a boolean
-          const currentPermission = Boolean(OneSignal.Notifications?.permission);
-          if (currentPermission) {
+          // In OneSignal v16 User Model, check PushSubscription.optedIn
+          const isOptedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
+          const hasPerm = Boolean(OneSignal.Notifications?.permission);
+
+          if (isOptedIn) {
             setIsSubscribed(true);
+          } else if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+            // Browser already granted permission: auto opt-in to register subscription with OneSignal backend
+            OneSignal.User?.PushSubscription?.optIn?.().then(() => {
+              setIsSubscribed(true);
+            }).catch(() => {});
           }
 
-          // Listen for permission changes
+          // Listen for push subscription changes
+          OneSignal.User?.PushSubscription?.addEventListener("change", (event: any) => {
+            if (event?.current?.optedIn) {
+              setIsSubscribed(true);
+              toast.success("Subscribed to Voice of UPSA alerts! SDK verified.");
+            }
+          });
+
+          // Listen for notification permission changes
           OneSignal.Notifications?.addEventListener("permissionChange", (permission: boolean) => {
-            setIsSubscribed(Boolean(permission));
             if (permission) {
-              toast.success("Voice of UPSA alerts enabled!");
+              OneSignal.User?.PushSubscription?.optIn?.().catch(() => {});
+              setIsSubscribed(true);
             }
           });
 
           // Attempt prompt with force flag if permission is not yet decided
-          if (!currentPermission && typeof Notification !== "undefined" && Notification.permission === "default") {
+          if (!hasPerm && typeof Notification !== "undefined" && Notification.permission === "default") {
             setTimeout(() => {
               try {
                 OneSignal.Slidedown?.promptPush?.({ force: true })?.catch(() => {});
@@ -100,31 +113,31 @@ export default function OneSignalProvider() {
       return;
     }
 
-    if (Notification.permission === "granted") {
-      setIsSubscribed(true);
-      toast.success("Notifications are already enabled!");
-      return;
-    }
-
     setIsRequesting(true);
 
-    // Immediate feedback so the user knows the action was received
     toast("Opening notification prompt... Click 'Allow' when asked.", {
       icon: "🔔",
       duration: 4000,
     });
 
     try {
-      // 1. Attempt OneSignal slidedown prompt in case native is restricted
-      try {
-        if (window.OneSignal?.Slidedown?.promptPush) {
-          window.OneSignal.Slidedown.promptPush({ force: true }).catch(() => {});
+      // 1. Primary: Use OneSignal v16 User PushSubscription optIn API
+      if (window.OneSignal?.User?.PushSubscription?.optIn) {
+        await window.OneSignal.User.PushSubscription.optIn();
+        const optedIn = Boolean(window.OneSignal.User?.PushSubscription?.optedIn);
+        if (optedIn) {
+          setIsSubscribed(true);
+          toast.success("Subscribed to Voice of UPSA alerts! SDK verified.");
+          return;
         }
-      } catch {
-        // ignore
       }
 
-      // 2. Direct native browser permission request
+      // 2. Secondary: Trigger in-page slidedown
+      if (window.OneSignal?.Slidedown?.promptPush) {
+        window.OneSignal.Slidedown.promptPush({ force: true }).catch(() => {});
+      }
+
+      // 3. Fallback: Direct native browser permission request
       const permissionPromise = Notification.requestPermission();
       const timeoutPromise = new Promise<NotificationPermission>((resolve) =>
         setTimeout(() => resolve(Notification.permission), 5000)
@@ -133,17 +146,11 @@ export default function OneSignalProvider() {
       const result = await Promise.race([permissionPromise, timeoutPromise]);
 
       if (result === "granted") {
-        setIsSubscribed(true);
-        toast.success("Subscribed to Voice of UPSA alerts!");
-
-        // Sync with OneSignal SDK
-        try {
-          if (window.OneSignal?.Notifications) {
-            window.OneSignal.Notifications.requestPermission().catch(() => {});
-          }
-        } catch {
-          // ignore
+        if (window.OneSignal?.User?.PushSubscription?.optIn) {
+          await window.OneSignal.User.PushSubscription.optIn();
         }
+        setIsSubscribed(true);
+        toast.success("Subscribed to Voice of UPSA alerts! SDK verified.");
       } else if (result === "denied") {
         toast.error("Notification permission was denied.");
       } else {
@@ -151,9 +158,9 @@ export default function OneSignalProvider() {
           duration: 5000,
         });
       }
-    } catch (err) {
-      console.error("[OneSignal] Permission request error:", err);
-      toast.error("Failed to open notification prompt.");
+    } catch (err: any) {
+      console.error("[OneSignal] Opt-in error:", err);
+      toast.error(err?.message || "Failed to subscribe. Please try again.");
     } finally {
       setIsRequesting(false);
     }
