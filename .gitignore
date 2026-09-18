@@ -22,6 +22,9 @@
 
 # misc
 .DS_Store
+__MACOSX
+OneSignalSDK-v16-ServiceWorker
+*.zip
 *.pem
 
 # debug
