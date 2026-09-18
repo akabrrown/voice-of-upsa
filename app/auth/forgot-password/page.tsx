@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forgotPasswordSchema, ForgotPasswordFormValues } from "@/lib/validations/auth";
@@ -17,7 +17,17 @@ import { getAuthRedirectUrl } from "@/lib/auth/urls";
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [hasExpiredNotice, setHasExpiredNotice] = useState(false);
   const supabase = createClient();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("error") === "expired") {
+        setHasExpiredNotice(true);
+      }
+    }
+  }, []);
 
   const {
     register,
@@ -76,6 +86,13 @@ export default function ForgotPasswordPage() {
               : "Enter your email address and we'll send you a link to reset your password."}
           </p>
         </div>
+
+        {hasExpiredNotice && !isSubmitted && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-xs flex items-start space-x-2 animate-in fade-in duration-200">
+            <span className="font-bold shrink-0">Note:</span>
+            <span>Your previous reset link has expired or has already been used. Enter your email below to receive a fresh link.</span>
+          </div>
+        )}
 
         {!isSubmitted ? (
           <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>

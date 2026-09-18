@@ -95,8 +95,22 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 2. Auth routes redirect if logged in
-  if (request.nextUrl.pathname.startsWith("/auth") && user) {
+  // 2. Intercept expired or invalid Supabase email recovery tokens at root
+  const authErrorCode = request.nextUrl.searchParams.get("error_code");
+  const authError = request.nextUrl.searchParams.get("error");
+  if (authErrorCode === "otp_expired" || authError === "access_denied") {
+    const redirectUrl = new URL("/auth/forgot-password", request.url);
+    redirectUrl.searchParams.set("error", "expired");
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // 3. Auth routes redirect if logged in (exclude callback and update-password)
+  const isAuthPage = request.nextUrl.pathname.startsWith("/auth");
+  const isExemptAuthPage =
+    request.nextUrl.pathname.startsWith("/auth/callback") ||
+    request.nextUrl.pathname.startsWith("/auth/update-password");
+
+  if (isAuthPage && !isExemptAuthPage && user) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
