@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthRedirectUrl } from "@/lib/auth/urls";
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -30,8 +31,9 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     
     try {
+      const redirectUrl = getAuthRedirectUrl("/auth/callback?next=/auth/update-password");
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
+        redirectTo: redirectUrl,
       });
 
       if (error) {

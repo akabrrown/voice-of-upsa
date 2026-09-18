@@ -13,6 +13,7 @@ import { UserPlus, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getAuthRedirectUrl } from "@/lib/auth/urls";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -40,7 +41,7 @@ export default function RegisterPage() {
             full_name: data.fullName,
             username: data.username,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getAuthRedirectUrl("/auth/callback"),
         },
       });
 

@@ -17,19 +17,69 @@ import { createClient } from "@/lib/supabase/client";
 export default function UpdatePasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    // Check if the user is in a recovery session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Invalid or expired password reset link.");
-        router.push("/auth/login");
+    let isMounted = true;
+
+    const verifySession = async () => {
+      // 1. If code query param is present on direct landing, exchange it
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+        if (code) {
+          try {
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            if (!error && data.session) {
+              if (isMounted) setIsVerifying(false);
+              return;
+            }
+          } catch (e) {
+            console.warn("Client exchange code check:", e);
+          }
+        }
       }
+
+      // 2. Check if a valid session already exists
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        if (isMounted) setIsVerifying(false);
+        return;
+      }
+
+      // 3. Listen for auth state change
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session || event === "PASSWORD_RECOVERY") {
+          if (isMounted) setIsVerifying(false);
+        }
+      });
+
+      // 4. Grace period before concluding the link is invalid
+      const timer = setTimeout(async () => {
+        if (isMounted) {
+          const { data: { session: finalCheck } } = await supabase.auth.getSession();
+          if (!finalCheck) {
+            toast.error("Invalid or expired password reset link. Please request a new one.");
+            router.push("/auth/forgot-password");
+          } else {
+            setIsVerifying(false);
+          }
+        }
+      }, 2000);
+
+      return () => {
+        subscription.unsubscribe();
+        clearTimeout(timer);
+      };
     };
-    checkSession();
+
+    const cleanupPromise = verifySession();
+    return () => {
+      isMounted = false;
+      cleanupPromise.then((cleanup) => cleanup && cleanup());
+    };
   }, [router, supabase]);
 
   const {
@@ -61,6 +111,22 @@ export default function UpdatePasswordPage() {
       setIsLoading(false);
     }
   };
+
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl border border-gray-100 text-center space-y-4">
+          <div className="relative h-16 w-16 mx-auto rounded-full overflow-hidden border-2 border-upsa-gold/20 shadow-md">
+            <Image src="/logo.jpg" alt="Voice of UPSA" fill sizes="64px" className="object-cover" />
+          </div>
+          <div className="flex items-center justify-center space-x-2 text-upsa-navy">
+            <span className="h-4 w-4 border-2 border-upsa-navy/30 border-t-upsa-navy rounded-full animate-spin"></span>
+            <span className="text-sm font-semibold">Verifying recovery link...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
