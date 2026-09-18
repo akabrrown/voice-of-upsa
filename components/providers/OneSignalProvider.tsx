@@ -82,7 +82,11 @@ export default function OneSignalProvider() {
     setIsRequesting(true);
 
     if (!(OneSignal as any).initialized) {
-      toast.error("OneSignal is disabled for localhost in your dashboard. Test this in production or update your OneSignal settings.");
+      toast.error(
+        window.location.hostname === "localhost" 
+          ? "OneSignal is disabled on localhost. Test in production or update OneSignal settings." 
+          : "OneSignal failed to initialize. Please ensure you are on the main domain (voiceofupsa.com) and disable any ad-blockers."
+      );
       setIsRequesting(false);
       return;
     }
