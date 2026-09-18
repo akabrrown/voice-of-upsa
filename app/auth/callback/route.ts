@@ -5,6 +5,8 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const token_hash = searchParams.get("token_hash");
+  const type = (searchParams.get("type") as "recovery" | "email" | "signup" | null) || "recovery";
   const forwardedHost = request.headers.get("x-forwarded-host");
   const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
   const effectiveOrigin = forwardedHost
@@ -18,7 +20,7 @@ export async function GET(request: NextRequest) {
       ? rawNext
       : "/dashboard";
 
-  if (code) {
+  if (code || token_hash) {
     const cookieStore = await cookies();
     const redirectResponse = NextResponse.redirect(`${effectiveOrigin}${safeNext}`);
 
@@ -44,26 +46,36 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    let authError = null;
+
+    if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      authError = error;
+    } else if (token_hash) {
+      const { error } = await supabase.auth.verifyOtp({ token_hash, type });
+      authError = error;
+    }
+
+    if (!authError) {
       return redirectResponse;
     }
 
-    console.error("[Auth Callback] exchangeCodeForSession failed:", error.message);
+    console.error("[Auth Callback] Auth exchange failed:", authError.message);
 
-    // If destination is password recovery, route there with error and code so client can handle or display reset CTA
+    // If destination is password recovery, route there with error parameters
     if (safeNext.includes("/auth/update-password")) {
       const targetUrl = new URL(`${effectiveOrigin}/auth/update-password`);
-      targetUrl.searchParams.set("error_description", error.message);
-      targetUrl.searchParams.set("code", code);
+      targetUrl.searchParams.set("error_description", authError.message);
+      if (code) targetUrl.searchParams.set("code", code);
+      if (token_hash) targetUrl.searchParams.set("token_hash", token_hash);
       return NextResponse.redirect(targetUrl.toString());
     }
   }
 
-  // If password recovery without code, redirect to update password with explanation
+  // If password recovery without token, redirect to update password
   if (safeNext.includes("/auth/update-password")) {
     return NextResponse.redirect(
-      `${effectiveOrigin}/auth/update-password?error_description=No+recovery+code+was+found+in+the+reset+link`
+      `${effectiveOrigin}/auth/update-password?error_description=No+recovery+token+found`
     );
   }
 

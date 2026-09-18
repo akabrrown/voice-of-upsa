@@ -9,20 +9,16 @@ import { forgotPasswordSchema, ForgotPasswordFormValues } from "@/lib/validation
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthRedirectUrl } from "@/lib/auth/urls";
-import { useRouter } from "next/navigation";
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [hasExpiredNotice, setHasExpiredNotice] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
@@ -44,7 +40,7 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsLoading(true);
-    
+
     try {
       const redirectUrl = getAuthRedirectUrl("/auth/callback?next=/auth/update-password");
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
@@ -58,42 +54,11 @@ export default function ForgotPasswordPage() {
 
       setSubmittedEmail(data.email);
       setIsSubmitted(true);
-      toast.success("Reset link and verification code sent to your email!");
+      toast.success("Password reset link sent to your email!");
     } catch (error: any) {
       toast.error(error?.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpCode.trim()) {
-      toast.error("Please enter the 6-digit verification code.");
-      return;
-    }
-
-    setIsVerifyingOtp(true);
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: submittedEmail,
-        token: otpCode.trim(),
-        type: "recovery",
-      });
-
-      if (error) {
-        toast.error(error.message);
-        return;
-      }
-
-      if (data.session) {
-        toast.success("Code verified! Set your new password.");
-        router.push("/auth/update-password");
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to verify code.");
-    } finally {
-      setIsVerifyingOtp(false);
     }
   };
 
@@ -106,7 +71,8 @@ export default function ForgotPasswordPage() {
               <Image
                 src="/logo.jpg"
                 alt="Voice of UPSA"
-                fill sizes="120px"
+                fill
+                sizes="120px"
                 className="object-cover"
               />
             </div>
@@ -119,8 +85,8 @@ export default function ForgotPasswordPage() {
             Reset Password
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            {isSubmitted 
-              ? "Check your email for a password reset link." 
+            {isSubmitted
+              ? "We've sent a password reset link to your email."
               : "Enter your email address and we'll send you a link to reset your password."}
           </p>
         </div>
@@ -165,54 +131,24 @@ export default function ForgotPasswordPage() {
             </Button>
           </form>
         ) : (
-          <div className="mt-8 space-y-6 animate-in fade-in duration-300">
-            <div className="bg-blue-50 border border-blue-200 text-blue-900 p-4 rounded-xl text-xs space-y-1">
-              <p className="font-bold">Email sent to {submittedEmail}</p>
-              <p className="text-gray-600">
-                You can tap the link in the email, or enter the <strong>6-digit verification code</strong> from the email below:
+          <div className="mt-8 space-y-6 text-center animate-in fade-in duration-300">
+            <div className="h-16 w-16 mx-auto rounded-full bg-green-50 text-green-600 flex items-center justify-center border border-green-200">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-upsa-navy">Check your inbox</p>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                We sent a password reset link to <strong className="text-gray-700">{submittedEmail}</strong>. Click the link in the email to set your new password.
               </p>
             </div>
-
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="otpCode">6-Digit Verification Code</Label>
-                <Input
-                  id="otpCode"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  placeholder="123456"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                  className="text-center font-mono text-2xl tracking-widest py-3 font-bold"
-                  autoFocus
-                />
-                <p className="text-[11px] text-gray-500 text-center mt-1">
-                  Entering the code directly avoids link expiration issues from email scanners
-                </p>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isVerifyingOtp || otpCode.length < 6}
-                className="w-full bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy py-6 text-base font-bold transition-all"
-              >
-                {isVerifyingOtp ? "Verifying Code..." : "Verify Code & Update Password"}
-              </Button>
-            </form>
-
-            <div className="pt-2 flex flex-col gap-2">
+            <div className="pt-2">
               <Button
                 type="button"
-                onClick={() => {
-                  setIsSubmitted(false);
-                  setOtpCode("");
-                }}
+                onClick={() => setIsSubmitted(false)}
                 variant="outline"
-                className="w-full py-4 text-xs font-semibold text-gray-600"
+                className="w-full py-5 text-sm font-semibold text-gray-700"
               >
-                Try another email or resend
+                Send to another email
               </Button>
             </div>
           </div>
