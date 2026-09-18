@@ -26,6 +26,11 @@ export default function OneSignalProvider() {
       return;
     }
 
+    if ((window as any).__onesignal_initialized) {
+      return;
+    }
+    (window as any).__onesignal_initialized = true;
+
     // Check if browser native notification permission is already granted
     if (typeof Notification !== "undefined") {
       if (Notification.permission === "granted") {
@@ -41,14 +46,16 @@ export default function OneSignalProvider() {
             appId,
             allowLocalhostAsSecureOrigin: true,
             serviceWorkerParam: { scope: "/" },
-            serviceWorkerPath: "OneSignalSDKWorker.js",
+            serviceWorkerPath: "/OneSignalSDKWorker.js",
           });
 
           setIsInitialized(true);
 
           // In OneSignal v16, Notifications.permission is a boolean
           const currentPermission = Boolean(OneSignal.Notifications?.permission);
-          setIsSubscribed(currentPermission);
+          if (currentPermission) {
+            setIsSubscribed(true);
+          }
 
           // Listen for permission changes
           OneSignal.Notifications?.addEventListener("permissionChange", (permission: boolean) => {
@@ -59,7 +66,7 @@ export default function OneSignalProvider() {
           });
 
           // Attempt prompt with force flag if permission is not yet decided
-          if (!currentPermission) {
+          if (!currentPermission && typeof Notification !== "undefined" && Notification.permission === "default") {
             setTimeout(() => {
               try {
                 OneSignal.Slidedown?.promptPush?.({ force: true })?.catch(() => {});
@@ -78,24 +85,75 @@ export default function OneSignalProvider() {
   }, [appId]);
 
   const handleRequestPermission = async () => {
+    if (typeof window === "undefined") return;
+
+    if (typeof Notification === "undefined") {
+      toast.error("Push notifications are not supported on this browser.");
+      return;
+    }
+
+    if (Notification.permission === "denied") {
+      toast.error(
+        "Notifications are blocked in your browser settings. Click the lock/settings icon in your address bar to allow them.",
+        { duration: 6000 }
+      );
+      return;
+    }
+
+    if (Notification.permission === "granted") {
+      setIsSubscribed(true);
+      toast.success("Notifications are already enabled!");
+      return;
+    }
+
     setIsRequesting(true);
+
+    // Immediate feedback so the user knows the action was received
+    toast("Opening notification prompt... Click 'Allow' when asked.", {
+      icon: "🔔",
+      duration: 4000,
+    });
+
     try {
-      if (window.OneSignal?.Notifications) {
-        await window.OneSignal.Notifications.requestPermission();
-        const granted = Boolean(window.OneSignal.Notifications.permission);
-        setIsSubscribed(granted);
-        if (granted) {
-          toast.success("Subscribed to Voice of UPSA alerts!");
+      // 1. Attempt OneSignal slidedown prompt in case native is restricted
+      try {
+        if (window.OneSignal?.Slidedown?.promptPush) {
+          window.OneSignal.Slidedown.promptPush({ force: true }).catch(() => {});
         }
-      } else if (typeof Notification !== "undefined") {
-        const result = await Notification.requestPermission();
-        if (result === "granted") {
-          setIsSubscribed(true);
-          toast.success("Subscribed to Voice of UPSA alerts!");
+      } catch {
+        // ignore
+      }
+
+      // 2. Direct native browser permission request
+      const permissionPromise = Notification.requestPermission();
+      const timeoutPromise = new Promise<NotificationPermission>((resolve) =>
+        setTimeout(() => resolve(Notification.permission), 5000)
+      );
+
+      const result = await Promise.race([permissionPromise, timeoutPromise]);
+
+      if (result === "granted") {
+        setIsSubscribed(true);
+        toast.success("Subscribed to Voice of UPSA alerts!");
+
+        // Sync with OneSignal SDK
+        try {
+          if (window.OneSignal?.Notifications) {
+            window.OneSignal.Notifications.requestPermission().catch(() => {});
+          }
+        } catch {
+          // ignore
         }
+      } else if (result === "denied") {
+        toast.error("Notification permission was denied.");
+      } else {
+        toast("If prompt did not show, check the bell or lock icon in your address bar.", {
+          duration: 5000,
+        });
       }
     } catch (err) {
       console.error("[OneSignal] Permission request error:", err);
+      toast.error("Failed to open notification prompt.");
     } finally {
       setIsRequesting(false);
     }
@@ -149,10 +207,19 @@ export default function OneSignalProvider() {
                   type="button"
                   onClick={handleRequestPermission}
                   disabled={isRequesting}
-                  className="flex-1 bg-upsa-navy hover:bg-upsa-navy/90 text-white text-xs font-semibold py-2 px-3 rounded-xl transition-all shadow-xs hover:shadow flex items-center justify-center space-x-1.5 active:scale-98 disabled:opacity-70"
+                  className="flex-1 bg-upsa-navy hover:bg-upsa-navy/90 text-white text-xs font-semibold py-2 px-3 rounded-xl transition-all shadow-xs hover:shadow flex items-center justify-center space-x-1.5 active:scale-98 disabled:opacity-85"
                 >
-                  <Bell className="h-3.5 w-3.5" />
-                  <span>{isRequesting ? "Prompting..." : "Enable Alerts"}</span>
+                  {isRequesting ? (
+                    <>
+                      <span className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                      <span>Requesting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bell className="h-3.5 w-3.5" />
+                      <span>Enable Alerts</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
