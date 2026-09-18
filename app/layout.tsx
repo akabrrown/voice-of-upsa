@@ -3,6 +3,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import OneSignalProvider from "@/components/providers/OneSignalProvider";
+import { HolidayAmbientBar } from "@/components/holidays/HolidayAmbientBar";
+import { HolidayGreetingModal } from "@/components/holidays/HolidayGreetingModal";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -37,6 +39,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground font-arial" suppressHydrationWarning>
         <ToastProvider />
         <OneSignalProvider />
+        <HolidayAmbientBar />
+        <HolidayGreetingModal />
         {children}
       </body>
     </html>

@@ -13,6 +13,7 @@ import {
   Settings, 
   BarChart3, 
   Megaphone,
+  CalendarHeart,
 } from "lucide-react";
 
 const editorLinks = [
@@ -27,6 +28,7 @@ const adminLinks = [
   { name: "Editorial Team", href: "/dashboard/admin/team", icon: Users },
   { name: "Users", href: "/dashboard/admin/users", icon: Users },
   { name: "Ads", href: "/dashboard/admin/ads", icon: Megaphone },
+  { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
   { name: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
   { name: "Settings", href: "/dashboard/admin/settings", icon: Settings },
 ];

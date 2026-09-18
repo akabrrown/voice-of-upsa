@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Eye } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NewsletterForm } from "./NewsletterForm";
+import { UpcomingHolidayWidget } from "@/components/holidays/UpcomingHolidayWidget";
 
 export async function TrendingSidebar() {
   const supabase = await createClient();
@@ -15,6 +16,9 @@ export async function TrendingSidebar() {
 
   return (
     <aside className="space-y-8">
+      {/* Upcoming Ghana Public Holiday Countdown */}
+      <UpcomingHolidayWidget />
+
       {/* Trending Articles */}
       <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
         <div className="flex items-center space-x-2 mb-6 border-b border-gray-200 pb-4">

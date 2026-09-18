@@ -81,10 +81,60 @@ export async function sendArticlePushNotification(
       recipients: data.recipients,
     };
   } catch (err: any) {
-    console.error("[OneSignal] Network exception during push:", err);
+    console.error("[OneSignal] Exception sending push notification:", err);
     return {
       success: false,
-      error: err.message || "Network error while connecting to OneSignal API",
+      error: err.message || "Network exception during push dispatch.",
     };
+  }
+}
+
+/**
+ * Dispatches a statutory holiday wish broadcast push notification via OneSignal.
+ */
+export async function sendHolidayPushNotification(
+  headline: string,
+  bodyMessage: string,
+  url?: string
+): Promise<PushResult> {
+  const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+  const restApiKey = process.env.ONESIGNAL_REST_API_KEY;
+
+  if (!appId || !restApiKey || appId === "your-onesignal-app-id" || restApiKey === "your-onesignal-rest-api-key") {
+    return {
+      success: false,
+      skipped: true,
+      error: "OneSignal credentials not configured.",
+    };
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://voiceofupsa.com";
+  const targetUrl = url || siteUrl;
+
+  const payload: Record<string, any> = {
+    app_id: appId,
+    included_segments: ["Total Subscriptions"],
+    headings: { en: headline },
+    contents: { en: bodyMessage },
+    url: targetUrl,
+  };
+
+  try {
+    const response = await fetch("https://api.onesignal.com/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Basic ${restApiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, error: data.errors?.[0] || "Failed to dispatch push" };
+    }
+    return { success: true, id: data.id, recipients: data.recipients };
+  } catch (err: any) {
+    return { success: false, error: err.message };
   }
 }

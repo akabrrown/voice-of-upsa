@@ -17,7 +17,8 @@ import {
   MessageSquare,
   Megaphone,
   FolderOpen,
-  LogOut
+  LogOut,
+  CalendarHeart
 } from "lucide-react";
 
 const editorLinks = [
@@ -32,6 +33,7 @@ const adminLinks = [
   { name: "Editorial Team", href: "/dashboard/admin/team", icon: Users },
   { name: "User Management", href: "/dashboard/admin/users", icon: UserCheck },
   { name: "Advertisements", href: "/dashboard/admin/ads", icon: Megaphone },
+  { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
   { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
   { name: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
   { name: "Site Settings", href: "/dashboard/admin/settings", icon: Settings },
