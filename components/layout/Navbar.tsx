@@ -336,7 +336,7 @@ export function Navbar() {
           <div className="pt-4 border-t border-white/10 flex flex-col gap-2">
             {user ? (
               <>
-                <Button asChild variant="outline" className="w-full text-white border-white/20 hover:bg-upsa-gold hover:text-upsa-navy justify-between">
+                <Button asChild variant="outline" className="w-full bg-transparent text-white border-white/20 hover:bg-upsa-gold hover:text-upsa-navy justify-between">
                   <Link href="/profile?tab=notifications" onClick={() => setMobileMenuOpen(false)}>
                     <span className="flex items-center">
                       <Bell className="mr-2 h-4 w-4" />
@@ -349,14 +349,14 @@ export function Navbar() {
                     )}
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full text-white border-white/20 hover:bg-upsa-gold hover:text-upsa-navy">
+                <Button asChild variant="outline" className="w-full bg-transparent text-white border-white/20 hover:bg-upsa-gold hover:text-upsa-navy">
                   <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
                     <UserIcon className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
                 </Button>
                 {user.role !== "public" && (
-                  <Button asChild variant="outline" className="w-full text-white border-white/20 hover:bg-upsa-gold hover:text-upsa-navy">
+                  <Button asChild variant="outline" className="w-full bg-transparent text-white border-white/20 hover:bg-upsa-gold hover:text-upsa-navy">
                     <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard

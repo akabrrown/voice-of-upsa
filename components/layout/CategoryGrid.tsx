@@ -20,17 +20,17 @@ export function CategoryGrid() {
           <Link href="/categories/all" className="text-sm font-semibold text-upsa-gold hover:underline">View All</Link>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div className="flex overflow-x-auto pb-4 gap-3 md:gap-4 md:grid md:grid-cols-4 lg:grid-cols-7 snap-x px-1 -mx-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
           {categories.map((cat) => (
             <Link 
               key={cat.name} 
               href={cat.href}
-              className="group flex flex-col items-center justify-center p-6 rounded-xl border border-gray-100 hover:border-upsa-gold hover:shadow-lg transition-all"
+              className="group flex flex-col items-center justify-center p-4 md:p-6 rounded-xl border border-gray-100 hover:border-upsa-gold hover:shadow-lg transition-all min-w-[100px] sm:min-w-[120px] md:min-w-0 snap-start bg-white shrink-0"
             >
-              <div className={`p-4 rounded-full mb-4 group-hover:scale-110 transition-transform ${cat.color}`}>
-                <cat.icon className="h-6 w-6" />
+              <div className={`p-3 md:p-4 rounded-full mb-2 md:mb-4 group-hover:scale-110 transition-transform ${cat.color}`}>
+                <cat.icon className="h-5 w-5 md:h-6 md:w-6" />
               </div>
-              <span className="font-bold text-upsa-navy text-sm group-hover:text-upsa-gold transition-colors">{cat.name}</span>
+              <span className="font-bold text-upsa-navy text-xs md:text-sm group-hover:text-upsa-gold transition-colors">{cat.name}</span>
             </Link>
           ))}
         </div>
