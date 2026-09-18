@@ -26,7 +26,7 @@ export default function OneSignalProvider() {
 
     async function initOneSignal() {
       try {
-        if (!OneSignal.initialized) {
+        if (!(OneSignal as any).initialized) {
           await OneSignal.init({
             appId,
             allowLocalhostAsSecureOrigin: true,
@@ -81,7 +81,7 @@ export default function OneSignalProvider() {
 
     setIsRequesting(true);
 
-    if (!OneSignal.initialized) {
+    if (!(OneSignal as any).initialized) {
       toast.error("OneSignal is disabled for localhost in your dashboard. Test this in production or update your OneSignal settings.");
       setIsRequesting(false);
       return;
