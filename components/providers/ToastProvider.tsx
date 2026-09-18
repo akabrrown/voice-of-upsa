@@ -15,6 +15,13 @@ export function ToastProvider() {
       search.includes("otp_expired") ||
       hash.includes("error_code=otp_expired")
     ) {
+      // Clear error hash/search immediately to prevent persistent popup loops on refresh
+      try {
+        window.history.replaceState(null, "", window.location.pathname);
+      } catch {
+        // ignore
+      }
+
       toast.error(
         "Your password reset link has expired or was already used. Please request a new one.",
         { duration: 6000 }
@@ -24,7 +31,7 @@ export function ToastProvider() {
         !window.location.pathname.startsWith("/auth/forgot-password") &&
         !window.location.pathname.startsWith("/auth/update-password")
       ) {
-        window.location.href = "/auth/forgot-password?error=expired";
+        window.location.replace("/auth/forgot-password?error=expired");
       }
     }
   }, []);

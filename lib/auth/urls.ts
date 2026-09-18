@@ -5,18 +5,7 @@
  */
 
 export function getSiteUrl(): string {
-  // 1. Explicit site URL configured in environment (production domain)
-  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
-    return envUrl.replace(/\/$/, "");
-  }
-
-  // 2. Vercel deployment URL (provided in preview/production builds)
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL.replace(/\/$/, "")}`;
-  }
-
-  // 3. Current browser window origin if accessed from a real public domain
+  // 1. Current browser window origin if accessed from a real public domain (prioritize active domain)
   if (typeof window !== "undefined") {
     const origin = window.location.origin;
     if (!origin.includes("localhost") && !origin.includes("127.0.0.1")) {
@@ -24,8 +13,19 @@ export function getSiteUrl(): string {
     }
   }
 
-  // 4. Fallback production URL for Voice of UPSA so emails always work on mobile/Gmail
-  return "https://voiceofupsa.vercel.app";
+  // 2. Explicit site URL configured in environment (production domain)
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (envUrl && !envUrl.includes("localhost") && !envUrl.includes("127.0.0.1")) {
+    return envUrl.replace(/\/$/, "");
+  }
+
+  // 3. Vercel deployment URL (provided in preview/production builds)
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL.replace(/\/$/, "")}`;
+  }
+
+  // 4. Fallback production canonical domain
+  return "https://www.voiceofupsa.com";
 }
 
 /**
