@@ -8,6 +8,7 @@ import { toast } from "react-hot-toast";
 import Image from "next/image";
 import Link from "next/link";
 import { MessageSquare, Trash2, Reply, CornerDownRight, LogIn } from "lucide-react";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface CommentProfile {
   full_name: string;
@@ -187,14 +188,12 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
       {/* Write New Comment Form */}
       {currentUser ? (
         <div className="flex gap-4 mb-10">
-          <div className="relative h-10 w-10 rounded-full overflow-hidden shrink-0 border border-gray-200">
-            <Image
-              src={currentUser.user_metadata?.avatar_url || "https://i.pravatar.cc/150?u=current"}
-              alt="You"
-              fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover"
-            />
-          </div>
+          <UserAvatar
+            src={currentUser.user_metadata?.avatar_url}
+            name={currentUser.user_metadata?.full_name || "You"}
+            size="md"
+            className="border border-gray-200"
+          />
           <div className="flex-1 space-y-3">
             <Textarea
               placeholder="What are your thoughts on this story? Share nicely..."
@@ -240,14 +239,12 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
               <div key={comment.id} className="border-b border-gray-50 pb-6 last:border-0 last:pb-0">
                 <div className="flex gap-4">
                   {/* Avatar */}
-                  <div className="relative h-10 w-10 rounded-full overflow-hidden shrink-0 border border-gray-100">
-                    <Image
-                      src={comment.user?.avatar_url || "https://i.pravatar.cc/150?u=" + comment.id}
-                      alt={comment.user?.full_name || "User"}
-                      fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover"
-                    />
-                  </div>
+                  <UserAvatar
+                    src={comment.user?.avatar_url}
+                    name={comment.user?.full_name || "Editorial Reader"}
+                    size="md"
+                    className="border border-gray-100"
+                  />
                   
                   {/* Body */}
                   <div className="flex-1 space-y-2">
@@ -334,14 +331,12 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
                           <CornerDownRight className="h-4 w-4 text-gray-300 mt-1 shrink-0" />
                           
                           {/* Avatar */}
-                          <div className="relative h-8 w-8 rounded-full overflow-hidden shrink-0 border border-gray-50">
-                            <Image
-                              src={reply.user?.avatar_url || "https://i.pravatar.cc/150?u=" + reply.id}
-                              alt={reply.user?.full_name || "User"}
-                              fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              className="object-cover"
-                            />
-                          </div>
+                          <UserAvatar
+                            src={reply.user?.avatar_url}
+                            name={reply.user?.full_name || "Editorial Reader"}
+                            size="sm"
+                            className="border border-gray-50"
+                          />
 
                           {/* Body */}
                           <div className="flex-1 space-y-1">

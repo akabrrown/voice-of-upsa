@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArticleContent } from "@/components/articles/ArticleContent";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface RelatedArticleRaw {
   id: string;
@@ -144,7 +145,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       name: dbArticle.profiles?.full_name || "Editorial Team",
       role: dbArticle.profiles?.role || "Editor",
       bio: dbArticle.profiles?.bio || "Voice of UPSA editorial team member.",
-      avatar: dbArticle.profiles?.avatar_url || "https://i.pravatar.cc/150?u=1"
+      avatar: dbArticle.profiles?.avatar_url || null
     },
     coverImage: dbArticle.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000",
     content: dbArticle.content,
@@ -222,9 +223,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
               <div className="flex flex-wrap items-center justify-start gap-4 sm:gap-6 pt-2 text-sm text-gray-500 border-b border-gray-100 pb-6">
                 <div className="flex items-center">
-                  <div className="relative h-10 w-10 rounded-full overflow-hidden mr-3 border border-gray-200">
-                    <Image src={article.author.avatar} alt={article.author.name} fill sizes="40px" className="object-cover" />
-                  </div>
+                  <UserAvatar
+                    src={article.author.avatar}
+                    name={article.author.name}
+                    size="md"
+                    className="mr-3 border border-gray-200"
+                  />
                   <span className="font-bold text-upsa-navy">{article.author.name}</span>
                 </div>
                 <span className="flex items-center"><Calendar className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.date}</span>
@@ -257,9 +261,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
                 {/* Author Bio */}
                 <div className="mt-12 p-6 md:p-8 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
-                  <div className="relative h-20 w-20 rounded-full overflow-hidden shrink-0 border-4 border-white shadow-md">
-                    <Image src={article.author.avatar} alt={article.author.name} fill sizes="80px" className="object-cover" />
-                  </div>
+                  <UserAvatar
+                    src={article.author.avatar}
+                    name={article.author.name}
+                    size="2xl"
+                    className="shrink-0 border-4 border-white shadow-md"
+                  />
                   <div className="text-center md:text-left">
                     <h4 className="text-lg font-bold text-upsa-navy mb-1">{article.author.name}</h4>
                     <p className="text-xs uppercase tracking-widest text-upsa-gold font-bold mb-2">{article.author.role}</p>
