@@ -11,10 +11,39 @@ import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://voiceofupsa.com";
+
 export const metadata: Metadata = {
-  title: "Voice of UPSA | Official Communications Hub",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Voice of UPSA | Official Communications Hub",
+    template: "%s | Voice of UPSA",
+  },
   description: "The official digital news and communications platform for the University of Professional Studies, Accra (UPSA).",
   keywords: ["UPSA", "University of Professional Studies Accra", "Voice of UPSA", "Campus News", "Academic News"],
+  openGraph: {
+    title: "Voice of UPSA | Official Communications Hub",
+    description: "The official digital news and communications platform for the University of Professional Studies, Accra (UPSA).",
+    url: siteUrl,
+    siteName: "Voice of UPSA",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "Voice of UPSA",
+      },
+    ],
+    locale: "en_GH",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Voice of UPSA | Official Communications Hub",
+    description: "The official digital news and communications platform for the University of Professional Studies, Accra (UPSA).",
+    images: ["/og-image.jpg"],
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

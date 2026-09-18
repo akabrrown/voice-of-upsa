@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
-import { getAllHolidaysForYear } from "@/lib/holidays/engine";
+import { getAllHolidaysForYear, GHANA_STATUTORY_HOLIDAYS } from "@/lib/holidays/engine";
 import { DBHolidayWish } from "@/lib/holidays/types";
 import { sendHolidayPushNotification } from "@/lib/onesignal";
 
@@ -82,17 +82,26 @@ export async function POST(request: Request) {
 
     const adminClient = getAdminClient();
 
+    const def = GHANA_STATUTORY_HOLIDAYS.find((h) => h.key === holiday_key);
+    const date_type = body.date_type || def?.dateType || "fixed";
+    const month = body.month ?? def?.month ?? null;
+    const day = body.day ?? def?.day ?? null;
+    const resolvedTitle = title || def?.title || holiday_key;
+
     // Upsert into holiday_wishes
     const { data, error } = await adminClient
       .from("holiday_wishes")
       .upsert({
         holiday_key,
-        title,
+        title: resolvedTitle,
+        date_type,
+        month,
+        day,
         custom_date_override: custom_date_override || null,
         headline,
         body_message,
-        theme_accent,
-        academic_status,
+        theme_accent: theme_accent || def?.themeAccent || "gold",
+        academic_status: academic_status || def?.academicStatus || "Statutory public holiday — Lectures suspended",
         featured_article_slug: featured_article_slug || null,
         send_push_notification: !!send_push_notification,
         is_active: is_active !== false,

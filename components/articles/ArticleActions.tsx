@@ -37,7 +37,7 @@ export function ArticleActions({ slug, title }: ArticleActionsProps) {
   };
 
   const shareLinks = {
-    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(`*${title}*\n\nRead on Voice of UPSA:\n${shareUrl}`)}`,
+    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareUrl}\n\n*${title}*`)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
     twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(title)}`,
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,

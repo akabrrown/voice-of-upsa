@@ -52,7 +52,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://voiceofupsa.com";
   const articleUrl = `${siteUrl}/articles/${slug}`;
-  const coverImage = article.cover_image_url || `${siteUrl}/og-image.jpg`;
+  
+  // WhatsApp crawler strictly requires images < 300KB and prefers 1200x630 JPEG
+  let ogImageUrl = article.cover_image_url || `${siteUrl}/og-image.jpg`;
+  if (article.cover_image_url) {
+    if (article.cover_image_url.includes("res.cloudinary.com") && article.cover_image_url.includes("/image/upload/")) {
+      ogImageUrl = article.cover_image_url.replace(
+        "/image/upload/",
+        "/image/upload/c_fill,w_1200,h_630,q_auto:good,f_jpg/"
+      );
+    }
+  }
+
   const authorName = (article.profiles as any)?.full_name || "Voice of UPSA Editorial Team";
 
   return {
@@ -68,9 +79,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       siteName: "Voice of UPSA",
       images: [
         {
-          url: coverImage,
+          url: ogImageUrl,
+          secureUrl: ogImageUrl,
           width: 1200,
           height: 630,
+          type: "image/jpeg",
           alt: article.title,
         },
       ],
@@ -82,7 +95,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       card: "summary_large_image",
       title: article.title,
       description: article.excerpt || "Read the latest news on Voice of UPSA.",
-      images: [coverImage],
+      images: [ogImageUrl],
     },
   };
 }

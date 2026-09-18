@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.holiday_wishes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     holiday_key VARCHAR(50) NOT NULL UNIQUE,
     title VARCHAR(100) NOT NULL,
-    date_type VARCHAR(20) NOT NULL, -- 'fixed', 'relative', 'easter', 'islamic'
+    date_type VARCHAR(20) DEFAULT 'fixed', -- 'fixed', 'relative', 'easter', 'islamic'
     month INT,
     day INT,
     custom_date_override DATE,
@@ -19,6 +19,20 @@ CREATE TABLE IF NOT EXISTS public.holiday_wishes (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Ensure date_type has safe default and doesn't block inserts
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'holiday_wishes' 
+        AND column_name = 'date_type'
+    ) THEN
+        ALTER TABLE public.holiday_wishes ALTER COLUMN date_type DROP NOT NULL;
+        ALTER TABLE public.holiday_wishes ALTER COLUMN date_type SET DEFAULT 'fixed';
+    END IF;
+END $$;
 
 -- Enable RLS
 ALTER TABLE public.holiday_wishes ENABLE ROW LEVEL SECURITY;
