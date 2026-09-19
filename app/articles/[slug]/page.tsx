@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const { data: article } = await supabase
     .from("articles")
-    .select("title, excerpt, cover_image_url, published_at, updated_at, profiles:profiles!author_id(full_name), categories(name)")
+    .select("title, excerpt, cover_image_url, published_at, updated_at, author_name, profiles:profiles!author_id(full_name), categories(name)")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const siteUrl = getSiteUrl();
   const articleUrl = `${siteUrl}/articles/${slug}`;
   const ogImage = getOptimizedOgImage(article.cover_image_url, article.title, siteUrl);
-  const authorName = (article.profiles as any)?.full_name || "Voice of UPSA Editorial Team";
+  const authorName = (article as any).author_name || (article.profiles as any)?.full_name || "Voice of UPSA Editorial Team";
   const categoryName = (article.categories as any)?.name || "News";
   const description =
     article.excerpt?.trim() ||
@@ -111,10 +111,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Fetch the article details
+  // Fetch the article details with author and publisher profiles
   const { data: dbArticle } = await supabase
     .from("articles")
-    .select("*, profiles:profiles!author_id(full_name, avatar_url, bio, role), categories(id, name, slug)")
+    .select("*, profiles:profiles!author_id(full_name, avatar_url, bio, role), publisher:profiles!publisher_id(full_name), categories(id, name, slug)")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -151,6 +151,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     }
   }
 
+  const isGuestAuthor = Boolean(dbArticle.author_name);
+  const authorName = dbArticle.author_name || dbArticle.profiles?.full_name || "Editorial Staff";
+  const authorRole = dbArticle.author_title || (isGuestAuthor ? "Guest Contributor" : (dbArticle.profiles?.role || "Staff Writer"));
+  const authorBio = isGuestAuthor
+    ? "Guest contributor to Voice of UPSA."
+    : (dbArticle.profiles?.bio || "Voice of UPSA editorial team member.");
+  const authorAvatar = isGuestAuthor ? null : (dbArticle.profiles?.avatar_url || null);
+  const publisherName = (dbArticle as any).publisher?.full_name || null;
+
   const article = {
     title: dbArticle.title,
     category: dbArticle.categories?.name || "News",
@@ -162,11 +171,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     }) : "Recent",
     readTime: dbArticle.reading_time_minutes ? `${dbArticle.reading_time_minutes} min read` : "3 min read",
     author: {
-      name: dbArticle.profiles?.full_name || "Editorial Team",
-      role: dbArticle.profiles?.role || "Editor",
-      bio: dbArticle.profiles?.bio || "Voice of UPSA editorial team member.",
-      avatar: dbArticle.profiles?.avatar_url || null
+      name: authorName,
+      role: authorRole,
+      bio: authorBio,
+      avatar: authorAvatar,
+      isGuest: isGuestAuthor,
     },
+    publisherName,
     coverImage: dbArticle.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000",
     content: dbArticle.content,
   };
@@ -249,10 +260,23 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     size="md"
                     className="mr-3 border border-gray-200"
                   />
-                  <span className="font-bold text-upsa-navy">{article.author.name}</span>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-gray-400">By</span>
+                      <span className="font-bold text-upsa-navy">{article.author.name}</span>
+                    </div>
+                    {article.author.role && (
+                      <span className="text-[11px] text-gray-400 block">{article.author.role}</span>
+                    )}
+                  </div>
                 </div>
                 <span className="flex items-center"><Calendar className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.date}</span>
                 <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.readTime}</span>
+                {article.publisherName && article.publisherName !== article.author.name && (
+                  <span className="hidden sm:inline-flex items-center text-xs text-gray-400">
+                    Published by <span className="font-medium text-gray-600 ml-1">{article.publisherName}</span>
+                  </span>
+                )}
                 <div className="flex-1 hidden md:block" />
                 <ArticleActions slug={slug} title={article.title} />
               </div>
@@ -288,9 +312,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     className="shrink-0 border-4 border-white shadow-md"
                   />
                   <div className="text-center md:text-left">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">About the Author</span>
                     <h4 className="text-lg font-bold text-upsa-navy mb-1">{article.author.name}</h4>
                     <p className="text-xs uppercase tracking-widest text-upsa-gold font-bold mb-2">{article.author.role}</p>
                     <p className="text-sm text-gray-500 leading-relaxed">{article.author.bio}</p>
+                    {article.publisherName && article.publisherName !== article.author.name && (
+                      <p className="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-200/60">
+                        Reviewed &amp; published by <strong className="text-gray-600">{article.publisherName}</strong>
+                      </p>
+                    )}
                   </div>
                 </div>
 

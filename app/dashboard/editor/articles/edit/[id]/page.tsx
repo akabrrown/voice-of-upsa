@@ -20,10 +20,11 @@ import {
 import { 
   Card, 
   CardContent, 
+  CardDescription,
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Zap, Loader2, Undo2 } from "lucide-react";
+import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Zap, Loader2, Trash2, ArrowLeft, RotateCcw, Undo2, PenTool, UserCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { FormShadowLoader } from "@/components/ui/shadow-loaders";
@@ -49,6 +50,10 @@ interface ArticleData {
   meta_keywords: string | null;
   status: string | null;
   published_at?: string | null;
+  author_id?: string | null;
+  author_name?: string | null;
+  author_title?: string | null;
+  publisher_id?: string | null;
 }
 
 export default function EditArticlePage({ params }: EditArticleProps) {
@@ -58,6 +63,10 @@ export default function EditArticlePage({ params }: EditArticleProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [teamProfiles, setTeamProfiles] = useState<{ id: string; full_name: string; role: string }[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [isGuestAuthor, setIsGuestAuthor] = useState<boolean>(false);
+  const [publisherName, setPublisherName] = useState<string>("");
   const [userRole, setUserRole] = useState<string>("editor");
   const [originalArticle, setOriginalArticle] = useState<ArticleData | null>(null);
   const supabase = createClient();
@@ -70,6 +79,9 @@ export default function EditArticlePage({ params }: EditArticleProps) {
       excerpt: "",
       content: "",
       category_id: "",
+      author_id: null,
+      author_name: "",
+      author_title: "",
       is_featured: false,
       is_pinned: false,
       allow_comments: true,
@@ -100,10 +112,11 @@ export default function EditArticlePage({ params }: EditArticleProps) {
   }, [supabase]);
 
   useEffect(() => {
-    const fetchUserRole = async () => {
+    const fetchUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          setCurrentUserId(user.id);
           const { data } = await supabase
             .from("profiles")
             .select("role")
@@ -113,11 +126,22 @@ export default function EditArticlePage({ params }: EditArticleProps) {
             setUserRole(data.role);
           }
         }
+
+        // Fetch editorial team members for author dropdown
+        const { data: team } = await supabase
+          .from("profiles")
+          .select("id, full_name, role")
+          .in("role", ["admin", "editor"])
+          .order("full_name");
+
+        if (team) {
+          setTeamProfiles(team);
+        }
       } catch (err) {
-        console.error("Error fetching user role:", err);
+        console.error("Error fetching user data:", err);
       }
     };
-    fetchUserRole();
+    fetchUserData();
   }, [supabase]);
 
   useEffect(() => {
@@ -125,13 +149,19 @@ export default function EditArticlePage({ params }: EditArticleProps) {
       try {
         const { data, error } = await supabase
           .from("articles")
-          .select("*")
+          .select("*, publisher:profiles!publisher_id(full_name)")
           .eq("id", id)
           .single();
 
         if (error) throw error;
         if (data) {
           setOriginalArticle(data);
+          if (data.author_name) {
+            setIsGuestAuthor(true);
+          }
+          if (data.publisher?.full_name) {
+            setPublisherName(data.publisher.full_name);
+          }
           
           const savedDraft = localStorage.getItem(`vou_draft_edit_${id}`);
           if (savedDraft) {
@@ -140,6 +170,9 @@ export default function EditArticlePage({ params }: EditArticleProps) {
               Object.keys(parsed).forEach((key) => {
                 form.setValue(key as keyof ArticleFormValues, parsed[key], { shouldValidate: true });
               });
+              if (parsed.author_name) {
+                setIsGuestAuthor(true);
+              }
               toast.success("Loaded your auto-saved edits.");
             } catch (e) {
               console.error("Error loading draft edits:", e);
@@ -151,6 +184,9 @@ export default function EditArticlePage({ params }: EditArticleProps) {
               excerpt: data.excerpt || "",
               content: data.content || "",
               category_id: data.category_id || "",
+              author_id: data.author_id || null,
+              author_name: data.author_name || "",
+              author_title: data.author_title || "",
               is_featured: data.is_featured || false,
               is_pinned: data.is_pinned || false,
               allow_comments: data.allow_comments !== false,
@@ -242,12 +278,19 @@ export default function EditArticlePage({ params }: EditArticleProps) {
         return;
       }
 
+      const resolvedAuthorId = isGuestAuthor ? null : (data.author_id || originalArticle?.author_id || user.id);
+      const resolvedAuthorName = isGuestAuthor ? (data.author_name?.trim() || null) : null;
+      const resolvedAuthorTitle = isGuestAuthor ? (data.author_title?.trim() || null) : null;
+
       const updatePayload: Record<string, unknown> = {
         title: data.title,
         slug: data.slug,
         excerpt: data.excerpt,
         content: data.content,
         category_id: data.category_id || null,
+        author_id: resolvedAuthorId,
+        author_name: resolvedAuthorName,
+        author_title: resolvedAuthorTitle,
         status,
         meta_title: data.meta_title || null,
         meta_description: data.meta_description || null,
@@ -260,7 +303,8 @@ export default function EditArticlePage({ params }: EditArticleProps) {
       };
 
       if (status === "published") {
-        updatePayload.published_at = new Date().toISOString();
+        updatePayload.published_at = originalArticle?.published_at || new Date().toISOString();
+        updatePayload.publisher_id = user.id;
       }
 
       const { error } = await supabase
@@ -572,6 +616,101 @@ export default function EditArticlePage({ params }: EditArticleProps) {
 
         {/* Sidebar Settings Column */}
         <div className="space-y-6">
+          {/* Author Attribution Card */}
+          <Card className="border-upsa-navy/10 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xs uppercase tracking-widest font-bold text-gray-500 flex items-center gap-1.5">
+                  <PenTool className="h-3.5 w-3.5 text-upsa-gold" /> Written By
+                </CardTitle>
+                <span className="text-[10px] bg-upsa-navy/5 text-upsa-navy font-bold px-2 py-0.5 rounded-full">
+                  Author Credit
+                </span>
+              </div>
+              <CardDescription className="text-xs text-gray-500">
+                Credit the person who researched and wrote this piece.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_guest_author_edit"
+                  className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy cursor-pointer"
+                  checked={isGuestAuthor}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsGuestAuthor(checked);
+                    if (checked) {
+                      form.setValue("author_id", null);
+                    } else {
+                      form.setValue("author_id", originalArticle?.author_id || currentUserId || null);
+                      form.setValue("author_name", "");
+                      form.setValue("author_title", "");
+                    }
+                  }}
+                />
+                <Label htmlFor="is_guest_author_edit" className="cursor-pointer text-xs font-semibold text-gray-700">
+                  Guest / External Contributor
+                </Label>
+              </div>
+
+              {!isGuestAuthor ? (
+                <div className="space-y-2">
+                  <Label htmlFor="author_id_edit" className="text-xs text-gray-600">Staff Author</Label>
+                  <Select
+                    value={form.watch("author_id") || originalArticle?.author_id || currentUserId || undefined}
+                    onValueChange={(val) => form.setValue("author_id", val, { shouldValidate: true })}
+                  >
+                    <SelectTrigger id="author_id_edit" className="h-9 text-xs">
+                      <SelectValue placeholder="Choose staff author" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teamProfiles.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.full_name} ({member.role}) {member.id === currentUserId ? "— You" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="space-y-1">
+                    <Label htmlFor="author_name_edit" className="text-xs font-bold text-gray-700">Author Name *</Label>
+                    <Input
+                      id="author_name_edit"
+                      placeholder="e.g. Kofi Mensah"
+                      className="h-8 text-xs bg-white"
+                      {...form.register("author_name")}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="author_title_edit" className="text-xs text-gray-500">Author Title / Role</Label>
+                    <Input
+                      id="author_title_edit"
+                      placeholder="e.g. SRC PRO / Level 400 Student"
+                      className="h-8 text-xs bg-white"
+                      {...form.register("author_title")}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Publisher Attribution Badge */}
+              {originalArticle?.status === "published" && (
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <UserCheck className="h-3.5 w-3.5 text-emerald-600" /> Published by:
+                  </span>
+                  <span className="font-semibold text-upsa-navy">
+                    {publisherName || "Editorial Staff"}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm uppercase tracking-widest text-gray-400">Settings</CardTitle>

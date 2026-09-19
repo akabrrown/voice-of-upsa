@@ -14,6 +14,9 @@ export const articleSchema = z.object({
   meta_title: z.string().max(60, "Meta title must be under 60 characters.").optional().or(z.literal("")),
   meta_description: z.string().max(160, "Meta description must be under 160 characters.").optional().or(z.literal("")),
   meta_keywords: z.string().optional().or(z.literal("")),
+  author_id: z.string().uuid().optional().nullable(),
+  author_name: z.string().max(100, "Author name must be under 100 characters.").optional().or(z.literal("")),
+  author_title: z.string().max(100, "Author title must be under 100 characters.").optional().or(z.literal("")),
 });
 
 export type ArticleFormValues = z.infer<typeof articleSchema>;

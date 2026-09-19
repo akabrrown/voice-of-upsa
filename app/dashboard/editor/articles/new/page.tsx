@@ -24,7 +24,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Zap, Loader2, Trash2 } from "lucide-react";
+import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Zap, Loader2, Trash2, User, PenTool } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 
@@ -33,6 +33,9 @@ export default function NewArticlePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [teamProfiles, setTeamProfiles] = useState<{ id: string; full_name: string; role: string }[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [isGuestAuthor, setIsGuestAuthor] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string>("editor");
   const supabase = createClient();
 
@@ -44,6 +47,9 @@ export default function NewArticlePage() {
       excerpt: "",
       content: "",
       category_id: "",
+      author_id: null,
+      author_name: "",
+      author_title: "",
       is_featured: false,
       is_pinned: false,
       allow_comments: true,
@@ -73,12 +79,18 @@ export default function NewArticlePage() {
     fetchCategories();
   }, [supabase]);
 
-  // Fetch the user's role to determine publish workflow capabilities
+  // Fetch the user's role and ID to determine author and publish workflow capabilities
   useEffect(() => {
-    const fetchUserRole = async () => {
+    const fetchUserData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
+          setCurrentUserId(user.id);
+          // Default author_id to current user if not already set
+          if (!form.getValues("author_id") && !form.getValues("author_name")) {
+            form.setValue("author_id", user.id);
+          }
+
           const { data } = await supabase
             .from("profiles")
             .select("role")
@@ -88,12 +100,23 @@ export default function NewArticlePage() {
             setUserRole(data.role);
           }
         }
+
+        // Fetch editorial team members for author attribution
+        const { data: team } = await supabase
+          .from("profiles")
+          .select("id, full_name, role")
+          .in("role", ["admin", "editor"])
+          .order("full_name");
+
+        if (team) {
+          setTeamProfiles(team);
+        }
       } catch (err) {
-        console.error("Error fetching user role:", err);
+        console.error("Error fetching user data:", err);
       }
     };
-    fetchUserRole();
-  }, [supabase]);
+    fetchUserData();
+  }, [supabase, form]);
 
   // Load draft from localStorage on mount
   useEffect(() => {
@@ -178,13 +201,20 @@ export default function NewArticlePage() {
         return;
       }
 
+      const resolvedAuthorId = isGuestAuthor ? null : (data.author_id || user.id);
+      const resolvedAuthorName = isGuestAuthor ? (data.author_name?.trim() || null) : null;
+      const resolvedAuthorTitle = isGuestAuthor ? (data.author_title?.trim() || null) : null;
+
       const insertPayload: any = {
         title: data.title,
         slug: data.slug,
         excerpt: data.excerpt,
         content: data.content,
         category_id: data.category_id || null,
-        author_id: user.id,
+        author_id: resolvedAuthorId,
+        author_name: resolvedAuthorName,
+        author_title: resolvedAuthorTitle,
+        publisher_id: status === "published" ? user.id : null,
         status,
         meta_title: data.meta_title || null,
         meta_description: data.meta_description || null,
@@ -507,6 +537,89 @@ export default function NewArticlePage() {
 
         {/* Sidebar Settings Column */}
         <div className="space-y-6">
+          {/* Author Attribution Card */}
+          <Card className="border-upsa-navy/10 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xs uppercase tracking-widest font-bold text-gray-500 flex items-center gap-1.5">
+                  <PenTool className="h-3.5 w-3.5 text-upsa-gold" /> Written By
+                </CardTitle>
+                <span className="text-[10px] bg-upsa-navy/5 text-upsa-navy font-bold px-2 py-0.5 rounded-full">
+                  Author Credit
+                </span>
+              </div>
+              <CardDescription className="text-xs text-gray-500">
+                Credit the person who wrote this piece. You will be logged as the publisher.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="is_guest_author"
+                  className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy cursor-pointer"
+                  checked={isGuestAuthor}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsGuestAuthor(checked);
+                    if (checked) {
+                      form.setValue("author_id", null);
+                    } else {
+                      form.setValue("author_id", currentUserId || null);
+                      form.setValue("author_name", "");
+                      form.setValue("author_title", "");
+                    }
+                  }}
+                />
+                <Label htmlFor="is_guest_author" className="cursor-pointer text-xs font-semibold text-gray-700">
+                  Guest / External Contributor
+                </Label>
+              </div>
+
+              {!isGuestAuthor ? (
+                <div className="space-y-2">
+                  <Label htmlFor="author_id" className="text-xs text-gray-600">Staff Author</Label>
+                  <Select
+                    value={form.watch("author_id") || currentUserId || undefined}
+                    onValueChange={(val) => form.setValue("author_id", val, { shouldValidate: true })}
+                  >
+                    <SelectTrigger id="author_id" className="h-9 text-xs">
+                      <SelectValue placeholder="Choose staff author" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teamProfiles.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.full_name} ({member.role}) {member.id === currentUserId ? "— You" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="space-y-1">
+                    <Label htmlFor="author_name" className="text-xs font-bold text-gray-700">Author Name *</Label>
+                    <Input
+                      id="author_name"
+                      placeholder="e.g. Kofi Mensah"
+                      className="h-8 text-xs bg-white"
+                      {...form.register("author_name")}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="author_title" className="text-xs text-gray-500">Author Title / Role</Label>
+                    <Input
+                      id="author_title"
+                      placeholder="e.g. SRC PRO / Level 400 Student"
+                      className="h-8 text-xs bg-white"
+                      {...form.register("author_title")}
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-sm uppercase tracking-widest text-gray-400">Settings</CardTitle>

@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from("articles")
-    .select("*, author:profiles!author_id(full_name, avatar_url), category:categories(name, slug)", { count: "exact" })
+    .select("*, author:profiles!author_id(full_name, avatar_url), publisher:profiles!publisher_id(full_name), category:categories(name, slug)", { count: "exact" })
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .range(from, to);
@@ -68,9 +68,19 @@ export async function POST(request: Request) {
     delete body.published_at;
   }
 
+  const { author_id, author_name, author_title, ...articleFields } = body;
+  const resolvedAuthorId = author_id || (author_name ? null : user.id);
+  const insertPayload = {
+    ...articleFields,
+    author_id: resolvedAuthorId,
+    author_name: author_name || null,
+    author_title: author_title || null,
+    publisher_id: body.status === "published" ? user.id : null,
+  };
+
   const { data, error } = await supabase
     .from("articles")
-    .insert([{ ...body, author_id: user.id }])
+    .insert([insertPayload])
     .select()
     .single();
 

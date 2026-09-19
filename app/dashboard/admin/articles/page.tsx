@@ -32,6 +32,8 @@ interface ArticleItem {
   title: string;
   slug: string;
   author: string;
+  author_title?: string;
+  publisher: string;
   category: string;
   status: string;
   views: number;
@@ -53,7 +55,7 @@ export default function AdminArticlesPage() {
     try {
       const { data, error } = await supabase
         .from("articles")
-        .select("*, categories(name), profiles:profiles!author_id(full_name)")
+        .select("*, categories(name), author:profiles!author_id(full_name), publisher:profiles!publisher_id(full_name)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -63,7 +65,9 @@ export default function AdminArticlesPage() {
           id: art.id,
           title: art.title,
           slug: art.slug,
-          author: art.profiles?.full_name || "Unknown",
+          author: art.author_name ? art.author_name : (art.author?.full_name || "Unknown"),
+          author_title: art.author_title || (art.author_name ? "Guest Contributor" : undefined),
+          publisher: art.publisher?.full_name || (art.status === "published" ? "Staff" : "—"),
           category: art.categories?.name || "Uncategorized",
           status: art.status || "draft",
           views: art.view_count || 0,
@@ -112,9 +116,13 @@ export default function AdminArticlesPage() {
 
   const handleUpdateStatus = async (articleId: string, newStatus: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const updateData: any = { status: newStatus };
       if (newStatus === "published") {
         updateData.published_at = new Date().toISOString();
+        if (user) {
+          updateData.publisher_id = user.id;
+        }
       }
       
       const { error } = await supabase
@@ -229,8 +237,9 @@ export default function AdminArticlesPage() {
           <Table>
             <TableHeader className="bg-gray-50">
               <TableRow>
-                 <TableHead className="font-bold text-upsa-navy">Article Title</TableHead>
+                <TableHead className="font-bold text-upsa-navy">Article Title</TableHead>
                 <TableHead className="font-bold text-upsa-navy">Author</TableHead>
+                <TableHead className="font-bold text-upsa-navy">Publisher</TableHead>
                 <TableHead className="font-bold text-upsa-navy">Category</TableHead>
                 <TableHead className="font-bold text-upsa-navy">Views</TableHead>
                 <TableHead className="font-bold text-upsa-navy text-center">Featured</TableHead>
@@ -247,7 +256,19 @@ export default function AdminArticlesPage() {
                       {art.title}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-sm font-medium text-gray-600">{art.author}</TableCell>
+                  <TableCell className="text-sm font-medium text-gray-700">
+                    <div>
+                      <span>{art.author}</span>
+                      {art.author_title && (
+                        <span className="block text-[10px] text-gray-400 font-normal">{art.author_title}</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs font-semibold text-gray-500">
+                    <span className={cn(art.publisher !== "—" ? "text-upsa-navy" : "text-gray-400")}>
+                      {art.publisher}
+                    </span>
+                  </TableCell>
                   <TableCell className="text-sm text-gray-500">{art.category}</TableCell>
                   <TableCell className="text-sm font-bold text-gray-600">{art.views.toLocaleString()}</TableCell>
                   <TableCell>

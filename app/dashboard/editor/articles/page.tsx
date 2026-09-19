@@ -42,6 +42,8 @@ interface ArticleItem {
   id: string;
   title: string;
   slug: string;
+  author: string;
+  author_title?: string;
   category: string;
   status: string;
   views: number;
@@ -69,17 +71,19 @@ export default function EditorArticlesPage() {
 
       const { data, error } = await supabase
         .from("articles")
-        .select("*, categories(name)")
-        .eq("author_id", user.id)
+        .select("*, categories(name), author:profiles!author_id(full_name)")
+        .or(`author_id.eq.${user.id},publisher_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
       if (data) {
-        const mapped = data.map((art: RawArticle) => ({
+        const mapped = data.map((art: any) => ({
           id: art.id,
           title: art.title,
           slug: art.slug,
+          author: art.author_name ? art.author_name : (art.author?.full_name || "You"),
+          author_title: art.author_title || (art.author_name ? "Guest" : undefined),
           category: art.categories?.name || "Uncategorized",
           status: art.status || "draft",
           views: art.view_count || 0,
@@ -216,6 +220,7 @@ export default function EditorArticlesPage() {
             <TableHeader className="bg-gray-50">
               <TableRow>
                 <TableHead className="font-bold text-upsa-navy">Article Title</TableHead>
+                <TableHead className="font-bold text-upsa-navy">Author</TableHead>
                 <TableHead className="font-bold text-upsa-navy">Category</TableHead>
                 <TableHead className="font-bold text-upsa-navy">Views</TableHead>
                 <TableHead className="font-bold text-upsa-navy text-center">Featured</TableHead>
@@ -235,6 +240,14 @@ export default function EditorArticlesPage() {
                     ) : (
                       <span className="text-upsa-navy">{art.title}</span>
                     )}
+                  </TableCell>
+                  <TableCell className="text-sm font-medium text-gray-700">
+                    <div>
+                      <span>{art.author}</span>
+                      {art.author_title && (
+                        <span className="block text-[10px] text-gray-400 font-normal">{art.author_title}</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm text-gray-500">{art.category}</TableCell>
                   <TableCell className="text-sm font-bold text-gray-600">{art.views.toLocaleString()}</TableCell>
