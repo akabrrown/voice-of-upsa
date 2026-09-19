@@ -1,5 +1,19 @@
 -- Migration: Differentiate Article Author vs Publisher
 -- Timestamp: 20260918020000
+-- Target Project: Voice of UPSA (pilncldxyzijalbuvdlh)
+
+SET search_path = public, auth;
+
+-- 0. Safety Guard: Verify target database is the Voice of UPSA project
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_name = 'articles'
+    ) THEN
+        RAISE EXCEPTION 'Target database does not have "public.articles". Verify you are connected to the Voice of UPSA database (Project ID: pilncldxyzijalbuvdlh at https://supabase.com/dashboard/project/pilncldxyzijalbuvdlh/sql/new)';
+    END IF;
+END $$;
 
 -- 1. Add publisher_id, author_name, and author_title columns to public.articles
 ALTER TABLE public.articles
@@ -13,6 +27,7 @@ CREATE INDEX IF NOT EXISTS idx_articles_author_id ON public.articles(author_id);
 
 -- 3. Data backfill for existing published records (Preservation / Backward Compatibility)
 -- For existing published articles where publisher_id is null, default publisher_id to author_id
+-- (Captures the editor/staff member who originally uploaded and published the piece)
 UPDATE public.articles
 SET publisher_id = author_id
 WHERE status = 'published' AND publisher_id IS NULL;
