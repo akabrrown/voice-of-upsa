@@ -23,7 +23,26 @@ export async function GET(request: Request) {
     query = query.eq("category_id", category);
   }
 
-  const { data, count, error } = await query;
+  let { data, count, error } = await query;
+
+  // Fallback for pre-migration schema: fetch without publisher join
+  if (error && (error.code === "PGRST200" || error.message?.includes("publisher_id"))) {
+    let fallbackQuery = supabase
+      .from("articles")
+      .select("*, author:profiles!author_id(full_name, avatar_url), category:categories(name, slug)", { count: "exact" })
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .range(from, to);
+
+    if (category) {
+      fallbackQuery = fallbackQuery.eq("category_id", category);
+    }
+
+    const fallbackResult = await fallbackQuery;
+    data = fallbackResult.data;
+    count = fallbackResult.count;
+    error = fallbackResult.error;
+  }
 
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -61,7 +80,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  
+
   // Enforce workflow rules based on role
   if (profile.role === "editor") {
     body.status = (body.status === "draft" || body.status === "review") ? body.status : "review";
@@ -78,11 +97,22 @@ export async function POST(request: Request) {
     publisher_id: body.status === "published" ? user.id : null,
   };
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("articles")
     .insert([insertPayload])
     .select()
     .single();
+
+  // Gracefully retry with core fields if new columns are not yet present in the database
+  if (error && (error.message?.includes("publisher_id") || error.message?.includes("author_name") || error.message?.includes("author_title") || (error as any).code === "42703")) {
+    const fallbackPayload = { ...insertPayload };
+    delete (fallbackPayload as any).publisher_id;
+    delete (fallbackPayload as any).author_name;
+    delete (fallbackPayload as any).author_title;
+    const retry = await supabase.from("articles").insert([fallbackPayload]).select().single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });

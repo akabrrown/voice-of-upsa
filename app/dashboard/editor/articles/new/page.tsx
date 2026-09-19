@@ -230,9 +230,19 @@ export default function NewArticlePage() {
         insertPayload.published_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
+      let { error } = await supabase
         .from("articles")
         .insert(insertPayload);
+
+      // Gracefully retry with core fields if new columns are not yet present in the database
+      if (error && (error.message?.includes("publisher_id") || error.message?.includes("author_name") || error.message?.includes("author_title") || (error as any).code === "42703")) {
+        const fallbackPayload = { ...insertPayload };
+        delete (fallbackPayload as any).publisher_id;
+        delete (fallbackPayload as any).author_name;
+        delete (fallbackPayload as any).author_title;
+        const retry = await supabase.from("articles").insert(fallbackPayload);
+        error = retry.error;
+      }
 
       if (error) throw error;
 

@@ -40,9 +40,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const supabase = await createClient();
 
+  // Defensive query: wildcard select avoids failing if new columns are still propagating
   const { data: article } = await supabase
     .from("articles")
-    .select("title, excerpt, cover_image_url, published_at, updated_at, author_name, profiles:profiles!author_id(full_name), categories(name)")
+    .select("*, profiles:profiles!author_id(full_name), categories(name)")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -111,13 +112,28 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Fetch the article details with author and publisher profiles
-  const { data: dbArticle } = await supabase
+  // Fetch the article details with author and publisher profiles (with zero-downtime fallback)
+  let dbArticle: any = null;
+
+  const { data: withPublisher, error: publisherError } = await supabase
     .from("articles")
     .select("*, profiles:profiles!author_id(full_name, avatar_url, bio, role), publisher:profiles!publisher_id(full_name), categories(id, name, slug)")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
+
+  if (!publisherError && withPublisher) {
+    dbArticle = withPublisher;
+  } else {
+    // Graceful fallback: If publisher_id column/relation is not yet present in schema cache, query standard relation
+    const { data: standardArticle } = await supabase
+      .from("articles")
+      .select("*, profiles:profiles!author_id(full_name, avatar_url, bio, role), categories(id, name, slug)")
+      .eq("slug", slug)
+      .eq("status", "published")
+      .maybeSingle();
+    dbArticle = standardArticle;
+  }
 
   if (!dbArticle) {
     notFound();

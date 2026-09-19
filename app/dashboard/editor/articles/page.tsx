@@ -69,16 +69,29 @@ export default function EditorArticlesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      let articlesData = null;
+      let { data, error } = await supabase
         .from("articles")
         .select("*, categories(name), author:profiles!author_id(full_name)")
         .or(`author_id.eq.${user.id},publisher_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error && (error.message?.includes("publisher_id") || (error as any).code === "42703")) {
+        // Fallback for pre-migration schema: filter by author_id
+        const fallback = await supabase
+          .from("articles")
+          .select("*, categories(name), author:profiles!author_id(full_name)")
+          .eq("author_id", user.id)
+          .order("created_at", { ascending: false });
+        data = fallback.data;
+        error = fallback.error;
+      }
 
-      if (data) {
-        const mapped = data.map((art: any) => ({
+      if (error) throw error;
+      articlesData = data;
+
+      if (articlesData) {
+        const mapped = articlesData.map((art: any) => ({
           id: art.id,
           title: art.title,
           slug: art.slug,

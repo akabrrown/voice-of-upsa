@@ -53,15 +53,27 @@ export default function AdminArticlesPage() {
 
   const fetchArticles = async () => {
     try {
+      let articlesData = null;
       const { data, error } = await supabase
         .from("articles")
         .select("*, categories(name), author:profiles!author_id(full_name), publisher:profiles!publisher_id(full_name)")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (!error && data) {
+        articlesData = data;
+      } else {
+        // Fallback: If publisher_id is not in schema cache, fetch standard article relationships
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("articles")
+          .select("*, categories(name), author:profiles!author_id(full_name)")
+          .order("created_at", { ascending: false });
 
-      if (data) {
-        const mapped = data.map((art: any) => ({
+        if (fallbackError) throw fallbackError;
+        articlesData = fallbackData;
+      }
+
+      if (articlesData) {
+        const mapped = articlesData.map((art: any) => ({
           id: art.id,
           title: art.title,
           slug: art.slug,
@@ -125,10 +137,20 @@ export default function AdminArticlesPage() {
         }
       }
       
-      const { error } = await supabase
+      let { error } = await supabase
         .from("articles")
         .update(updateData)
         .eq("id", articleId);
+
+      // Gracefully retry without publisher_id if column hasn't migrated yet
+      if (error && error.message?.includes("publisher_id")) {
+        delete updateData.publisher_id;
+        const retry = await supabase
+          .from("articles")
+          .update(updateData)
+          .eq("id", articleId);
+        error = retry.error;
+      }
 
       if (error) throw error;
 

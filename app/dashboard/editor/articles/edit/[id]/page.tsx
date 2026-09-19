@@ -147,20 +147,33 @@ export default function EditArticlePage({ params }: EditArticleProps) {
   useEffect(() => {
     const fetchArticleDetails = async () => {
       try {
+        let articleData: any = null;
         const { data, error } = await supabase
           .from("articles")
           .select("*, publisher:profiles!publisher_id(full_name)")
           .eq("id", id)
           .single();
 
-        if (error) throw error;
-        if (data) {
-          setOriginalArticle(data);
-          if (data.author_name) {
+        if (!error && data) {
+          articleData = data;
+        } else {
+          // Graceful fallback if publisher_id relationship doesn't exist yet
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("articles")
+            .select("*")
+            .eq("id", id)
+            .single();
+          if (fallbackError) throw fallbackError;
+          articleData = fallbackData;
+        }
+
+        if (articleData) {
+          setOriginalArticle(articleData);
+          if (articleData.author_name) {
             setIsGuestAuthor(true);
           }
-          if (data.publisher?.full_name) {
-            setPublisherName(data.publisher.full_name);
+          if (articleData.publisher?.full_name) {
+            setPublisherName(articleData.publisher.full_name);
           }
           
           const savedDraft = localStorage.getItem(`vou_draft_edit_${id}`);
@@ -307,10 +320,20 @@ export default function EditArticlePage({ params }: EditArticleProps) {
         updatePayload.publisher_id = user.id;
       }
 
-      const { error } = await supabase
+      let { error } = await supabase
         .from("articles")
         .update(updatePayload)
         .eq("id", id);
+
+      // Gracefully retry with core fields if new columns are not yet present in the database
+      if (error && (error.message?.includes("publisher_id") || error.message?.includes("author_name") || error.message?.includes("author_title") || (error as any).code === "42703")) {
+        const fallbackPayload = { ...updatePayload };
+        delete (fallbackPayload as any).publisher_id;
+        delete (fallbackPayload as any).author_name;
+        delete (fallbackPayload as any).author_title;
+        const retry = await supabase.from("articles").update(fallbackPayload).eq("id", id);
+        error = retry.error;
+      }
 
       if (error) throw error;
 
