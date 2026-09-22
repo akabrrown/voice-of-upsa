@@ -33,6 +33,20 @@ export default function RegisterPage() {
     setIsLoading(true);
     
     try {
+      // Pre-flight check against 120,000+ disposable/temporary email provider database
+      const validationRes = await fetch("/api/auth/validate-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const validationData = await validationRes.json();
+      if (!validationRes.ok || validationData.isDisposable) {
+        toast.error(validationData.message || "Disposable and temporary email addresses are not permitted.");
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
