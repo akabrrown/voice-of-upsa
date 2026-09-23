@@ -27,6 +27,7 @@ export async function GET(request: Request) {
     const { data: profiles, error } = await adminSupabase
       .from("profiles")
       .select("id, full_name, role, avatar_url, created_at")
+      .in("role", ["admin", "editor"])
       .order("created_at", { ascending: false });
 
     if (error) throw error;
