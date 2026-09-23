@@ -18,7 +18,8 @@ import {
   Megaphone,
   FolderOpen,
   LogOut,
-  CalendarHeart
+  CalendarHeart,
+  Shield
 } from "lucide-react";
 
 const editorLinks = [
@@ -32,6 +33,7 @@ const adminLinks = [
   { name: "All Articles", href: "/dashboard/admin/articles", icon: FileText },
   { name: "Editorial Team", href: "/dashboard/admin/team", icon: Users },
   { name: "User Management", href: "/dashboard/admin/users", icon: UserCheck },
+  { name: "Role Management", href: "/dashboard/admin/roles", icon: Shield },
   { name: "Advertisements", href: "/dashboard/admin/ads", icon: Megaphone },
   { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
   { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
