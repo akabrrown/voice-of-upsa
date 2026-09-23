@@ -32,8 +32,8 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    // Fetch auth users to get emails
-    const { data: usersData, error: usersError } = await adminSupabase.auth.admin.listUsers();
+    // Fetch auth users to get emails (increase limit to avoid missing users)
+    const { data: usersData, error: usersError } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
     
     let mergedProfiles = profiles || [];
     if (!usersError && usersData?.users) {
