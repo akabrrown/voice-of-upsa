@@ -272,20 +272,18 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 <div className="flex items-center">
                   <UserAvatar
                     src={article.author.avatar}
-                    name={article.publisherName || article.author.name}
+                    name={article.author.name}
                     size="md"
                     className="mr-3 border border-gray-200"
                   />
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs text-gray-400">By</span>
-                      <span className="font-bold text-upsa-navy">{article.publisherName || article.author.name}</span>
+                      <span className="font-bold text-upsa-navy">{article.author.name}</span>
                     </div>
                     {article.author.role && (
                       <span className="text-[11px] text-gray-400 block">
-                        {article.publisherName && article.publisherName !== article.author.name 
-                          ? "Editor / Admin" 
-                          : article.author.role}
+                        {article.author.role}
                       </span>
                     )}
                   </div>
@@ -294,7 +292,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.readTime}</span>
                 {article.publisherName && article.publisherName !== article.author.name && (
                   <span className="hidden sm:inline-flex items-center text-xs text-gray-400">
-                    Originally written by <span className="font-medium text-gray-600 ml-1">{article.author.name}</span>
+                    Published by <span className="font-medium text-gray-600 ml-1">{article.publisherName}</span>
                   </span>
                 )}
                 <div className="flex-1 hidden md:block" />
@@ -326,23 +324,27 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 <div className="mt-12 p-6 md:p-8 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
                   <UserAvatar
                     src={article.author.avatar}
-                    name={article.publisherName || article.author.name}
+                    name={article.author.name}
                     size="2xl"
                     className="shrink-0 border-4 border-white shadow-md"
                   />
-                  <div className="text-center md:text-left">
+                  <div className="text-center md:text-left w-full">
                     <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                      {article.publisherName && article.publisherName !== article.author.name ? "Published By" : "About the Author"}
+                      About the Author
                     </span>
-                    <h4 className="text-lg font-bold text-upsa-navy mb-1">{article.publisherName || article.author.name}</h4>
+                    <h4 className="text-lg font-bold text-upsa-navy mb-1">{article.author.name}</h4>
                     <p className="text-xs uppercase tracking-widest text-upsa-gold font-bold mb-2">
-                      {article.publisherName && article.publisherName !== article.author.name ? "Editor / Admin" : article.author.role}
+                      {article.author.role}
                     </p>
                     <p className="text-sm text-gray-500 leading-relaxed">
-                      {article.publisherName && article.publisherName !== article.author.name 
-                        ? `Official publishing account for Voice of UPSA. This article was originally written and researched by ${article.author.name}.`
-                        : article.author.bio}
+                      {article.author.bio}
                     </p>
+                    
+                    {article.publisherName && article.publisherName !== article.author.name && (
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-center md:justify-start gap-2 text-[11px] text-gray-400">
+                        <span className="font-semibold text-gray-500">Published to Voice of UPSA by:</span> {article.publisherName}
+                      </div>
+                    )}
                   </div>
                 </div>
 
