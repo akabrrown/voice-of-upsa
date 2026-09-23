@@ -56,7 +56,7 @@ export async function FeaturedStories() {
     readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
     image: art.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000",
     slug: art.slug,
-    author: art.profiles?.full_name || "Editorial Team"
+    author: (art as any).author_name || art.profiles?.full_name || "Editorial Team"
   });
 
   const featuredList = articles.map(formatArticle);

@@ -20,9 +20,10 @@ interface ArticleListItem {
   slug: string;
   excerpt: string | null;
   cover_image_url: string | null;
-  reading_time_minutes: number | null;
   published_at: string | null;
   categories: { name: string } | null;
+  profiles?: { full_name: string } | null;
+  author_name?: string | null;
 }
 
 const categoryConfigs: Record<string, { name: string; description: string; banner_url: string }> = {
@@ -143,7 +144,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
     const { data, count } = await supabase
       .from("articles")
-      .select("*, categories(name)", { count: "exact" })
+      .select("*, categories(name), profiles:profiles!author_id(full_name)", { count: "exact" })
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .range(from, to);
@@ -154,7 +155,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
     const { data, count } = await supabase
       .from("articles")
-      .select("*, categories(name)", { count: "exact" })
+      .select("*, categories(name), profiles:profiles!author_id(full_name)", { count: "exact" })
       .eq("status", "published")
       .eq("is_featured", true)
       .order("published_at", { ascending: false })
@@ -186,7 +187,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
     const { data: articles, count } = await supabase
       .from("articles")
-      .select("*, categories(name)", { count: "exact" })
+      .select("*, categories(name), profiles:profiles!author_id(full_name)", { count: "exact" })
       .eq("category_id", dbCategory.id || '')
       .eq("status", "published")
       .order("published_at", { ascending: false })
@@ -220,6 +221,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
     image: art.cover_image_url || "/campus.png",
     slug: art.slug,
+    author: art.author_name || art.profiles?.full_name || "Editorial Team",
   }));
 
   return (

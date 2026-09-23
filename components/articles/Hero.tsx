@@ -48,7 +48,7 @@ export async function Hero() {
   }) : "Recent";
   
   const readTimeStr = article.reading_time_minutes ? `${article.reading_time_minutes} min read` : "3 min read";
-  const authorName = article.profiles?.full_name || "Editorial Team";
+  const authorName = article.author_name || article.profiles?.full_name || "Editorial Team";
   const imageUrl = article.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000";
 
   return (

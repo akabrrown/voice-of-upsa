@@ -5,7 +5,7 @@ export async function LatestArticles() {
   const supabase = await createClient();
   const { data: articles } = await supabase
     .from("articles")
-    .select("*, categories(name)")
+    .select("*, categories(name), profiles:profiles!author_id(full_name)")
     .eq("status", "published")
     .neq("is_featured", true)
     .order("published_at", { ascending: false })
@@ -23,6 +23,7 @@ export async function LatestArticles() {
     readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
     image: art.cover_image_url || "https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?q=80&w=800",
     slug: art.slug,
+    author: (art as any).author_name || art.profiles?.full_name || "Editorial Team",
   })) || [];
 
   return (

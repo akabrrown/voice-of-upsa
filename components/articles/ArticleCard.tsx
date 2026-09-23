@@ -23,9 +23,10 @@ interface ArticleCardProps {
   readTime: string;
   image: string;
   slug: string;
+  author?: string;
 }
 
-export function ArticleCard({ title, excerpt, category, date, readTime, image, slug }: ArticleCardProps) {
+export function ArticleCard({ title, excerpt, category, date, readTime, image, slug, author }: ArticleCardProps) {
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
@@ -111,9 +112,10 @@ export function ArticleCard({ title, excerpt, category, date, readTime, image, s
       </Link>
       
       <div className="p-5 flex-1 flex flex-col">
-        <div className="flex items-center space-x-4 text-[10px] uppercase tracking-widest text-gray-400 mb-3 font-bold">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] uppercase tracking-widest text-gray-400 mb-3 font-bold">
           <span className="flex items-center"><Calendar className="h-3 w-3 mr-1" /> {date}</span>
           <span className="flex items-center"><Clock className="h-3 w-3 mr-1" /> {readTime}</span>
+          {author && <span className="flex items-center normal-case">By {author}</span>}
         </div>
         
         <Link href={`/articles/${slug}`}>

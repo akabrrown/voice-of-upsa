@@ -38,7 +38,7 @@ export default function SearchPage() {
       try {
         let queryBuilder = supabase
           .from("articles")
-          .select("*, categories(name)", { count: "exact" })
+          .select("*, categories(name), profiles:profiles!author_id(full_name)", { count: "exact" })
           .eq("status", "published")
           .or(`title.ilike.%${query}%,excerpt.ilike.%${query}%,content.ilike.%${query}%`);
 
@@ -91,6 +91,7 @@ export default function SearchPage() {
             readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
             image: art.cover_image_url || "/campus.png",
             slug: art.slug,
+            author: (art as any).author_name || art.profiles?.full_name || "Editorial Team",
           }));
           setSearchResults(mapped);
         }
