@@ -1,426 +1,305 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { 
-  CalendarHeart, 
-  Church, 
-  Moon, 
-  Award, 
-  Send, 
-  Eye, 
-  Edit3, 
-  Check, 
-  AlertCircle, 
-  RefreshCw,
-  Save,
-  X
+  CalendarHeart, Loader2, Save, Send, AlertTriangle, PlayCircle
 } from "lucide-react";
-import { toast } from "react-hot-toast";
-import { ComputedHoliday, DBHolidayWish, HolidayThemeAccent } from "@/lib/holidays/types";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ComputedHoliday, HolidayThemeAccent } from "@/lib/holidays/types";
 import { HolidayGreetingModal } from "@/components/holidays/HolidayGreetingModal";
 
 export default function AdminHolidaysPage() {
-  const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [holidays, setHolidays] = useState<ComputedHoliday[]>([]);
-  const [dbRecords, setDbRecords] = useState<DBHolidayWish[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Edit Modal State
-  const [editingHoliday, setEditingHoliday] = useState<ComputedHoliday | null>(null);
-  const [editForm, setEditForm] = useState<{
-    custom_date_override: string;
-    headline: string;
-    body_message: string;
-    academic_status: string;
-    theme_accent: HolidayThemeAccent;
-    featured_article_slug: string;
-    send_push_notification: boolean;
-    broadcast_push_now: boolean;
-  }>({
-    custom_date_override: "",
-    headline: "",
-    body_message: "",
-    academic_status: "",
-    theme_accent: "gold",
-    featured_article_slug: "",
-    send_push_notification: true,
-    broadcast_push_now: false,
-  });
-  const [saving, setSaving] = useState(false);
-
-  // Live Preview Modal
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Selection & Edit State
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [editingHoliday, setEditingHoliday] = useState<Partial<ComputedHoliday> & { isActive?: boolean; customDateOverride?: string }>({});
+  const [isSaving, setIsSaving] = useState(false);
   const [previewHoliday, setPreviewHoliday] = useState<ComputedHoliday | null>(null);
 
-  const loadHolidays = async (year: number) => {
-    setLoading(true);
+  useEffect(() => {
+    fetchHolidays();
+  }, []);
+
+  const fetchHolidays = async () => {
+    setIsLoading(true);
     try {
-      const res = await fetch(`/api/admin/holidays?year=${year}`);
-      if (!res.ok) throw new Error("Failed to fetch holidays");
+      const res = await fetch("/api/admin/holidays");
       const data = await res.json();
       if (data.success) {
-        setHolidays(data.computedHolidays || []);
-        setDbRecords(data.dbRecords || []);
+        setHolidays(data.computedHolidays);
+        
+        // Match existing selected holiday with updated data
+        if (selectedKey) {
+          const updated = data.computedHolidays.find((h: ComputedHoliday) => h.key === selectedKey);
+          if (updated) handleSelectHoliday(updated, data.dbRecords);
+        }
+      } else {
+        toast.error("Failed to load holidays: " + data.error);
       }
-    } catch (err: any) {
-      console.error(err);
-      toast.error("Could not load holiday records.");
+    } catch (err) {
+      toast.error("An error occurred while fetching holidays.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadHolidays(selectedYear);
-  }, [selectedYear]);
+  const handleSelectHoliday = (holiday: ComputedHoliday, dbRecords?: any[]) => {
+    setSelectedKey(holiday.key);
+    
+    // Find if it has a db override for isActive
+    // Since computedHoliday doesn't have is_active, we should ideally fetch the db record or assume true if we just clicked edit
+    let isActive = false;
+    let customDateOverride = "";
+    
+    if (dbRecords) {
+      const dbRecord = dbRecords.find((r: any) => r.holiday_key === holiday.key);
+      if (dbRecord) {
+        isActive = dbRecord.is_active;
+        customDateOverride = dbRecord.custom_date_override || "";
+      }
+    }
 
-  const handleOpenEdit = (h: ComputedHoliday) => {
-    const dbItem = dbRecords.find((r) => r.holiday_key === h.key);
-    setEditingHoliday(h);
-    setEditForm({
-      custom_date_override: dbItem?.custom_date_override || "",
-      headline: h.headline,
-      body_message: h.bodyMessage,
-      academic_status: h.academicStatus,
-      theme_accent: h.themeAccent,
-      featured_article_slug: h.featuredArticleSlug || "",
-      send_push_notification: dbItem ? dbItem.send_push_notification : true,
-      broadcast_push_now: false,
+    setEditingHoliday({
+      ...holiday,
+      isActive,
+      customDateOverride
     });
   };
 
-  const handleSaveHoliday = async () => {
-    if (!editingHoliday) return;
-    setSaving(true);
+  const handleSave = async (e: React.FormEvent, broadcastPushNow = false) => {
+    e.preventDefault();
+    if (!selectedKey) return;
+
+    setIsSaving(true);
     try {
+      const payload = {
+        holiday_key: selectedKey,
+        title: editingHoliday.title,
+        custom_date_override: editingHoliday.customDateOverride || null,
+        headline: editingHoliday.headline,
+        body_message: editingHoliday.bodyMessage,
+        theme_accent: editingHoliday.themeAccent,
+        academic_status: editingHoliday.academicStatus,
+        is_active: editingHoliday.isActive,
+        broadcast_push_now: broadcastPushNow,
+      };
+
       const res = await fetch("/api/admin/holidays", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          holiday_key: editingHoliday.key,
-          title: editingHoliday.title,
-          ...editForm,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
       if (data.success) {
-        toast.success(
-          editForm.broadcast_push_now 
-            ? "Saved and broadcasted push notification!" 
-            : "Holiday wishes configuration updated!"
-        );
-        setEditingHoliday(null);
-        loadHolidays(selectedYear);
+        toast.success(broadcastPushNow ? "Holiday saved & push notification sent!" : "Holiday settings saved successfully!");
+        fetchHolidays();
       } else {
-        toast.error(data.error || "Failed to update holiday.");
+        toast.error("Failed to save: " + data.error);
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save holiday changes.");
+    } catch (err) {
+      toast.error("An error occurred while saving.");
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
 
-  const renderThemeIcon = (theme: HolidayThemeAccent) => {
-    switch (theme) {
-      case "ghana_flag":
-        return <span className="text-base">🇬🇭</span>;
-      case "crescent":
-        return <Moon className="h-4 w-4 text-emerald-600 fill-emerald-600" />;
-      case "laurel":
-        return <Award className="h-4 w-4 text-upsa-gold" />;
-      case "festive":
-        return <Church className="h-4 w-4 text-amber-500 fill-amber-500" />;
-      default:
-        return <CalendarHeart className="h-4 w-4 text-upsa-gold" />;
-    }
+  const handlePreview = () => {
+    if (!selectedKey) return;
+    setPreviewHoliday(editingHoliday as ComputedHoliday);
   };
+
+  if (isLoading && holidays.length === 0) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 p-4 sm:p-6 max-w-7xl mx-auto">
-      {/* Page Title & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-upsa-gold bg-upsa-gold/10 px-3 py-1 rounded-full mb-2">
-            <CalendarHeart className="h-3.5 w-3.5" />
-            <span>Ghana Statutory Holidays Engine</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-upsa-navy tracking-tight">
-            Holiday Wishes & Gazette CMS
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Automated calendar calculations for movable dates with Ministry of the Interior gazette overrides and OneSignal broadcast triggers.
-          </p>
-        </div>
-
-        {/* Year Selector */}
-        <div className="flex items-center space-x-2">
-          <label htmlFor="year-select" className="text-xs font-bold text-gray-500 uppercase">Year:</label>
-          <select
-            id="year-select"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-            className="px-4 py-2 border border-gray-300 rounded-xl bg-white text-sm font-bold text-upsa-navy focus:ring-2 focus:ring-upsa-gold focus:border-transparent outline-none"
-          >
-            <option value={currentYear - 1}>{currentYear - 1}</option>
-            <option value={currentYear}>{currentYear} (Active)</option>
-            <option value={currentYear + 1}>{currentYear + 1}</option>
-            <option value={currentYear + 2}>{currentYear + 2}</option>
-          </select>
-          <button
-            onClick={() => loadHolidays(selectedYear)}
-            aria-label="Refresh holidays"
-            className="p-2 border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
+          <h1 className="text-2xl font-bold tracking-tight text-upsa-navy">Holiday & Events Manager</h1>
+          <p className="text-sm text-gray-500 mt-1">Configure pop-ups, greetings, and push notifications for statutory public holidays.</p>
         </div>
       </div>
 
-      {/* Overview Notice */}
-      <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-4 sm:p-5 flex items-start space-x-3 text-xs sm:text-sm text-blue-900">
-        <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="font-bold text-blue-950">Statutory Rollover & Variable Dates Active</p>
-          <p className="text-blue-800 leading-relaxed">
-            Holidays falling on weekends are automatically rolled over to Monday in accordance with the Ghana Public Holidays Act (Act 601).
-            When the Ministry gazettes the physical moon sighting for <strong>Eid-ul-Fitr</strong> or <strong>Eid-ul-Adha</strong>, tap <em>Edit</em> to confirm the gazetted date.
-          </p>
-        </div>
-      </div>
-
-      {/* Holidays Grid */}
-      {loading ? (
-        <div className="py-20 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-upsa-navy border-t-transparent" />
-          <p className="text-sm text-gray-400 mt-2 font-medium">Computing statutory holiday calendar...</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {holidays.map((h) => {
-            const isOverridden = dbRecords.some((r) => r.holiday_key === h.key && r.custom_date_override);
-            const dateObj = new Date(h.observedDate + "T00:00:00Z");
-            const readableDate = dateObj.toLocaleDateString("en-GB", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              timeZone: "UTC",
-            });
-
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* Left Column: List of Holidays */}
+        <div className="md:col-span-4 space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
+          {holidays.map((holiday) => {
+            const isSelected = selectedKey === holiday.key;
             return (
-              <div 
-                key={h.key}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+              <Card 
+                key={holiday.key}
+                className={`cursor-pointer transition-all hover:shadow-md ${isSelected ? 'border-upsa-navy ring-1 ring-upsa-navy bg-upsa-navy/5' : 'hover:border-upsa-gold/50'}`}
+                onClick={() => handleSelectHoliday(holiday)}
               >
-                <div className="p-5 space-y-3">
-                  {/* Top Bar: Icon + Date */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="p-2 bg-gray-100 rounded-xl">
-                        {renderThemeIcon(h.themeAccent)}
-                      </div>
-                      <div>
-                        <h3 className="font-extrabold text-sm text-upsa-navy leading-tight">
-                          {h.title}
-                        </h3>
-                        <span className="text-[11px] text-gray-500 font-medium">
-                          {readableDate}
-                        </span>
-                      </div>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-upsa-navy mb-1">{holiday.title}</h4>
+                      <p className="text-xs text-gray-500 font-medium">Observed: {new Date(holiday.observedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                     </div>
-
-                    {isOverridden ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                        Gazetted
-                      </span>
-                    ) : h.isRollover ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                        Rollover
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600">
-                        Auto
-                      </span>
+                    {holiday.isRollover && (
+                      <span className="bg-amber-100 text-amber-700 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Rollover</span>
                     )}
                   </div>
-
-                  {/* Headline & Body Message */}
-                  <div className="space-y-1 pt-1">
-                    <p className="text-xs font-bold text-gray-900 leading-snug">
-                      &ldquo;{h.headline}&rdquo;
-                    </p>
-                    <p className="text-[11px] text-gray-500 line-clamp-3 leading-relaxed">
-                      {h.bodyMessage}
-                    </p>
-                  </div>
-
-                  {/* Campus Status */}
-                  <div className="pt-2 border-t border-gray-100 text-[11px] text-gray-600 flex items-center space-x-1.5">
-                    <span className="font-semibold text-upsa-navy">Notice:</span>
-                    <span className="truncate">{h.academicStatus}</span>
-                  </div>
-                </div>
-
-                {/* Card Actions */}
-                <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => setPreviewHoliday(h)}
-                    className="flex-1 py-1.5 px-3 bg-white border border-gray-200 hover:border-upsa-gold rounded-lg text-xs font-bold text-upsa-navy flex items-center justify-center space-x-1.5 transition-colors shadow-2xs"
-                  >
-                    <Eye className="h-3.5 w-3.5 text-upsa-gold" />
-                    <span>Preview Card</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleOpenEdit(h)}
-                    className="py-1.5 px-3 bg-upsa-navy hover:bg-upsa-dark-navy rounded-lg text-xs font-bold text-white flex items-center justify-center space-x-1.5 transition-colors shadow-2xs"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                    <span>Edit</span>
-                  </button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
-      )}
 
-      {/* Edit Holiday Modal */}
-      {editingHoliday && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl border border-gray-200 overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-5 sm:p-6 bg-upsa-navy text-white flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-upsa-gold">Configure Statutory Holiday</span>
-                <h2 className="text-xl font-black">{editingHoliday.title}</h2>
-              </div>
-              <button
-                onClick={() => setEditingHoliday(null)}
-                className="p-1.5 text-gray-300 hover:text-white rounded-full hover:bg-white/10"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+        {/* Right Column: Editor */}
+        <div className="md:col-span-8">
+          {!selectedKey ? (
+            <Card className="h-full flex flex-col items-center justify-center p-12 border-dashed bg-gray-50/50">
+              <CalendarHeart className="h-16 w-16 text-gray-300 mb-4" />
+              <h3 className="text-xl font-bold text-gray-400 mb-2">Select a Holiday</h3>
+              <p className="text-sm text-gray-400 text-center max-w-md">
+                Choose a statutory holiday from the list to customize the greeting message, academic status, and activate the modal pop-up for visitors.
+              </p>
+            </Card>
+          ) : (
+            <Card className="shadow-lg border-upsa-gold/20">
+              <CardHeader className="bg-gray-50/50 border-b border-gray-100">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl text-upsa-navy">{editingHoliday.title}</CardTitle>
+                    <CardDescription className="mt-1">
+                      Customize the appearance and messaging for this holiday.
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handlePreview} className="text-upsa-navy font-bold">
+                    <PlayCircle className="h-4 w-4 mr-2 text-upsa-gold" /> Preview Modal
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form id="holiday-form" onSubmit={(e) => handleSave(e, false)} className="space-y-6">
+                  
+                  {/* Status Toggle */}
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-sm text-gray-900">Activate Pop-up Modal</h4>
+                      <p className="text-xs text-gray-500 mt-1">When active, this greeting will display to all visitors on the site.</p>
+                    </div>
+                    <Switch 
+                      checked={editingHoliday.isActive || false}
+                      onCheckedChange={(val) => setEditingHoliday({...editingHoliday, isActive: val})}
+                    />
+                  </div>
 
-            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs sm:text-sm">
-              {/* Date Override Field */}
-              <div>
-                <label className="block font-bold text-gray-800 mb-1">
-                  Custom Gazette Date Override (Optional)
-                </label>
-                <p className="text-[11px] text-gray-500 mb-2">
-                  Leave blank to use the statutory engine calculation ({editingHoliday.actualDate}). Set an explicit date when the Ministry announces physical moon sightings or presidential declarations.
-                </p>
-                <input
-                  type="date"
-                  value={editForm.custom_date_override}
-                  onChange={(e) => setEditForm({ ...editForm, custom_date_override: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-upsa-gold"
-                />
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Headline / Main Greeting</Label>
+                      <Input 
+                        value={editingHoliday.headline || ""}
+                        onChange={(e) => setEditingHoliday({...editingHoliday, headline: e.target.value})}
+                        placeholder="e.g. Merry Christmas from Voice of UPSA!"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Theme Accent</Label>
+                      <Select 
+                        value={editingHoliday.themeAccent}
+                        onValueChange={(val: HolidayThemeAccent) => setEditingHoliday({...editingHoliday, themeAccent: val})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gold">Classic Gold</SelectItem>
+                          <SelectItem value="ghana_flag">Ghana Flag (National)</SelectItem>
+                          <SelectItem value="crescent">Crescent Moon (Islamic)</SelectItem>
+                          <SelectItem value="festive">Festive (Christmas)</SelectItem>
+                          <SelectItem value="laurel">Laurel (Achievement)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-              {/* Theme Accent */}
-              <div>
-                <label className="block font-bold text-gray-800 mb-1">Theme Accent</label>
-                <select
-                  value={editForm.theme_accent}
-                  onChange={(e) => setEditForm({ ...editForm, theme_accent: e.target.value as HolidayThemeAccent })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-upsa-gold"
-                >
-                  <option value="gold">UPSA Gold (Christian / General)</option>
-                  <option value="ghana_flag">Ghana National Flag (Independence / Republic / Founder)</option>
-                  <option value="crescent">Islamic Crescent & Star (Eid-ul-Fitr / Eid-ul-Adha)</option>
-                  <option value="laurel">Agricultural Sheaf (Farmers’ Day)</option>
-                  <option value="festive">Festive Celebration (New Year / Christmas)</option>
-                </select>
-              </div>
+                  <div className="space-y-2">
+                    <Label>Greeting Body Message</Label>
+                    <Textarea 
+                      value={editingHoliday.bodyMessage || ""}
+                      onChange={(e) => setEditingHoliday({...editingHoliday, bodyMessage: e.target.value})}
+                      placeholder="Write your well wishes here..."
+                      className="min-h-[100px]"
+                      required
+                    />
+                  </div>
 
-              {/* Headline */}
-              <div>
-                <label className="block font-bold text-gray-800 mb-1">Celebration Headline</label>
-                <input
-                  type="text"
-                  value={editForm.headline}
-                  onChange={(e) => setEditForm({ ...editForm, headline: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-upsa-gold"
-                  placeholder="e.g. Happy Independence Day, Ghana!"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <Label>Official Campus Notice (Academic Status)</Label>
+                    <Input 
+                      value={editingHoliday.academicStatus || ""}
+                      onChange={(e) => setEditingHoliday({...editingHoliday, academicStatus: e.target.value})}
+                      placeholder="e.g. Statutory public holiday — Lectures suspended."
+                      required
+                    />
+                  </div>
 
-              {/* Body Greeting Message */}
-              <div>
-                <label className="block font-bold text-gray-800 mb-1">Official Greeting Message</label>
-                <textarea
-                  rows={3}
-                  value={editForm.body_message}
-                  onChange={(e) => setEditForm({ ...editForm, body_message: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-upsa-gold resize-none"
-                  placeholder="Official message to students, faculty, and readers..."
-                />
-              </div>
+                  <div className="space-y-2 pt-4 border-t border-gray-100">
+                    <Label className="flex items-center text-amber-600">
+                      <AlertTriangle className="h-4 w-4 mr-1" /> Custom Date Override (Optional)
+                    </Label>
+                    <p className="text-xs text-gray-500 mb-2">Only use this if the government gazettes a different observation date. Format: YYYY-MM-DD</p>
+                    <Input 
+                      type="date"
+                      value={editingHoliday.customDateOverride || ""}
+                      onChange={(e) => setEditingHoliday({...editingHoliday, customDateOverride: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="pt-6 flex items-center justify-between gap-4 border-t border-gray-100">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      className="border-upsa-navy text-upsa-navy hover:bg-upsa-navy/5"
+                      onClick={(e) => handleSave(e, true)}
+                      disabled={isSaving || !editingHoliday.isActive}
+                      title={!editingHoliday.isActive ? "Activate the holiday first to send a push notification" : ""}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Save & Broadcast Push Notification
+                    </Button>
 
-              {/* Academic & Campus Status */}
-              <div>
-                <label className="block font-bold text-gray-800 mb-1">Campus Academic Notice</label>
-                <input
-                  type="text"
-                  value={editForm.academic_status}
-                  onChange={(e) => setEditForm({ ...editForm, academic_status: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-upsa-gold"
-                  placeholder="e.g. University offices, faculties, and lecture halls closed."
-                />
-              </div>
+                    <Button 
+                      type="submit" 
+                      className="bg-upsa-navy hover:bg-upsa-navy/90"
+                      disabled={isSaving}
+                    >
+                      {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      Save Configuration
+                    </Button>
+                  </div>
 
-              {/* OneSignal Push Trigger */}
-              <div className="pt-2 border-t border-gray-100 space-y-3">
-                <label className="flex items-center space-x-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={editForm.broadcast_push_now}
-                    onChange={(e) => setEditForm({ ...editForm, broadcast_push_now: e.target.checked })}
-                    className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-gold"
-                  />
-                  <span className="font-bold text-gray-900 text-xs sm:text-sm flex items-center space-x-1">
-                    <Send className="h-3.5 w-3.5 text-upsa-gold" />
-                    <span>Broadcast Web Push Notification immediately</span>
-                  </span>
-                </label>
-                {editForm.broadcast_push_now && (
-                  <p className="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                    ⚠️ This will dispatch a live push notification to all OneSignal subscribers now.
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Footer Buttons */}
-            <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end space-x-3">
-              <button
-                onClick={() => setEditingHoliday(null)}
-                className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveHoliday}
-                disabled={saving}
-                className="px-5 py-2 bg-upsa-navy hover:bg-upsa-dark-navy text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-sm disabled:opacity-50"
-              >
-                <Save className="h-3.5 w-3.5" />
-                <span>{saving ? "Saving..." : "Save Configuration"}</span>
-              </button>
-            </div>
-          </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Live Preview Modal */}
       {previewHoliday && (
-        <HolidayGreetingModal
-          forcePreviewHoliday={previewHoliday}
-          onClosePreview={() => setPreviewHoliday(null)}
+        <HolidayGreetingModal 
+          forcePreviewHoliday={previewHoliday} 
+          onClosePreview={() => setPreviewHoliday(null)} 
         />
       )}
     </div>
