@@ -86,11 +86,6 @@ export function getOptimizedOgImage(
   }
 
   if (finalUrl.includes("supabase.co/storage/v1/object/public/")) {
-    const renderUrl = finalUrl.replace(
-      "/storage/v1/object/public/",
-      "/storage/v1/render/image/public/"
-    );
-    finalUrl = `${renderUrl}?width=1200&height=630&resize=contain&quality=80`;
     return {
       url: finalUrl,
       secureUrl: finalUrl,
