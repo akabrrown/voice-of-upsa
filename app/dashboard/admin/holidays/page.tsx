@@ -24,6 +24,7 @@ export default function AdminHolidaysPage() {
   const [editingHoliday, setEditingHoliday] = useState<Partial<ComputedHoliday> & { isActive?: boolean; customDateOverride?: string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [previewHoliday, setPreviewHoliday] = useState<ComputedHoliday | null>(null);
+  const [broadcastPushNow, setBroadcastPushNow] = useState(false);
 
   useEffect(() => {
     fetchHolidays();
@@ -73,9 +74,10 @@ export default function AdminHolidaysPage() {
       isActive,
       customDateOverride
     });
+    setBroadcastPushNow(false);
   };
 
-  const handleSave = async (e: React.FormEvent, broadcastPushNow = false) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedKey) return;
 
@@ -188,7 +190,7 @@ export default function AdminHolidaysPage() {
                 </div>
               </CardHeader>
               <CardContent className="p-6">
-                <form id="holiday-form" onSubmit={(e) => handleSave(e, false)} className="space-y-6">
+                <form id="holiday-form" onSubmit={handleSave} className="space-y-6">
                   
                   {/* Status Toggle */}
                   <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
@@ -265,20 +267,20 @@ export default function AdminHolidaysPage() {
                       onChange={(e) => setEditingHoliday({...editingHoliday, customDateOverride: e.target.value})}
                     />
                   </div>
-                  
-                  <div className="pt-6 flex items-center justify-between gap-4 border-t border-gray-100">
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      className="border-upsa-navy text-upsa-navy hover:bg-upsa-navy/5"
-                      onClick={(e) => handleSave(e, true)}
-                      disabled={isSaving || !editingHoliday.isActive}
-                      title={!editingHoliday.isActive ? "Activate the holiday first to send a push notification" : ""}
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Save & Broadcast Push Notification
-                    </Button>
 
+                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-sm text-gray-900">Broadcast Web Push Notification immediately</h4>
+                      <p className="text-xs text-gray-500 mt-1">Send a push notification to all subscribers right now when you save.</p>
+                    </div>
+                    <Switch 
+                      checked={broadcastPushNow}
+                      onCheckedChange={setBroadcastPushNow}
+                      disabled={!editingHoliday.isActive}
+                    />
+                  </div>
+                  
+                  <div className="pt-6 flex justify-end border-t border-gray-100">
                     <Button 
                       type="submit" 
                       className="bg-upsa-navy hover:bg-upsa-navy/90"

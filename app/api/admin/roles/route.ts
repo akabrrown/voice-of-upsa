@@ -22,14 +22,30 @@ export async function GET(request: Request) {
     }
 
     const adminSupabase = getAdminClient();
+    
+    // Fetch profiles without the email column
     const { data: profiles, error } = await adminSupabase
       .from("profiles")
-      .select("id, full_name, role, email, avatar_url, created_at")
+      .select("id, full_name, role, avatar_url, created_at")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: profiles });
+    // Fetch auth users to get emails
+    const { data: usersData, error: usersError } = await adminSupabase.auth.admin.listUsers();
+    
+    let mergedProfiles = profiles || [];
+    if (!usersError && usersData?.users) {
+      mergedProfiles = profiles.map(profile => {
+        const authUser = usersData.users.find(u => u.id === profile.id);
+        return {
+          ...profile,
+          email: authUser?.email || "No email"
+        };
+      });
+    }
+
+    return NextResponse.json({ success: true, data: mergedProfiles });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
