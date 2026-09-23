@@ -24,6 +24,7 @@ interface ArticleListItem {
   categories: { name: string } | null;
   profiles?: { full_name: string } | null;
   author_name?: string | null;
+  reading_time_minutes?: number | null;
 }
 
 const categoryConfigs: Record<string, { name: string; description: string; banner_url: string }> = {
