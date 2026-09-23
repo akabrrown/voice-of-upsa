@@ -7,10 +7,14 @@ import { UpcomingHolidayWidget } from "@/components/holidays/UpcomingHolidayWidg
 
 export async function TrendingSidebar() {
   const supabase = await createClient();
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
   const { data: trendingArticles } = await supabase
     .from("articles")
     .select("*, categories(name)")
     .eq("status", "published")
+    .gte("created_at", oneWeekAgo.toISOString())
     .order("view_count", { ascending: false })
     .limit(5);
 

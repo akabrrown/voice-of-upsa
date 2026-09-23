@@ -568,7 +568,7 @@ export default function EditArticlePage({ params }: EditArticleProps) {
             type="button"
             className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold"
             onClick={form.handleSubmit(
-              (data) => submitArticle(data, userRole === "admin" ? "published" : "review"),
+              (data) => submitArticle(data, "published"),
               (errors) => handleFormErrors(errors)
             )}
             disabled={isSaving}

@@ -256,7 +256,7 @@ export default function NewArticlePage() {
       } else if (status === "published") {
         toast.success("Article published successfully!");
         // Dispatch push notification to OneSignal subscribers in background
-        fetch("/api/notifications/push", {
+        await fetch("/api/notifications/push", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -472,7 +472,7 @@ export default function NewArticlePage() {
             type="button"
             className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold"
             onClick={form.handleSubmit(
-              (data) => submitArticle(data, userRole === "admin" ? "published" : "review"),
+              (data) => submitArticle(data, "published"),
               (errors) => handleFormErrors(errors)
             )}
             disabled={isLoading}

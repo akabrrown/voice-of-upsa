@@ -81,12 +81,6 @@ export async function POST(request: Request) {
 
   const body = await request.json();
 
-  // Enforce workflow rules based on role
-  if (profile.role === "editor") {
-    body.status = (body.status === "draft" || body.status === "review") ? body.status : "review";
-    delete body.published_at;
-  }
-
   const { author_id, author_name, author_title, ...articleFields } = body;
   const resolvedAuthorId = author_id || (author_name ? null : user.id);
   const insertPayload = {
