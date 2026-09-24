@@ -303,13 +303,11 @@ export default function EditorArticlesPage() {
                         <DropdownMenuLabel>Article Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         
-                        {art.status !== "published" && (
-                          <DropdownMenuItem asChild className="cursor-pointer">
-                            <Link href={`/dashboard/editor/articles/edit/${art.id}`}>
-                              <FileEdit className="mr-2 h-4 w-4 text-emerald-500" /> Edit Article
-                            </Link>
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                          <Link href={`/dashboard/editor/articles/edit/${art.id}`}>
+                            <FileEdit className="mr-2 h-4 w-4 text-emerald-500" /> Edit Article
+                          </Link>
+                        </DropdownMenuItem>
                         
                         {art.status === "published" && (
                           <DropdownMenuItem asChild className="cursor-pointer">
