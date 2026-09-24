@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpen, GraduationCap, Calendar, Newspaper, MessageSquare, Trophy, Vote, Star, Home as HomeIcon, Layers, Megaphone, Info, PhoneCall, Bell } from "lucide-react";
+import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpen, GraduationCap, Calendar, Newspaper, MessageSquare, Trophy, Vote, Star, Home as HomeIcon, Layers, Megaphone, Info, PhoneCall, Bell, Store } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 
 interface AuthenticatedUser extends User {
@@ -147,9 +147,11 @@ export function Navbar() {
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
-                  <Link href="/" className="flex items-center gap-1.5">
-                    <HomeIcon className="h-4 w-4" />
-                    Home
+                  <Link href="/">
+                    <div className="flex items-center gap-1.5">
+                      <HomeIcon className="h-4 w-4" />
+                      Home
+                    </div>
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -168,27 +170,44 @@ export function Navbar() {
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
-                  <Link href="/advertise" className="flex items-center gap-1.5">
-                    <Megaphone className="h-4 w-4" />
-                    Advertise
+                  <Link href="/mart">
+                    <div className="flex items-center gap-1.5">
+                      <Store className="h-4 w-4" />
+                      Campus Mart
+                    </div>
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
-                  <Link href="/about" className="flex items-center gap-1.5">
-                    <Info className="h-4 w-4" />
-                    About
+                  <Link href="/advertise">
+                    <div className="flex items-center gap-1.5">
+                      <Megaphone className="h-4 w-4" />
+                      Advertise
+                    </div>
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
-                  <Link href="/contact" className="flex items-center gap-1.5">
-                    <PhoneCall className="h-4 w-4" />
-                    Contact
+                  <Link href="/about">
+                    <div className="flex items-center gap-1.5">
+                      <Info className="h-4 w-4" />
+                      About
+                    </div>
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
+                  <Link href="/contact">
+                    <div className="flex items-center gap-1.5">
+                      <PhoneCall className="h-4 w-4" />
+                      Contact
+                    </div>
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -318,6 +337,14 @@ export function Navbar() {
               </div>
             </div>
 
+            <Link 
+              href="/mart" 
+              className="flex items-center gap-2 text-white hover:text-upsa-gold py-2 font-bold transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Store className="h-5 w-5" />
+              Campus Mart
+            </Link>
             <Link 
               href="/advertise" 
               className="flex items-center gap-2 text-white hover:text-upsa-gold py-2 font-bold transition-colors"

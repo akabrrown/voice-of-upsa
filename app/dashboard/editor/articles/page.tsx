@@ -303,11 +303,13 @@ export default function EditorArticlesPage() {
                         <DropdownMenuLabel>Article Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         
-                        <DropdownMenuItem asChild className="cursor-pointer">
-                          <Link href={`/dashboard/editor/articles/edit/${art.id}`}>
-                            <FileEdit className="mr-2 h-4 w-4 text-emerald-500" /> Edit Article
-                          </Link>
-                        </DropdownMenuItem>
+                        {art.status !== "published" && (
+                          <DropdownMenuItem asChild className="cursor-pointer">
+                            <Link href={`/dashboard/editor/articles/edit/${art.id}`}>
+                              <FileEdit className="mr-2 h-4 w-4 text-emerald-500" /> Edit Article
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
                         
                         {art.status === "published" && (
                           <DropdownMenuItem asChild className="cursor-pointer">
@@ -323,6 +325,15 @@ export default function EditorArticlesPage() {
                             onClick={() => handleUpdateStatus(art.id, "review")}
                           >
                             <AlertCircle className="mr-2 h-4 w-4 text-amber-500" /> Submit for Review
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {art.status === "published" && (
+                          <DropdownMenuItem 
+                            className="cursor-pointer text-amber-600 focus:text-amber-600 focus:bg-amber-50"
+                            onClick={() => handleUpdateStatus(art.id, "draft")}
+                          >
+                            <RotateCcw className="mr-2 h-4 w-4" /> Revert to Draft
                           </DropdownMenuItem>
                         )}
 
