@@ -168,16 +168,18 @@ export function Navbar() {
                 </button>
               </NavigationMenuItem>
 
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
-                  <Link href="/mart">
-                    <div className="flex items-center gap-1.5">
-                      <Store className="h-4 w-4" />
-                      Campus Mart
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+              {process.env.NODE_ENV !== "production" && (
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
+                    <Link href="/mart">
+                      <div className="flex items-center gap-1.5">
+                        <Store className="h-4 w-4" />
+                        Campus Mart
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              )}
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
@@ -337,14 +339,16 @@ export function Navbar() {
               </div>
             </div>
 
-            <Link 
-              href="/mart" 
-              className="flex items-center gap-2 text-white hover:text-upsa-gold py-2 font-bold transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Store className="h-5 w-5" />
-              Campus Mart
-            </Link>
+            {process.env.NODE_ENV !== "production" && (
+              <Link 
+                href="/mart" 
+                className="flex items-center gap-2 text-white hover:text-upsa-gold py-2 font-bold transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Store className="h-5 w-5" />
+                Campus Mart
+              </Link>
+            )}
             <Link 
               href="/advertise" 
               className="flex items-center gap-2 text-white hover:text-upsa-gold py-2 font-bold transition-colors"

@@ -38,7 +38,7 @@ const adminLinks = [
   { name: "Advertisements", href: "/dashboard/admin/ads", icon: Megaphone },
   { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
   { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
-  { name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store },
+  ...(process.env.NODE_ENV !== "production" ? [{ name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store }] : []),
   { name: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
   { name: "Site Settings", href: "/dashboard/admin/settings", icon: Settings },
 ];
