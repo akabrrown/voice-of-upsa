@@ -20,7 +20,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Trash2, AlertCircle, Plus, Calendar, FileEdit, Star } from "lucide-react";
+import { MoreHorizontal, Eye, Trash2, AlertCircle, Plus, Calendar, FileEdit, Star, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "react-hot-toast";
