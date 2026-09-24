@@ -192,22 +192,22 @@ export default function EditArticlePage({ params }: EditArticleProps) {
             }
           } else {
             form.reset({
-              title: data.title || "",
-              slug: data.slug || "",
-              excerpt: data.excerpt || "",
-              content: data.content || "",
-              category_id: data.category_id || "",
-              author_id: data.author_id || null,
-              author_name: data.author_name || "",
-              author_title: data.author_title || "",
-              is_featured: data.is_featured || false,
-              is_pinned: data.is_pinned || false,
-              allow_comments: data.allow_comments !== false,
-              cover_image_url: data.cover_image_url || "",
-              cover_image_alt: data.cover_image_alt || "",
-              meta_title: data.meta_title || "",
-              meta_description: data.meta_description || "",
-              meta_keywords: data.meta_keywords || "",
+              title: articleData.title || "",
+              slug: articleData.slug || "",
+              excerpt: articleData.excerpt || "",
+              content: articleData.content || "",
+              category_id: articleData.category_id || "",
+              author_id: articleData.author_id || null,
+              author_name: articleData.author_name || "",
+              author_title: articleData.author_title || "",
+              is_featured: articleData.is_featured || false,
+              is_pinned: articleData.is_pinned || false,
+              allow_comments: articleData.allow_comments !== false,
+              cover_image_url: articleData.cover_image_url || "",
+              cover_image_alt: articleData.cover_image_alt || "",
+              meta_title: articleData.meta_title || "",
+              meta_description: articleData.meta_description || "",
+              meta_keywords: articleData.meta_keywords || "",
             });
           }
         }
