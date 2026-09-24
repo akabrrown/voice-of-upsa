@@ -1,21 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
-import * as dotenv from "dotenv";
+import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
-async function run() {
-  const { data, error } = await supabase
-    .from('seller_details')
-    .select('*, profiles!inner(seller_status, email, full_name, avatar_url)')
-    .eq('profiles.seller_status', 'pending_verification');
+const supabase = createClient(supabaseUrl, supabaseKey);
 
+async function testFetch() {
+  const { data, error } = await supabase.from("articles").select("*").limit(1).single();
   if (error) {
-    console.error("SUPABASE ERROR:", JSON.stringify(error, null, 2));
+    console.error("Error:", error);
   } else {
-    console.log("SUCCESS:", data);
+    console.log("Columns:", Object.keys(data));
   }
 }
 
-run();
+testFetch();

@@ -126,7 +126,7 @@ export default function EditorArticlesPage() {
   // Compute filtered articles dynamically on render to prevent cascading renders
   const filteredArticles = articles.filter(art => {
     const matchesSearch = searchQuery.trim() === "" || 
-      art.title.toLowerCase().includes(searchQuery.toLowerCase());
+      (art.title || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || art.status === statusFilter;
     return matchesSearch && matchesStatus;
   });

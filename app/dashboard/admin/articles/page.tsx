@@ -114,8 +114,8 @@ export default function AdminArticlesPage() {
 
     if (searchQuery.trim() !== "") {
       result = result.filter(art => 
-        art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        art.author.toLowerCase().includes(searchQuery.toLowerCase())
+        (art.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (art.author || "").toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
