@@ -77,14 +77,20 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col lg:flex-row items-center justify-between gap-4 text-center lg:text-left">
           <p className="text-xs text-gray-400">
             © {new Date().getFullYear()} Voice of UPSA. All Rights Reserved. Prepared by Codey Dev.
           </p>
-          <div className="flex items-center space-x-4 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-x-4 gap-y-2 text-xs text-gray-400">
+            <Link href="/guidelines" className="hover:text-white transition-colors">Community Guidelines</Link>
+            <span className="hidden md:inline">|</span>
+            <Link href="/disclaimer" className="hover:text-white transition-colors">Editorial Disclaimer</Link>
+            <span className="hidden md:inline">|</span>
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <span>|</span>
+            <span className="hidden md:inline">|</span>
             <Link href="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link>
+            <span className="hidden md:inline">|</span>
+            <Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link>
           </div>
         </div>
       </div>
