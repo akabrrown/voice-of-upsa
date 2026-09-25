@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
     else if (art.status === "draft") action = "saved a draft";
     
     return {
-      user: art.profiles?.full_name || "Unknown Author",
+      user: (art as any).author_name || art.profiles?.full_name || "Unknown Author",
       action,
       item: art.title,
       time: art.updated_at ? new Date(art.updated_at).toLocaleDateString() : "Recent",

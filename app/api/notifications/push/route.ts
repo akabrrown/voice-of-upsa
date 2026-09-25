@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { sendArticlePushNotification, ArticlePushPayload } from "@/lib/onesignal";
+import { messaging } from "@/lib/firebase-admin";
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const article: ArticlePushPayload = body.article;
+    const article = body.article;
 
     if (!article || !article.title || !article.slug) {
       return NextResponse.json(
@@ -37,9 +37,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await sendArticlePushNotification(article);
+    // Send broadcast push to the "all_users" topic via Firebase
+    const message = {
+      notification: {
+        title: article.title,
+        body: article.excerpt || "Read the latest article on Voice of UPSA",
+        // Fallback image if featured_image is missing
+        imageUrl: article.featured_image || "https://voiceofupsa.com/icon.png", 
+      },
+      data: {
+        url: `https://voiceofupsa.com/articles/${article.slug}`,
+      },
+      topic: "all_users",
+    };
 
-    return NextResponse.json(result);
+    const response = await messaging.send(message);
+
+    return NextResponse.json({ success: true, messageId: response });
   } catch (error: any) {
     console.error("Push API route error:", error);
     return NextResponse.json(

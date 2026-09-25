@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ToastProvider } from "@/components/providers/ToastProvider";
-import OneSignalProvider from "@/components/providers/OneSignalProvider";
+import PushNotificationProvider from "@/components/providers/PushNotificationProvider";
 import { HolidayAmbientBar } from "@/components/holidays/HolidayAmbientBar";
 import { HolidayGreetingModal } from "@/components/holidays/HolidayGreetingModal";
 import "./globals.css";
@@ -17,6 +17,13 @@ const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const siteUrl = getSiteUrl();
 const defaultOgImage = getOptimizedOgImage(null, "Voice of UPSA", siteUrl);
+
+export const viewport: Viewport = {
+  themeColor: "#0f172a", // UPSA Navy
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -76,7 +83,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground font-arial" suppressHydrationWarning>
 
         <ToastProvider />
-        <OneSignalProvider />
+        <PushNotificationProvider />
         <HolidayAmbientBar />
         <HolidayGreetingModal />
         {children}

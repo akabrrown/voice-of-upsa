@@ -3,79 +3,24 @@
 import { useEffect, useState } from "react";
 import { Bell, BellRing, X } from "lucide-react";
 import { toast } from "react-hot-toast";
-import OneSignal from "react-onesignal";
+import { requestNotificationPermission } from "@/lib/firebase";
 
-const DEFAULT_APP_ID = "7f22b994-e03e-4e3f-b141-6ab398cbcdd0";
-
-// Module-level cache to prevent multiple init calls in React StrictMode
-let initPromise: Promise<void> | null = null;
-
-export default function OneSignalProvider() {
-  const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || DEFAULT_APP_ID;
+export default function PushNotificationProvider() {
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
   const [isPromptDismissed, setIsPromptDismissed] = useState<boolean>(false);
-  const [isSdkReady, setIsSdkReady] = useState<boolean>(false);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [isRequesting, setIsRequesting] = useState<boolean>(false);
-  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !appId || appId === "your-onesignal-app-id") {
-      setIsInitialized(true);
-      return;
-    }
-
+    if (typeof window === "undefined") return;
+    
     // Check if user is already granted or subscribed in browser
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
       setIsSubscribed(true);
     }
-
-    async function setupOneSignal() {
-      try {
-        if (!initPromise) {
-          initPromise = OneSignal.init({
-            appId,
-            allowLocalhostAsSecureOrigin: true,
-          });
-        }
-        await initPromise;
-        setIsSdkReady(true);
-        setInitError(null);
-
-        // Check OneSignal subscription state
-        const isOptedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
-        if (isOptedIn) {
-          setIsSubscribed(true);
-        } else if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-          OneSignal.User?.PushSubscription?.optIn?.().catch(() => {});
-        }
-
-        OneSignal.User?.PushSubscription?.addEventListener("change", (event: any) => {
-          if (event?.current?.optedIn) {
-            setIsSubscribed(true);
-            toast.success("Subscribed to Voice of UPSA alerts!");
-          }
-        });
-      } catch (err: any) {
-        const message = err?.message || String(err);
-        if (message.includes("already initialized")) {
-          setIsSdkReady(true);
-          setInitError(null);
-        } else {
-          console.warn("[OneSignal] Initialization notice:", message);
-          setInitError(message);
-          setIsSdkReady(false);
-        }
-      } finally {
-        setIsInitialized(true);
-      }
-    }
-
-    setupOneSignal();
-  }, [appId]);
+  }, []);
 
   const handleRequestPermission = async () => {
-    if (typeof window === "undefined" || !isInitialized) return;
+    if (typeof window === "undefined") return;
 
     if (typeof Notification === "undefined") {
       toast.error("Push notifications are not supported on this browser.");
@@ -91,97 +36,42 @@ export default function OneSignalProvider() {
     }
 
     setIsRequesting(true);
+    toast("Opening notification prompt... Click 'Allow' when asked.", {
+      icon: "🔔",
+      duration: 4000,
+    });
 
-    // If permission is already granted in the browser, ensure opt-in and sync
-    if (Notification.permission === "granted") {
-      if (isSdkReady) {
-        try {
-          await OneSignal.User?.PushSubscription?.optIn?.();
-        } catch (e) {
-          console.warn("[OneSignal] Opt-in sync error:", e);
-        }
-      }
-      setIsSubscribed(true);
-      toast.success("Push alerts are already enabled!");
-      setIsRequesting(false);
-      return;
-    }
-
-    // Attempt subscription via OneSignal SDK if ready
-    if (isSdkReady) {
-      toast("Opening notification prompt... Click 'Allow' when asked.", {
-        icon: "🔔",
-        duration: 4000,
-      });
-
-      try {
-        if (OneSignal.Notifications?.requestPermission) {
-          const granted = await OneSignal.Notifications.requestPermission();
-          if (granted) {
-            setIsSubscribed(true);
-            toast.success("Subscribed to Voice of UPSA alerts!");
-            return;
-          }
-        } else if (OneSignal.Slidedown?.promptPush) {
-          await OneSignal.Slidedown.promptPush({ force: true });
-        } else if (OneSignal.User?.PushSubscription?.optIn) {
-          await OneSignal.User.PushSubscription.optIn();
-        }
-
-        const optedIn = Boolean(OneSignal.User?.PushSubscription?.optedIn);
-        if (optedIn) {
-          setIsSubscribed(true);
-        }
-      } catch (err: any) {
-        console.warn("[OneSignal] SDK permission request issue, attempting native fallback:", err);
-        // Fallback to native browser prompt
-        try {
-          const perm = await Notification.requestPermission();
-          if (perm === "granted") {
-            setIsSubscribed(true);
-            OneSignal.User?.PushSubscription?.optIn?.().catch(() => {});
-            toast.success("Subscribed to Voice of UPSA alerts!");
-          }
-        } catch (nativeErr) {
-          console.error("[OneSignal] Native permission failed:", nativeErr);
-        }
-      } finally {
-        setIsRequesting(false);
-      }
-      return;
-    }
-
-    // Fallback: If OneSignal SDK is not ready (e.g., origin mismatch on preview/localhost or ad-blocker)
     try {
-      const perm = await Notification.requestPermission();
-      if (perm === "granted") {
-        setIsSubscribed(true);
-        if (window.location.hostname !== "voiceofupsa.com") {
-          toast.success("Browser notifications enabled! (Push delivery syncs on voiceofupsa.com)");
+      const token = await requestNotificationPermission();
+      
+      if (token) {
+        // Send token to our backend to subscribe to the "all_users" broadcast topic
+        const res = await fetch("/api/notifications/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+
+        if (res.ok) {
+          setIsSubscribed(true);
+          toast.success("Subscribed to Voice of UPSA alerts!");
         } else {
-          toast.success("Browser notifications enabled!");
+          throw new Error("Failed to register on server");
         }
-      } else if (perm === "denied") {
+      } else {
         toast.error("Notifications were declined.");
       }
-    } catch {
-      if (initError?.includes("Can only be used on")) {
-        toast.error("OneSignal push requires the main domain: voiceofupsa.com");
-      } else {
-        toast.error("Could not enable notifications. Please check browser settings.");
-      }
+    } catch (err: any) {
+      console.error("[Firebase Push] Subscription failed:", err);
+      toast.error("Could not enable notifications. Please check browser settings.");
     } finally {
       setIsRequesting(false);
     }
   };
 
-  if (!appId || appId === "your-onesignal-app-id") {
-    return null;
-  }
-
   return (
     <>
-      {/* Floating Permission Trigger to guarantee user-gesture activation for SDK validation */}
+      {/* Floating Permission Trigger */}
       {!isSubscribed && (
         <div className="fixed bottom-5 right-5 z-40">
           {!isPromptDismissed ? (
@@ -216,7 +106,7 @@ export default function OneSignalProvider() {
                 <button
                   type="button"
                   onClick={handleRequestPermission}
-                  disabled={isRequesting || !isInitialized}
+                  disabled={isRequesting}
                   className="flex-1 bg-upsa-navy hover:bg-upsa-navy/90 text-white text-xs font-semibold py-2 px-3 rounded-xl transition-all shadow-xs hover:shadow flex items-center justify-center space-x-1.5 active:scale-98 disabled:opacity-85"
                 >
                   {isRequesting ? (
@@ -227,7 +117,7 @@ export default function OneSignalProvider() {
                   ) : (
                     <>
                       <Bell className="h-3.5 w-3.5" />
-                      <span>{isInitialized ? 'Enable Alerts' : 'Loading...'}</span>
+                      <span>Enable Alerts</span>
                     </>
                   )}
                 </button>
@@ -244,7 +134,7 @@ export default function OneSignalProvider() {
             <button
               type="button"
               onClick={handleRequestPermission}
-              disabled={isRequesting || !isInitialized}
+              disabled={isRequesting}
               title="Enable Voice of UPSA News Alerts"
               className="group relative flex items-center justify-center h-12 w-12 rounded-full bg-upsa-navy text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 border-2 border-white focus:outline-none focus:ring-2 focus:ring-upsa-gold disabled:opacity-80"
             >
