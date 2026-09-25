@@ -79,7 +79,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-white/10 text-center">
           <p className="text-xs text-gray-400">
-            © {new Date().getFullYear()} Voice of UPSA. All Rights Reserved. Prepared by the UPSA Digital Innovation Team.
+            © {new Date().getFullYear()} Voice of UPSA. All Rights Reserved. Prepared by Codey Dev.
           </p>
         </div>
       </div>
