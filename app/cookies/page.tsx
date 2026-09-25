@@ -20,12 +20,6 @@ export default function CookiePolicyPage() {
 
           <div className="prose prose-lg prose-headings:text-upsa-navy prose-a:text-upsa-gold max-w-none text-gray-700">
             
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded-r-md">
-              <p className="text-sm text-yellow-800 m-0 font-medium">
-                <strong>[DRAFT / LEGAL REVIEW REQUIRED]</strong> This Cookie Policy accurately reflects that Voice of UPSA currently only uses strictly necessary authentication cookies. It must be reviewed by legal counsel before taking effect.
-              </p>
-            </div>
-
             <p>
               This Cookie Policy explains how Voice of UPSA uses cookies and similar technologies to recognize you when you visit our digital platform. It explains what these technologies are and why we use them, as well as your rights to control our use of them.
             </p>

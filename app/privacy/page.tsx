@@ -20,12 +20,6 @@ export default function PrivacyPolicyPage() {
 
           <div className="prose prose-lg prose-headings:text-upsa-navy prose-a:text-upsa-gold max-w-none text-gray-700">
             
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded-r-md">
-              <p className="text-sm text-yellow-800 m-0 font-medium">
-                <strong>[DRAFT / LEGAL REVIEW REQUIRED]</strong> This is a placeholder privacy policy reflecting the technical implementation of the Voice of UPSA platform. It must be reviewed by qualified legal counsel in Ghana (per the Data Protection Act, 2012 (Act 843)) before taking legal effect.
-              </p>
-            </div>
-
             <p>
               At Voice of UPSA ("we," "us," or "our"), we respect your privacy and are committed to protecting the personal data of our students, faculty, and platform visitors. This Privacy Policy explains how we collect, use, and safeguard your information when you use our digital platform.
             </p>

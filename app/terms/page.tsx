@@ -20,12 +20,6 @@ export default function TermsAndConditionsPage() {
 
           <div className="prose prose-lg prose-headings:text-upsa-navy prose-a:text-upsa-gold max-w-none text-gray-700">
             
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded-r-md">
-              <p className="text-sm text-yellow-800 m-0 font-medium">
-                <strong>[DRAFT / LEGAL REVIEW REQUIRED]</strong> This is a placeholder Terms & Conditions document outlining the basic operational rules of the Voice of UPSA platform. It must be reviewed by qualified legal counsel in Ghana before taking legal effect.
-              </p>
-            </div>
-
             <p>
               Welcome to Voice of UPSA. By accessing or using our digital platform, you agree to be bound by these Terms and Conditions. Please read them carefully.
             </p>
