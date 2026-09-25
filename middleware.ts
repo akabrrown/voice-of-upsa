@@ -121,10 +121,10 @@ export async function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   
-  // Content Security Policy (allows OneSignal, Cloudinary, and Supabase)
+  // Content Security Policy (allows Firebase, Cloudinary, Supabase, and Vercel Live)
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.onesignal.com https://onesignal.com https://*.onesignal.com https://api.onesignal.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com https://onesignal.com https://*.onesignal.com https://*.os.tc data:; connect-src 'self' https://*.supabase.co https://onesignal.com https://*.onesignal.com https://api.onesignal.com https://*.os.tc ws: wss:; worker-src 'self' blob:; frame-ancestors 'none'; frame-src 'self' https://www.google.com https://maps.google.com;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel-scripts.com https://apis.google.com https://*.firebaseapp.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://*.supabase.co https://*.googleapis.com https://*.firebaseio.com https://vercel.live wss://*.vercel.live ws: wss:; worker-src 'self' blob:; frame-ancestors 'none'; frame-src 'self' https://www.google.com https://maps.google.com https://vercel.live https://*.firebaseapp.com;"
   );
 
   return response;
@@ -132,6 +132,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|OneSignalSDKWorker.js|OneSignalSDK.sw.js|api/upload|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|firebase-messaging-sw.js|api/upload|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
