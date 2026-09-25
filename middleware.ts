@@ -124,7 +124,7 @@ export async function middleware(request: NextRequest) {
   // Content Security Policy (allows Firebase, Cloudinary, Supabase, and Vercel Live)
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel-scripts.com https://apis.google.com https://*.firebaseapp.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://res.cloudinary.com data: blob:; connect-src 'self' https://*.supabase.co https://*.googleapis.com https://*.firebaseio.com https://vercel.live wss://*.vercel.live ws: wss:; worker-src 'self' blob:; frame-ancestors 'none'; frame-src 'self' https://www.google.com https://maps.google.com https://vercel.live https://*.firebaseapp.com;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel-scripts.com https://apis.google.com https://*.firebaseapp.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://vercel.live https://fonts.gstatic.com data:; img-src 'self' https://res.cloudinary.com https://vercel.com https://vercel.live https://*.vercel.com data: blob:; connect-src 'self' https://*.supabase.co https://*.googleapis.com https://*.firebaseio.com https://vercel.live wss://*.vercel.live ws: wss:; worker-src 'self' blob:; frame-ancestors 'none'; frame-src 'self' https://www.google.com https://maps.google.com https://vercel.live https://*.firebaseapp.com;"
   );
 
   return response;
