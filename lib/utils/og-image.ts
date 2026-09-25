@@ -106,6 +106,10 @@ export function getOptimizedOgImage(
     mimeType = "image/gif";
   }
 
+  // WhatsApp's link preview scraper has a known bug where it often truncates or misparses URLs 
+  // containing raw commas (common in Cloudinary URLs). We must URL encode them.
+  finalUrl = finalUrl.replace(/,/g, "%2C");
+
   return {
     url: finalUrl,
     secureUrl: finalUrl,
