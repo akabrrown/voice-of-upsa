@@ -7,6 +7,9 @@ function formatPrivateKey(key: string | undefined) {
   let formattedKey = key.replace(/^"|"$/g, "");
   // Replace literal \n characters with actual newlines
   formattedKey = formattedKey.replace(/\\n/g, "\n");
+  // Fix missing spaces in the PEM header and footer (a common copy-paste error)
+  formattedKey = formattedKey.replace(/BEGINPRIVATEKEY/g, "BEGIN PRIVATE KEY");
+  formattedKey = formattedKey.replace(/ENDPRIVATEKEY/g, "END PRIVATE KEY");
   return formattedKey;
 }
 
