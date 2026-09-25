@@ -47,9 +47,11 @@ export const requestNotificationPermission = async () => {
       return token;
     }
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error requesting notification permission:", error);
-    return null;
+    // Instead of failing silently and saying "declined", we surface the real error
+    // so it shows up in the UI (e.g., if API keys are missing on Vercel)
+    throw error;
   }
 };
 

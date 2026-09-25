@@ -63,7 +63,13 @@ export default function PushNotificationProvider() {
       }
     } catch (err: any) {
       console.error("[Firebase Push] Subscription failed:", err);
-      toast.error("Could not enable notifications. Please check browser settings.");
+      
+      // If the error is a configuration issue (e.g. missing API keys on Vercel)
+      if (err?.message?.includes("Missing App configuration") || err?.message?.includes("apiKey")) {
+        toast.error("Configuration Error: Missing Firebase API Keys. Please add them to Vercel and redeploy.", { duration: 6000 });
+      } else {
+        toast.error("Could not enable notifications. Please check browser settings.");
+      }
     } finally {
       setIsRequesting(false);
     }
