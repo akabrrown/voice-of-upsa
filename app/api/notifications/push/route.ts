@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { messaging } from "@/lib/firebase-admin";
+import { getAdminMessaging } from "@/lib/firebase-admin";
 
 export async function POST(request: Request) {
   try {
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
       topic: "all_users",
     };
 
+    const messaging = getAdminMessaging();
     const response = await messaging.send(message);
 
     return NextResponse.json({ success: true, messageId: response });

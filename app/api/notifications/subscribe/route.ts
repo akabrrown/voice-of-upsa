@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { messaging } from "@/lib/firebase-admin";
+import { getAdminMessaging } from "@/lib/firebase-admin";
 
 export async function POST(request: Request) {
   try {
@@ -11,6 +11,7 @@ export async function POST(request: Request) {
 
     // Subscribe the device token to the "all_users" topic
     // This allows us to broadcast notifications to everyone without needing to query thousands of tokens
+    const messaging = getAdminMessaging();
     await messaging.subscribeToTopic([token], "all_users");
 
     return NextResponse.json({ success: true, message: "Successfully subscribed to notifications" });
