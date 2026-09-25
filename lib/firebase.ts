@@ -30,8 +30,18 @@ export const requestNotificationPermission = async () => {
       const msg = await messaging();
       if (!msg) return null;
       
+      // Explicitly register the service worker so it doesn't hang if there's an error
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .catch(err => {
+          console.error("Service Worker registration failed:", err);
+          throw err;
+        });
+
+      await navigator.serviceWorker.ready;
+
       const token = await getToken(msg, {
         vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration: registration,
       });
       
       return token;
