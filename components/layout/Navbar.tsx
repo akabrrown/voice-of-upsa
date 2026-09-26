@@ -115,19 +115,25 @@ export function Navbar() {
     };
   }, [user, supabase]);
 
-  // Close mobile menu on scroll
+  // Close mobile menu on scroll (with threshold to prevent layout-shift blinking)
   React.useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const initialScrollY = window.scrollY;
+
     const handleScroll = () => {
-      if (mobileMenuOpen) {
+      if (Math.abs(window.scrollY - initialScrollY) > 10) {
         setMobileMenuOpen(false);
       }
     };
     
-    if (mobileMenuOpen) {
+    // Add small delay to prevent immediate firing from layout shifts when opening
+    const timeoutId = setTimeout(() => {
       window.addEventListener("scroll", handleScroll, { passive: true });
-    }
+    }, 100);
     
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener("scroll", handleScroll);
     };
   }, [mobileMenuOpen]);
