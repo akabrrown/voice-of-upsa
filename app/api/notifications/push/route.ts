@@ -42,8 +42,8 @@ export async function POST(request: Request) {
       notification: {
         title: article.title,
         body: article.excerpt || "Read the latest article on Voice of UPSA",
-        // Fallback image if featured_image is missing
-        imageUrl: article.featured_image || "https://voiceofupsa.com/icon.png", 
+        // Fallback image if cover_image_url is missing
+        imageUrl: article.cover_image_url || "https://www.voiceofupsa.com/icon-512.png", 
       },
       data: {
         url: `https://voiceofupsa.com/articles/${article.slug}`,

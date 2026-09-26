@@ -15,7 +15,33 @@ export default function PushNotificationProvider() {
     
     // Check if user is already granted or subscribed in browser
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      setIsSubscribed(true);
+      const hasSynced = localStorage.getItem("vou_push_synced");
+      if (hasSynced === "true") {
+        setIsSubscribed(true);
+      } else {
+        // Permission was granted previously, but backend sync failed (e.g. during missing API keys error).
+        // Try to silently sync it now.
+        const silentSync = async () => {
+          try {
+            const { requestNotificationPermission } = await import("@/lib/firebase");
+            const token = await requestNotificationPermission();
+            if (token) {
+              const res = await fetch("/api/notifications/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token }),
+              });
+              if (res.ok) {
+                localStorage.setItem("vou_push_synced", "true");
+                setIsSubscribed(true);
+              }
+            }
+          } catch (e) {
+            console.error("Silent push sync failed:", e);
+          }
+        };
+        silentSync();
+      }
     }
   }, []);
 
@@ -53,6 +79,7 @@ export default function PushNotificationProvider() {
         });
 
         if (res.ok) {
+          localStorage.setItem("vou_push_synced", "true");
           setIsSubscribed(true);
           toast.success("Subscribed to Voice of UPSA alerts!");
         } else {
