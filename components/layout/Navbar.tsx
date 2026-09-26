@@ -115,6 +115,23 @@ export function Navbar() {
     };
   }, [user, supabase]);
 
+  // Close mobile menu on scroll
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    
+    if (mobileMenuOpen) {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [mobileMenuOpen]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/");

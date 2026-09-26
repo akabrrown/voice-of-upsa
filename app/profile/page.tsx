@@ -127,6 +127,31 @@ export default function ProfilePage() {
     }
   };
 
+  const handleTestNotification = async () => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator && typeof Notification !== "undefined") {
+      if (Notification.permission === "granted") {
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            registration.showNotification("Voice of UPSA", {
+              body: "Your device is ready to receive push alerts! 🎉",
+              icon: "/icon-192.png",
+            });
+            toast.success("Test alert sent to your device.");
+          } else {
+            toast.error("Service worker not active. Try reloading the page.");
+          }
+        } catch (e) {
+          toast.error("Failed to trigger test alert.");
+        }
+      } else {
+        toast.error("You need to enable notification permissions first using the bell icon.");
+      }
+    } else {
+      toast.error("Your browser doesn't support notifications.");
+    }
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile || !user) return;
@@ -426,17 +451,28 @@ export default function ProfilePage() {
                     <h2 className="text-2xl font-black text-upsa-navy">Notifications</h2>
                     <p className="text-gray-500 text-sm">Stay updated with system activity, ad submissions, and alerts</p>
                   </div>
-                  {notifications.some(n => !n.is_read) && (
+                  <div className="flex items-center gap-2 self-start sm:self-center">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleMarkAllAsRead}
-                      className="border-gray-200 text-xs font-bold text-upsa-navy hover:bg-gray-50 gap-1.5 rounded-xl cursor-pointer self-start sm:self-center"
+                      onClick={handleTestNotification}
+                      className="border-upsa-gold text-xs font-bold text-upsa-navy hover:bg-upsa-gold/10 gap-1.5 rounded-xl cursor-pointer"
                     >
-                      <CheckCheck className="h-4 w-4 text-upsa-gold" />
-                      Mark all as read
+                      <Bell className="h-4 w-4 text-upsa-gold" />
+                      Test Alert
                     </Button>
-                  )}
+                    {notifications.some(n => !n.is_read) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleMarkAllAsRead}
+                        className="border-gray-200 text-xs font-bold text-upsa-navy hover:bg-gray-50 gap-1.5 rounded-xl cursor-pointer"
+                      >
+                        <CheckCheck className="h-4 w-4 text-upsa-gold" />
+                        Mark all as read
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
                 {notifications.length === 0 ? (
