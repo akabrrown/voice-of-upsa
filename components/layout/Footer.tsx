@@ -67,11 +67,11 @@ export function Footer() {
               </li>
               <li className="flex items-center space-x-3 text-sm text-gray-300">
                 <Phone className="h-5 w-5 text-upsa-gold shrink-0" />
-                <span>+233 (0) 302 500 722</span>
+                <span>+233 (0)55 310 8760</span>
               </li>
               <li className="flex items-center space-x-3 text-sm text-gray-300">
                 <Mail className="h-5 w-5 text-upsa-gold shrink-0" />
-                <span>voice@upsamail.edu.gh</span>
+                <span>voice.of.upsa.mail@gmail.com</span>
               </li>
             </ul>
           </div>

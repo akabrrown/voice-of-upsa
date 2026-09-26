@@ -61,7 +61,7 @@ export default function CommunityGuidelinesPage() {
 
             <h2>5. Reporting Violations</h2>
             <p>
-              If you encounter content that violates these guidelines, please report it immediately to the editorial team at <strong>voice@upsamail.edu.gh</strong>.
+              If you encounter content that violates these guidelines, please report it immediately to the editorial team at <strong>voice.of.upsa.mail@gmail.com</strong>.
             </p>
           </div>
 

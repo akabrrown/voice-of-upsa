@@ -56,7 +56,7 @@ export default function EditorialDisclaimerPage() {
 
             <h2>5. Contact the Editorial Team</h2>
             <p>
-              If you have concerns about the accuracy of a published article, or wish to submit a formal retraction request or right of reply, please contact the Editor-in-Chief at <strong>voice@upsamail.edu.gh</strong>.
+              If you have concerns about the accuracy of a published article, or wish to submit a formal retraction request or right of reply, please contact the Editor-in-Chief at <strong>voice.of.upsa.mail@gmail.com</strong>.
             </p>
           </div>
 

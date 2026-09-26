@@ -74,7 +74,7 @@ export default function PrivacyPolicyPage() {
               If you have any questions or concerns about this Privacy Policy, please contact us at:
             </p>
             <p>
-              <strong>Email:</strong> voice@upsamail.edu.gh<br />
+              <strong>Email:</strong> voice.of.upsa.mail@gmail.com<br />
               <strong>Address:</strong> University of Professional Studies, Accra (UPSA), Legon, Accra - Ghana
             </p>
           </div>

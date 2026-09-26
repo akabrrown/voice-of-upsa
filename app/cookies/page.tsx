@@ -58,7 +58,7 @@ export default function CookiePolicyPage() {
 
             <h2>6. Contact Us</h2>
             <p>
-              If you have any questions about our use of cookies or other technologies, please email us at <strong>voice@upsamail.edu.gh</strong>.
+              If you have any questions about our use of cookies or other technologies, please email us at <strong>voice.of.upsa.mail@gmail.com</strong>.
             </p>
           </div>
 
