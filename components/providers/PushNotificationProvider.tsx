@@ -45,6 +45,79 @@ export default function PushNotificationProvider() {
     }
   }, []);
 
+  // Listen for foreground messages
+  useEffect(() => {
+    let mounted = true;
+
+    const setupForegroundListener = async () => {
+      try {
+        const { onMessageListener } = await import("@/lib/firebase");
+        
+        // onMessageListener returns a promise that resolves with the first payload.
+        // To listen continuously, we need to loop or change how onMessage is handled.
+        // Actually, it's better to just call it and when it resolves, show toast and call again.
+        const listen = async () => {
+          if (!mounted) return;
+          const payload: any = await onMessageListener();
+          if (payload && mounted) {
+            toast.custom(
+              (t) => (
+                <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+                  <div className="flex-1 w-0 p-4">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 pt-0.5">
+                        <img
+                          className="h-10 w-10 rounded-full object-cover"
+                          src={payload.notification?.image || "/icon-192.png"}
+                          alt=""
+                        />
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <p className="text-sm font-bold text-gray-900">
+                          {payload.notification?.title || "Voice of UPSA"}
+                        </p>
+                        <p className="mt-1 text-sm text-gray-500 line-clamp-2">
+                          {payload.notification?.body}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex border-l border-gray-200">
+                    <button
+                      onClick={() => {
+                        toast.dismiss(t.id);
+                        if (payload.data?.url) {
+                          window.location.href = payload.data.url;
+                        }
+                      }}
+                      className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-bold text-upsa-navy hover:text-upsa-gold focus:outline-none"
+                    >
+                      Read
+                    </button>
+                  </div>
+                </div>
+              ),
+              { duration: 8000 }
+            );
+            // Listen for the next message
+            listen();
+          }
+        };
+        listen();
+      } catch (error) {
+        console.error("Foreground listener error:", error);
+      }
+    };
+
+    if (isSubscribed) {
+      setupForegroundListener();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [isSubscribed]);
+
   const handleRequestPermission = async () => {
     if (typeof window === "undefined") return;
 
