@@ -234,6 +234,14 @@ export default function NewArticlePage() {
         .from("articles")
         .insert(insertPayload);
 
+      // Handle duplicate slug (409 Conflict - unique constraint violation)
+      if (error && (error as any).code === "23505" && error.message?.includes("slug")) {
+        const randomSuffix = Math.random().toString(36).substring(2, 6);
+        insertPayload.slug = `${insertPayload.slug}-${randomSuffix}`;
+        const retrySlug = await supabase.from("articles").insert(insertPayload);
+        error = retrySlug.error;
+      }
+
       // Gracefully retry with core fields if new columns are not yet present in the database
       if (error && (error.message?.includes("publisher_id") || error.message?.includes("author_name") || error.message?.includes("author_title") || (error as any).code === "42703")) {
         const fallbackPayload = { ...insertPayload };
@@ -590,7 +598,7 @@ export default function NewArticlePage() {
                 <div className="space-y-2">
                   <Label htmlFor="author_id" className="text-xs text-gray-600">Staff Author</Label>
                   <Select
-                    value={form.watch("author_id") || currentUserId || undefined}
+                    value={form.watch("author_id") || currentUserId || ""}
                     onValueChange={(val) => form.setValue("author_id", val, { shouldValidate: true })}
                   >
                     <SelectTrigger id="author_id" className="h-9 text-xs">
