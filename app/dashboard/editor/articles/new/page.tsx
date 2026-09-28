@@ -264,18 +264,26 @@ export default function NewArticlePage() {
       } else if (status === "published") {
         toast.success("Article published successfully!");
         // Dispatch push notification to OneSignal subscribers in background
-        await fetch("/api/notifications/push", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            article: {
-              title: data.title,
-              slug: data.slug,
-              excerpt: data.excerpt,
-              cover_image_url: data.cover_image_url,
-            },
-          }),
-        }).catch((e) => console.error("Push dispatch error:", e));
+        try {
+          const res = await fetch("/api/notifications/push", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              article: {
+                title: data.title,
+                slug: insertPayload.slug,
+                excerpt: data.excerpt,
+                cover_image_url: data.cover_image_url,
+              },
+            }),
+          });
+          if (!res.ok) {
+            const errBody = await res.text();
+            console.error("Push dispatch failed with status:", res.status, errBody);
+          }
+        } catch (e) {
+          console.error("Push dispatch error:", e);
+        }
       } else {
         toast.success("Article submitted for review!");
       }

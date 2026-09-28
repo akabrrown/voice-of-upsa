@@ -55,14 +55,13 @@ export const requestNotificationPermission = async () => {
   }
 };
 
-export const onMessageListener = async () => {
+export const onForegroundMessage = async (callback: (payload: any) => void) => {
   const msg = await messaging();
-  if (!msg) return;
+  if (!msg) return () => {};
 
-  return new Promise((resolve) => {
-    onMessage(msg, (payload) => {
-      resolve(payload);
-    });
+  // onMessage returns an unsubscribe function
+  return onMessage(msg, (payload) => {
+    callback(payload);
   });
 };
 

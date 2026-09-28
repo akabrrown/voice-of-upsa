@@ -51,15 +51,10 @@ export default function PushNotificationProvider() {
 
     const setupForegroundListener = async () => {
       try {
-        const { onMessageListener } = await import("@/lib/firebase");
+        const { onForegroundMessage } = await import("@/lib/firebase");
         
-        // onMessageListener returns a promise that resolves with the first payload.
-        // To listen continuously, we need to loop or change how onMessage is handled.
-        // Actually, it's better to just call it and when it resolves, show toast and call again.
-        const listen = async () => {
-          if (!mounted) return;
-          const payload: any = await onMessageListener();
-          if (payload && mounted) {
+        const unsubscribe = await onForegroundMessage((payload: any) => {
+          if (mounted) {
             toast.custom(
               (t) => (
                 <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
@@ -99,11 +94,8 @@ export default function PushNotificationProvider() {
               ),
               { duration: 8000 }
             );
-            // Listen for the next message
-            listen();
           }
-        };
-        listen();
+        });
       } catch (error) {
         console.error("Foreground listener error:", error);
       }
