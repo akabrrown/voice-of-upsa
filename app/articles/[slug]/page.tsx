@@ -264,7 +264,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 {article.category}
               </Badge>
 
-              <h1 className="text-3xl md:text-5xl font-black text-upsa-navy leading-tight tracking-tight text-left">
+              <h1 className="text-3xl md:text-5xl font-black text-black leading-tight tracking-tight text-left">
                 {article.title}
               </h1>
 
