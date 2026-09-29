@@ -59,6 +59,7 @@ function AdSubmissionForm() {
   const [companyName, setCompanyName] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [adType, setAdType] = useState<"leaderboard" | "sidebar" | "in-feed">("sidebar");
@@ -192,6 +193,7 @@ function AdSubmissionForm() {
           company_name: companyName,
           contact_name: contactName,
           contact_email: contactEmail,
+          contact_phone: contactPhone,
           product_name: productName,
           product_description: productDescription,
           ad_type: adType,
@@ -304,7 +306,7 @@ function AdSubmissionForm() {
                     />
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2">
                     <Label htmlFor="email" className="font-bold text-upsa-navy text-xs uppercase">Contact Email Address</Label>
                     <Input 
                       id="email" 
@@ -312,6 +314,19 @@ function AdSubmissionForm() {
                       placeholder="contact@company.com" 
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
+                      required 
+                      className="rounded-xl border-gray-200 focus:border-upsa-navy py-5 text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="font-bold text-upsa-navy text-xs uppercase">Contact Phone Number</Label>
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      placeholder="e.g. 024XXXXXXX" 
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
                       required 
                       className="rounded-xl border-gray-200 focus:border-upsa-navy py-5 text-sm"
                     />
