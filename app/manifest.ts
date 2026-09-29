@@ -9,6 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#0f172a', // UPSA Navy color (slate-900)
+    icons: [
       {
         src: '/icon-192.png',
         sizes: '192x192',
