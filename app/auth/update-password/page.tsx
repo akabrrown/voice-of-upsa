@@ -186,7 +186,7 @@ export default function UpdatePasswordPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl border border-gray-100 text-center space-y-4">
-          <div className="relative h-16 w-16 mx-auto rounded-full overflow-hidden border-2 border-upsa-gold/20 shadow-md">
+          <div className="relative h-16 w-16 mx-auto rounded-md overflow-hidden border-2 border-upsa-gold/20 shadow-md">
             <Image src="/logo.jpg" alt="Voice of UPSA" fill sizes="64px" className="object-cover" />
           </div>
           <div className="flex items-center justify-center space-x-2 text-upsa-navy">
@@ -202,7 +202,7 @@ export default function UpdatePasswordPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl border border-gray-100 text-center space-y-6">
-          <div className="relative h-20 w-20 mx-auto rounded-full overflow-hidden border-4 border-upsa-gold/20 shadow-lg mb-2">
+          <div className="relative h-20 w-20 mx-auto rounded-md overflow-hidden border-4 border-upsa-gold/20 shadow-lg mb-2">
             <Image src="/logo.jpg" alt="Voice of UPSA" fill sizes="80px" className="object-cover" />
           </div>
           <div className="space-y-2">
@@ -235,7 +235,7 @@ export default function UpdatePasswordPage() {
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
         <div className="text-center">
           <Link href="/" className="flex flex-col items-center group">
-            <div className="relative h-20 w-20 rounded-full overflow-hidden border-4 border-upsa-gold/20 shadow-lg transition-transform group-hover:scale-105 mb-3">
+            <div className="relative h-20 w-20 rounded-md overflow-hidden border-4 border-upsa-gold/20 shadow-lg transition-transform group-hover:scale-105 mb-3">
               <Image
                 src="/logo.jpg"
                 alt="Voice of UPSA"

@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
         <div className="text-center">
           <Link href="/" className="flex flex-col items-center group">
-            <div className="relative h-20 w-20 rounded-full overflow-hidden border-4 border-upsa-gold/20 shadow-lg transition-transform group-hover:scale-105 mb-3">
+            <div className="relative h-20 w-20 rounded-md overflow-hidden border-4 border-upsa-gold/20 shadow-lg transition-transform group-hover:scale-105 mb-3">
               <Image
                 src="/logo.jpg"
                 alt="Voice of UPSA"

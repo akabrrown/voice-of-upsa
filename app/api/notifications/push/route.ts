@@ -2,6 +2,28 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { getAdminMessaging } from "@/lib/firebase-admin";
 
+export async function GET() {
+  // Debug endpoint to verify environment variables are present on Vercel
+  const hasProjectId = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const hasClientEmail = !!process.env.FIREBASE_CLIENT_EMAIL;
+  
+  const rawKey = process.env.FIREBASE_PRIVATE_KEY || "";
+  const hasPrivateKey = !!rawKey;
+  const keyLength = rawKey.length;
+  const hasNewlines = rawKey.includes("\\n") || rawKey.includes("\n");
+
+  return NextResponse.json({
+    debug: {
+      hasProjectId,
+      hasClientEmail,
+      hasPrivateKey,
+      keyLength,
+      hasNewlines,
+      envMode: process.env.NODE_ENV,
+    }
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();

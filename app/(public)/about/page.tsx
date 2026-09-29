@@ -109,7 +109,7 @@ export default async function AboutPage() {
               </div>
             ) : (
               <div className="bg-white rounded-2xl p-10 max-w-md mx-auto border border-dashed border-gray-200">
-                <div className="relative w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-upsa-gold shadow-sm">
+                <div className="relative w-16 h-16 mx-auto mb-3 rounded-md overflow-hidden border-2 border-upsa-gold shadow-sm">
                   <Image src="/logo.jpg" alt="Voice of UPSA" fill sizes="64px" className="object-cover" />
                 </div>
                 <h3 className="font-bold text-upsa-navy text-sm">Editorial Board</h3>
