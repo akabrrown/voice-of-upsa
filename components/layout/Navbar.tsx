@@ -18,6 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpen, GraduationCap, Calendar, Newspaper, MessageSquare, Trophy, Vote, Star, Home as HomeIcon, Layers, Megaphone, Info, PhoneCall, Bell, Store } from "lucide-react";
 import { User } from "@supabase/supabase-js";
+import { InstallPWA } from "./InstallPWA";
 
 interface AuthenticatedUser extends User {
   role?: string;
@@ -245,6 +246,7 @@ export function Navbar() {
 
           
           <div className="hidden sm:flex items-center space-x-2 border-l border-white/20 pl-4">
+            <InstallPWA />
             {user ? (
               <>
                 <Button asChild variant="ghost" className="text-white hover:bg-upsa-gold hover:text-upsa-navy relative px-3">
@@ -399,7 +401,11 @@ export function Navbar() {
           </nav>
 
           {/* User Auth controls inside mobile menu */}
-          <div className="pt-4 border-t border-white/10 flex flex-col gap-2">
+          <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+            {/* Show PWA Install button on mobile without the hidden class */}
+            <div className="[&>button]:w-full [&>button]:justify-center [&>button]:flex sm:[&>button]:hidden">
+              <InstallPWA />
+            </div>
             {user ? (
               <>
                 <Button asChild variant="outline" className="w-full bg-transparent text-white border-white/20 hover:bg-upsa-gold hover:text-upsa-navy justify-between">
