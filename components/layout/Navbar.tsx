@@ -16,13 +16,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpen, GraduationCap, Calendar, Newspaper, MessageSquare, Trophy, Vote, Star, Home as HomeIcon, Layers, Megaphone, Info, PhoneCall, Bell, Store } from "lucide-react";
+import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpen, GraduationCap, Calendar, Newspaper, MessageSquare, Trophy, Vote, Star, Home as HomeIcon, Layers, Megaphone, Info, PhoneCall, Bell, Store, Bot, EyeOff, Camera, Map, BarChart3, Video, BellRing, Mic, Briefcase, Users, Beaker } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { InstallPWA } from "./InstallPWA";
 
 interface AuthenticatedUser extends User {
   role?: string;
 }
+
+const previewFeatures = [
+  { title: "AI Assistant", href: "/ai-assistant", description: "Your virtual campus guide.", icon: Bot },
+  { title: "Anonymous", href: "/anonymous", description: "Confessions and opinions.", icon: EyeOff },
+  { title: "Gallery", href: "/gallery", description: "Campus photos and memories.", icon: Camera },
+  { title: "Campus Map", href: "/map", description: "Navigate the university.", icon: Map },
+  { title: "Campus Mart", href: "/mart", description: "Buy and sell on campus.", icon: Store },
+  { title: "Polls", href: "/polls", description: "Vote on campus issues.", icon: BarChart3 },
+  { title: "Video TV", href: "/tv", description: "Campus news and shows.", icon: Video },
+  { title: "Podcasts", href: "/podcasts", description: "Listen to campus voices.", icon: Mic },
+  { title: "Student Services", href: "/services", description: "Access campus services.", icon: Briefcase },
+  { title: "Jobs Board", href: "/jobs", description: "Find internships and jobs.", icon: Users },
+];
 
 const categories = [
   { title: "All Articles", href: "/categories/all", description: "Browse all published articles.", icon: BookOpen },
@@ -40,6 +53,7 @@ export function Navbar() {
   const [unreadNotifications, setUnreadNotifications] = React.useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [showCategories, setShowCategories] = React.useState(false);
+  const [showPreview, setShowPreview] = React.useState(false);
   const supabase = createClient();
   const router = useRouter();
 
@@ -184,7 +198,10 @@ export function Navbar() {
 
               <NavigationMenuItem>
                 <button 
-                  onClick={() => setShowCategories(!showCategories)}
+                  onClick={() => {
+                    setShowCategories(!showCategories);
+                    if (showPreview) setShowPreview(false);
+                  }}
                   className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors flex items-center gap-1.5 cursor-pointer", showCategories && "bg-upsa-gold text-upsa-navy")}
                 >
                   <Layers className="h-4 w-4" />
@@ -194,14 +211,16 @@ export function Navbar() {
 
               {process.env.NODE_ENV !== "production" && (
                 <NavigationMenuItem>
-                  <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
-                    <Link href="/mart">
-                      <div className="flex items-center gap-1.5">
-                        <Store className="h-4 w-4" />
-                        Campus Mart
-                      </div>
-                    </Link>
-                  </NavigationMenuLink>
+                  <button 
+                    onClick={() => {
+                      setShowPreview(!showPreview);
+                      if (showCategories) setShowCategories(false);
+                    }}
+                    className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors flex items-center gap-1.5 cursor-pointer", showPreview && "bg-upsa-gold text-upsa-navy")}
+                  >
+                    <Beaker className="h-4 w-4" />
+                    Upcoming
+                  </button>
                 </NavigationMenuItem>
               )}
 
@@ -331,6 +350,26 @@ export function Navbar() {
         </div>
       )}
 
+      {/* Secondary Navigation for Preview Features */}
+      {showPreview && process.env.NODE_ENV !== "production" && (
+        <div className="hidden lg:block w-full bg-gray-50 border-t border-gray-200 border-b shadow-sm overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] animate-in slide-in-from-top-2 duration-200">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-start md:justify-center space-x-6 h-11 min-w-max md:min-w-0 mx-auto">
+              {previewFeatures.map((c) => (
+                <Link 
+                  key={c.href} 
+                  href={c.href} 
+                  className="flex items-center gap-1.5 text-[11px] font-black text-slate-800 uppercase tracking-[0.1em] whitespace-nowrap hover:text-upsa-gold transition-colors py-2"
+                >
+                  <c.icon className="h-3.5 w-3.5" />
+                  <span>{c.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Drawer Overlay & Content */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-upsa-navy border-t border-white/10 px-4 py-6 space-y-4 animate-in slide-in-from-top duration-300">
@@ -365,14 +404,24 @@ export function Navbar() {
             </div>
 
             {process.env.NODE_ENV !== "production" && (
-              <Link 
-                href="/mart" 
-                className="flex items-center gap-2 text-white hover:text-upsa-gold py-2 font-bold transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Store className="h-5 w-5" />
-                Campus Mart
-              </Link>
+              <div className="space-y-1 pt-2 border-t border-white/10">
+                <div className="flex items-center gap-2 text-gray-400">
+                  <Beaker className="h-5 w-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Upcoming Features</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1 pl-2">
+                  {previewFeatures.map((feature) => (
+                    <Link
+                      key={feature.title}
+                      href={feature.href}
+                      className="text-gray-200 hover:text-upsa-gold text-sm py-1.5 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {feature.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             )}
             <Link 
               href="/advertise" 
