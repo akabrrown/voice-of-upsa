@@ -2,8 +2,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import Image from "next/image";
 import { Users, Target, ShieldCheck, Award, FileText, Download } from "lucide-react";
+import { AboutSlideshow } from "@/components/about/AboutSlideshow";
 import { createClient } from "@/lib/supabase/server";
-
 export default async function AboutPage() {
   const supabase = await createClient();
 
@@ -64,14 +64,7 @@ export default async function AboutPage() {
                   </div>
                 </div>
               </div>
-              <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
-                <Image
-                  src="/campus.png"
-                  alt="UPSA Campus"
-                  fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="object-cover"
-                />
-              </div>
+              <AboutSlideshow />
             </div>
           </div>
         </section>
