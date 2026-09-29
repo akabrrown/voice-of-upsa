@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getAllHolidaysForYear, GHANA_STATUTORY_HOLIDAYS } from "@/lib/holidays/engine";
 import { DBHolidayWish } from "@/lib/holidays/types";
-import { sendHolidayPushNotification } from "@/lib/onesignal";
+import { getAdminMessaging } from "@/lib/firebase-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -116,7 +116,25 @@ export async function POST(request: Request) {
 
     let pushResult = null;
     if (broadcast_push_now && headline && body_message) {
-      pushResult = await sendHolidayPushNotification(headline, body_message);
+      try {
+        const message = {
+          notification: {
+            title: title || headline,
+            body: body_message,
+            imageUrl: "https://www.voiceofupsa.com/icon-512.png",
+          },
+          data: {
+            url: "https://voiceofupsa.com/",
+          },
+          topic: "all_users",
+        };
+        const messaging = getAdminMessaging();
+        const response = await messaging.send(message);
+        pushResult = { success: true, messageId: response };
+      } catch (e: any) {
+        console.error("Firebase push error:", e);
+        pushResult = { success: false, error: e.message };
+      }
     }
 
     return NextResponse.json({

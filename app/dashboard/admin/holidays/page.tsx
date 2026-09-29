@@ -25,6 +25,7 @@ export default function AdminHolidaysPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [previewHoliday, setPreviewHoliday] = useState<ComputedHoliday | null>(null);
   const [broadcastPushNow, setBroadcastPushNow] = useState(false);
+  const [dbRecords, setDbRecords] = useState<any[]>([]);
 
   useEffect(() => {
     fetchHolidays();
@@ -37,6 +38,7 @@ export default function AdminHolidaysPage() {
       const data = await res.json();
       if (data.success) {
         setHolidays(data.computedHolidays);
+        setDbRecords(data.dbRecords);
         
         // Match existing selected holiday with updated data
         if (selectedKey) {
@@ -146,7 +148,7 @@ export default function AdminHolidaysPage() {
               <Card 
                 key={holiday.key}
                 className={`cursor-pointer transition-all hover:shadow-md ${isSelected ? 'border-upsa-navy ring-1 ring-upsa-navy bg-upsa-navy/5' : 'hover:border-upsa-gold/50'}`}
-                onClick={() => handleSelectHoliday(holiday)}
+                onClick={() => handleSelectHoliday(holiday, dbRecords)}
               >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
