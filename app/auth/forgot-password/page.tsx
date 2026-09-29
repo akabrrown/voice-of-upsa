@@ -76,8 +76,8 @@ export default function ForgotPasswordPage() {
                 className="object-cover"
               />
             </div>
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
+            <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5 items-center justify-center">
+              <span className="text-[10px] sm:text-xl font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
               <span className="text-2xl font-black tracking-tight text-upsa-navy uppercase leading-tight">UPSA</span>
             </div>
           </Link>

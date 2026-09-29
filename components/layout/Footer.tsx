@@ -19,8 +19,8 @@ export function Footer() {
                   className="object-cover"
                 />
               </div>
-              <div className="flex flex-col justify-center text-left">
-                <span className="text-xs font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
+              <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5 justify-center text-left">
+                <span className="text-xs sm:text-lg font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
                 <span className="text-lg font-black tracking-tight text-white uppercase leading-tight">UPSA</span>
               </div>
             </Link>

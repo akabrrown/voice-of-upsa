@@ -108,8 +108,8 @@ export function Sidebar({ className }: { className?: string }) {
               className="object-cover"
             />
           </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
+          <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5">
+            <span className="text-[10px] sm:text-sm font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
             <span className="text-base font-black tracking-tight text-upsa-navy uppercase leading-tight">UPSA</span>
           </div>
         </Link>
