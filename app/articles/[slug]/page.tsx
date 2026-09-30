@@ -252,57 +252,56 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         {/* Article Header & Content */}
         <article className="pt-10 pb-20">
           <div className="container mx-auto px-4 max-w-7xl">
-            {/* Header: Breadcrumbs, Badge, Title & Meta */}
-            <div className="max-w-4xl mx-auto mb-10 space-y-4 text-left">
-              <nav className="flex items-center justify-start space-x-2 text-sm text-gray-400">
-                <Link href="/" className="hover:text-upsa-navy transition-colors">Home</Link>
-                <span>/</span>
-                <Link href={`/categories/${article.categorySlug}`} className="hover:text-upsa-navy transition-colors">{article.category}</Link>
-              </nav>
-
-              <Badge className="bg-upsa-gold text-upsa-navy font-bold uppercase tracking-widest text-[10px]">
-                {article.category}
-              </Badge>
-
-              <h1 className="text-3xl md:text-5xl font-black text-black leading-tight tracking-tight text-left">
-                {article.title}
-              </h1>
-
-              <div className="flex flex-wrap items-center justify-start gap-4 sm:gap-6 pt-2 text-sm text-gray-500 border-b border-gray-100 pb-6">
-                <div className="flex items-center">
-                  <UserAvatar
-                    src={article.author.avatar}
-                    name={article.author.name}
-                    size="md"
-                    className="mr-3 border border-gray-200"
-                  />
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-gray-400">By</span>
-                      <span className="font-bold text-upsa-navy">{article.author.name}</span>
-                    </div>
-                    {article.author.role && (
-                      <span className="text-[11px] text-gray-400 block">
-                        {article.author.role}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <span className="flex items-center"><Calendar className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.date}</span>
-                <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.readTime}</span>
-                {article.publisherName && article.publisherName !== article.author.name && (
-                  <span className="hidden sm:inline-flex items-center text-xs text-gray-400">
-                    Published by <span className="font-medium text-gray-600 ml-1">{article.publisherName}</span>
-                  </span>
-                )}
-                <div className="flex-1 hidden md:block" />
-                <ArticleActions slug={slug} title={article.title} />
-              </div>
-            </div>
-
             {/* Main Editorial Grid: Content (8 cols) + Sticky Trending Sidebar (4 cols) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-7xl mx-auto">
               <div className="lg:col-span-8 space-y-8">
+                {/* Header: Breadcrumbs, Badge, Title & Meta */}
+                <div className="space-y-4 text-left">
+                  <nav className="flex items-center justify-start space-x-2 text-sm text-gray-400">
+                    <Link href="/" className="hover:text-upsa-navy transition-colors">Home</Link>
+                    <span>/</span>
+                    <Link href={`/categories/${article.categorySlug}`} className="hover:text-upsa-navy transition-colors">{article.category}</Link>
+                  </nav>
+
+                  <Badge className="bg-upsa-gold text-upsa-navy font-bold uppercase tracking-widest text-[10px]">
+                    {article.category}
+                  </Badge>
+
+                  <h1 className="text-3xl md:text-5xl font-black text-black leading-tight tracking-tight text-left">
+                    {article.title}
+                  </h1>
+
+                  <div className="flex flex-wrap items-center justify-start gap-4 sm:gap-6 pt-2 text-sm text-gray-500 pb-2">
+                    <div className="flex items-center">
+                      <UserAvatar
+                        src={article.author.avatar}
+                        name={article.author.name}
+                        size="md"
+                        className="mr-3 border border-gray-200"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-gray-400">By</span>
+                          <span className="font-bold text-upsa-navy">{article.author.name}</span>
+                        </div>
+                        {article.author.role && (
+                          <span className="text-[11px] text-gray-400 block">
+                            {article.author.role}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="flex items-center"><Calendar className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.date}</span>
+                    <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.readTime}</span>
+                    {article.publisherName && article.publisherName !== article.author.name && (
+                      <span className="hidden sm:inline-flex items-center text-xs text-gray-400">
+                        Published by <span className="font-medium text-gray-600 ml-1">{article.publisherName}</span>
+                      </span>
+                    )}
+                    <div className="flex-1 hidden md:block" />
+                    <ArticleActions slug={slug} title={article.title} />
+                  </div>
+                </div>
                 {/* Cover Image */}
                 <div className="relative aspect-video md:aspect-[16/9] w-full rounded-2xl overflow-hidden shadow-xl border border-gray-100">
                   <Image
