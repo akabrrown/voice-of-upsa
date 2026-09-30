@@ -30,9 +30,9 @@ export async function AdZone({ type, className }: AdZoneProps) {
 
   if (ad && typeof ad.creative_url === "string" && ad.creative_url.trim().length > 0) {
     const aspectRatios = {
-      leaderboard: "aspect-[728/90] md:h-[90px] w-full max-w-[728px]",
-      sidebar: "aspect-[300/250] w-full max-w-[300px]",
-      "in-feed": "w-full",
+      leaderboard: "min-h-[50px] aspect-[320/50] md:aspect-[728/90] md:min-h-[90px] w-full max-w-[728px]",
+      sidebar: "min-h-[200px] aspect-square md:aspect-[300/250] w-full max-w-[300px]",
+      "in-feed": "min-h-[100px] w-full",
     };
 
     return (
