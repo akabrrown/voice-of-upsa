@@ -12,7 +12,6 @@ interface NewsItem {
 }
 
 export function BreakingNews() {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const supabase = createClient();
 
@@ -45,41 +44,32 @@ export function BreakingNews() {
     fetchBreakingNews();
   }, [supabase]);
 
-  useEffect(() => {
-    if (newsItems.length === 0) return;
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % newsItems.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [newsItems]);
-
   if (newsItems.length === 0) {
     return null;
   }
 
+  // Duplicate items twice to ensure a smooth continuous loop
+  const displayItems = [...newsItems, ...newsItems, ...newsItems];
+
   return (
-    <div className="bg-upsa-gold text-upsa-navy py-2 overflow-hidden border-b border-upsa-navy/10">
+    <div className="bg-upsa-gold text-upsa-navy py-2 overflow-hidden border-b border-upsa-navy/10 relative z-50">
       <div className="container mx-auto px-4 flex items-center">
-        <div className="flex items-center font-bold text-xs uppercase tracking-widest mr-4 whitespace-nowrap">
+        <div className="flex items-center font-bold text-xs uppercase tracking-widest mr-4 whitespace-nowrap bg-upsa-gold relative z-10 pr-2">
           <Megaphone className="h-4 w-4 mr-2" />
           Breaking News
         </div>
         <div className="flex-1 relative h-6 overflow-hidden">
-          {newsItems.map((item, index) => (
-            <Link
-              key={item.id}
-              href={`/articles/${item.slug}`}
-              className={`absolute inset-0 flex items-center text-sm font-medium transition-all duration-500 transform w-full ${
-                index === currentIndex 
-                  ? "translate-y-0 opacity-100" 
-                  : index < currentIndex 
-                    ? "-translate-y-full opacity-0" 
-                    : "translate-y-full opacity-0"
-              }`}
-            >
-              <span className="truncate w-full block">{item.title}</span>
-            </Link>
-          ))}
+          <div className="absolute top-0 flex whitespace-nowrap animate-marquee">
+            {displayItems.map((item, index) => (
+              <Link
+                key={`${item.id}-${index}`}
+                href={`/articles/${item.slug}`}
+                className="inline-block text-sm font-medium mr-12 hover:underline focus:outline-none"
+              >
+                {item.title}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
