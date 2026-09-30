@@ -32,6 +32,7 @@ const editorLinks = [
 const adminLinks = [
   { name: "Admin Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
   { name: "All Articles", href: "/dashboard/admin/articles", icon: FileText },
+  { name: "Services Directory", href: "/dashboard/admin/services", icon: FolderOpen },
   { name: "Editorial Team", href: "/dashboard/admin/team", icon: Users },
   { name: "User Management", href: "/dashboard/admin/users", icon: UserCheck },
   { name: "Role Management", href: "/dashboard/admin/roles", icon: Shield },
