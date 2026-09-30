@@ -16,7 +16,7 @@ export default function Home() {
         <BreakingNews />
 
         {/* Top Leaderboard Ad */}
-        <div className="container mx-auto px-4 py-6 hidden md:block">
+        <div className="container mx-auto px-4 py-6">
           <AdZone type="leaderboard" className="mx-auto" />
         </div>
 
