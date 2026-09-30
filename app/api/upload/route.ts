@@ -55,6 +55,7 @@ export async function POST(request: Request) {
         {
           folder: "voice_of_upsa/articles",
           resource_type: "image",
+          image_metadata: false, // Strips EXIF and location metadata for privacy
         },
         (error, result) => {
           if (error) reject(error);
