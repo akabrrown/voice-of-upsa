@@ -48,8 +48,8 @@ export function BreakingNews() {
     return null;
   }
 
-  // Duplicate items twice to ensure a smooth continuous loop
-  const displayItems = [...newsItems, ...newsItems, ...newsItems];
+  // Duplicate items to ensure they exceed screen width (e.g. at least 15 items total per block)
+  const repeatedItems = [...newsItems, ...newsItems, ...newsItems];
 
   return (
     <div className="bg-upsa-gold text-upsa-navy py-2 overflow-hidden border-b border-upsa-navy/10 relative z-50">
@@ -58,17 +58,31 @@ export function BreakingNews() {
           <Megaphone className="h-4 w-4 mr-2" />
           Breaking News
         </div>
-        <div className="flex-1 relative h-6 overflow-hidden">
-          <div className="absolute top-0 flex whitespace-nowrap animate-marquee">
-            {displayItems.map((item, index) => (
-              <Link
-                key={`${item.id}-${index}`}
-                href={`/articles/${item.slug}`}
-                className="inline-block text-sm font-medium mr-12 hover:underline focus:outline-none"
-              >
-                {item.title}
-              </Link>
-            ))}
+        <div className="flex-1 overflow-hidden flex relative h-6 items-center">
+          <div className="flex whitespace-nowrap animate-marquee w-max">
+            <div className="flex items-center shrink-0">
+              {repeatedItems.map((item, index) => (
+                <Link
+                  key={`${item.id}-${index}`}
+                  href={`/articles/${item.slug}`}
+                  className="inline-block text-sm font-medium mx-6 hover:underline focus:outline-none"
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+            <div className="flex items-center shrink-0" aria-hidden="true">
+              {repeatedItems.map((item, index) => (
+                <Link
+                  key={`${item.id}-dup-${index}`}
+                  href={`/articles/${item.slug}`}
+                  className="inline-block text-sm font-medium mx-6 hover:underline focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>
