@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS public.reports (
 );
 
 -- 3. Create public.notifications table
+DROP TABLE IF EXISTS public.notifications CASCADE;
+
 CREATE TABLE IF NOT EXISTS public.notifications (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     recipient_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE,
