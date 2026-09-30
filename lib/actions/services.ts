@@ -42,8 +42,7 @@ export async function createService(data: ServiceInput) {
   if (!adminId) throw new Error("Unauthorized");
 
   const { data: service, error } = await supabase
-    .schema("directory")
-    .from("services")
+    .from("directory_services")
     .insert({
       ...validated,
       created_by: adminId,
@@ -75,8 +74,7 @@ export async function updateService(id: string, data: Partial<ServiceInput>) {
   if (!adminId) throw new Error("Unauthorized");
 
   const { data: service, error } = await supabase
-    .schema("directory")
-    .from("services")
+    .from("directory_services")
     .update({
       ...data,
       updated_at: new Date().toISOString()
@@ -108,8 +106,7 @@ export async function verifyServiceToday(id: string) {
   if (!adminId) throw new Error("Unauthorized");
 
   const { data: service, error } = await supabase
-    .schema("directory")
-    .from("services")
+    .from("directory_services")
     .update({
       last_verified_at: new Date().toISOString(),
       verified_by: adminId,
@@ -146,8 +143,7 @@ export async function softDeleteService(id: string) {
   if (!adminId) throw new Error("Unauthorized");
 
   const { data: service, error } = await supabase
-    .schema("directory")
-    .from("services")
+    .from("directory_services")
     .update({
       deleted_at: new Date().toISOString(),
       status: "inactive",
@@ -182,8 +178,7 @@ export async function manageCategory(data: CategoryInput, id?: string) {
   let result;
   if (id) {
     const { data: cat, error } = await supabase
-      .schema("directory")
-      .from("service_categories")
+      .from("directory_categories")
       .update({ ...validated, updated_at: new Date().toISOString() })
       .eq("id", id)
       .select()
@@ -193,8 +188,7 @@ export async function manageCategory(data: CategoryInput, id?: string) {
     await logAudit(supabase, adminId, "category.updated", cat.id, { name: cat.name });
   } else {
     const { data: cat, error } = await supabase
-      .schema("directory")
-      .from("service_categories")
+      .from("directory_categories")
       .insert(validated)
       .select()
       .single();

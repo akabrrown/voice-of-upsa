@@ -14,8 +14,7 @@ export async function getServiceCategories(): Promise<ServiceCategory[]> {
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .schema("directory")
-    .from("service_categories")
+    .from("directory_categories")
     .select("*")
     .eq("is_active", true)
     .order("sort_order");
@@ -46,8 +45,7 @@ export async function getActiveServices(): Promise<StudentService[]> {
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .schema("directory")
-    .from("services")
+    .from("directory_services")
     .select(`
       *,
       category:category_id (*)
@@ -82,8 +80,7 @@ export async function getServiceBySlug(slug: string): Promise<StudentService | n
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .schema("directory")
-    .from("services")
+    .from("directory_services")
     .select(`
       *,
       category:category_id (*)

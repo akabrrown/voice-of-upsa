@@ -163,8 +163,8 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-upsa-navy text-white shadow-md">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 relative">
         {/* Logo */}
-        <Link href="/" className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex items-center space-x-3 group">
-          <div className="relative h-12 w-12 rounded-md overflow-hidden border-2 border-upsa-gold/20 transition-transform group-hover:scale-105 shadow-md">
+        <Link href="/" className="flex items-center lg:space-x-3 group z-10">
+          <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-md overflow-hidden border-2 border-upsa-gold/20 transition-transform group-hover:scale-105 shadow-md shrink-0">
             <Image
               src="/logo.jpg"
               alt="Voice of UPSA"
@@ -173,10 +173,16 @@ export function Navbar() {
               priority
             />
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5 justify-center">
+          <div className="hidden lg:flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5 justify-center">
             <span className="text-xs sm:text-xl font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
             <span className="text-xl font-black tracking-tight text-white uppercase leading-tight">UPSA</span>
           </div>
+        </Link>
+
+        {/* Mobile Centered Text */}
+        <Link href="/" className="absolute left-1/2 -translate-x-1/2 lg:hidden flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] font-black tracking-[0.15em] text-upsa-gold uppercase leading-none mb-0.5">Voice of</span>
+          <span className="text-lg font-black tracking-tight text-white uppercase leading-none">UPSA</span>
         </Link>
 
         {/* Desktop Navigation */}
