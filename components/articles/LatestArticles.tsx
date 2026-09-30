@@ -20,7 +20,7 @@ export async function LatestArticles() {
       day: "numeric",
       year: "numeric"
     }) : "Recent",
-    readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
+
     image: art.cover_image_url || "https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?q=80&w=800",
     slug: art.slug,
     author: (art as any).author_name || art.profiles?.full_name || "Editorial Team",

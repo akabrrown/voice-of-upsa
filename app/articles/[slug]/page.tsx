@@ -185,7 +185,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       day: "numeric",
       year: "numeric"
     }) : "Recent",
-    readTime: dbArticle.reading_time_minutes ? `${dbArticle.reading_time_minutes} min read` : "3 min read",
+
     author: {
       name: authorName,
       role: authorRole,
@@ -207,7 +207,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       day: "numeric",
       year: "numeric"
     }) : "Recent",
-    readTime: rel.reading_time_minutes ? `${rel.reading_time_minutes} min read` : "3 min read",
+
     image: rel.cover_image_url || "/campus.png",
     slug: rel.slug,
   })) || [];
@@ -292,7 +292,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                       </div>
                     </div>
                     <span className="flex items-center"><Calendar className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.date}</span>
-                    <span className="flex items-center"><Clock className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.readTime}</span>
+
                     {article.publisherName && article.publisherName !== article.author.name && (
                       <span className="hidden sm:inline-flex items-center text-xs text-gray-400">
                         Published by <span className="font-medium text-gray-600 ml-1">{article.publisherName}</span>

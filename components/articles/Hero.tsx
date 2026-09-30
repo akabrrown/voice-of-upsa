@@ -47,7 +47,7 @@ export async function Hero() {
     year: "numeric"
   }) : "Recent";
   
-  const readTimeStr = article.reading_time_minutes ? `${article.reading_time_minutes} min read` : "3 min read";
+
   const authorName = article.author_name || article.profiles?.full_name || "Editorial Team";
   const imageUrl = article.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000";
 
@@ -76,7 +76,7 @@ export async function Hero() {
           
           <div className="flex flex-wrap items-center gap-6 pt-4 text-gray-300 text-sm">
             <span className="flex items-center"><Calendar className="h-4 w-4 mr-2 text-upsa-gold" /> {dateStr}</span>
-            <span className="flex items-center"><Clock className="h-4 w-4 mr-2 text-upsa-gold" /> {readTimeStr}</span>
+
             <span className="flex items-center font-semibold text-white">By {authorName}</span>
           </div>
           

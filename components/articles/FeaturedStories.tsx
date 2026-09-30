@@ -53,7 +53,7 @@ export async function FeaturedStories() {
       day: "numeric",
       year: "numeric"
     }) : "Recent",
-    readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
+
     image: art.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000",
     slug: art.slug,
     author: (art as any).author_name || art.profiles?.full_name || "Editorial Team"
@@ -112,7 +112,7 @@ export async function FeaturedStories() {
               
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs md:text-sm font-medium text-gray-300">
                 <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-upsa-gold" /> {mainArticle.date}</span>
-                <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-upsa-gold" /> {mainArticle.readTime}</span>
+
                 <span className="flex items-center gap-2 text-white border-l border-white/20 pl-6">By {mainArticle.author}</span>
               </div>
             </div>
@@ -150,7 +150,7 @@ export async function FeaturedStories() {
                   <div className="flex items-center gap-4 text-xs font-semibold text-gray-400">
                     <span>{art.date}</span>
                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                    <span>{art.readTime}</span>
+
                   </div>
                 </div>
               </Link>

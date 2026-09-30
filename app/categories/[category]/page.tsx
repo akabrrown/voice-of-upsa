@@ -219,7 +219,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
       day: "numeric",
       year: "numeric"
     }) : "Recent",
-    readTime: art.reading_time_minutes ? `${art.reading_time_minutes} min read` : "3 min read",
+
     image: art.cover_image_url || "/campus.png",
     slug: art.slug,
     author: art.author_name || art.profiles?.full_name || "Editorial Team",
