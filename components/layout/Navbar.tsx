@@ -161,9 +161,9 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-upsa-navy text-white shadow-md">
-      <div className="container mx-auto flex h-20 items-center justify-between px-4">
+      <div className="container mx-auto flex h-20 items-center justify-between px-4 relative">
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3 group">
+        <Link href="/" className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex items-center space-x-3 group">
           <div className="relative h-12 w-12 rounded-md overflow-hidden border-2 border-upsa-gold/20 transition-transform group-hover:scale-105 shadow-md">
             <Image
               src="/logo.jpg"
