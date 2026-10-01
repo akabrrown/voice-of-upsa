@@ -24,7 +24,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Zap, Loader2, Trash2, User, PenTool } from "lucide-react";
+import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Bot, Loader2, Trash2, User, PenTool } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 
@@ -532,7 +532,7 @@ export default function NewArticlePage() {
                     onClick={generateExcerpt}
                     disabled={isGenerating}
                   >
-                    <Zap className={`h-3.5 w-3.5 ${isGenerating ? "animate-pulse" : ""}`} />
+                    <Bot className={`h-3.5 w-3.5 ${isGenerating ? "animate-pulse" : ""}`} />
                     {isGenerating ? "Generating..." : "Generate Summary"}
                   </Button>
                 </div>
@@ -821,7 +821,7 @@ export default function NewArticlePage() {
                 onClick={generateSEO}
                 disabled={isGeneratingSEO}
               >
-                <Zap className={`h-3 w-3 ${isGeneratingSEO ? "animate-pulse" : ""}`} />
+                <Bot className={`h-3 w-3 ${isGeneratingSEO ? "animate-pulse" : ""}`} />
                 {isGeneratingSEO ? "Generating..." : "Generate SEO"}
               </Button>
             </CardHeader>

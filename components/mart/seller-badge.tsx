@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Star, UserCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SellerStatus } from "@/lib/marketplace/types";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ export function SellerBadge({ status, className, showText = true }: SellerBadgeP
       classes: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400",
     },
     trusted: {
-      icon: Sparkles,
+      icon: Star,
       text: "Trusted Partner",
       classes: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20 dark:text-indigo-400",
     },

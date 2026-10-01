@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Phone, MapPin, Sparkles } from "lucide-react";
+import { Mail, Phone, MapPin, Newspaper } from "lucide-react";
 import { SocialMediaButtons } from "@/components/shared/SocialMediaButtons";
 import { NewsletterForm } from "@/components/newsletter/NewsletterForm";
 
@@ -21,7 +21,7 @@ export function Footer() {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative z-10">
             <div className="max-w-xl space-y-3">
               <div className="inline-flex items-center space-x-2 px-3 py-1 bg-upsa-gold/15 border border-upsa-gold/30 rounded-full mb-2">
-                <Sparkles className="w-4 h-4 text-upsa-gold" />
+                <Newspaper className="w-4 h-4 text-upsa-gold" />
                 <span className="text-xs font-bold uppercase tracking-widest text-upsa-gold">The Weekly Digest</span>
               </div>
               <h3 className="text-3xl font-black text-white tracking-tight">Stay Ahead of the Curve</h3>

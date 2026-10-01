@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Zap, Rocket } from "lucide-react";
+import { Check, Star, Target, Rocket } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,7 +11,7 @@ const defaultTiers = [
     name: "Basic",
     price: 200,
     period: "per week",
-    icon: Zap,
+    icon: Target,
     description: "Perfect for student-led initiatives and campus clubs.",
     features: [
       "Sidebar Ad (300x250)",
@@ -78,7 +78,7 @@ export default async function AdvertisePage() {
 
   // Combine DB tiers with default fallbacks and icon associations
   const iconMap: Record<string, any> = {
-    basic: Zap,
+    basic: Target,
     standard: Star,
     premium: Rocket,
   };
@@ -86,7 +86,7 @@ export default async function AdvertisePage() {
   const tiers = dbTiers.length > 0
     ? dbTiers.map((tier) => {
         const defaultMatch = defaultTiers.find((d) => d.id === tier.id);
-        const IconComponent = iconMap[tier.id] || (tier.highlight ? Star : Zap);
+        const IconComponent = iconMap[tier.id] || (tier.highlight ? Star : Target);
         
         let featureList = tier.features;
         if (typeof featureList === "string") {
