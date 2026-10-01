@@ -77,9 +77,17 @@ USING (
 );
 
 -- Trigger for updated_at
+CREATE OR REPLACE FUNCTION update_holiday_wishes_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
 DROP TRIGGER IF EXISTS update_holiday_wishes_updated_at ON public.holiday_wishes;
 
 CREATE TRIGGER update_holiday_wishes_updated_at
     BEFORE UPDATE ON public.holiday_wishes
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_holiday_wishes_updated_at();
