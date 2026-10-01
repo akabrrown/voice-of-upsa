@@ -103,3 +103,35 @@ export async function getServiceBySlug(slug: string): Promise<StudentService | n
 
   return data as StudentService;
 }
+
+export async function getAllServicesForAdmin(): Promise<StudentService[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('directory_services')
+    .select('*, category:category_id (*)')
+    .is('deleted_at', null)
+    .order('name');
+
+  if (error) {
+    console.error('Supabase fetch error (admin services):', error);
+    return [];
+  }
+
+  return data as StudentService[];
+}
+
+export async function getAllCategoriesForAdmin(): Promise<ServiceCategory[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('directory_categories')
+    .select('*')
+    .order('sort_order');
+
+  if (error) {
+    console.error('Supabase fetch error (admin categories):', error);
+    return [];
+  }
+
+  return data as ServiceCategory[];
+}
+
