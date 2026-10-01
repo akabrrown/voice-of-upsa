@@ -48,19 +48,19 @@ export function BreakingNews() {
     return null;
   }
 
-  // Duplicate items to ensure they exceed screen width (e.g. at least 15 items total per block)
-  const repeatedItems = [...newsItems, ...newsItems, ...newsItems];
+  // Duplicate items heavily to ensure they exceed screen width
+  const repeatedItems = Array(10).fill(newsItems).flat();
 
   return (
-    <div className="bg-upsa-gold text-upsa-navy py-2 overflow-hidden border-b border-upsa-navy/10 relative z-50">
+    <div className="sticky top-20 z-40 bg-upsa-gold text-upsa-navy py-2 overflow-hidden border-b border-upsa-navy/10 shadow-sm">
       <div className="container mx-auto px-4 flex items-center">
         <div className="flex items-center font-bold text-xs uppercase tracking-widest mr-4 whitespace-nowrap bg-upsa-gold relative z-10 pr-2">
           <Megaphone className="h-4 w-4 mr-2" />
           Breaking News
         </div>
-        <div className="flex-1 overflow-hidden flex relative h-6 items-center">
-          <div className="flex whitespace-nowrap animate-marquee w-max">
-            <div className="flex items-center shrink-0">
+        <div className="flex-1 overflow-hidden flex relative h-6 items-center [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+          <div className="flex whitespace-nowrap animate-marquee hover:[animation-play-state:paused]">
+            <div className="flex items-center shrink-0 min-w-full justify-around">
               {repeatedItems.map((item, index) => (
                 <Link
                   key={`${item.id}-${index}`}
@@ -71,7 +71,7 @@ export function BreakingNews() {
                 </Link>
               ))}
             </div>
-            <div className="flex items-center shrink-0" aria-hidden="true">
+            <div className="flex items-center shrink-0 min-w-full justify-around" aria-hidden="true">
               {repeatedItems.map((item, index) => (
                 <Link
                   key={`${item.id}-dup-${index}`}
