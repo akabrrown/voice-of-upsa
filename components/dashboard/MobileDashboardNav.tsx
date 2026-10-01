@@ -15,6 +15,8 @@ import {
   Megaphone,
   CalendarHeart,
   Store,
+  FolderOpen,
+  Shield,
 } from "lucide-react";
 
 const editorLinks = [
@@ -26,10 +28,13 @@ const editorLinks = [
 const adminLinks = [
   { name: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
   { name: "Articles", href: "/dashboard/admin/articles", icon: FileText },
+  { name: "Services", href: "/dashboard/admin/services", icon: FolderOpen },
   { name: "Editorial Team", href: "/dashboard/admin/team", icon: Users },
   { name: "Users", href: "/dashboard/admin/users", icon: Users },
+  { name: "Roles", href: "/dashboard/admin/roles", icon: Shield },
   { name: "Ads", href: "/dashboard/admin/ads", icon: Megaphone },
   { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
+  { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
   ...(process.env.NODE_ENV !== "production" ? [{ name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store }] : []),
   { name: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
   { name: "Settings", href: "/dashboard/admin/settings", icon: Settings },
