@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpen, GraduationCap, Calendar, Newspaper, MessageSquare, Trophy, Vote, Star, Home as HomeIcon, Layers, Megaphone, Info, PhoneCall, Bell, Store, Bot, EyeOff, Camera, Map, BarChart3, Video, BellRing, Mic, Briefcase, Users, Beaker, ChevronDown } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { InstallPWA } from "./InstallPWA";
+import { NotificationBell } from "./NotificationBell";
 
 interface AuthenticatedUser extends User {
   role?: string;
@@ -92,52 +93,6 @@ export function Navbar() {
 
     return () => subscription.unsubscribe();
   }, [supabase]);
-
-  // Fetch and subscribe to notifications for authenticated user
-  React.useEffect(() => {
-    if (!user) {
-      setUnreadNotifications(0);
-      return;
-    }
-
-    const fetchNotifications = async () => {
-      try {
-        const { count, error } = await supabase
-          .from("notifications")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("is_read", false);
-
-        if (!error && typeof count === "number") {
-          setUnreadNotifications(count);
-        }
-      } catch (err) {
-        console.error("Failed to load notifications count:", err);
-      }
-    };
-
-    fetchNotifications();
-
-    const channel = supabase
-      .channel(`navbar-notifications-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchNotifications();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, supabase]);
 
   // Close mobile menu on scroll (with threshold to prevent layout-shift blinking)
   React.useEffect(() => {
@@ -371,18 +326,7 @@ export function Navbar() {
             <InstallPWA />
             {user ? (
               <>
-                <Button asChild variant="ghost" className="text-white hover:bg-upsa-gold hover:text-upsa-navy relative px-3">
-                  <Link href="/profile?tab=notifications" title="View Notifications" className="flex items-center">
-                    <Bell className="h-4 w-4" />
-                    {unreadNotifications > 0 && (
-                      <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                      </span>
-                    )}
-                    <span className="sr-only">Notifications</span>
-                  </Link>
-                </Button>
+                <NotificationBell user={user} />
                 <Button asChild variant="ghost" className="text-white hover:bg-upsa-gold hover:text-upsa-navy">
                   <Link href="/profile">
                     <UserIcon className="mr-2 h-4 w-4" />
