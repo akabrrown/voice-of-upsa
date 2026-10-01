@@ -17,7 +17,16 @@ import {
   Store,
   FolderOpen,
   Shield,
+  Bookmark,
+  History,
+  User,
 } from "lucide-react";
+
+const userLinks = [
+  { name: "Profile", href: "/dashboard/user", icon: User },
+  { name: "Saved", href: "/dashboard/user/bookmarks", icon: Bookmark },
+  { name: "History", href: "/dashboard/user/history", icon: History },
+];
 
 const editorLinks = [
   { name: "Overview", href: "/dashboard/editor", icon: LayoutDashboard },
@@ -43,9 +52,16 @@ const adminLinks = [
 export function MobileDashboardNav({ className }: { className?: string }) {
   const pathname = usePathname();
   const isAdmin = pathname.includes("/admin");
+  const isUser = pathname.includes("/user");
   const [pendingAdsCount, setPendingAdsCount] = useState<number>(0);
   const supabase = createClient();
-  const links = isAdmin ? adminLinks : editorLinks;
+  
+  let links = editorLinks;
+  if (isAdmin) {
+    links = adminLinks;
+  } else if (isUser) {
+    links = userLinks;
+  }
 
   useEffect(() => {
     if (!isAdmin) return;

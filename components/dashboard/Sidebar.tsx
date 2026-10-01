@@ -17,11 +17,20 @@ import {
   MessageSquare,
   Megaphone,
   FolderOpen,
-  LogOut,
   CalendarHeart,
   Shield,
-  Store
+  Store,
+  Bookmark,
+  History,
+  User,
+  LogOut
 } from "lucide-react";
+
+const userLinks = [
+  { name: "My Profile", href: "/dashboard/user", icon: User },
+  { name: "Saved Articles", href: "/dashboard/user/bookmarks", icon: Bookmark },
+  { name: "Reading History", href: "/dashboard/user/history", icon: History },
+];
 
 const editorLinks = [
   { name: "Overview", href: "/dashboard/editor", icon: LayoutDashboard },
@@ -48,10 +57,16 @@ export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const isAdmin = pathname.includes("/admin");
+  const isUser = pathname.includes("/user");
   const [pendingAdsCount, setPendingAdsCount] = useState<number>(0);
   const supabase = createClient();
 
-  const links = isAdmin ? adminLinks : editorLinks;
+  let links = editorLinks;
+  if (isAdmin) {
+    links = adminLinks;
+  } else if (isUser) {
+    links = userLinks;
+  }
 
   useEffect(() => {
     if (!isAdmin) return;
