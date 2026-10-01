@@ -13,14 +13,37 @@ import { toast } from "react-hot-toast";
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      subject: formData.get("subject"),
+      message: formData.get("message"),
+    };
+
+    try {
+      const res = await fetch("/api/contact/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to send message");
+      }
+
       toast.success("Message sent successfully! We'll get back to you soon.");
-      setIsSubmitting(false);
       (e.target as HTMLFormElement).reset();
-    }, 2000);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send message");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

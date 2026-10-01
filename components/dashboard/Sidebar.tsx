@@ -46,6 +46,7 @@ const adminLinks = [
   { name: "User Management", href: "/dashboard/admin/users", icon: UserCheck },
   { name: "Role Management", href: "/dashboard/admin/roles", icon: Shield },
   { name: "Advertisements", href: "/dashboard/admin/ads", icon: Megaphone },
+  { name: "Inbox", href: "/dashboard/admin/inbox", icon: MessageSquare },
   { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
   { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
   ...(process.env.NODE_ENV !== "production" ? [{ name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store }] : []),
@@ -59,6 +60,7 @@ export function Sidebar({ className }: { className?: string }) {
   const isAdmin = pathname.includes("/admin");
   const isUser = pathname.includes("/user");
   const [pendingAdsCount, setPendingAdsCount] = useState<number>(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
   const supabase = createClient();
 
   let links = editorLinks;
@@ -86,7 +88,23 @@ export function Sidebar({ className }: { className?: string }) {
       }
     };
 
+    const fetchUnreadMessagesCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("contact_messages")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "unread");
+
+        if (!error && typeof count === "number") {
+          setUnreadMessagesCount(count);
+        }
+      } catch (err) {
+        console.error("Failed to fetch unread messages count:", err);
+      }
+    };
+
     fetchPendingCount();
+    fetchUnreadMessagesCount();
 
     // Live subscription for instant updates when users submit ads
     const channel = supabase
@@ -96,6 +114,13 @@ export function Sidebar({ className }: { className?: string }) {
         { event: "*", schema: "public", table: "advertisements" },
         () => {
           fetchPendingCount();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contact_messages" },
+        () => {
+          fetchUnreadMessagesCount();
         }
       )
       .subscribe();
@@ -158,6 +183,11 @@ export function Sidebar({ className }: { className?: string }) {
                 {isAdsLink && pendingAdsCount > 0 && (
                   <span className="ml-auto bg-amber-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse shrink-0">
                     {pendingAdsCount}
+                  </span>
+                )}
+                {link.name === "Inbox" && unreadMessagesCount > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse shrink-0">
+                    {unreadMessagesCount}
                   </span>
                 )}
               </Link>

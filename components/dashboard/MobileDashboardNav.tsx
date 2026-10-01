@@ -20,6 +20,7 @@ import {
   Bookmark,
   History,
   User,
+  MessageSquare,
 } from "lucide-react";
 
 const userLinks = [
@@ -42,6 +43,7 @@ const adminLinks = [
   { name: "Users", href: "/dashboard/admin/users", icon: Users },
   { name: "Roles", href: "/dashboard/admin/roles", icon: Shield },
   { name: "Ads", href: "/dashboard/admin/ads", icon: Megaphone },
+  { name: "Inbox", href: "/dashboard/admin/inbox", icon: MessageSquare },
   { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
   { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
   ...(process.env.NODE_ENV !== "production" ? [{ name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store }] : []),
@@ -54,6 +56,7 @@ export function MobileDashboardNav({ className }: { className?: string }) {
   const isAdmin = pathname.includes("/admin");
   const isUser = pathname.includes("/user");
   const [pendingAdsCount, setPendingAdsCount] = useState<number>(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
   const supabase = createClient();
   
   let links = editorLinks;
@@ -81,7 +84,23 @@ export function MobileDashboardNav({ className }: { className?: string }) {
       }
     };
 
+    const fetchUnreadMessagesCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("contact_messages")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "unread");
+
+        if (!error && typeof count === "number") {
+          setUnreadMessagesCount(count);
+        }
+      } catch (err) {
+        console.error("Failed to fetch unread messages count (mobile):", err);
+      }
+    };
+
     fetchPendingCount();
+    fetchUnreadMessagesCount();
 
     const channel = supabase
       .channel("admin-mobile-advertisements-count")
@@ -90,6 +109,13 @@ export function MobileDashboardNav({ className }: { className?: string }) {
         { event: "*", schema: "public", table: "advertisements" },
         () => {
           fetchPendingCount();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contact_messages" },
+        () => {
+          fetchUnreadMessagesCount();
         }
       )
       .subscribe();
@@ -123,6 +149,11 @@ export function MobileDashboardNav({ className }: { className?: string }) {
               {isAdsLink && pendingAdsCount > 0 && (
                 <span className="ml-1.5 bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
                   {pendingAdsCount}
+                </span>
+              )}
+              {link.name === "Inbox" && unreadMessagesCount > 0 && (
+                <span className="ml-1.5 bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm">
+                  {unreadMessagesCount}
                 </span>
               )}
             </Link>
