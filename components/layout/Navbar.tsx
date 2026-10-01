@@ -287,43 +287,45 @@ export function Navbar() {
                 </NavigationMenuContent>
               </NavigationMenuItem>
 
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy data-[state=open]:bg-upsa-gold data-[state=open]:text-upsa-navy transition-colors">
-                  Community
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="w-full p-4 md:p-6 bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6">
-                    {/* Featured Panel */}
-                    <div className="w-full md:w-[30%] shrink-0 rounded-2xl bg-gradient-to-br from-upsa-gold to-yellow-500 p-6 flex flex-col justify-between relative overflow-hidden group/featured shadow-inner">
-                      <div className="absolute -top-4 -right-4 p-4 opacity-20 group-hover/featured:scale-110 group-hover/featured:-rotate-12 transition-all duration-700">
-                        <Users className="w-40 h-40 text-upsa-navy" />
+              {visibleCommunity.length > 0 && (
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy data-[state=open]:bg-upsa-gold data-[state=open]:text-upsa-navy transition-colors">
+                    Community
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="w-full p-4 md:p-6 bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6">
+                      {/* Featured Panel */}
+                      <div className="w-full md:w-[30%] shrink-0 rounded-2xl bg-gradient-to-br from-upsa-gold to-yellow-500 p-6 flex flex-col justify-between relative overflow-hidden group/featured shadow-inner">
+                        <div className="absolute -top-4 -right-4 p-4 opacity-20 group-hover/featured:scale-110 group-hover/featured:-rotate-12 transition-all duration-700">
+                          <Users className="w-40 h-40 text-upsa-navy" />
+                        </div>
+                        <div className="relative z-10">
+                          <h3 className="text-2xl font-black text-upsa-navy mb-2 tracking-tight">Community</h3>
+                          <p className="text-sm text-upsa-navy/80 leading-relaxed font-medium">Engage with fellow students. Participate in polls, watch campus TV, or drop an anonymous confession.</p>
+                        </div>
+                        <div className="relative z-10 mt-8">
+                          <Link href="/tv" className="inline-flex items-center text-sm font-black text-upsa-navy group-hover/featured:translate-x-1 transition-transform bg-white/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                            Watch TV <span className="ml-1 text-lg leading-none">&rarr;</span>
+                          </Link>
+                        </div>
                       </div>
-                      <div className="relative z-10">
-                        <h3 className="text-2xl font-black text-upsa-navy mb-2 tracking-tight">Community</h3>
-                        <p className="text-sm text-upsa-navy/80 leading-relaxed font-medium">Engage with fellow students. Participate in polls, watch campus TV, or drop an anonymous confession.</p>
-                      </div>
-                      <div className="relative z-10 mt-8">
-                        <Link href="/tv" className="inline-flex items-center text-sm font-black text-upsa-navy group-hover/featured:translate-x-1 transition-transform bg-white/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                          Watch TV <span className="ml-1 text-lg leading-none">&rarr;</span>
-                        </Link>
-                      </div>
+                      {/* Grid */}
+                      <ul className="w-full md:w-[70%] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-1">
+                        {visibleCommunity.map((feature) => (
+                          <ListItem
+                            key={feature.title}
+                            title={feature.title}
+                            href={feature.href}
+                            icon={feature.icon}
+                          >
+                            {feature.description}
+                          </ListItem>
+                        ))}
+                      </ul>
                     </div>
-                    {/* Grid */}
-                    <ul className="w-full md:w-[70%] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-1">
-                      {visibleCommunity.map((feature) => (
-                        <ListItem
-                          key={feature.title}
-                          title={feature.title}
-                          href={feature.href}
-                          icon={feature.icon}
-                        >
-                          {feature.description}
-                        </ListItem>
-                      ))}
-                    </ul>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              )}
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
@@ -503,32 +505,34 @@ export function Navbar() {
               )}
             </div>
 
-            <div className="space-y-1 pt-2 border-t border-white/10">
-              <button 
-                onClick={() => setMobileCommunityOpen(!mobileCommunityOpen)}
-                className="w-full flex items-center justify-between text-gray-400 py-2 hover:text-upsa-gold transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Community</span>
-                </div>
-                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCommunityOpen ? "rotate-180" : "")} />
-              </button>
-              {mobileCommunityOpen && (
-                <div className="grid grid-cols-2 gap-2 pt-1 pl-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                  {visibleCommunity.map((feature) => (
-                    <Link
-                      key={feature.title}
-                      href={feature.href}
-                      className="text-gray-200 hover:text-upsa-gold text-sm py-1.5 transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {feature.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            {visibleCommunity.length > 0 && (
+              <div className="space-y-1 pt-2 border-t border-white/10">
+                <button 
+                  onClick={() => setMobileCommunityOpen(!mobileCommunityOpen)}
+                  className="w-full flex items-center justify-between text-gray-400 py-2 hover:text-upsa-gold transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Community</span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCommunityOpen ? "rotate-180" : "")} />
+                </button>
+                {mobileCommunityOpen && (
+                  <div className="grid grid-cols-2 gap-2 pt-1 pl-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {visibleCommunity.map((feature) => (
+                      <Link
+                        key={feature.title}
+                        href={feature.href}
+                        className="text-gray-200 hover:text-upsa-gold text-sm py-1.5 transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {feature.title}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <Link 
               href="/advertise" 
               className="flex items-center gap-2 text-white hover:text-upsa-gold py-2 font-bold transition-colors"
