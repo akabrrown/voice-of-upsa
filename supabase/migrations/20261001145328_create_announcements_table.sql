@@ -21,6 +21,12 @@ CREATE TABLE IF NOT EXISTS public.holiday_wishes (
 -- Enable Row Level Security
 ALTER TABLE public.holiday_wishes ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies to make this script idempotent
+DROP POLICY IF EXISTS "Public can view holiday wishes" ON public.holiday_wishes;
+DROP POLICY IF EXISTS "Admins can insert holiday wishes" ON public.holiday_wishes;
+DROP POLICY IF EXISTS "Admins can update holiday wishes" ON public.holiday_wishes;
+DROP POLICY IF EXISTS "Admins can delete holiday wishes" ON public.holiday_wishes;
+
 -- Allow public read access (anyone can see active holiday wishes)
 CREATE POLICY "Public can view holiday wishes" 
 ON public.holiday_wishes 
@@ -71,6 +77,8 @@ USING (
 );
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_holiday_wishes_updated_at ON public.holiday_wishes;
+
 CREATE TRIGGER update_holiday_wishes_updated_at
     BEFORE UPDATE ON public.holiday_wishes
     FOR EACH ROW

@@ -8,6 +8,10 @@ CREATE TABLE IF NOT EXISTS public.bookmarks (
 
 ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own bookmarks" ON public.bookmarks;
+DROP POLICY IF EXISTS "Users can insert own bookmarks" ON public.bookmarks;
+DROP POLICY IF EXISTS "Users can delete own bookmarks" ON public.bookmarks;
+
 CREATE POLICY "Users can view own bookmarks"
     ON public.bookmarks FOR SELECT
     USING (auth.uid() = profile_id);
@@ -37,6 +41,11 @@ CREATE TABLE IF NOT EXISTS public.comments (
 CREATE INDEX IF NOT EXISTS comments_article_id_idx ON public.comments(article_id);
 
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can view comments" ON public.comments;
+DROP POLICY IF EXISTS "Users can insert own comments" ON public.comments;
+DROP POLICY IF EXISTS "Users can update own comments" ON public.comments;
+DROP POLICY IF EXISTS "Users can delete own comments or Admins can delete any" ON public.comments;
 
 -- Public can view all comments
 CREATE POLICY "Public can view comments"
@@ -75,6 +84,8 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+DROP TRIGGER IF EXISTS update_comments_updated_at ON public.comments;
 
 CREATE TRIGGER update_comments_updated_at
     BEFORE UPDATE ON public.comments
