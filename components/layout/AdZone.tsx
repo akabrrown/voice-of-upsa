@@ -14,13 +14,18 @@ export async function AdZone({ type, className }: AdZoneProps) {
 
   try {
     const supabase = getAdminClient();
+    let targetTiers: string[] = [];
+    if (type === "leaderboard") targetTiers = ["standard", "premium"];
+    if (type === "sidebar") targetTiers = ["basic", "standard", "premium"];
+    if (type === "in-feed") targetTiers = ["standard", "premium"];
+
     const { data: ads } = await supabase
       .from("advertisements")
       .select("*")
-      .eq("ad_type", type)
+      .in("ad_tier", targetTiers)
       .eq("status", "active")
-      .not("creative_url", "is", null)
-      .neq("creative_url", "")
+      .not("banner_image_url", "is", null)
+      .neq("banner_image_url", "")
       .limit(1);
 
     ad = ads?.[0] || null;
@@ -28,16 +33,20 @@ export async function AdZone({ type, className }: AdZoneProps) {
     ad = null;
   }
 
-  if (ad && typeof ad.creative_url === "string" && ad.creative_url.trim().length > 0) {
+  if (ad && typeof ad.banner_image_url === "string" && ad.banner_image_url.trim().length > 0) {
     const aspectRatios = {
       leaderboard: "min-h-[50px] aspect-[320/50] md:aspect-[728/90] md:min-h-[90px] w-full max-w-[728px]",
       sidebar: "min-h-[200px] aspect-square md:aspect-[300/250] w-full max-w-[300px]",
       "in-feed": "min-h-[100px] w-full",
     };
 
+    const targetUrl = ad.target_url || `/advertise`;
+
     return (
       <Link 
-        href={`/ads/${ad.id}`}
+        href={targetUrl}
+        target={ad.target_url ? "_blank" : "_self"}
+        rel={ad.target_url ? "noopener noreferrer" : ""}
         className={cn(
           "block overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 relative group border border-gray-200/80 dark:border-gray-800",
           aspectRatios[type],
@@ -48,9 +57,10 @@ export async function AdZone({ type, className }: AdZoneProps) {
           <span>Ad</span>
           <ArrowUpRight className="h-2.5 w-2.5 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
-          src={ad.creative_url} 
-          alt={ad.company_name || ad.product_name || "Advertisement"} 
+          src={ad.banner_image_url} 
+          alt={ad.company_name || "Advertisement"} 
           className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
         />
       </Link>
