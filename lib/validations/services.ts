@@ -23,5 +23,5 @@ export const serviceSchema = z.object({
   status: z.enum(["active", "inactive"]).default("inactive"),
 });
 
-export type CategoryInput = z.infer<typeof categorySchema>;
-export type ServiceInput = z.infer<typeof serviceSchema>;
+export type CategoryInput = z.input<typeof categorySchema>;
+export type ServiceInput = z.input<typeof serviceSchema>;
