@@ -1,12 +1,40 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Sparkles } from "lucide-react";
 import { SocialMediaButtons } from "@/components/shared/SocialMediaButtons";
+import { NewsletterForm } from "@/components/newsletter/NewsletterForm";
 
 export function Footer() {
   return (
-    <footer className="bg-upsa-navy text-white py-12">
-      <div className="container mx-auto px-4">
+    <footer className="bg-upsa-navy text-white pt-16 pb-8 relative overflow-hidden">
+      {/* Decorative ambient background elements */}
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-upsa-gold/30 to-transparent" />
+      <div className="absolute -top-[500px] -right-[300px] w-[800px] h-[800px] rounded-full bg-upsa-gold/5 blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-[500px] -left-[300px] w-[800px] h-[800px] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
+      
+      <div className="container mx-auto px-4 relative z-10">
+        {/* Newsletter Subscription Banner */}
+        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 mb-16 relative overflow-hidden backdrop-blur-sm">
+          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+            <Mail className="w-32 h-32 text-upsa-gold" />
+          </div>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 relative z-10">
+            <div className="max-w-xl space-y-3">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-upsa-gold/15 border border-upsa-gold/30 rounded-full mb-2">
+                <Sparkles className="w-4 h-4 text-upsa-gold" />
+                <span className="text-xs font-bold uppercase tracking-widest text-upsa-gold">The Weekly Digest</span>
+              </div>
+              <h3 className="text-3xl font-black text-white tracking-tight">Stay Ahead of the Curve</h3>
+              <p className="text-gray-300 text-sm md:text-base leading-relaxed max-w-md">
+                Get the most important UPSA news, upcoming events, and exclusive campus insights delivered straight to your inbox every Friday.
+              </p>
+            </div>
+            <div className="w-full md:w-auto shrink-0 flex-1 max-w-sm ml-auto">
+              <NewsletterForm />
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Column */}
           <div className="space-y-4">
