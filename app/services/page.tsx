@@ -14,6 +14,11 @@ export default async function ServicesDirectoryPage() {
     getActiveServices()
   ]);
 
+  // Only display categories that actually have active services associated with them
+  const activeCategories = categories.filter(category => 
+    allServices.some(service => service.category_id === category.id)
+  );
+
   const featuredServices = allServices.filter(s => s.is_featured);
   const otherServices = allServices.filter(s => !s.is_featured);
 
@@ -27,7 +32,7 @@ export default async function ServicesDirectoryPage() {
         </p>
       </div>
 
-      <CategoryChips categories={categories} />
+      <CategoryChips categories={activeCategories} />
 
       {featuredServices.length > 0 && (
         <div className="mb-12">

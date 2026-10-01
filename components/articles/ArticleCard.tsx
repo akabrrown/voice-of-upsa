@@ -132,6 +132,7 @@ export function ArticleCard({ title, excerpt, category, date, image, slug, autho
           <Link 
             href={`/articles/${slug}`} 
             className="text-sm font-bold text-upsa-navy hover:text-upsa-gold flex items-center transition-colors"
+            aria-label={`Read more about ${title}`}
           >
             Read More
           </Link>

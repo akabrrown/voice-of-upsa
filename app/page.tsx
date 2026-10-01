@@ -11,9 +11,8 @@ export default function Home() {
   return (
     <>
       <Navbar />
+      <BreakingNews />
       <main className="flex-1">
-        {/* Breaking News Ticker */}
-        <BreakingNews />
 
         {/* Top Leaderboard Ad */}
         <div className="container mx-auto px-4 py-6">

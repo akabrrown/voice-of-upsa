@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpen, GraduationCap, Calendar, Newspaper, MessageSquare, Trophy, Vote, Star, Home as HomeIcon, Layers, Megaphone, Info, PhoneCall, Bell, Store, Bot, EyeOff, Camera, Map, BarChart3, Video, BellRing, Mic, Briefcase, Users, Beaker } from "lucide-react";
+import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpen, GraduationCap, Calendar, Newspaper, MessageSquare, Trophy, Vote, Star, Home as HomeIcon, Layers, Megaphone, Info, PhoneCall, Bell, Store, Bot, EyeOff, Camera, Map, BarChart3, Video, BellRing, Mic, Briefcase, Users, Beaker, ChevronDown } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { InstallPWA } from "./InstallPWA";
 
@@ -24,17 +24,20 @@ interface AuthenticatedUser extends User {
   role?: string;
 }
 
-const previewFeatures = [
-  { title: "AI Assistant", href: "/ai-assistant", description: "Your virtual campus guide.", icon: Bot },
-  { title: "Anonymous", href: "/anonymous", description: "Confessions and opinions.", icon: EyeOff },
-  { title: "Gallery", href: "/gallery", description: "Campus photos and memories.", icon: Camera },
-  { title: "Campus Map", href: "/map", description: "Navigate the university.", icon: Map },
-  { title: "Campus Mart", href: "/mart", description: "Buy and sell on campus.", icon: Store },
-  { title: "Polls", href: "/polls", description: "Vote on campus issues.", icon: BarChart3 },
-  { title: "Video TV", href: "/tv", description: "Campus news and shows.", icon: Video },
-  { title: "Podcasts", href: "/podcasts", description: "Listen to campus voices.", icon: Mic },
-  { title: "Student Services", href: "/services", description: "Access campus services.", icon: Briefcase },
-  { title: "Jobs Board", href: "/jobs", description: "Find internships and jobs.", icon: Users },
+const campusLifeFeatures = [
+  { title: "Student Services", href: "/services", description: "Access official campus services and directories.", icon: Briefcase, completed: true },
+  { title: "Campus Mart", href: "/mart", description: "Buy, sell, and trade within the campus community.", icon: Store, completed: false },
+  { title: "Jobs Board", href: "/jobs", description: "Find internships, part-time jobs, and career opportunities.", icon: Users, completed: false },
+  { title: "Campus Map", href: "/map", description: "Navigate the university with an interactive map.", icon: Map, completed: false },
+];
+
+const communityMediaFeatures = [
+  { title: "Video TV", href: "/tv", description: "Watch campus news, shows, and event coverage.", icon: Video, completed: false },
+  { title: "Podcasts", href: "/podcasts", description: "Listen to student voices and interviews.", icon: Mic, completed: false },
+  { title: "Gallery", href: "/gallery", description: "Explore campus photos and event memories.", icon: Camera, completed: false },
+  { title: "Anonymous", href: "/anonymous", description: "Share confessions and opinions safely.", icon: EyeOff, completed: false },
+  { title: "Polls", href: "/polls", description: "Vote on pressing campus issues and debates.", icon: BarChart3, completed: false },
+  { title: "AI Assistant", href: "/ai-assistant", description: "Your smart virtual campus guide.", icon: Bot, completed: false },
 ];
 
 const categories = [
@@ -52,10 +55,15 @@ export function Navbar() {
   const [user, setUser] = React.useState<AuthenticatedUser | null>(null);
   const [unreadNotifications, setUnreadNotifications] = React.useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [mobileCategoriesOpen, setMobileCategoriesOpen] = React.useState(false);
+  const [mobileCommunityOpen, setMobileCommunityOpen] = React.useState(false);
   const [showCategories, setShowCategories] = React.useState(false);
-  const [showPreview, setShowPreview] = React.useState(false);
   const supabase = createClient();
   const router = useRouter();
+
+  const isDev = process.env.NODE_ENV === "development";
+  const visibleCampusLife = campusLifeFeatures.filter(f => isDev || f.completed);
+  const visibleCommunity = communityMediaFeatures.filter(f => isDev || f.completed);
 
   React.useEffect(() => {
     const fetchUserRole = async (user: User | null) => {
@@ -203,32 +211,118 @@ export function Navbar() {
 
 
               <NavigationMenuItem>
-                <button 
-                  onClick={() => {
-                    setShowCategories(!showCategories);
-                    if (showPreview) setShowPreview(false);
-                  }}
-                  className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors flex items-center gap-1.5 cursor-pointer", showCategories && "bg-upsa-gold text-upsa-navy")}
-                >
-                  <Layers className="h-4 w-4" />
+                <NavigationMenuTrigger className="bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy data-[state=open]:bg-upsa-gold data-[state=open]:text-upsa-navy transition-colors">
                   Categories
-                </button>
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="w-full p-4 md:p-6 bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6">
+                    {/* Featured Panel */}
+                    <div className="w-full md:w-[30%] shrink-0 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-6 flex flex-col justify-between border border-gray-200/60 relative overflow-hidden group/featured">
+                      <div className="absolute -top-4 -right-4 p-4 opacity-5 group-hover/featured:scale-110 group-hover/featured:rotate-12 transition-all duration-700">
+                        <Layers className="w-40 h-40 text-upsa-navy" />
+                      </div>
+                      <div className="relative z-10">
+                        <h3 className="text-2xl font-black text-upsa-navy mb-2 tracking-tight">Browse Topics</h3>
+                        <p className="text-sm text-gray-500 leading-relaxed font-medium">Explore articles across academics, campus events, sports, and student lifestyle.</p>
+                      </div>
+                      <div className="relative z-10 mt-8">
+                        <Link href="/categories/all" className="inline-flex items-center text-sm font-bold text-upsa-gold group-hover/featured:translate-x-1 transition-transform">
+                          View all articles <span className="ml-1 text-lg leading-none">&rarr;</span>
+                        </Link>
+                      </div>
+                    </div>
+                    {/* Grid */}
+                    <ul className="w-full md:w-[70%] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-1">
+                      {categories.map((category) => (
+                        <ListItem
+                          key={category.title}
+                          title={category.title}
+                          href={category.href}
+                          icon={category.icon}
+                        >
+                          {category.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </div>
+                </NavigationMenuContent>
               </NavigationMenuItem>
 
-              {process.env.NODE_ENV !== "production" && (
-                <NavigationMenuItem>
-                  <button 
-                    onClick={() => {
-                      setShowPreview(!showPreview);
-                      if (showCategories) setShowCategories(false);
-                    }}
-                    className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors flex items-center gap-1.5 cursor-pointer", showPreview && "bg-upsa-gold text-upsa-navy")}
-                  >
-                    <Beaker className="h-4 w-4" />
-                    Upcoming
-                  </button>
-                </NavigationMenuItem>
-              )}
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy data-[state=open]:bg-upsa-gold data-[state=open]:text-upsa-navy transition-colors">
+                  Campus Life
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="w-full p-4 md:p-6 bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6">
+                    {/* Featured Panel */}
+                    <div className="w-full md:w-[35%] shrink-0 rounded-2xl bg-gradient-to-br from-upsa-navy to-gray-900 p-6 flex flex-col justify-between border border-upsa-navy relative overflow-hidden group/featured">
+                      <div className="absolute -bottom-4 -right-4 p-4 opacity-10 group-hover/featured:scale-110 transition-transform duration-700">
+                        <Map className="w-40 h-40 text-white" />
+                      </div>
+                      <div className="relative z-10">
+                        <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Campus Life</h3>
+                        <p className="text-sm text-gray-300 leading-relaxed font-medium">Everything you need to thrive at UPSA. Discover services, campus map, jobs, and the marketplace.</p>
+                      </div>
+                      <div className="relative z-10 mt-8">
+                        <Link href="/services" className="inline-flex items-center text-sm font-bold text-upsa-gold group-hover/featured:translate-x-1 transition-transform">
+                          Explore services <span className="ml-1 text-lg leading-none">&rarr;</span>
+                        </Link>
+                      </div>
+                    </div>
+                    {/* Grid */}
+                    <ul className="w-full md:w-[65%] grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1">
+                      {visibleCampusLife.map((feature) => (
+                        <ListItem
+                          key={feature.title}
+                          title={feature.title}
+                          href={feature.href}
+                          icon={feature.icon}
+                        >
+                          {feature.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy data-[state=open]:bg-upsa-gold data-[state=open]:text-upsa-navy transition-colors">
+                  Community
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="w-full p-4 md:p-6 bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6">
+                    {/* Featured Panel */}
+                    <div className="w-full md:w-[30%] shrink-0 rounded-2xl bg-gradient-to-br from-upsa-gold to-yellow-500 p-6 flex flex-col justify-between relative overflow-hidden group/featured shadow-inner">
+                      <div className="absolute -top-4 -right-4 p-4 opacity-20 group-hover/featured:scale-110 group-hover/featured:-rotate-12 transition-all duration-700">
+                        <Users className="w-40 h-40 text-upsa-navy" />
+                      </div>
+                      <div className="relative z-10">
+                        <h3 className="text-2xl font-black text-upsa-navy mb-2 tracking-tight">Community</h3>
+                        <p className="text-sm text-upsa-navy/80 leading-relaxed font-medium">Engage with fellow students. Participate in polls, watch campus TV, or drop an anonymous confession.</p>
+                      </div>
+                      <div className="relative z-10 mt-8">
+                        <Link href="/tv" className="inline-flex items-center text-sm font-black text-upsa-navy group-hover/featured:translate-x-1 transition-transform bg-white/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                          Watch TV <span className="ml-1 text-lg leading-none">&rarr;</span>
+                        </Link>
+                      </div>
+                    </div>
+                    {/* Grid */}
+                    <ul className="w-full md:w-[70%] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-1">
+                      {visibleCommunity.map((feature) => (
+                        <ListItem
+                          key={feature.title}
+                          title={feature.title}
+                          href={feature.href}
+                          icon={feature.icon}
+                        >
+                          {feature.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors")}>
@@ -336,45 +430,9 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Secondary Navigation for Categories (FT Style) */}
-      {showCategories && (
-        <div className="hidden lg:block w-full bg-gray-50 border-t border-gray-200 border-b shadow-sm overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] animate-in slide-in-from-top-2 duration-200">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-start md:justify-center space-x-6 md:space-x-8 h-11 min-w-max md:min-w-0 mx-auto">
-              {categories.map((c) => (
-                <Link 
-                  key={c.href} 
-                  href={c.href} 
-                  className="flex items-center gap-1.5 text-[11px] font-black text-slate-800 uppercase tracking-[0.1em] whitespace-nowrap hover:text-upsa-gold transition-colors py-2"
-                >
-                  <c.icon className="h-3.5 w-3.5" />
-                  <span>{c.title}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Secondary Navigation for Preview Features */}
-      {showPreview && process.env.NODE_ENV !== "production" && (
-        <div className="hidden lg:block w-full bg-gray-50 border-t border-gray-200 border-b shadow-sm overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] animate-in slide-in-from-top-2 duration-200">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-start md:justify-center space-x-6 h-11 min-w-max md:min-w-0 mx-auto">
-              {previewFeatures.map((c) => (
-                <Link 
-                  key={c.href} 
-                  href={c.href} 
-                  className="flex items-center gap-1.5 text-[11px] font-black text-slate-800 uppercase tracking-[0.1em] whitespace-nowrap hover:text-upsa-gold transition-colors py-2"
-                >
-                  <c.icon className="h-3.5 w-3.5" />
-                  <span>{c.title}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+
+
 
       {/* Mobile Drawer Overlay & Content */}
       {mobileMenuOpen && (
@@ -391,32 +449,46 @@ export function Navbar() {
             
             {/* Category Accordion / List */}
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-gray-400">
-                <Layers className="h-5 w-5" />
-                <span className="text-xs font-bold uppercase tracking-wider">Categories</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-1 pl-2">
-                {categories.map((category) => (
-                  <Link
-                    key={category.title}
-                    href={category.href}
-                    className="text-gray-200 hover:text-upsa-gold text-sm py-1.5 transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {category.title}
-                  </Link>
-                ))}
-              </div>
+              <button 
+                onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
+                className="w-full flex items-center justify-between text-gray-400 py-2 hover:text-upsa-gold transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Layers className="h-5 w-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Categories</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCategoriesOpen ? "rotate-180" : "")} />
+              </button>
+              {mobileCategoriesOpen && (
+                <div className="grid grid-cols-2 gap-2 pt-1 pl-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {categories.map((category) => (
+                    <Link
+                      key={category.title}
+                      href={category.href}
+                      className="text-gray-200 hover:text-upsa-gold text-sm py-1.5 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {category.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {process.env.NODE_ENV !== "production" && (
-              <div className="space-y-1 pt-2 border-t border-white/10">
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Beaker className="h-5 w-5" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Upcoming Features</span>
+            <div className="space-y-1 pt-2 border-t border-white/10">
+              <button 
+                onClick={() => setMobileCampusLifeOpen(!mobileCampusLifeOpen)}
+                className="w-full flex items-center justify-between text-gray-400 py-2 hover:text-upsa-gold transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Campus Life</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 pt-1 pl-2">
-                  {previewFeatures.map((feature) => (
+                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCampusLifeOpen ? "rotate-180" : "")} />
+              </button>
+              {mobileCampusLifeOpen && (
+                <div className="grid grid-cols-2 gap-2 pt-1 pl-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {visibleCampusLife.map((feature) => (
                     <Link
                       key={feature.title}
                       href={feature.href}
@@ -427,8 +499,35 @@ export function Navbar() {
                     </Link>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            <div className="space-y-1 pt-2 border-t border-white/10">
+              <button 
+                onClick={() => setMobileCommunityOpen(!mobileCommunityOpen)}
+                className="w-full flex items-center justify-between text-gray-400 py-2 hover:text-upsa-gold transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Community</span>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCommunityOpen ? "rotate-180" : "")} />
+              </button>
+              {mobileCommunityOpen && (
+                <div className="grid grid-cols-2 gap-2 pt-1 pl-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {visibleCommunity.map((feature) => (
+                    <Link
+                      key={feature.title}
+                      href={feature.href}
+                      className="text-gray-200 hover:text-upsa-gold text-sm py-1.5 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {feature.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link 
               href="/advertise" 
               className="flex items-center gap-2 text-white hover:text-upsa-gold py-2 font-bold transition-colors"
@@ -534,19 +633,19 @@ const ListItem = React.forwardRef<
           ref={ref}
           href={props.href ?? "#"}
           className={cn(
-            "group flex items-start select-none space-x-4 rounded-xl p-3 leading-none no-underline outline-none transition-all hover:bg-gray-50 focus:bg-gray-50 active:scale-95",
+            "group flex items-start select-none space-x-4 rounded-xl p-3 no-underline outline-none transition-all duration-200 hover:bg-gray-100/70 focus:bg-gray-100/70 active:scale-[0.98] bg-transparent w-full",
             className
           )}
           {...props}
         >
           {Icon && (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-upsa-gold/10 text-upsa-navy group-hover:bg-upsa-gold group-hover:text-white transition-colors shadow-sm">
-              <Icon className="h-5 w-5 transition-transform group-hover:scale-110" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-gray-200/50 text-gray-500 group-hover:bg-upsa-navy group-hover:text-upsa-gold group-hover:ring-upsa-navy transition-all duration-300">
+              <Icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
             </div>
           )}
-          <div className="space-y-1.5 pt-0.5">
-            <div className="text-sm font-bold leading-none text-gray-900 group-hover:text-upsa-navy">{title}</div>
-            <p className="line-clamp-2 text-xs leading-relaxed text-gray-500">
+          <div className="space-y-1 pt-0.5 w-full text-left">
+            <div className="text-sm font-bold tracking-tight leading-none text-gray-900 group-hover:text-upsa-navy transition-colors">{title}</div>
+            <p className="line-clamp-2 text-xs font-medium leading-relaxed text-gray-500 group-hover:text-gray-600 transition-colors">
               {children}
             </p>
           </div>

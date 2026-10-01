@@ -33,7 +33,6 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
   }
 
   const verifiedAgo = formatDistanceToNow(new Date(service.last_verified_at), { addSuffix: true });
-  const hours = service.hours ? Object.entries(service.hours as Record<string, string>) : [];
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -137,19 +136,24 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           <div className="p-8 space-y-6 bg-gray-50/50">
             <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Operating Hours</h3>
             
-            {hours.length > 0 ? (
+            {!service.hours ? (
+              <div className="flex items-center text-gray-500">
+                <Clock className="h-5 w-5 mr-3 text-gray-400" />
+                <p>Hours not specified</p>
+              </div>
+            ) : typeof service.hours === 'string' ? (
+              <div className="flex items-center text-gray-900">
+                <Clock className="h-5 w-5 mr-3 text-upsa-gold" />
+                <p>{service.hours}</p>
+              </div>
+            ) : (
               <div className="space-y-3">
-                {hours.map(([day, time]) => (
+                {Object.entries(service.hours as Record<string, string>).map(([day, time]) => (
                   <div key={day} className="flex justify-between items-center">
                     <span className="text-gray-600 font-medium capitalize">{day}</span>
                     <span className="text-gray-900">{time}</span>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <div className="flex items-center text-gray-500">
-                <Clock className="h-5 w-5 mr-3 text-gray-400" />
-                <p>Hours not specified</p>
               </div>
             )}
 

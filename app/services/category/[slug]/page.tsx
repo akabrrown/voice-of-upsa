@@ -37,6 +37,11 @@ export default async function ServicesCategoryPage({ params }: CategoryPageProps
     notFound();
   }
 
+  // Only display categories that actually have active services associated with them
+  const activeCategories = categories.filter(cat => 
+    allServices.some(service => service.category_id === cat.id)
+  );
+
   const categoryServices = allServices.filter(s => s.category?.slug === slug);
 
   return (
@@ -48,7 +53,7 @@ export default async function ServicesCategoryPage({ params }: CategoryPageProps
         </p>
       </div>
 
-      <CategoryChips categories={categories} />
+      <CategoryChips categories={activeCategories} />
 
       <div>
         {categoryServices.length > 0 ? (

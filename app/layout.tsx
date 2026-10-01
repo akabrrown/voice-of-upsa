@@ -22,7 +22,6 @@ export const viewport: Viewport = {
   themeColor: "#0f172a", // UPSA Navy
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export const metadata: Metadata = {
@@ -61,12 +60,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon.png", type: "image/png", sizes: "32x32" },
       { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
       { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
     ],
-    shortcut: "/favicon.ico",
+    shortcut: "/favicon.png",
     apple: [
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
