@@ -45,6 +45,7 @@ const adminLinks = [
   { name: "Editorial Team", href: "/dashboard/admin/team", icon: Users },
   { name: "User Management", href: "/dashboard/admin/users", icon: UserCheck },
   { name: "Role Management", href: "/dashboard/admin/roles", icon: Shield },
+  { name: "Campus Polls", href: "/admin/polls", icon: BarChart3 },
   { name: "Advertisements", href: "/dashboard/admin/ads", icon: Megaphone },
   { name: "Inbox", href: "/dashboard/admin/inbox", icon: MessageSquare },
   { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
