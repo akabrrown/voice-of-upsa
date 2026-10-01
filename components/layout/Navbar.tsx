@@ -56,6 +56,7 @@ export function Navbar() {
   const [unreadNotifications, setUnreadNotifications] = React.useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = React.useState(false);
+  const [mobileCampusLifeOpen, setMobileCampusLifeOpen] = React.useState(false);
   const [mobileCommunityOpen, setMobileCommunityOpen] = React.useState(false);
   const [showCategories, setShowCategories] = React.useState(false);
   const supabase = createClient();
