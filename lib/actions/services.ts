@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { aj } from "@/lib/arcjet";
 import { request } from "@arcjet/next";
 import { redis } from "@/lib/upstash";
@@ -13,11 +14,11 @@ async function checkAdmin(supabase: any) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_admin, id")
+    .select("role, id")
     .eq("id", user.id)
     .single();
 
-  if (!profile?.is_admin) return null;
+  if (profile?.role !== 'admin') return null;
   return profile.id;
 }
 
@@ -41,7 +42,8 @@ export async function createService(data: ServiceInput) {
   const adminId = await checkAdmin(supabase);
   if (!adminId) throw new Error("Unauthorized");
 
-  const { data: service, error } = await supabase
+  const adminSupabase = getAdminClient();
+  const { data: service, error } = await adminSupabase
     .from("directory_services")
     .insert({
       ...validated,
@@ -54,7 +56,7 @@ export async function createService(data: ServiceInput) {
 
   if (error) throw new Error(error.message);
 
-  await logAudit(supabase, adminId, "service.created", service.id, { name: service.name });
+  await logAudit(adminSupabase, adminId, "service.created", service.id, { name: service.name });
   
   await redis.del("directory:services:active");
   
@@ -73,7 +75,8 @@ export async function updateService(id: string, data: Partial<ServiceInput>) {
   const adminId = await checkAdmin(supabase);
   if (!adminId) throw new Error("Unauthorized");
 
-  const { data: service, error } = await supabase
+  const adminSupabase = getAdminClient();
+  const { data: service, error } = await adminSupabase
     .from("directory_services")
     .update({
       ...data,
@@ -85,7 +88,7 @@ export async function updateService(id: string, data: Partial<ServiceInput>) {
 
   if (error) throw new Error(error.message);
 
-  await logAudit(supabase, adminId, "service.updated", service.id, { changes: Object.keys(data) });
+  await logAudit(adminSupabase, adminId, "service.updated", service.id, { changes: Object.keys(data) });
   
   await redis.del("directory:services:active", `directory:service:${service.slug}`);
   
@@ -105,7 +108,8 @@ export async function verifyServiceToday(id: string) {
   const adminId = await checkAdmin(supabase);
   if (!adminId) throw new Error("Unauthorized");
 
-  const { data: service, error } = await supabase
+  const adminSupabase = getAdminClient();
+  const { data: service, error } = await adminSupabase
     .from("directory_services")
     .update({
       last_verified_at: new Date().toISOString(),
@@ -118,7 +122,7 @@ export async function verifyServiceToday(id: string) {
 
   if (error) throw new Error(error.message);
 
-  await logAudit(supabase, adminId, "service.verified", service.id);
+  await logAudit(adminSupabase, adminId, "service.verified", service.id);
   
   await redis.del("directory:services:active", `directory:service:${service.slug}`);
   
@@ -142,7 +146,8 @@ export async function softDeleteService(id: string) {
   const adminId = await checkAdmin(supabase);
   if (!adminId) throw new Error("Unauthorized");
 
-  const { data: service, error } = await supabase
+  const adminSupabase = getAdminClient();
+  const { data: service, error } = await adminSupabase
     .from("directory_services")
     .update({
       deleted_at: new Date().toISOString(),
@@ -155,7 +160,7 @@ export async function softDeleteService(id: string) {
 
   if (error) throw new Error(error.message);
 
-  await logAudit(supabase, adminId, "service.deleted", service.id);
+  await logAudit(adminSupabase, adminId, "service.deleted", service.id);
   
   await redis.del("directory:services:active", `directory:service:${service.slug}`);
   
@@ -175,9 +180,10 @@ export async function manageCategory(data: CategoryInput, id?: string) {
   const adminId = await checkAdmin(supabase);
   if (!adminId) throw new Error("Unauthorized");
 
+  const adminSupabase = getAdminClient();
   let result;
   if (id) {
-    const { data: cat, error } = await supabase
+    const { data: cat, error } = await adminSupabase
       .from("directory_categories")
       .update({ ...validated, updated_at: new Date().toISOString() })
       .eq("id", id)
@@ -185,16 +191,16 @@ export async function manageCategory(data: CategoryInput, id?: string) {
       .single();
     if (error) throw new Error(error.message);
     result = cat;
-    await logAudit(supabase, adminId, "category.updated", cat.id, { name: cat.name });
+    await logAudit(adminSupabase, adminId, "category.updated", cat.id, { name: cat.name });
   } else {
-    const { data: cat, error } = await supabase
+    const { data: cat, error } = await adminSupabase
       .from("directory_categories")
       .insert(validated)
       .select()
       .single();
     if (error) throw new Error(error.message);
     result = cat;
-    await logAudit(supabase, adminId, "category.created", cat.id, { name: cat.name });
+    await logAudit(adminSupabase, adminId, "category.created", cat.id, { name: cat.name });
   }
 
   await redis.del("directory:categories");

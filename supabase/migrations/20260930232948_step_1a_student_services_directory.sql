@@ -2,7 +2,12 @@
 -- Creating the tables and RLS policies in the public schema to avoid PostgREST exposed schema issues.
 
 -- ENUMs
-CREATE TYPE public.service_status AS ENUM ('active', 'inactive');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'service_status') THEN
+        EXECUTE 'CREATE TYPE public.service_status AS ENUM (''active'', ''inactive'')';
+    END IF;
+END $$;
 
 -- 1. directory_categories
 CREATE TABLE IF NOT EXISTS public.directory_categories (
@@ -51,28 +56,32 @@ ALTER TABLE public.directory_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.directory_services ENABLE ROW LEVEL SECURITY;
 
 -- Helper function to check admin (already exists in public, but making sure we can use it)
--- We use: EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+-- We use: EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 
 -- RLS for directory_categories
 -- Public read if active, Admin reads all
+DROP POLICY IF EXISTS "Public can view active categories" ON public.directory_categories;
 CREATE POLICY "Public can view active categories" ON public.directory_categories
-    FOR SELECT USING (is_active = true OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    FOR SELECT USING (is_active = true OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- Admin can insert/update/delete categories
+DROP POLICY IF EXISTS "Admins can manage categories" ON public.directory_categories;
 CREATE POLICY "Admins can manage categories" ON public.directory_categories
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- RLS for directory_services
 -- Public read if active and not deleted, Admin reads all
+DROP POLICY IF EXISTS "Public can view active services" ON public.directory_services;
 CREATE POLICY "Public can view active services" ON public.directory_services
     FOR SELECT USING (
         (status = 'active' AND deleted_at IS NULL)
-        OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+        OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
     );
 
 -- Admin can insert/update/delete services
+DROP POLICY IF EXISTS "Admins can manage services" ON public.directory_services;
 CREATE POLICY "Admins can manage services" ON public.directory_services
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- Seed some initial categories as mentioned in PRD
 INSERT INTO public.directory_categories (name, slug, sort_order) VALUES

@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Upload, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -24,6 +25,7 @@ interface ServiceFormProps {
 export function ServiceForm({ initialData, categories }: ServiceFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<ServiceInput>({
     resolver: zodResolver(serviceSchema),
@@ -31,15 +33,16 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
       name: "",
       slug: "",
       description: "",
-      category_id: undefined,
+      category_id: "",
       location_label: "",
       contact_phone: "",
       contact_email: "",
       website_url: "",
       logo_url: "",
+      contact_whatsapp: "",
       status: "inactive",
       is_featured: false,
-      hours: {},
+      hours: "",
     },
   });
 
@@ -72,6 +75,35 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)+/g, '');
       form.setValue("slug", generatedSlug);
+    }
+  };
+
+  const logoUrl = form.watch("logo_url");
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      form.setValue("logo_url", data.url, { shouldValidate: true });
+      toast.success("Logo uploaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload image.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -128,18 +160,58 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
-            <Textarea
-              id="description"
-              placeholder="What does this service provide?"
-              className="min-h-[100px]"
-              {...form.register("description")}
-            />
-            {form.formState.errors.description && (
-              <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
-            )}
-          </div>
+            <div className="space-y-2 mb-4">
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                placeholder="What does this service provide?"
+                className="min-h-[100px]"
+                {...form.register("description")}
+              />
+              {form.formState.errors.description && (
+                <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Service Logo</Label>
+              <div className="flex items-center gap-4">
+                {logoUrl ? (
+                  <div className="relative h-20 w-20 rounded-full overflow-hidden border border-gray-200">
+                    <Image src={logoUrl} alt="Logo" fill className="object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => form.setValue("logo_url", "")}
+                      className="absolute top-0 right-0 bg-white/80 p-1 rounded-bl text-red-500 hover:bg-white z-10"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="h-20 w-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400">
+                    <Upload className="h-6 w-6" />
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="logo_upload" className="cursor-pointer bg-white border border-gray-300 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 text-center flex items-center gap-2 max-w-fit">
+                    {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {isUploading ? "Uploading..." : "Upload Logo"}
+                  </Label>
+                  <Input
+                    id="logo_upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                  />
+                  <p className="text-xs text-gray-500">Square image recommended. Max 2MB.</p>
+                </div>
+              </div>
+              {form.formState.errors.logo_url && (
+                <p className="text-sm text-red-500">{form.formState.errors.logo_url.message}</p>
+              )}
+            </div>
         </div>
       </div>
 
@@ -158,10 +230,10 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="contact_phone">Phone Number</Label>
+              <Label htmlFor="contact_phone">Phone Number(s)</Label>
               <Input
                 id="contact_phone"
-                placeholder="e.g. +233 24..."
+                placeholder="e.g. 024..., 050... (separate with commas)"
                 {...form.register("contact_phone")}
               />
             </div>
@@ -177,12 +249,30 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
             </div>
             
             <div className="space-y-2">
+              <Label htmlFor="contact_whatsapp">WhatsApp Number</Label>
+              <Input
+                id="contact_whatsapp"
+                placeholder="e.g. +233 24..."
+                {...form.register("contact_whatsapp")}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="website_url">Website URL</Label>
               <Input
                 id="website_url"
                 type="url"
                 placeholder="https://..."
                 {...form.register("website_url")}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="hours">Operating Hours</Label>
+              <Input
+                id="hours"
+                placeholder="e.g. Mon-Fri, 9am - 5pm"
+                {...form.register("hours" as any)}
               />
             </div>
           </div>

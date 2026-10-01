@@ -117,32 +117,41 @@ ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
 
 -- 9. RLS Policies
 -- Reports: Reporter reads own; Admin reads all
+DROP POLICY IF EXISTS "Users can view their own reports" ON public.reports;
 CREATE POLICY "Users can view their own reports" ON public.reports
     FOR SELECT USING (auth.uid() = reporter_id);
 
+DROP POLICY IF EXISTS "Admins can view all reports" ON public.reports;
 CREATE POLICY "Admins can view all reports" ON public.reports
-    FOR SELECT USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    FOR SELECT USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
+DROP POLICY IF EXISTS "Users can insert reports" ON public.reports;
 CREATE POLICY "Users can insert reports" ON public.reports
     FOR INSERT WITH CHECK (auth.uid() = reporter_id);
 
+DROP POLICY IF EXISTS "Admins can update reports" ON public.reports;
 CREATE POLICY "Admins can update reports" ON public.reports
-    FOR UPDATE USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true));
+    FOR UPDATE USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- Notifications: Owner reads/updates own, inserted via trigger/function
+DROP POLICY IF EXISTS "Users can view their own notifications" ON public.notifications;
 CREATE POLICY "Users can view their own notifications" ON public.notifications
     FOR SELECT USING (auth.uid() = recipient_id);
 
+DROP POLICY IF EXISTS "Users can update their own notifications" ON public.notifications;
 CREATE POLICY "Users can update their own notifications" ON public.notifications
     FOR UPDATE USING (auth.uid() = recipient_id);
 
 -- Preferences: Owner only
+DROP POLICY IF EXISTS "Users can view their own notification preferences" ON public.notification_preferences;
 CREATE POLICY "Users can view their own notification preferences" ON public.notification_preferences
     FOR SELECT USING (auth.uid() = profile_id);
 
+DROP POLICY IF EXISTS "Users can insert their own notification preferences" ON public.notification_preferences;
 CREATE POLICY "Users can insert their own notification preferences" ON public.notification_preferences
     FOR INSERT WITH CHECK (auth.uid() = profile_id);
 
+DROP POLICY IF EXISTS "Users can update their own notification preferences" ON public.notification_preferences;
 CREATE POLICY "Users can update their own notification preferences" ON public.notification_preferences
     FOR UPDATE USING (auth.uid() = profile_id);
 
