@@ -2,7 +2,7 @@ const sharp = require("sharp");
 const path = require("path");
 
 async function processImage() {
-  const inputPath = path.join(__dirname, "..", "public", "IMG-20260930-WA0033.jpg");
+  const inputPath = path.join(__dirname, "..", "public", "file_0000000083cc81f48037ef2ebda7e11b.png");
   const logoPath = path.join(__dirname, "..", "public", "logo.png");
   const iconPath = path.join(__dirname, "..", "app", "icon.png");
 
