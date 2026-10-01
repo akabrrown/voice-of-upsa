@@ -100,9 +100,9 @@ export function Sidebar({ className }: { className?: string }) {
     <div className={cn("w-64 border-r bg-white flex flex-col", className)}>
       <div className="p-6 flex-1">
         <Link href="/" className="flex items-center space-x-3 mb-6 px-1 group">
-          <div className="relative h-10 w-10 rounded-md overflow-hidden border-2 border-upsa-gold/30 shadow-sm shrink-0">
+          <div className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-upsa-gold/30 shadow-sm shrink-0">
             <Image
-              src="/logo.jpg"
+              src="/logo.png"
               alt="Voice of UPSA"
               fill
               sizes="40px"

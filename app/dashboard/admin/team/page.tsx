@@ -49,7 +49,7 @@ interface TeamMember {
   created_at?: string;
 }
 
-const DEFAULT_IMAGE = "/logo.jpg";
+const DEFAULT_IMAGE = "/logo.png";
 
 export default function AdminEditorialTeamPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -588,7 +588,7 @@ export default function AdminEditorialTeamPage() {
                   </div>
                   <p className="text-[10px] text-gray-400 leading-normal">
                     {imageUrl === DEFAULT_IMAGE 
-                      ? "Currently using default placeholder: /logo.jpg. Upload a PNG, JPG, or WebP photo to replace." 
+                      ? "Currently using default placeholder: /logo.png. Upload a PNG, JPG, or WebP photo to replace." 
                       : "Photo uploaded and ready to save."}
                   </p>
                 </div>

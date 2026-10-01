@@ -1,6 +1,5 @@
 const sharp = require("sharp");
 const path = require("path");
-const fs = require("fs");
 
 async function processImage() {
   const inputPath = path.join(__dirname, "..", "public", "IMG-20260930-WA0033.jpg");
@@ -10,26 +9,48 @@ async function processImage() {
   try {
     console.log("Reading image:", inputPath);
     
-    // Trim trims "boring" pixels (e.g. whitespace background) from all edges
-    const image = sharp(inputPath).trim();
+    // First, let's get metadata to find the shortest dimension
+    const metadata = await sharp(inputPath).metadata();
+    const size = Math.min(metadata.width, metadata.height);
 
-    // Save as logo
-    await image
-      .jpeg({ quality: 90 })
-      .toFile(logoPath);
-    console.log("Saved cropped logo to:", logoPath);
+    // Create a circular SVG mask
+    const circleSvg = Buffer.from(
+      `<svg width="${size}" height="${size}">
+        <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="white"/>
+      </svg>`
+    );
 
-    // Save as icon (needs to be square usually, let's just resize it to fit within a square and make background transparent/white)
-    // First, let's get the trimmed image buffer so we can resize it
-    const trimmedBuffer = await image.toBuffer();
-    
-    await sharp(trimmedBuffer)
-      .resize(512, 512, {
-        fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 } // white background
+    // 1. Crop to perfect square around the center, then apply circular mask
+    // We will save this as a PNG so the outside of the circle is transparent
+    const circularBuffer = await sharp(inputPath)
+      .resize(size, size, {
+        fit: 'cover',
+        position: 'center'
       })
+      .composite([{
+        input: circleSvg,
+        blend: 'dest-in'
+      }])
       .png()
+      .toBuffer();
+
+    // Now save this perfectly circular, transparent-background image as logo.png
+    // Wait, the app uses logo.jpg in many places. If we save as JPG, it will have a black/white background.
+    // The user probably wants logo.png to support transparency, but the code references logo.jpg.
+    // Let's save as logo.png and then we will update all references from logo.jpg to logo.png in the codebase!
+    const logoPngPath = path.join(__dirname, "..", "public", "logo.png");
+    
+    await sharp(circularBuffer)
+      .resize(512, 512, { fit: 'contain' })
+      .toFile(logoPngPath);
+      
+    console.log("Saved circular logo to:", logoPngPath);
+
+    // Save as favicon (icon.png)
+    await sharp(circularBuffer)
+      .resize(512, 512, { fit: 'contain' })
       .toFile(iconPath);
+      
     console.log("Saved favicon icon to:", iconPath);
 
   } catch (err) {

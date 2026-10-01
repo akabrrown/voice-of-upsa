@@ -11,9 +11,9 @@ export function Footer() {
           {/* Brand Column */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-3 group mb-4">
-              <div className="relative h-12 w-12 rounded-md overflow-hidden border-2 border-upsa-gold/20 transition-transform group-hover:scale-105 shadow-md">
+              <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-upsa-gold/20 transition-transform group-hover:scale-105 shadow-md">
                 <Image
-                  src="/logo.jpg"
+                  src="/logo.png"
                   alt="Voice of UPSA"
                   fill sizes="120px"
                   className="object-cover"

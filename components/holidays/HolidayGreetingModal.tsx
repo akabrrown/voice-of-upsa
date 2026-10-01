@@ -117,8 +117,8 @@ export function HolidayGreetingModal({ forcePreviewHoliday, onClosePreview }: Ho
 
           {/* University Seal & Theme Icon */}
           <div className="relative inline-flex items-center justify-center mb-4">
-            <div className="relative h-16 w-16 rounded-md overflow-hidden border-2 border-upsa-gold shadow-lg bg-white">
-              <Image src="/logo.jpg" alt="Voice of UPSA" fill sizes="80px" className="object-cover" />
+            <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-upsa-gold shadow-lg bg-white">
+              <Image src="/logo.png" alt="Voice of UPSA" fill sizes="80px" className="object-cover" />
             </div>
             <div className="absolute -bottom-1 -right-1 p-1 bg-upsa-dark-navy rounded-full border border-upsa-gold/50 shadow">
               {renderThemeBadge(holiday.themeAccent)}

@@ -37,19 +37,19 @@ CREATE POLICY "Admins can manage editorial team members" ON public.editorial_tea
 
 -- Seed initial team members if table is empty
 INSERT INTO public.editorial_team (name, role, bio, image_url, display_order, is_active)
-SELECT 'Dr. Kwesi Amponsah', 'Editor-in-Chief', 'Supervising editorial direction, journalistic ethics, and digital publication strategy.', '/logo.jpg', 1, true
+SELECT 'Dr. Kwesi Amponsah', 'Editor-in-Chief', 'Supervising editorial direction, journalistic ethics, and digital publication strategy.', '/logo.png', 1, true
 WHERE NOT EXISTS (SELECT 1 FROM public.editorial_team WHERE name = 'Dr. Kwesi Amponsah');
 
 INSERT INTO public.editorial_team (name, role, bio, image_url, display_order, is_active)
-SELECT 'Sarah Mensah', 'Managing Editor', 'Directing newsroom operations, investigative reporting desks, and campus outreach.', '/logo.jpg', 2, true
+SELECT 'Sarah Mensah', 'Managing Editor', 'Directing newsroom operations, investigative reporting desks, and campus outreach.', '/logo.png', 2, true
 WHERE NOT EXISTS (SELECT 1 FROM public.editorial_team WHERE name = 'Sarah Mensah');
 
 INSERT INTO public.editorial_team (name, role, bio, image_url, display_order, is_active)
-SELECT 'Isaac Osei', 'Digital Content Lead', 'Leading multimedia production, data storytelling, and digital channel engagement.', '/logo.jpg', 3, true
+SELECT 'Isaac Osei', 'Digital Content Lead', 'Leading multimedia production, data storytelling, and digital channel engagement.', '/logo.png', 3, true
 WHERE NOT EXISTS (SELECT 1 FROM public.editorial_team WHERE name = 'Isaac Osei');
 
 INSERT INTO public.editorial_team (name, role, bio, image_url, display_order, is_active)
-SELECT 'Grace Appiah', 'Lead Reporter', 'Covering student council affairs, academic achievements, and campus development news.', '/logo.jpg', 4, true
+SELECT 'Grace Appiah', 'Lead Reporter', 'Covering student council affairs, academic achievements, and campus development news.', '/logo.png', 4, true
 WHERE NOT EXISTS (SELECT 1 FROM public.editorial_team WHERE name = 'Grace Appiah');
 
 -- 2. Extend Pricing Tiers Table to allow custom plans & admin edits

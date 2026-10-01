@@ -83,7 +83,7 @@ export default async function AboutPage() {
                   <div key={member.id || member.name} className="bg-white p-7 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 flex flex-col items-center">
                     <div className="relative w-24 h-24 mx-auto mb-5 rounded-full overflow-hidden border-2 border-upsa-gold shadow-sm bg-gray-50 shrink-0">
                       <Image 
-                        src={member.image_url || "/logo.jpg"} 
+                        src={member.image_url || "/logo.png"} 
                         alt={member.name} 
                         fill 
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" 
@@ -102,8 +102,8 @@ export default async function AboutPage() {
               </div>
             ) : (
               <div className="bg-white rounded-2xl p-10 max-w-md mx-auto border border-dashed border-gray-200">
-                <div className="relative w-16 h-16 mx-auto mb-3 rounded-md overflow-hidden border-2 border-upsa-gold shadow-sm">
-                  <Image src="/logo.jpg" alt="Voice of UPSA" fill sizes="64px" className="object-cover" />
+                <div className="relative w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-upsa-gold shadow-sm">
+                  <Image src="/logo.png" alt="Voice of UPSA" fill sizes="64px" className="object-cover" />
                 </div>
                 <h3 className="font-bold text-upsa-navy text-sm">Editorial Board</h3>
                 <p className="text-xs text-gray-500 mt-1">

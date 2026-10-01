@@ -164,9 +164,9 @@ export function Navbar() {
       <div className="container mx-auto flex h-20 items-center justify-between px-4 relative">
         {/* Logo */}
         <Link href="/" className="flex items-center lg:space-x-3 group z-10">
-          <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-md overflow-hidden border-2 border-upsa-gold/20 transition-transform group-hover:scale-105 shadow-md shrink-0">
+          <div className="relative h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden border-2 border-upsa-gold/20 transition-transform group-hover:scale-105 shadow-md shrink-0">
             <Image
-              src="/logo.jpg"
+              src="/logo.png"
               alt="Voice of UPSA"
               fill sizes="120px"
               className="object-cover"
