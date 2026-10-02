@@ -17,6 +17,7 @@ interface Advertisement {
   contact_email: string;
   contact_phone: string | null;
   ad_tier: string;
+  ad_placement: string;
   banner_image_url: string | null;
   target_url: string | null;
   status: "pending" | "approved" | "rejected" | "active" | "completed";
@@ -89,10 +90,10 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                 <div className="flex flex-col md:flex-row border-b border-gray-100">
                   {/* Image Section */}
                   <div className="w-full md:w-64 h-40 md:h-auto bg-gray-50 relative border-r border-gray-100 flex items-center justify-center p-4">
-                    {ad.banner_image_url ? (
+                    {ad.banner_image_url || (ad as any).creative_url ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img 
-                        src={ad.banner_image_url} 
+                        src={ad.banner_image_url || (ad as any).creative_url} 
                         alt={ad.company_name} 
                         className="max-h-full max-w-full object-contain rounded-md"
                       />
@@ -117,7 +118,11 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                       <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 mb-4">
                         <div>
                           <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider mb-1">Tier</span>
-                          <span className="capitalize">{ad.ad_tier}</span>
+                          <span className="capitalize">{ad.ad_tier || (ad as any).package_tier || "Standard"}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider mb-1">Placement</span>
+                          <span className="capitalize">{ad.ad_placement}</span>
                         </div>
                         <div>
                           <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider mb-1">Submitted</span>

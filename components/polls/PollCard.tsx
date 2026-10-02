@@ -11,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, Clock } from "lucide-react";
+import { PollShare } from "./PollShare";
 
 interface PollCardProps {
   poll: PollWithDetails;
@@ -130,7 +131,7 @@ export function PollCard({ poll, isDetailedView = false }: PollCardProps) {
         )}
       </CardContent>
 
-      <CardFooter className="pt-6">
+      <CardFooter className="pt-6 flex flex-col gap-4">
         {showVotingForm ? (
           <Button 
             onClick={handleVote} 
@@ -144,6 +145,8 @@ export function PollCard({ poll, isDetailedView = false }: PollCardProps) {
             <a href={`/polls/${poll.slug}`}>View Details</a>
           </Button>
         ) : null}
+        
+        {isDetailedView && <PollShare slug={poll.slug} title={poll.question} />}
       </CardFooter>
     </Card>
   );

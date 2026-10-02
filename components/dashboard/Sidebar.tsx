@@ -25,6 +25,7 @@ import {
   User,
   LogOut,
   Vote,
+  Camera,
 } from "lucide-react";
 
 type NavLink = { name: string; href: string; icon: any; badge?: "ads" | "inbox" };
@@ -65,6 +66,7 @@ const adminGroups: AdminGroup[] = [
     label: "Community",
     links: [
       { name: "Services Directory", href: "/dashboard/admin/services", icon: FolderOpen },
+      { name: "Gallery", href: "/dashboard/admin/gallery", icon: Camera },
       ...(process.env.NODE_ENV !== "production"
         ? [{ name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store }]
         : []),
