@@ -12,11 +12,10 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function PollsPage({
-  searchParams,
-}: {
-  searchParams: { category?: string };
-}) {
+export default async function PollsPage(
+  props: { searchParams: Promise<{ category?: string }> }
+) {
+  const searchParams = await props.searchParams;
   const category = searchParams.category as PollCategory | undefined;
   const result = await getActivePolls(category);
   const polls = result.data || [];

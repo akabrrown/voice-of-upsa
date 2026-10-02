@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { Poll, PollCategory, PollOption, PollStatus, PollVisibility } from "@/lib/polls/types";
+import { PollCategory, PollStatus, PollVisibility } from "@/lib/polls/types";
+import { sendBroadcastNotification } from "./notifications";
 
 export type ActionState = {
   success: boolean;
@@ -32,38 +33,25 @@ export async function getActivePolls(category?: PollCategory) {
   }
 
   const { data, error } = await query;
-  
+
   if (error) {
-    console.error("Error fetching polls:", error);
+    console.error("Error fetching polls:", JSON.stringify(error));
     return { success: false, error: "Failed to fetch polls", data: [] };
   }
 
-  // Map to PollWithDetails
   const formattedPolls = (data as any[]).map(poll => {
-    // Total votes logic
     const total_votes = poll.options.reduce((sum: number, opt: any) => sum + opt.vote_count, 0);
-    
-    // Check if current user voted
     let user_voted_option_id = null;
-    if (user) {
-      // In a real scenario we'd do a specific query for user votes, but here we can check the votes array if RLS allows reading own votes
-      const userVote = poll.votes?.find((v: any) => v.voter_id === user.id); // Although voter_id isn't returned by RLS sometimes, we can rely on RLS returning ONLY the user's vote.
-      if (poll.votes && poll.votes.length > 0) {
-        user_voted_option_id = poll.votes[0].option_id;
-      }
+    if (user && poll.votes && poll.votes.length > 0) {
+      user_voted_option_id = poll.votes[0].option_id;
     }
-
-    return {
-      ...poll,
-      total_votes,
-      user_voted_option_id
-    };
+    return { ...poll, total_votes, user_voted_option_id };
   });
 
   return { success: true, data: formattedPolls };
 }
 
-// 2. Fetch Single Poll
+// 2. Fetch Single Poll by Slug
 export async function getPollBySlug(slug: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -84,19 +72,14 @@ export async function getPollBySlug(slug: string) {
   }
 
   const total_votes = poll.options.reduce((sum: number, opt: any) => sum + opt.vote_count, 0);
-  
   let user_voted_option_id = null;
   if (user && poll.votes && poll.votes.length > 0) {
     user_voted_option_id = poll.votes[0].option_id;
   }
 
-  return { 
-    success: true, 
-    data: {
-      ...poll,
-      total_votes,
-      user_voted_option_id
-    } 
+  return {
+    success: true,
+    data: { ...poll, total_votes, user_voted_option_id }
   };
 }
 
@@ -109,7 +92,6 @@ export async function castVote(pollId: string, optionId: string): Promise<Action
     return { success: false, error: "You must be logged in to vote." };
   }
 
-  // Verify poll is active
   const { data: poll, error: pollError } = await supabase
     .from("polls")
     .select("status, expires_at")
@@ -128,7 +110,6 @@ export async function castVote(pollId: string, optionId: string): Promise<Action
     return { success: false, error: "This poll has expired." };
   }
 
-  // Check if already voted (enforced by DB, but good to check for UI message)
   const { count } = await supabase
     .from("poll_votes")
     .select("*", { count: "exact", head: true })
@@ -139,37 +120,31 @@ export async function castVote(pollId: string, optionId: string): Promise<Action
     return { success: false, error: "You have already voted in this poll." };
   }
 
-  // Insert vote
   const { error: voteError } = await supabase
     .from("poll_votes")
-    .insert({
-      poll_id: pollId,
-      option_id: optionId,
-      voter_id: user.id
-    });
+    .insert({ poll_id: pollId, option_id: optionId, voter_id: user.id });
 
   if (voteError) {
-    console.error("Error casting vote:", voteError);
-    if (voteError.code === '23505') { // Unique violation
-       return { success: false, error: "You have already voted in this poll." };
+    console.error("Error casting vote:", JSON.stringify(voteError));
+    if (voteError.code === "23505") {
+      return { success: false, error: "You have already voted in this poll." };
     }
     return { success: false, error: "Failed to cast vote. Please try again." };
   }
 
   revalidatePath("/polls");
   revalidatePath(`/polls/[slug]`, "page");
-  
+
   return { success: true, message: "Vote cast successfully!" };
 }
 
-// ADMIN ACTIONS
-
+// ADMIN: Create Poll
 export async function createPoll(formData: FormData): Promise<ActionState> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { success: false, error: "Unauthorized" };
-  
+
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
 
@@ -178,7 +153,7 @@ export async function createPoll(formData: FormData): Promise<ActionState> {
   const visibility = formData.get("results_visibility") as PollVisibility;
   const expires_at_str = formData.get("expires_at") as string;
   const status = formData.get("status") as PollStatus || "draft";
-  
+
   const optionsRaw = formData.getAll("options[]") as string[];
   const options = optionsRaw.filter(o => o.trim() !== "");
 
@@ -189,41 +164,38 @@ export async function createPoll(formData: FormData): Promise<ActionState> {
   const slug = question.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50) + "-" + Math.random().toString(36).substring(2, 7);
   const expires_at = expires_at_str ? new Date(expires_at_str).toISOString() : null;
 
-  // 1. Insert Poll
   const { data: poll, error: pollError } = await supabase
     .from("polls")
-    .insert({
-      question,
-      slug,
-      category,
-      results_visibility: visibility,
-      expires_at,
-      status,
-      created_by: user.id
-    })
+    .insert({ question, slug, category, results_visibility: visibility, expires_at, status, created_by: user.id })
     .select()
     .single();
 
   if (pollError || !poll) {
-    console.error(pollError);
+    console.error(JSON.stringify(pollError));
     return { success: false, error: "Failed to create poll." };
   }
 
-  // 2. Insert Options
   const optionsData = options.map((label, index) => ({
     poll_id: poll.id,
     label,
     sort_order: index
   }));
 
-  const { error: optionsError } = await supabase
-    .from("poll_options")
-    .insert(optionsData);
+  const { error: optionsError } = await supabase.from("poll_options").insert(optionsData);
 
   if (optionsError) {
-    console.error(optionsError);
-    // Ideally rollback poll creation here or soft-delete
+    console.error(JSON.stringify(optionsError));
     return { success: false, error: "Failed to create poll options." };
+  }
+
+  // Send notification if published immediately
+  if (status === "published") {
+    await sendBroadcastNotification("new_poll", "campus_life", {
+      title: "New Campus Poll!",
+      message: question,
+      actionUrl: `/polls/${slug}`,
+      pollId: poll.id
+    });
   }
 
   revalidatePath("/admin/polls");
@@ -231,6 +203,7 @@ export async function createPoll(formData: FormData): Promise<ActionState> {
   return { success: true, message: "Poll created successfully." };
 }
 
+// ADMIN: Soft-delete Poll
 export async function deletePoll(pollId: string): Promise<ActionState> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -239,21 +212,19 @@ export async function deletePoll(pollId: string): Promise<ActionState> {
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
 
-  // Soft delete
   const { error } = await supabase
     .from("polls")
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", pollId);
 
-  if (error) {
-    return { success: false, error: "Failed to delete poll." };
-  }
+  if (error) return { success: false, error: "Failed to delete poll." };
 
   revalidatePath("/admin/polls");
   revalidatePath("/polls");
   return { success: true, message: "Poll deleted successfully." };
 }
 
+// ADMIN: Update Poll Status
 export async function updatePollStatus(pollId: string, status: PollStatus): Promise<ActionState> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -262,13 +233,23 @@ export async function updatePollStatus(pollId: string, status: PollStatus): Prom
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
 
+  // Fetch poll first to get details for notification
+  const { data: poll } = await supabase.from("polls").select("*").eq("id", pollId).single();
+
   const { error } = await supabase
     .from("polls")
     .update({ status })
     .eq("id", pollId);
 
-  if (error) {
-    return { success: false, error: "Failed to update poll status." };
+  if (error) return { success: false, error: "Failed to update poll status." };
+
+  if (status === "published" && poll && poll.status !== "published") {
+    await sendBroadcastNotification("new_poll", "campus_life", {
+      title: "New Campus Poll!",
+      message: poll.question,
+      actionUrl: `/polls/${poll.slug}`,
+      pollId: poll.id
+    });
   }
 
   revalidatePath("/admin/polls");

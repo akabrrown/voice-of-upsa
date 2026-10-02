@@ -67,3 +67,44 @@ export async function updateNotificationPreference(category: string, muted: bool
   revalidatePath("/dashboard/user/notifications");
   return { success: true };
 }
+
+export async function sendBroadcastNotification(type: string, category: string, payload: any) {
+  const supabase = await createClient();
+  
+  // 1. Get all profiles
+  const { data: profiles } = await supabase.from("profiles").select("id");
+  if (!profiles || profiles.length === 0) return { success: false };
+
+  // 2. Get muted preferences for this category
+  const { data: mutedPrefs } = await supabase
+    .from("notification_preferences")
+    .select("profile_id")
+    .eq("category", category)
+    .eq("muted", true);
+
+  const mutedSet = new Set(mutedPrefs?.map(p => p.profile_id) || []);
+
+  // 3. Filter profiles that haven't muted this category
+  const recipients = profiles.filter(p => !mutedSet.has(p.id));
+
+  if (recipients.length === 0) return { success: true };
+
+  // 4. Batch insert notifications
+  const notifications = recipients.map(p => ({
+    recipient_id: p.id,
+    type,
+    category,
+    payload
+  }));
+
+  // Supabase limits inserts to ~1000 rows at a time, we'll assume it's under that for now, 
+  // or chunk it if necessary.
+  const { error } = await supabase.from("notifications").insert(notifications);
+
+  if (error) {
+    console.error("Error broadcasting notification:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}

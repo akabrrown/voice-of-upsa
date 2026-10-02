@@ -49,7 +49,7 @@ export function CreatePollClient() {
 
     if (result.success) {
       toast.success("Poll created successfully!");
-      router.push("/admin/polls");
+      router.push("/dashboard/admin/polls");
     } else {
       toast.error(result.error || "Failed to create poll");
     }
@@ -59,7 +59,7 @@ export function CreatePollClient() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild className="-ml-2">
-          <Link href="/admin/polls"><ChevronLeft className="w-5 h-5" /></Link>
+          <Link href="/dashboard/admin/polls"><ChevronLeft className="w-5 h-5" /></Link>
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-[#1B2A4A]">Create New Poll</h1>
@@ -187,7 +187,7 @@ export function CreatePollClient() {
 
         <div className="pt-6 border-t flex justify-end gap-3">
           <Button type="button" variant="ghost" asChild>
-            <Link href="/admin/polls">Cancel</Link>
+            <Link href="/dashboard/admin/polls">Cancel</Link>
           </Button>
           <Button type="submit" disabled={isSubmitting} className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy font-bold px-8">
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, BarChart2, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, BarChart2, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 export const metadata = {
@@ -31,7 +31,7 @@ export default async function AdminPollsPage() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(error);
+    console.error("Admin polls fetch error:", JSON.stringify(error));
   }
 
   const formattedPolls = (polls || []).map(poll => {
@@ -46,8 +46,8 @@ export default async function AdminPollsPage() {
           <h1 className="text-2xl font-bold tracking-tight text-[#1B2A4A]">Campus Polls</h1>
           <p className="text-gray-500 text-sm mt-1">Manage active polls and view live results.</p>
         </div>
-        <Button asChild className="bg-upsa-navy hover:bg-upsa-navy/90 text-white font-semibold">
-          <Link href="/admin/polls/new">
+        <Button asChild className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy font-semibold transition-colors">
+          <Link href="/dashboard/admin/polls/new">
             <Plus className="w-4 h-4 mr-2" /> New Poll
           </Link>
         </Button>
@@ -70,8 +70,8 @@ export default async function AdminPollsPage() {
               {formattedPolls.length > 0 ? (
                 formattedPolls.map((poll) => (
                   <tr key={poll.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-900 max-w-md truncate">
-                      {poll.question}
+                    <td className="px-6 py-4 font-medium text-gray-900 max-w-md">
+                      <span className="line-clamp-2">{poll.question}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
@@ -85,13 +85,13 @@ export default async function AdminPollsPage() {
                     <td className="px-6 py-4 text-gray-600 capitalize">
                       {poll.category.replace("_", " ")}
                     </td>
-                    <td className="px-6 py-4 text-center font-medium text-upsa-navy">
+                    <td className="px-6 py-4 text-center font-bold text-upsa-navy">
                       {poll.total_votes}
                     </td>
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                       {format(new Date(poll.created_at), "MMM d, yyyy")}
                     </td>
-                    <td className="px-6 py-4 text-right space-x-2">
+                    <td className="px-6 py-4 text-right space-x-1">
                       <Button variant="ghost" size="icon" asChild title="View Results" className="text-gray-400 hover:text-upsa-navy">
                         <Link href={`/polls/${poll.slug}`}>
                           <BarChart2 className="w-4 h-4" />
@@ -99,7 +99,7 @@ export default async function AdminPollsPage() {
                       </Button>
                       {poll.status === 'draft' && (
                         <Button variant="ghost" size="icon" asChild title="Edit" className="text-gray-400 hover:text-amber-600">
-                          <Link href={`/admin/polls/${poll.id}/edit`}>
+                          <Link href={`/dashboard/admin/polls/${poll.id}/edit`}>
                             <Edit className="w-4 h-4" />
                           </Link>
                         </Button>
@@ -112,8 +112,19 @@ export default async function AdminPollsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                    No polls found. Create one to engage the student body!
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="p-4 bg-gray-50 rounded-full">
+                        <BarChart2 className="w-8 h-8 text-gray-300" />
+                      </div>
+                      <p className="font-semibold text-gray-600">No polls yet</p>
+                      <p className="text-gray-400 text-sm">Create your first poll to engage the student body.</p>
+                      <Button asChild size="sm" className="mt-2 bg-upsa-navy text-white">
+                        <Link href="/dashboard/admin/polls/new">
+                          <Plus className="w-3.5 h-3.5 mr-1.5" /> Create Poll
+                        </Link>
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               )}

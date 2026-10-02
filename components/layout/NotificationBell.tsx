@@ -61,7 +61,22 @@ export function NotificationBell({ user }: { user: any }) {
           filter: `recipient_id=eq.${user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
+          const newNotif = payload.new as Notification;
+          setNotifications((prev) => [newNotif, ...prev]);
+          
+          // Trigger a pop-up toast for the new notification
+          if (newNotif.payload?.title) {
+            toast(newNotif.payload.title, {
+              icon: '🔔',
+              style: {
+                borderRadius: '10px',
+                background: '#333',
+                color: '#fff',
+              },
+            });
+          } else {
+            toast('New notification received', { icon: '🔔' });
+          }
         }
       )
       .on(

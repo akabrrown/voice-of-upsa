@@ -6,14 +6,14 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  PlusCircle, 
-  Users, 
+import {
+  LayoutDashboard,
+  FileText,
+  PlusCircle,
+  Users,
   UserCheck,
-  Settings, 
-  BarChart3, 
+  Settings,
+  BarChart3,
   MessageSquare,
   Megaphone,
   FolderOpen,
@@ -23,36 +23,68 @@ import {
   Bookmark,
   History,
   User,
-  LogOut
+  LogOut,
+  Vote,
 } from "lucide-react";
 
-const userLinks = [
+type NavLink = { name: string; href: string; icon: any; badge?: "ads" | "inbox" };
+
+const userLinks: NavLink[] = [
   { name: "My Profile", href: "/dashboard/user", icon: User },
   { name: "Saved Articles", href: "/dashboard/user/bookmarks", icon: Bookmark },
   { name: "Reading History", href: "/dashboard/user/history", icon: History },
 ];
 
-const editorLinks = [
+const editorLinks: NavLink[] = [
   { name: "Overview", href: "/dashboard/editor", icon: LayoutDashboard },
   { name: "My Articles", href: "/dashboard/editor/articles", icon: FileText },
   { name: "Create New", href: "/dashboard/editor/articles/new", icon: PlusCircle },
 ];
 
-const adminLinks = [
-  { name: "Admin Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
-  { name: "All Articles", href: "/dashboard/admin/articles", icon: FileText },
-  { name: "Services Directory", href: "/dashboard/admin/services", icon: FolderOpen },
-  { name: "Editorial Team", href: "/dashboard/admin/team", icon: Users },
-  { name: "User Management", href: "/dashboard/admin/users", icon: UserCheck },
-  { name: "Role Management", href: "/dashboard/admin/roles", icon: Shield },
-  { name: "Campus Polls", href: "/admin/polls", icon: BarChart3 },
-  { name: "Advertisements", href: "/dashboard/admin/ads", icon: Megaphone },
-  { name: "Inbox", href: "/dashboard/admin/inbox", icon: MessageSquare },
-  { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
-  { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
-  ...(process.env.NODE_ENV !== "production" ? [{ name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store }] : []),
-  { name: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
-  { name: "Site Settings", href: "/dashboard/admin/settings", icon: Settings },
+type AdminGroup = { label: string; links: NavLink[] };
+
+const adminGroups: AdminGroup[] = [
+  {
+    label: "Overview",
+    links: [
+      { name: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
+      { name: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+      { name: "Site Settings", href: "/dashboard/admin/settings", icon: Settings },
+    ],
+  },
+  {
+    label: "Content",
+    links: [
+      { name: "All Articles", href: "/dashboard/admin/articles", icon: FileText },
+      { name: "Polls", href: "/dashboard/admin/polls", icon: Vote },
+      { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
+      { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
+    ],
+  },
+  {
+    label: "Community",
+    links: [
+      { name: "Services Directory", href: "/dashboard/admin/services", icon: FolderOpen },
+      ...(process.env.NODE_ENV !== "production"
+        ? [{ name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store }]
+        : []),
+    ],
+  },
+  {
+    label: "Monetization",
+    links: [
+      { name: "Advertisements", href: "/dashboard/admin/ads", icon: Megaphone, badge: "ads" as const },
+      { name: "Inbox", href: "/dashboard/admin/inbox", icon: MessageSquare, badge: "inbox" as const },
+    ],
+  },
+  {
+    label: "Team & Access",
+    links: [
+      { name: "Editorial Team", href: "/dashboard/admin/team", icon: Users },
+      { name: "User Management", href: "/dashboard/admin/users", icon: UserCheck },
+      { name: "Role Management", href: "/dashboard/admin/roles", icon: Shield },
+    ],
+  },
 ];
 
 export function Sidebar({ className }: { className?: string }) {
@@ -64,12 +96,7 @@ export function Sidebar({ className }: { className?: string }) {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
   const supabase = createClient();
 
-  let links = editorLinks;
-  if (isAdmin) {
-    links = adminLinks;
-  } else if (isUser) {
-    links = userLinks;
-  }
+  const plainLinks = isUser ? userLinks : editorLinks;
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -80,10 +107,7 @@ export function Sidebar({ className }: { className?: string }) {
           .from("advertisements")
           .select("*", { count: "exact", head: true })
           .eq("status", "pending");
-
-        if (!error && typeof count === "number") {
-          setPendingAdsCount(count);
-        }
+        if (!error && typeof count === "number") setPendingAdsCount(count);
       } catch (err) {
         console.error("Failed to fetch pending ads count:", err);
       }
@@ -95,10 +119,7 @@ export function Sidebar({ className }: { className?: string }) {
           .from("contact_messages")
           .select("*", { count: "exact", head: true })
           .eq("status", "unread");
-
-        if (!error && typeof count === "number") {
-          setUnreadMessagesCount(count);
-        }
+        if (!error && typeof count === "number") setUnreadMessagesCount(count);
       } catch (err) {
         console.error("Failed to fetch unread messages count:", err);
       }
@@ -107,28 +128,13 @@ export function Sidebar({ className }: { className?: string }) {
     fetchPendingCount();
     fetchUnreadMessagesCount();
 
-    // Live subscription for instant updates when users submit ads
     const channel = supabase
-      .channel("admin-sidebar-advertisements-count")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "advertisements" },
-        () => {
-          fetchPendingCount();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "contact_messages" },
-        () => {
-          fetchUnreadMessagesCount();
-        }
-      )
+      .channel("admin-sidebar-counts")
+      .on("postgres_changes", { event: "*", schema: "public", table: "advertisements" }, fetchPendingCount)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contact_messages" }, fetchUnreadMessagesCount)
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [isAdmin, supabase]);
 
   const handleLogout = async () => {
@@ -137,72 +143,91 @@ export function Sidebar({ className }: { className?: string }) {
     router.refresh();
   };
 
+  const getBadgeCount = (badge?: "ads" | "inbox") => {
+    if (badge === "ads") return pendingAdsCount;
+    if (badge === "inbox") return unreadMessagesCount;
+    return 0;
+  };
+
+  const renderLink = (link: NavLink) => {
+    const Icon = link.icon;
+    const isActive = pathname === link.href || (link.href !== "/dashboard/admin" && pathname.startsWith(link.href));
+    const badgeCount = getBadgeCount(link.badge);
+
+    return (
+      <Link
+        key={link.href}
+        href={link.href}
+        className={cn(
+          "flex items-center px-3 py-2.5 text-sm font-semibold rounded-xl transition-all",
+          isActive
+            ? "bg-upsa-navy text-white shadow-md"
+            : "text-gray-500 hover:bg-upsa-navy/5 hover:text-upsa-navy"
+        )}
+      >
+        <Icon className={cn("h-4 w-4 mr-3 shrink-0", isActive ? "text-upsa-gold" : "text-gray-400")} />
+        <span className="truncate">{link.name}</span>
+        {badgeCount > 0 && (
+          <span className={cn(
+            "ml-auto text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shrink-0 animate-pulse",
+            link.badge === "ads" ? "bg-amber-500" : "bg-red-500"
+          )}>
+            {badgeCount}
+          </span>
+        )}
+      </Link>
+    );
+  };
+
   return (
     <div className={cn("w-64 border-r bg-white flex flex-col", className)}>
-      <div className="p-6 flex-1">
+      <div className="p-5 flex-1 overflow-y-auto">
+        {/* Logo */}
         <Link href="/" className="flex items-center space-x-3 mb-6 px-1 group">
-          <div className="relative h-10 w-10 rounded-full overflow-hidden border-2 border-upsa-gold/30 shadow-sm shrink-0">
-            <Image
-              src="/logo.png"
-              alt="Voice of UPSA"
-              fill
-              sizes="40px"
-              className="object-cover"
-            />
+          <div className="relative h-9 w-9 rounded-full overflow-hidden border-2 border-upsa-gold/30 shadow-sm shrink-0">
+            <Image src="/logo.png" alt="Voice of UPSA" fill sizes="36px" className="object-cover" />
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5">
-            <span className="text-[10px] sm:text-sm font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
-            <span className="text-base font-black tracking-tight text-upsa-navy uppercase leading-tight">UPSA</span>
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
+            <span className="text-sm font-black tracking-tight text-upsa-navy uppercase">UPSA</span>
           </div>
         </Link>
 
-        <div className="mb-6 px-2">
-          <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">
-            {isAdmin ? "Admin Portal" : "Editor Workspace"}
+        {/* Section label */}
+        <div className="mb-4 px-1">
+          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            {isAdmin ? "Admin Portal" : isUser ? "My Account" : "Editor Workspace"}
           </h2>
         </div>
-        
-        <nav className="space-y-1">
-          {links.map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname === link.href;
-            const isAdsLink = link.name === "Advertisements";
 
-            return (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={cn(
-                  "flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all",
-                  isActive 
-                    ? "bg-upsa-navy text-white shadow-lg" 
-                    : "text-gray-500 hover:bg-upsa-navy/5 hover:text-upsa-navy"
-                )}
-              >
-                <Icon className={cn("h-5 w-5 mr-3 shrink-0", isActive ? "text-upsa-gold" : "text-gray-400")} />
-                <span className="truncate">{link.name}</span>
-                {isAdsLink && pendingAdsCount > 0 && (
-                  <span className="ml-auto bg-amber-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse shrink-0">
-                    {pendingAdsCount}
-                  </span>
-                )}
-                {link.name === "Inbox" && unreadMessagesCount > 0 && (
-                  <span className="ml-auto bg-red-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse shrink-0">
-                    {unreadMessagesCount}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Admin grouped nav */}
+        {isAdmin ? (
+          <div className="space-y-5">
+            {adminGroups.map((group) => (
+              <div key={group.label}>
+                <p className="px-3 mb-1.5 text-[10px] font-black uppercase tracking-widest text-gray-300">
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {group.links.map(renderLink)}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <nav className="space-y-0.5">
+            {plainLinks.map(renderLink)}
+          </nav>
+        )}
       </div>
 
-      <div className="p-6 border-t">
-        <button 
+      {/* Logout */}
+      <div className="p-4 border-t">
+        <button
           onClick={handleLogout}
-          className="flex items-center w-full px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+          className="flex items-center w-full px-3 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
         >
-          <LogOut className="h-5 w-5 mr-3" />
+          <LogOut className="h-4 w-4 mr-3" />
           Logout
         </button>
       </div>

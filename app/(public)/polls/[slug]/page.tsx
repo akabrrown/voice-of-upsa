@@ -7,7 +7,8 @@ import { ChevronLeft } from "lucide-react";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const result = await getPollBySlug(params.slug);
   if (!result.success || !result.data) {
     return { title: "Poll Not Found" };
@@ -15,7 +16,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return { title: `${result.data.question} | Campus Polls` };
 }
 
-export default async function PollDetailPage({ params }: { params: { slug: string } }) {
+export default async function PollDetailPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const result = await getPollBySlug(params.slug);
   
   if (!result.success || !result.data) {
