@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { PhotoWithAuthor } from "@/lib/gallery/types";
-import { X, ChevronLeft, ChevronRight, Flag, AlertTriangle, User } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Flag, AlertTriangle, User, Camera } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
