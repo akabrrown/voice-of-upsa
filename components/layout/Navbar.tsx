@@ -20,6 +20,7 @@ import { User as UserIcon, LogOut, LayoutDashboard, Menu, Search, LogIn, BookOpe
 import { User } from "@supabase/supabase-js";
 import { InstallPWA } from "./InstallPWA";
 import { NotificationBell } from "./NotificationBell";
+import GlobalSearch from "./GlobalSearch";
 
 interface AuthenticatedUser extends User {
   role?: string;
@@ -27,6 +28,7 @@ interface AuthenticatedUser extends User {
 
 const campusLifeFeatures = [
   { title: "Student Services", href: "/services", description: "Access official campus services and directories.", icon: Briefcase, completed: true },
+  { title: "Student Handbook", href: "/handbook", description: "Official rules, regulations, and academic programs.", icon: BookOpen, completed: true },
   { title: "Campus Mart", href: "/mart", description: "Buy, sell, and trade within the campus community.", icon: Store, completed: false },
   { title: "Jobs Board", href: "/jobs", description: "Find internships, part-time jobs, and career opportunities.", icon: Users, completed: false },
   { title: "Campus Map", href: "/map", description: "Navigate the university with an interactive map.", icon: Map, completed: false },
@@ -319,8 +321,7 @@ export function Navbar() {
         </div>
 
         {/* Right Side Controls */}
-        <div className="flex items-center space-x-4">
-
+        <div className="flex items-center space-x-2 md:space-x-4">
           
           <div className="hidden sm:flex items-center space-x-2 border-l border-white/20 pl-4">
             <InstallPWA />
@@ -567,6 +568,13 @@ export function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Secondary Search Bar Row (Under Nav Buttons) */}
+      <div className="border-t border-white/10 bg-upsa-navy/95 py-2 px-4 shadow-inner flex justify-center backdrop-blur-md">
+        <div className="container px-4 flex justify-center w-full max-w-3xl">
+          <GlobalSearch className="flex items-center gap-3 px-4 py-2 text-sm text-gray-300 bg-black/20 hover:bg-black/30 rounded-full border border-white/10 transition-colors w-full focus-within:ring-2 focus-within:ring-upsa-gold/50 shadow-sm" />
+        </div>
+      </div>
     </header>
   );
 }
