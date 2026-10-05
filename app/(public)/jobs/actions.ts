@@ -24,6 +24,7 @@ const postingSchema = z
       .regex(/^https:\/\/res\.cloudinary\.com\//, "Invalid image.")
       .optional()
       .or(z.literal("")),
+    expires_at: z.string().optional().or(z.literal("")),
   })
   .superRefine((value, ctx) => {
     if (value.apply_method === "link" && !/^https?:\/\/[^\s]+$/i.test(value.apply_value)) {
@@ -90,7 +91,7 @@ export async function submitPosting(input: PostingInput): Promise<SubmitResult> 
       slug: slugify(parsed.data.title),
       poster_id: user.id,
       status: isAdmin ? "approved" : "pending_review",
-      expires_at: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+      expires_at: parsed.data.expires_at ? new Date(parsed.data.expires_at).toISOString() : null,
     });
 
   if (error) {
@@ -138,6 +139,7 @@ export async function editPosting(postingId: string, input: PostingInput): Promi
     .update({
       ...parsed.data,
       image_url: parsed.data.image_url || null,
+      expires_at: parsed.data.expires_at ? new Date(parsed.data.expires_at).toISOString() : null,
       // Status remains unchanged unless we explicitly want to reset to pending_review for non-admins?
       // Let's reset to pending_review if not admin to prevent sneaking in bad content after approval.
       ...(isAdmin ? {} : { status: "pending_review" })

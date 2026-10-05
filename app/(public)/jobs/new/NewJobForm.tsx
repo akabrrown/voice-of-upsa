@@ -21,6 +21,7 @@ const EMPTY_FORM = {
     apply_method: "link",
     apply_value: "",
     image_url: "",
+    expires_at: "",
 };
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -47,6 +48,7 @@ export default function NewJobForm({
   const [formData, setFormData] = useState({
     ...(initialData || EMPTY_FORM),
     category_id: initialData?.category_id || categories[0]?.id || "",
+    expires_at: initialData?.expires_at ? new Date(initialData.expires_at).toISOString().split('T')[0] : "",
   });
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -308,6 +310,19 @@ export default function NewJobForm({
                   placeholder={formData.apply_method === 'link' ? 'https://...' : formData.apply_method === 'email' ? 'careers@example.com' : 'e.g. Call this number...'} 
                   className="bg-gray-50 border-gray-200" 
                 />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Application Deadline (Optional)</label>
+                <Input 
+                  type="date"
+                  value={formData.expires_at} 
+                  onChange={e => setFormData({...formData, expires_at: e.target.value})} 
+                  className="bg-gray-50 border-gray-200" 
+                />
+                <p className="text-xs text-gray-500 mt-1">If left blank, the posting will never expire.</p>
               </div>
             </div>
           </div>
