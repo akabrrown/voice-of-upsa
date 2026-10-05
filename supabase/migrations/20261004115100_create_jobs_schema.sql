@@ -92,11 +92,11 @@ CREATE TABLE IF NOT EXISTS jobs.job_reports (
 );
 
 -- 5. Create indexes
-CREATE INDEX idx_postings_category ON jobs.postings(category_id);
-CREATE INDEX idx_postings_poster ON jobs.postings(poster_id);
-CREATE INDEX idx_postings_status ON jobs.postings(status);
-CREATE INDEX idx_postings_search ON jobs.postings USING GIN (search_vector);
-CREATE INDEX idx_postings_expires ON jobs.postings(expires_at);
+CREATE INDEX IF NOT EXISTS idx_postings_category ON jobs.postings(category_id);
+CREATE INDEX IF NOT EXISTS idx_postings_poster ON jobs.postings(poster_id);
+CREATE INDEX IF NOT EXISTS idx_postings_status ON jobs.postings(status);
+CREATE INDEX IF NOT EXISTS idx_postings_search ON jobs.postings USING GIN (search_vector);
+CREATE INDEX IF NOT EXISTS idx_postings_expires ON jobs.postings(expires_at);
 
 -- 6. RLS Setup
 
@@ -106,9 +106,11 @@ ALTER TABLE jobs.postings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobs.job_reports ENABLE ROW LEVEL SECURITY;
 
 -- Categories RLS
+DROP POLICY IF EXISTS "Categories are viewable by everyone" ON jobs.job_categories;
 CREATE POLICY "Categories are viewable by everyone" ON jobs.job_categories
     FOR SELECT USING (is_active = true);
 
+DROP POLICY IF EXISTS "Admins can manage categories" ON jobs.job_categories;
 CREATE POLICY "Admins can manage categories" ON jobs.job_categories
     FOR ALL USING (
         EXISTS (
@@ -118,6 +120,7 @@ CREATE POLICY "Admins can manage categories" ON jobs.job_categories
     );
 
 -- Postings RLS
+DROP POLICY IF EXISTS "Public can view approved active postings" ON jobs.postings;
 CREATE POLICY "Public can view approved active postings" ON jobs.postings
     FOR SELECT USING (
         status = 'approved' 
@@ -125,9 +128,11 @@ CREATE POLICY "Public can view approved active postings" ON jobs.postings
         AND (expires_at IS NULL OR expires_at > now())
     );
 
+DROP POLICY IF EXISTS "Users can view their own postings" ON jobs.postings;
 CREATE POLICY "Users can view their own postings" ON jobs.postings
     FOR SELECT USING (poster_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins can view all postings" ON jobs.postings;
 CREATE POLICY "Admins can view all postings" ON jobs.postings
     FOR SELECT USING (
         EXISTS (
@@ -136,12 +141,15 @@ CREATE POLICY "Admins can view all postings" ON jobs.postings
         )
     );
 
+DROP POLICY IF EXISTS "Users can create postings" ON jobs.postings;
 CREATE POLICY "Users can create postings" ON jobs.postings
     FOR INSERT WITH CHECK (auth.uid() = poster_id);
 
+DROP POLICY IF EXISTS "Users can update their own postings" ON jobs.postings;
 CREATE POLICY "Users can update their own postings" ON jobs.postings
     FOR UPDATE USING (poster_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins can update all postings" ON jobs.postings;
 CREATE POLICY "Admins can update all postings" ON jobs.postings
     FOR UPDATE USING (
         EXISTS (
@@ -151,9 +159,11 @@ CREATE POLICY "Admins can update all postings" ON jobs.postings
     );
 
 -- Reports RLS
+DROP POLICY IF EXISTS "Users can view their own reports" ON jobs.job_reports;
 CREATE POLICY "Users can view their own reports" ON jobs.job_reports
     FOR SELECT USING (reporter_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins can view all reports" ON jobs.job_reports;
 CREATE POLICY "Admins can view all reports" ON jobs.job_reports
     FOR SELECT USING (
         EXISTS (
@@ -162,9 +172,11 @@ CREATE POLICY "Admins can view all reports" ON jobs.job_reports
         )
     );
 
+DROP POLICY IF EXISTS "Users can create reports" ON jobs.job_reports;
 CREATE POLICY "Users can create reports" ON jobs.job_reports
     FOR INSERT WITH CHECK (auth.uid() = reporter_id);
 
+DROP POLICY IF EXISTS "Admins can update reports" ON jobs.job_reports;
 CREATE POLICY "Admins can update reports" ON jobs.job_reports
     FOR UPDATE USING (
         EXISTS (
@@ -182,14 +194,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_job_categories_updated_at ON jobs.job_categories;
 CREATE TRIGGER set_job_categories_updated_at
     BEFORE UPDATE ON jobs.job_categories
     FOR EACH ROW EXECUTE FUNCTION jobs.set_updated_at();
 
+DROP TRIGGER IF EXISTS set_postings_updated_at ON jobs.postings;
 CREATE TRIGGER set_postings_updated_at
     BEFORE UPDATE ON jobs.postings
     FOR EACH ROW EXECUTE FUNCTION jobs.set_updated_at();
 
+DROP TRIGGER IF EXISTS set_job_reports_updated_at ON jobs.job_reports;
 CREATE TRIGGER set_job_reports_updated_at
     BEFORE UPDATE ON jobs.job_reports
     FOR EACH ROW EXECUTE FUNCTION jobs.set_updated_at();
@@ -221,6 +236,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS enforce_posting_status_transition_trigger ON jobs.postings;
 CREATE TRIGGER enforce_posting_status_transition_trigger
     BEFORE UPDATE ON jobs.postings
     FOR EACH ROW EXECUTE FUNCTION jobs.enforce_posting_status_transition();
