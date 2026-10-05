@@ -26,6 +26,7 @@ import {
   LogOut,
   Vote,
   Camera,
+  Briefcase,
 } from "lucide-react";
 
 type NavLink = { name: string; href: string; icon: any; badge?: "ads" | "inbox" };
@@ -58,6 +59,8 @@ const adminGroups: AdminGroup[] = [
     links: [
       { name: "All Articles", href: "/dashboard/admin/articles", icon: FileText },
       { name: "Polls", href: "/dashboard/admin/polls", icon: Vote },
+      { name: "Campus Mart", href: "/dashboard/admin/mart", icon: Store },
+      { name: "Job Board", href: "/dashboard/admin/jobs", icon: Briefcase },
       { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
       { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
     ],
