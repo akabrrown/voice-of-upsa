@@ -65,13 +65,12 @@ export default async function JobDetailPage({ params }: { params: { slug: string
   let job = null;
 
   try {
-    const { data, error } = await supabase
-      .schema('jobs')
-      .from('postings')
-      .select('*, job_categories(name)')
-      .eq('slug', params.slug)
-      .eq('status', 'approved')
-      .single();
+      const { data, error } = await supabase
+        .schema('jobs')
+        .from('postings')
+        .select('*, job_categories(name)')
+        .eq('slug', params.slug)
+        .single();
 
     if (error) {
       if (error.code === 'PGRST205' || error.code === 'PGRST116') {

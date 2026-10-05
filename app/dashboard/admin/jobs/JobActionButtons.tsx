@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Loader2, Eye } from "lucide-react";
 import { updateJobStatus, deleteJob } from "./actions";
+import Link from "next/link";
 
-export function JobActionButtons({ id, status }: { id: string; status: string }) {
+export function JobActionButtons({ id, status, slug }: { id: string; status: string; slug: string }) {
   const [isPending, setIsPending] = useState(false);
 
   const handleUpdateStatus = async (newStatus: "approved" | "rejected") => {
@@ -23,6 +24,17 @@ export function JobActionButtons({ id, status }: { id: string; status: string })
 
   return (
     <>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        title="Preview" 
+        asChild
+        className="text-gray-400 hover:text-blue-600"
+      >
+        <Link href={`/jobs/${slug}`}>
+          <Eye className="w-4 h-4" />
+        </Link>
+      </Button>
       {status === 'pending_review' && (
         <>
           <Button 

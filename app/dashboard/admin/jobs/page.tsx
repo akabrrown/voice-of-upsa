@@ -57,6 +57,11 @@ export default async function AdminJobsPage() {
           <h1 className="text-2xl font-bold tracking-tight text-[#1B2A4A]">Job Board</h1>
           <p className="text-gray-500 text-sm mt-1">Manage job postings, approve or reject pending reviews.</p>
         </div>
+        <Button asChild className="bg-[#1B2A4A] hover:bg-gray-900 text-white font-semibold transition-colors">
+          <Link href="/jobs/new">
+            <Plus className="w-4 h-4 mr-2" /> New Job
+          </Link>
+        </Button>
       </div>
 
       <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
@@ -100,7 +105,7 @@ export default async function AdminJobsPage() {
                       {format(new Date(job.created_at), "MMM d, yyyy")}
                     </td>
                     <td className="px-6 py-4 text-right space-x-1">
-                      <JobActionButtons id={job.id} status={job.status} />
+                      <JobActionButtons id={job.id} status={job.status} slug={job.slug} />
                     </td>
                   </tr>
                 ))
