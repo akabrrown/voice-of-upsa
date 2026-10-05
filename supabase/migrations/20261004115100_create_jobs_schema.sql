@@ -3,14 +3,37 @@
 -- Create the jobs schema
 CREATE SCHEMA IF NOT EXISTS jobs;
 
--- 1. Create Enums
-CREATE TYPE jobs.job_type AS ENUM ('full_time', 'part_time', 'internship', 'volunteer', 'freelance');
-CREATE TYPE jobs.location_type AS ENUM ('on_campus', 'accra', 'remote', 'other');
-CREATE TYPE jobs.compensation_type AS ENUM ('paid', 'unpaid', 'stipend', 'undisclosed');
-CREATE TYPE jobs.apply_method AS ENUM ('link', 'email', 'instructions');
-CREATE TYPE jobs.job_status AS ENUM ('pending_review', 'approved', 'rejected', 'closed');
-CREATE TYPE jobs.report_reason AS ENUM ('scam', 'fraud', 'misleading', 'inappropriate', 'other');
-CREATE TYPE jobs.report_status AS ENUM ('open', 'resolved', 'dismissed');
+-- 1. Create Enums (safely check if they exist first)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'job_type' AND n.nspname = 'jobs') THEN
+        CREATE TYPE jobs.job_type AS ENUM ('full_time', 'part_time', 'internship', 'volunteer', 'freelance');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'location_type' AND n.nspname = 'jobs') THEN
+        CREATE TYPE jobs.location_type AS ENUM ('on_campus', 'accra', 'remote', 'other');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'compensation_type' AND n.nspname = 'jobs') THEN
+        CREATE TYPE jobs.compensation_type AS ENUM ('paid', 'unpaid', 'stipend', 'undisclosed');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'apply_method' AND n.nspname = 'jobs') THEN
+        CREATE TYPE jobs.apply_method AS ENUM ('link', 'email', 'instructions');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'job_status' AND n.nspname = 'jobs') THEN
+        CREATE TYPE jobs.job_status AS ENUM ('pending_review', 'approved', 'rejected', 'closed');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'report_reason' AND n.nspname = 'jobs') THEN
+        CREATE TYPE jobs.report_reason AS ENUM ('scam', 'fraud', 'misleading', 'inappropriate', 'other');
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'report_status' AND n.nspname = 'jobs') THEN
+        CREATE TYPE jobs.report_status AS ENUM ('open', 'resolved', 'dismissed');
+    END IF;
+END $$;
 
 -- 2. Create job_categories table
 CREATE TABLE IF NOT EXISTS jobs.job_categories (
