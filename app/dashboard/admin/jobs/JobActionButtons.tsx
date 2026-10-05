@@ -31,7 +31,7 @@ export function JobActionButtons({ id, status, slug }: { id: string; status: str
         asChild
         className="text-gray-400 hover:text-blue-600"
       >
-        <Link href={`/jobs/${slug}`}>
+        <Link href={`/dashboard/admin/jobs/${slug}`}>
           <Eye className="w-4 h-4" />
         </Link>
       </Button>

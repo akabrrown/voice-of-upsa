@@ -68,9 +68,18 @@ export async function submitPosting(input: PostingInput): Promise<SubmitResult> 
     .select("id", { count: "exact", head: true })
     .eq("poster_id", user.id)
     .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
+  
   if ((count ?? 0) >= 5) {
     return { ok: false, error: "Daily posting limit reached. Try again tomorrow." };
   }
+
+  // Check if user is admin
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const isAdmin = profile?.role === "admin";
 
   const { error } = await supabase
     .schema("jobs")
@@ -80,7 +89,7 @@ export async function submitPosting(input: PostingInput): Promise<SubmitResult> 
       image_url: parsed.data.image_url || null,
       slug: slugify(parsed.data.title),
       poster_id: user.id,
-      status: "pending_review",
+      status: isAdmin ? "approved" : "pending_review",
       expires_at: new Date(Date.now() + 30 * 86_400_000).toISOString(),
     });
 
