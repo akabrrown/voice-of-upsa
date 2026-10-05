@@ -1,15 +1,9 @@
 import Link from "next/link";
 import { Store, ShoppingBag, Search, User, ArrowRight } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 
 export default function MartLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <Navbar />
-      
-
-
       {/* Premium Mart Sub-navigation Header */}
       <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-white">
         <div className="container flex h-16 items-center justify-between px-6 lg:px-12 max-w-[1400px] mx-auto">
@@ -58,8 +52,6 @@ export default function MartLayout({ children }: { children: React.ReactNode }) 
       <main className="flex-1 bg-[#F9FAFB]">
         {children}
       </main>
-      
-      <Footer />
     </div>
   );
 }
