@@ -100,6 +100,57 @@ export async function submitPosting(input: PostingInput): Promise<SubmitResult> 
   return { ok: true };
 }
 
+export async function editPosting(postingId: string, input: PostingInput): Promise<SubmitResult> {
+  const parsed = postingSchema.safeParse(input);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { ok: false, error: issue.message, field: String(issue.path[0] ?? "") };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Sign in to edit this opportunity." };
+
+  // Check if user is admin or the poster
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const isAdmin = profile?.role === "admin";
+
+  const { data: existing } = await supabase
+    .schema("jobs")
+    .from("postings")
+    .select("poster_id")
+    .eq("id", postingId)
+    .single();
+
+  if (!existing || (!isAdmin && existing.poster_id !== user.id)) {
+    return { ok: false, error: "You don't have permission to edit this posting." };
+  }
+
+  const { error } = await supabase
+    .schema("jobs")
+    .from("postings")
+    .update({
+      ...parsed.data,
+      image_url: parsed.data.image_url || null,
+      // Status remains unchanged unless we explicitly want to reset to pending_review for non-admins?
+      // Let's reset to pending_review if not admin to prevent sneaking in bad content after approval.
+      ...(isAdmin ? {} : { status: "pending_review" })
+    })
+    .eq("id", postingId);
+
+  if (error) {
+    console.error("editPosting failed", error.code, error.message);
+    return { ok: false, error: `Database error: ${error.message}` };
+  }
+  return { ok: true };
+}
+
 export async function closePosting(postingId: string): Promise<SubmitResult> {
   if (!z.string().uuid().safeParse(postingId).success) {
     return { ok: false, error: "Invalid posting." };

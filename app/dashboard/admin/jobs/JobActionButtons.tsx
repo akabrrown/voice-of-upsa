@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, CheckCircle, XCircle, Loader2, Eye } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Loader2, Eye, Pencil } from "lucide-react";
 import { updateJobStatus, deleteJob } from "./actions";
 import Link from "next/link";
 
@@ -33,6 +33,17 @@ export function JobActionButtons({ id, status, slug }: { id: string; status: str
       >
         <Link href={`/dashboard/admin/jobs/${slug}`}>
           <Eye className="w-4 h-4" />
+        </Link>
+      </Button>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        title="Edit" 
+        asChild
+        className="text-gray-400 hover:text-amber-600"
+      >
+        <Link href={`/dashboard/admin/jobs/${slug}/edit`}>
+          <Pencil className="w-4 h-4" />
         </Link>
       </Button>
       {status === 'pending_review' && (

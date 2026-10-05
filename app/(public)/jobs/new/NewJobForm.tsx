@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, CheckCircle, AlertCircle, ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { submitPosting } from "../actions";
+import { submitPosting, editPosting } from "../actions";
 
 const EMPTY_FORM = {
     title: "",
@@ -26,7 +26,17 @@ const EMPTY_FORM = {
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
-export default function NewJobForm({ categories, isAdminMode = false }: { categories: { id: string; name: string }[], isAdminMode?: boolean }) {
+export default function NewJobForm({ 
+  categories, 
+  isAdminMode = false,
+  initialData,
+  jobId,
+}: { 
+  categories: { id: string; name: string }[];
+  isAdminMode?: boolean;
+  initialData?: any;
+  jobId?: string;
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -35,8 +45,8 @@ export default function NewJobForm({ categories, isAdminMode = false }: { catego
   const imageInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
-    ...EMPTY_FORM,
-    category_id: categories[0]?.id ?? "",
+    ...(initialData || EMPTY_FORM),
+    category_id: initialData?.category_id || categories[0]?.id || "",
   });
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +83,9 @@ export default function NewJobForm({ categories, isAdminMode = false }: { catego
     setIsSubmitting(true);
     setErrorMessage(null);
     try {
-      const result = await submitPosting(formData as Parameters<typeof submitPosting>[0]);
+      const result = jobId 
+        ? await editPosting(jobId, formData as Parameters<typeof editPosting>[1])
+        : await submitPosting(formData as Parameters<typeof submitPosting>[0]);
       if (result.ok) setSubmitted(true);
       else setErrorMessage(result.error);
     } catch {
@@ -90,12 +102,14 @@ export default function NewJobForm({ categories, isAdminMode = false }: { catego
           <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
-          <h2 className="text-2xl font-black text-[#1B2A4A] mb-4">Posting Submitted</h2>
+          <h2 className="text-2xl font-black text-[#1B2A4A] mb-4">
+            {jobId ? "Posting Updated" : "Posting Submitted"}
+          </h2>
           <p className="text-gray-600 mb-8">
             {isAdminMode ? (
-              <>Your posting has been successfully created and is now live on the public board.</>
+              <>{jobId ? "Your posting has been successfully updated." : "Your posting has been successfully created and is now live on the public board."}</>
             ) : (
-              <>Your posting has been successfully submitted and is now <span className="font-bold">Pending Review</span>. 
+              <>{jobId ? "Your posting was updated and is now pending review." : <>Your posting has been successfully submitted and is now <span className="font-bold">Pending Review</span>.</>} 
               Once an admin approves it, it will be visible on the public board.</>
             )}
           </p>
@@ -105,9 +119,11 @@ export default function NewJobForm({ categories, isAdminMode = false }: { catego
                 {isAdminMode ? "Back to Admin Jobs" : "Back to Board"}
               </Button>
             </Link>
-            <Button onClick={() => { setSubmitted(false); setFormData({ ...EMPTY_FORM, category_id: categories[0]?.id ?? "" }); }} className="bg-[#1F7A6C] hover:bg-[#155A4F] text-white rounded-xl">
-              Post Another
-            </Button>
+            {!jobId && (
+              <Button onClick={() => { setSubmitted(false); setFormData({ ...EMPTY_FORM, category_id: categories[0]?.id ?? "" }); }} className="bg-[#1F7A6C] hover:bg-[#155A4F] text-white rounded-xl">
+                Post Another
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -125,10 +141,10 @@ export default function NewJobForm({ categories, isAdminMode = false }: { catego
 
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-[#1B2A4A] tracking-tight mb-2">
-            {isAdminMode ? "Create a Job Posting" : "Post an Opportunity"}
+            {jobId ? "Edit Job Posting" : isAdminMode ? "Create a Job Posting" : "Post an Opportunity"}
           </h1>
           <p className="text-gray-500">
-            {isAdminMode 
+            {jobId ? "Update the details of this job posting." : isAdminMode 
               ? "Create a new job posting directly on the board." 
               : "Submit a job, internship, or gig. All postings are reviewed before going public."}
           </p>
@@ -336,9 +352,9 @@ export default function NewJobForm({ categories, isAdminMode = false }: { catego
           <div className="pt-6 border-t border-gray-100">
             <Button disabled={isSubmitting || isUploading} type="submit" className="w-full md:w-auto md:px-12 bg-[#1F7A6C] hover:bg-[#155A4F] text-white rounded-xl py-6 text-lg font-bold shadow-md transition-all">
               {isSubmitting ? (
-                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> {isAdminMode ? "Publishing..." : "Submitting..."}</>
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> {jobId ? "Saving..." : isAdminMode ? "Publishing..." : "Submitting..."}</>
               ) : (
-                isAdminMode ? "Publish Job" : "Submit for Review"
+                jobId ? "Save Changes" : isAdminMode ? "Publish Job" : "Submit for Review"
               )}
             </Button>
           </div>
