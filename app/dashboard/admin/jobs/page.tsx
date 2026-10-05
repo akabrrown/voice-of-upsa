@@ -22,14 +22,13 @@ export default async function AdminJobsPage() {
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "admin") redirect("/dashboard");
 
-  // Fetch postings from the 'jobs' schema
+  // Fetch postings from the 'jobs' schema without joining public.profiles
   const { data: postings, error } = await supabase
     .schema("jobs")
     .from("postings")
     .select(`
       *,
-      category:job_categories(name),
-      poster:profiles(first_name, last_name)
+      category:job_categories(name)
     `)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
@@ -37,6 +36,19 @@ export default async function AdminJobsPage() {
   if (error) {
     console.error("Admin jobs fetch error:", JSON.stringify(error));
   }
+
+  // Fetch profiles separately
+  let profiles: any[] = [];
+  if (postings && postings.length > 0) {
+    const posterIds = Array.from(new Set(postings.map(p => p.poster_id)));
+    const { data: fetchedProfiles } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .in("id", posterIds);
+    if (fetchedProfiles) profiles = fetchedProfiles;
+  }
+  
+  const profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
 
   return (
     <div className="space-y-6">
@@ -82,7 +94,7 @@ export default async function AdminJobsPage() {
                       {job.category?.name || "Unknown"}
                     </td>
                     <td className="px-6 py-4 text-gray-600">
-                      {job.poster ? `${job.poster.first_name} ${job.poster.last_name}` : "Unknown"}
+                      {profileMap[job.poster_id] ? `${profileMap[job.poster_id].first_name} ${profileMap[job.poster_id].last_name}` : "Unknown"}
                     </td>
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                       {format(new Date(job.created_at), "MMM d, yyyy")}
