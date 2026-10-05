@@ -175,6 +175,7 @@ export default function NewJobForm({ categories }: { categories: { id: string; n
                   onChange={e => setFormData({...formData, category_id: e.target.value})}
                   className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
                 >
+                  <option value="" disabled>Select a category</option>
                   {categories.map(category => (
                     <option key={category.id} value={category.id}>{category.name}</option>
                   ))}

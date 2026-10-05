@@ -86,7 +86,7 @@ export async function submitPosting(input: PostingInput): Promise<SubmitResult> 
 
   if (error) {
     console.error("submitPosting failed", error.code, error.message);
-    return { ok: false, error: "Could not submit your posting. Please try again." };
+    return { ok: false, error: `Database error: ${error.message}` };
   }
   return { ok: true };
 }
