@@ -30,7 +30,7 @@ const campusLifeFeatures = [
   { title: "Student Services", href: "/services", description: "Access official campus services and directories.", icon: Briefcase, completed: true },
   { title: "Student Handbook", href: "/handbook", description: "Official rules, regulations, and academic programs.", icon: BookOpen, completed: true },
   { title: "Campus Mart", href: "/mart", description: "Buy, sell, and trade within the campus community.", icon: Store, completed: false },
-  { title: "Jobs Board", href: "/jobs", description: "Find internships, part-time jobs, and career opportunities.", icon: Users, completed: false },
+  { title: "Jobs Board", href: "/jobs", description: "Find internships, part-time jobs, and career opportunities.", icon: Users, completed: true },
   { title: "Campus Map", href: "/map", description: "Navigate the university with an interactive map.", icon: Map, completed: false },
 ];
 
