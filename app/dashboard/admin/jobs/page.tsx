@@ -29,7 +29,7 @@ export default async function AdminJobsPage() {
     .select(`
       *,
       category:job_categories(name),
-      poster:poster_id(first_name, last_name)
+      poster:profiles(first_name, last_name)
     `)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
