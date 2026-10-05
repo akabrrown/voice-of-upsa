@@ -26,7 +26,7 @@ const EMPTY_FORM = {
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
-export default function NewJobForm({ categories }: { categories: { id: string; name: string }[] }) {
+export default function NewJobForm({ categories, isAdminMode = false }: { categories: { id: string; name: string }[], isAdminMode?: boolean }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -92,13 +92,17 @@ export default function NewJobForm({ categories }: { categories: { id: string; n
           </div>
           <h2 className="text-2xl font-black text-[#1B2A4A] mb-4">Posting Submitted</h2>
           <p className="text-gray-600 mb-8">
-            Your posting has been successfully submitted and is now <span className="font-bold">Pending Review</span>. 
-            Once an admin approves it, it will be visible on the public board.
+            {isAdminMode ? (
+              <>Your posting has been successfully created and is now live on the public board.</>
+            ) : (
+              <>Your posting has been successfully submitted and is now <span className="font-bold">Pending Review</span>. 
+              Once an admin approves it, it will be visible on the public board.</>
+            )}
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/jobs">
+            <Link href={isAdminMode ? "/dashboard/admin/jobs" : "/jobs"}>
               <Button variant="outline" className="rounded-xl border-gray-200">
-                Back to Board
+                {isAdminMode ? "Back to Admin Jobs" : "Back to Board"}
               </Button>
             </Link>
             <Button onClick={() => { setSubmitted(false); setFormData({ ...EMPTY_FORM, category_id: categories[0]?.id ?? "" }); }} className="bg-[#1F7A6C] hover:bg-[#155A4F] text-white rounded-xl">
@@ -114,17 +118,19 @@ export default function NewJobForm({ categories }: { categories: { id: string; n
     <div className="min-h-screen bg-gray-50/50 pb-20">
       <div className="max-w-3xl mx-auto px-4 py-8">
         
-        <Link href="/jobs" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#1B2A4A] mb-8 transition-colors">
+        <Link href={isAdminMode ? "/dashboard/admin/jobs" : "/jobs"} className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#1B2A4A] mb-8 transition-colors">
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to Jobs
+          {isAdminMode ? "Back to Admin Jobs" : "Back to Jobs"}
         </Link>
 
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-[#1B2A4A] tracking-tight mb-2">
-            Post an Opportunity
+            {isAdminMode ? "Create a Job Posting" : "Post an Opportunity"}
           </h1>
           <p className="text-gray-500">
-            Submit a job, internship, or gig. All postings are reviewed before going public.
+            {isAdminMode 
+              ? "Create a new job posting directly on the board." 
+              : "Submit a job, internship, or gig. All postings are reviewed before going public."}
           </p>
         </div>
 
@@ -330,9 +336,9 @@ export default function NewJobForm({ categories }: { categories: { id: string; n
           <div className="pt-6 border-t border-gray-100">
             <Button disabled={isSubmitting || isUploading} type="submit" className="w-full md:w-auto md:px-12 bg-[#1F7A6C] hover:bg-[#155A4F] text-white rounded-xl py-6 text-lg font-bold shadow-md transition-all">
               {isSubmitting ? (
-                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Submitting...</>
+                <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> {isAdminMode ? "Publishing..." : "Submitting..."}</>
               ) : (
-                "Submit for Review"
+                isAdminMode ? "Publish Job" : "Submit for Review"
               )}
             </Button>
           </div>

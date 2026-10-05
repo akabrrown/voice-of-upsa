@@ -58,7 +58,7 @@ export default async function AdminJobsPage() {
           <p className="text-gray-500 text-sm mt-1">Manage job postings, approve or reject pending reviews.</p>
         </div>
         <Button asChild className="bg-[#1B2A4A] hover:bg-gray-900 text-white font-semibold transition-colors">
-          <Link href="/jobs/new">
+          <Link href="/dashboard/admin/jobs/new">
             <Plus className="w-4 h-4 mr-2" /> New Job
           </Link>
         </Button>

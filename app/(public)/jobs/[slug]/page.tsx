@@ -53,13 +53,15 @@ const MOCK_JOBS = [
   }
 ];
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
   return {
     title: `Job Details | Voice of UPSA`,
   };
 }
 
-export default async function JobDetailPage({ params }: { params: { slug: string } }) {
+export default async function JobDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const supabase = await createClient();
   
   let job = null;
@@ -69,20 +71,22 @@ export default async function JobDetailPage({ params }: { params: { slug: string
         .schema('jobs')
         .from('postings')
         .select('*, job_categories(name)')
-        .eq('slug', params.slug)
+        .eq('slug', slug)
         .single();
 
     if (error) {
       if (error.code === 'PGRST205' || error.code === 'PGRST116') {
-        job = MOCK_JOBS.find(j => j.slug === params.slug);
+        job = MOCK_JOBS.find(j => j.slug === slug);
       } else {
+        console.error("Supabase job fetch error:", error);
         throw error;
       }
     } else {
       job = data;
     }
   } catch (err) {
-    job = MOCK_JOBS.find(j => j.slug === params.slug);
+    console.error("Caught error in JobDetailPage:", err);
+    job = MOCK_JOBS.find(j => j.slug === slug);
   }
 
   if (!job) {
