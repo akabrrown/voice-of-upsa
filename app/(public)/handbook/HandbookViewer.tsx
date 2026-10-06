@@ -1,6 +1,6 @@
 "use client";
 
-import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { Worker, Viewer, ScrollMode, ViewMode } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 
 import '@react-pdf-viewer/core/lib/styles/index.css';
@@ -15,6 +15,8 @@ export default function HandbookViewer() {
                 <Viewer
                     fileUrl="/students-handbook-2018.pdf"
                     plugins={[defaultLayoutPluginInstance]}
+                    scrollMode={ScrollMode.Page}
+                    viewMode={ViewMode.SinglePage}
                 />
             </Worker>
         </div>
