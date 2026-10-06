@@ -44,7 +44,7 @@ export type SubmitResult =
   | { ok: false; error: string; field?: string };
 
 // Must match max_window in jobs.guard_posting_write().
-export const MAX_CLOSING_DAYS = 90;
+const MAX_CLOSING_DAYS = 90;
 const DAY_MS = 86_400_000;
 
 // Error codes raised deliberately by jobs.guard_posting_write(); their
