@@ -1,22 +1,26 @@
 "use client";
 
+import { Worker, Viewer, ScrollMode, ViewMode, SpecialZoomLevel } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
 export default function HandbookViewer() {
+    const defaultLayoutPluginInstance = defaultLayoutPlugin();
+
     return (
         <div className="h-[85vh] w-full border border-zinc-200 rounded-lg overflow-hidden shadow-sm bg-white">
-            <object 
-                data="/students-handbook-2018.pdf" 
-                type="application/pdf" 
-                width="100%" 
-                height="100%"
-                className="w-full h-full"
-            >
-                <p>
-                    Your browser does not support PDFs. 
-                    <a href="/students-handbook-2018.pdf" className="text-orange-600 hover:underline ml-1">
-                        Download the PDF
-                    </a>.
-                </p>
-            </object>
+            <Worker workerUrl="/pdf.worker.min.js">
+                <Viewer
+                    fileUrl="/students-handbook-2018.pdf"
+                    plugins={[defaultLayoutPluginInstance]}
+                    scrollMode={ScrollMode.Horizontal}
+                    viewMode={ViewMode.SinglePage}
+                    defaultScale={SpecialZoomLevel.PageFit}
+                    theme="dark"
+                />
+            </Worker>
         </div>
     );
 }

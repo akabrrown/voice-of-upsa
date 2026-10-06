@@ -243,7 +243,7 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent className="h-80">
                 {categoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="name" stroke="#9ca3af" tick={{ fontSize: 11, fontWeight: "bold" }} />
@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent className="h-80">
                 {viewTrendData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <LineChart data={viewTrendData} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="month" stroke="#9ca3af" tick={{ fontSize: 11, fontWeight: "bold" }} />
@@ -352,7 +352,7 @@ export default function AnalyticsPage() {
                 {statusData.length > 0 ? (
                   <>
                     <div className="h-48 relative">
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                         <PieChart>
                           <Pie
                             data={statusData}
@@ -392,7 +392,7 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent className="h-72">
                 {categoryData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={categoryData} layout="vertical" margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                       <XAxis type="number" stroke="#9ca3af" tick={{ fontSize: 11 }} />
