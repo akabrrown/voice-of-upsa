@@ -109,5 +109,23 @@ CREATE POLICY "Admins can do everything on photos" ON public.gallery_photos
     USING (public.is_admin());
 
 -- Realtime subscriptions
-ALTER PUBLICATION supabase_realtime ADD TABLE public.gallery_albums;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.gallery_photos;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+      AND schemaname = 'public' 
+      AND tablename = 'gallery_albums'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.gallery_albums;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+      AND schemaname = 'public' 
+      AND tablename = 'gallery_photos'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.gallery_photos;
+  END IF;
+END $$;

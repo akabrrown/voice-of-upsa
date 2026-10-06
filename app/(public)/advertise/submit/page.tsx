@@ -1,7 +1,6 @@
-﻿"use client";
+"use client";
 
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +25,6 @@ import { FormShadowLoader } from "@/components/ui/shadow-loaders";
 export default function AdSubmissionPage() {
   return (
     <>
-      <Navbar />
       <main className="flex-1 bg-gray-50 py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
@@ -41,7 +39,6 @@ export default function AdSubmissionPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

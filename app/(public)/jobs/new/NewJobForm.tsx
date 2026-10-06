@@ -11,7 +11,9 @@ const EMPTY_FORM = {
     title: "",
     category_id: "",
     organization_name: "",
+    organization_website: "",
     type: "full_time",
+    experience_level: "not_applicable",
     location_type: "on_campus",
     location_label: "",
     description: "",
@@ -69,7 +71,7 @@ export default function NewJobForm({
         if (!res.ok || typeof data.secure_url !== "string") {
           throw new Error(data.error || "Upload failed");
         }
-        setFormData((prev) => ({ ...prev, image_url: data.secure_url }));
+        setFormData((prev: any) => ({ ...prev, image_url: data.secure_url }));
       } catch {
         setImageError("Could not upload the image. Try again.");
       } finally {
@@ -171,6 +173,27 @@ export default function NewJobForm({
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Organization Name *</label>
                 <Input required value={formData.organization_name} onChange={e => setFormData({...formData, organization_name: e.target.value})} placeholder="e.g. UPSA SRC" className="bg-gray-50 border-gray-200" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Organization Website</label>
+                <Input value={formData.organization_website} onChange={e => setFormData({...formData, organization_website: e.target.value})} placeholder="e.g. https://example.com" className="bg-gray-50 border-gray-200" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Experience Level *</label>
+                <select 
+                  required 
+                  value={formData.experience_level} 
+                  onChange={e => setFormData({...formData, experience_level: e.target.value})}
+                  className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                >
+                  <option value="entry">Entry Level</option>
+                  <option value="mid">Mid Level</option>
+                  <option value="senior">Senior Level</option>
+                  <option value="not_applicable">Not Applicable</option>
+                </select>
               </div>
             </div>
 

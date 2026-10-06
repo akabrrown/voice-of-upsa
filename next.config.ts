@@ -22,11 +22,6 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     proxyClientMaxBodySize: "100mb",
-    turbo: {
-      resolveAlias: {
-        canvas: "./empty.js",
-      },
-    },
   },
   serverExternalPackages: ["canvas"],
   turbopack: {},

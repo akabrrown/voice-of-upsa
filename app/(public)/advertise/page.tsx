@@ -1,5 +1,4 @@
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+
 import { Button } from "@/components/ui/button";
 import { Check, Star, Target, Rocket } from "lucide-react";
 import Link from "next/link";
@@ -119,7 +118,6 @@ export default async function AdvertisePage() {
 
   return (
     <>
-      <Navbar />
       <main className="flex-1 bg-white pb-20">
         <section className="py-20 bg-gray-50 border-b border-gray-100">
           <div className="container mx-auto px-4 text-center">
@@ -221,7 +219,6 @@ export default async function AdvertisePage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

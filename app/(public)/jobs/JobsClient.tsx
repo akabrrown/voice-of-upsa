@@ -59,12 +59,19 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
             Discover career opportunities, internships, and campus gigs.
           </p>
         </div>
-        <Link href="/jobs/new">
-          <Button className="bg-[#1F7A6C] hover:bg-[#155A4F] text-white rounded-full px-6 shadow-md transition-all hover:shadow-lg">
-            <Plus className="h-4 w-4 mr-2" />
-            Post Opportunity
-          </Button>
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link href="/jobs/mine">
+            <Button variant="outline" className="w-full sm:w-auto border-gray-200 text-[#1B2A4A] rounded-full px-6 shadow-sm transition-all hover:bg-gray-50">
+              Manage My Postings
+            </Button>
+          </Link>
+          <Link href="/jobs/new">
+            <Button className="w-full sm:w-auto bg-[#1F7A6C] hover:bg-[#155A4F] text-white rounded-full px-6 shadow-md transition-all hover:shadow-lg">
+              <Plus className="h-4 w-4 mr-2" />
+              Post Opportunity
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filter Bar */}

@@ -1,7 +1,5 @@
 import { Metadata } from "next";
 import HandbookViewerWrapper from "./HandbookViewerWrapper";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Undergraduate Students' Handbook | Voice of UPSA",
@@ -11,7 +9,6 @@ export const metadata: Metadata = {
 export default function HandbookPage() {
   return (
     <>
-      <Navbar />
       <main className="bg-white min-h-screen pt-4 pb-12 flex-1">
         <div className="container mx-auto px-4 max-w-[1400px]">
           <div className="mb-6 md:mb-10 text-center md:text-left">
@@ -26,7 +23,6 @@ export default function HandbookPage() {
           <HandbookViewerWrapper />
         </div>
       </main>
-      <Footer />
     </>
   );
 }

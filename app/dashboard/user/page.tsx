@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { User, Bookmark, History, Calendar, LogOut } from "lucide-react";
+import { User, Bookmark, History, Calendar, LogOut, Briefcase } from "lucide-react";
 import Link from "next/link";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,13 @@ export default async function UserOverviewPage() {
     .from("reading_history")
     .select("*", { count: "exact", head: true })
     .eq("profile_id", user.id);
+
+  const { count: postingsCount } = await supabase
+    .schema("jobs")
+    .from("postings")
+    .select("*", { count: "exact", head: true })
+    .eq("poster_id", user.id)
+    .is("deleted_at", null);
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -116,6 +123,14 @@ export default async function UserOverviewPage() {
                   <span className="font-medium">Reading History</span>
                 </div>
                 <span className="font-bold bg-white/20 px-2 py-1 rounded-lg text-sm">{historyCount || 0}</span>
+              </Link>
+              
+              <Link href="/jobs/mine" className="flex items-center justify-between p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-5 w-5 text-upsa-gold" />
+                  <span className="font-medium">My Postings</span>
+                </div>
+                <span className="font-bold bg-white/20 px-2 py-1 rounded-lg text-sm">{postingsCount || 0}</span>
               </Link>
             </div>
           </div>

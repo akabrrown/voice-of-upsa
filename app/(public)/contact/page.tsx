@@ -1,7 +1,6 @@
 "use client";
 
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { SocialMediaButtons } from "@/components/shared/SocialMediaButtons";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,6 @@ export default function ContactPage() {
 
   return (
     <>
-      <Navbar />
       <main className="flex-1 bg-white">
         <section className="py-20">
           <div className="container mx-auto px-4">
@@ -154,7 +152,6 @@ export default function ContactPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

@@ -79,6 +79,9 @@ export default function MyPostingsList({ postings }: { postings: MyPosting[] }) 
                   View
                 </Link>
               )}
+              <Link href={`/jobs/mine/${posting.id}/edit`} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-50">
+                Edit
+              </Link>
               {canClose && (
                 <button
                   type="button"

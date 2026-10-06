@@ -11,7 +11,7 @@ export default function HandbookViewer() {
 
     return (
         <div className="h-[85vh] w-full border border-zinc-200 rounded-lg overflow-hidden shadow-sm bg-white">
-            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+            <Worker workerUrl="/pdf.worker.min.js">
                 <Viewer
                     fileUrl="/students-handbook-2018.pdf"
                     plugins={[defaultLayoutPluginInstance]}

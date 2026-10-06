@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 import Image from "next/image";
 import { Users, Target, ShieldCheck, Award, FileText, Download } from "lucide-react";
 import { AboutSlideshow } from "@/components/about/AboutSlideshow";
@@ -22,7 +20,6 @@ export default async function AboutPage() {
 
   return (
     <>
-      <Navbar />
       <main className="flex-1 bg-white">
         {/* Hero Section */}
         <section className="relative py-20 bg-upsa-navy text-white overflow-hidden">
@@ -162,7 +159,6 @@ export default async function AboutPage() {
         </section>
 
       </main>
-      <Footer />
     </>
   );
 }

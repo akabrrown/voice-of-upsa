@@ -1,5 +1,3 @@
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 import { Metadata } from "next";
 import { getPublishedAlbums } from "@/app/actions/gallery";
 import { GalleryAlbumCategory } from "@/lib/gallery/types";
@@ -16,9 +14,10 @@ export const metadata: Metadata = {
 export default async function GalleryPage({
   searchParams,
 }: {
-  searchParams: { category?: string };
+  searchParams: Promise<{ category?: string }>;
 }) {
-  const category = searchParams.category as GalleryAlbumCategory | undefined;
+  const resolvedSearchParams = await searchParams;
+  const category = resolvedSearchParams.category as GalleryAlbumCategory | undefined;
   const result = await getPublishedAlbums(category);
   const albums = result.data || [];
 
@@ -31,9 +30,7 @@ export default async function GalleryPage({
   ];
 
   return (
-    <>
-      <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
           <h1 className="text-4xl font-extrabold text-[#1B2A4A] mb-2 tracking-tight">Campus Gallery</h1>
@@ -135,7 +132,5 @@ export default async function GalleryPage({
         </div>
       )}
     </div>
-    <Footer />
-    </>
   );
 }

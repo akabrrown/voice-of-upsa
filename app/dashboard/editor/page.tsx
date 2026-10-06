@@ -214,6 +214,11 @@ export default function EditorDashboard() {
                     <PlusCircle className="mr-2 h-5 w-5" /> Write New Article
                   </Link>
                 </Button>
+                <Button asChild variant="outline" className="w-full border-upsa-navy/10 text-upsa-navy hover:bg-upsa-navy/5 font-bold py-6 rounded-xl transition-all shadow-md">
+                  <Link href="/dashboard/editor/polls/new">
+                    <PlusCircle className="mr-2 h-5 w-5" /> Create New Poll
+                  </Link>
+                </Button>
                 <Button asChild variant="outline" className="w-full border-upsa-navy/10 text-upsa-navy hover:bg-upsa-navy/5 font-bold py-6 rounded-xl transition-all">
                   <Link href="/profile">
                     Edit Profile Details

@@ -146,7 +146,7 @@ export async function createPoll(formData: FormData): Promise<ActionState> {
   if (!user) return { success: false, error: "Unauthorized" };
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
+  if (profile?.role !== "admin" && profile?.role !== "editor") return { success: false, error: "Unauthorized" };
 
   const question = formData.get("question") as string;
   const category = formData.get("category") as PollCategory;
@@ -198,7 +198,8 @@ export async function createPoll(formData: FormData): Promise<ActionState> {
     });
   }
 
-  revalidatePath("/admin/polls");
+  revalidatePath("/dashboard/admin/polls");
+  revalidatePath("/dashboard/editor/polls");
   revalidatePath("/polls");
   return { success: true, message: "Poll created successfully." };
 }
@@ -210,7 +211,7 @@ export async function deletePoll(pollId: string): Promise<ActionState> {
 
   if (!user) return { success: false, error: "Unauthorized" };
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
+  if (profile?.role !== "admin" && profile?.role !== "editor") return { success: false, error: "Unauthorized" };
 
   const { error } = await supabase
     .from("polls")
@@ -219,7 +220,8 @@ export async function deletePoll(pollId: string): Promise<ActionState> {
 
   if (error) return { success: false, error: "Failed to delete poll." };
 
-  revalidatePath("/admin/polls");
+  revalidatePath("/dashboard/admin/polls");
+  revalidatePath("/dashboard/editor/polls");
   revalidatePath("/polls");
   return { success: true, message: "Poll deleted successfully." };
 }
@@ -231,7 +233,7 @@ export async function updatePollStatus(pollId: string, status: PollStatus): Prom
 
   if (!user) return { success: false, error: "Unauthorized" };
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
+  if (profile?.role !== "admin" && profile?.role !== "editor") return { success: false, error: "Unauthorized" };
 
   // Fetch poll first to get details for notification
   const { data: poll } = await supabase.from("polls").select("*").eq("id", pollId).single();
@@ -252,7 +254,8 @@ export async function updatePollStatus(pollId: string, status: PollStatus): Prom
     });
   }
 
-  revalidatePath("/admin/polls");
+  revalidatePath("/dashboard/admin/polls");
+  revalidatePath("/dashboard/editor/polls");
   revalidatePath("/polls");
   return { success: true, message: "Poll status updated." };
 }

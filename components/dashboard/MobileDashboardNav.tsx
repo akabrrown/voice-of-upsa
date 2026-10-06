@@ -24,6 +24,7 @@ import {
   UserCheck,
   Vote,
   Camera,
+  Briefcase,
 } from "lucide-react";
 
 type NavLink = { name: string; href: string; icon: any; badge?: "ads" | "inbox" };
@@ -31,6 +32,7 @@ type AdminGroup = { label: string; links: NavLink[] };
 
 const userLinks: NavLink[] = [
   { name: "Profile", href: "/dashboard/user", icon: User },
+  { name: "My Postings", href: "/jobs/mine", icon: Briefcase },
   { name: "Saved", href: "/dashboard/user/bookmarks", icon: Bookmark },
   { name: "History", href: "/dashboard/user/history", icon: History },
 ];
@@ -38,6 +40,7 @@ const userLinks: NavLink[] = [
 const editorLinks: NavLink[] = [
   { name: "Overview", href: "/dashboard/editor", icon: LayoutDashboard },
   { name: "My Articles", href: "/dashboard/editor/articles", icon: FileText },
+  { name: "Polls", href: "/dashboard/editor/polls", icon: FileText },
   { name: "Create New", href: "/dashboard/editor/articles/new", icon: PlusCircle },
 ];
 

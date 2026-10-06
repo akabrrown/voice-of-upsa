@@ -11,7 +11,9 @@ import {
   Calendar,
   ExternalLink,
   Mail,
-  Info
+  Info,
+  Briefcase,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Metadata } from "next";
@@ -144,6 +146,15 @@ export default async function JobDetailPage({ params }: { params: Promise<{ slug
                   </span>
                 </div>
                 
+                {job.experience_level && job.experience_level !== 'not_applicable' && (
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-gray-400" />
+                    <span className="capitalize font-medium">
+                      {job.experience_level} Level
+                    </span>
+                  </div>
+                )}
+                
                 <div className="flex items-center gap-2">
                   <Banknote className="h-5 w-5 text-gray-400" />
                   <span className="capitalize font-medium">
@@ -196,6 +207,18 @@ export default async function JobDetailPage({ params }: { params: Promise<{ slug
                     <p className="text-sm text-gray-500">
                       {format(new Date(job.expires_at), 'MMMM d, yyyy')}
                     </p>
+                  </div>
+                </div>
+              )}
+
+              {job.organization_website && (
+                <div className="mb-6 p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-start gap-3">
+                  <Globe className="h-5 w-5 text-[#1B2A4A] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">Organization Website</p>
+                    <a href={job.organization_website} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline break-all">
+                      {job.organization_website.replace(/^https?:\/\/(www\.)?/, '')}
+                    </a>
                   </div>
                 </div>
               )}

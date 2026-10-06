@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { getServiceCategories, getActiveServices } from "@/lib/services/queries";
-import { ServiceCard } from "@/components/services/ServiceCard";
+import { ServiceListClient } from "@/components/services/ServiceListClient";
 import { CategoryChips } from "@/components/services/CategoryChips";
 
 export const metadata: Metadata = {
@@ -34,34 +34,10 @@ export default async function ServicesDirectoryPage() {
 
       <CategoryChips categories={activeCategories} />
 
-      {featuredServices.length > 0 && (
-        <div className="mb-12">
-          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-            <span className="bg-upsa-gold/20 text-upsa-navy px-3 py-1 rounded text-sm mr-3">Featured</span>
-            Key Services
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredServices.map(service => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-6">All Services</h2>
-        {otherServices.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {otherServices.map(service => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
-            <p className="text-gray-500">No services found in the directory yet.</p>
-          </div>
-        )}
-      </div>
+      <ServiceListClient 
+        services={otherServices as any} 
+        featuredServices={featuredServices as any} 
+      />
     </div>
   );
 }

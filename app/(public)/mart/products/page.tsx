@@ -28,10 +28,11 @@ async function getProducts(searchQuery?: string, categoryId?: string): Promise<P
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: { q?: string; category?: string };
+  searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  const query = searchParams?.q || '';
-  const categoryId = searchParams?.category || '';
+  const resolvedSearchParams = await searchParams;
+  const query = resolvedSearchParams?.q || '';
+  const categoryId = resolvedSearchParams?.category || '';
   
   const products = await getProducts(query, categoryId);
 

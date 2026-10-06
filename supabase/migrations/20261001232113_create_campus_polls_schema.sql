@@ -84,10 +84,10 @@ DROP POLICY IF EXISTS "Public can view published or closed polls" ON public.poll
 CREATE POLICY "Public can view published or closed polls" ON public.polls
     FOR SELECT USING (status = 'published' OR status = 'closed');
 
-DROP POLICY IF EXISTS "Admins have full access to polls" ON public.polls;
-CREATE POLICY "Admins have full access to polls" ON public.polls
+DROP POLICY IF EXISTS "Admins and Editors have full access to polls" ON public.polls;
+CREATE POLICY "Admins and Editors have full access to polls" ON public.polls
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+        EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'editor'))
     );
 
 -- RLS: poll_options
@@ -97,10 +97,10 @@ CREATE POLICY "Public can view poll options" ON public.poll_options
         EXISTS (SELECT 1 FROM public.polls WHERE id = public.poll_options.poll_id AND (status = 'published' OR status = 'closed'))
     );
 
-DROP POLICY IF EXISTS "Admins have full access to poll options" ON public.poll_options;
-CREATE POLICY "Admins have full access to poll options" ON public.poll_options
+DROP POLICY IF EXISTS "Admins and Editors have full access to poll options" ON public.poll_options;
+CREATE POLICY "Admins and Editors have full access to poll options" ON public.poll_options
     FOR ALL USING (
-        EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+        EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'editor'))
     );
 
 -- RLS: poll_votes
@@ -108,10 +108,10 @@ DROP POLICY IF EXISTS "Users can view their own votes" ON public.poll_votes;
 CREATE POLICY "Users can view their own votes" ON public.poll_votes
     FOR SELECT USING (auth.uid() = voter_id);
 
-DROP POLICY IF EXISTS "Admins can view all votes" ON public.poll_votes;
-CREATE POLICY "Admins can view all votes" ON public.poll_votes
+DROP POLICY IF EXISTS "Admins and Editors can view all votes" ON public.poll_votes;
+CREATE POLICY "Admins and Editors can view all votes" ON public.poll_votes
     FOR SELECT USING (
-        EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+        EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'editor'))
     );
 
 DROP POLICY IF EXISTS "Users can vote" ON public.poll_votes;
@@ -119,4 +119,14 @@ CREATE POLICY "Users can vote" ON public.poll_votes
     FOR INSERT WITH CHECK (auth.uid() = voter_id);
 
 -- Enable Realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE public.polls;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+      AND schemaname = 'public' 
+      AND tablename = 'polls'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.polls;
+  END IF;
+END $$;

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { getServiceCategories, getActiveServices } from "@/lib/services/queries";
-import { ServiceCard } from "@/components/services/ServiceCard";
+import { ServiceListClient } from "@/components/services/ServiceListClient";
 import { CategoryChips } from "@/components/services/CategoryChips";
 import { notFound } from "next/navigation";
 
@@ -55,19 +55,10 @@ export default async function ServicesCategoryPage({ params }: CategoryPageProps
 
       <CategoryChips categories={activeCategories} />
 
-      <div>
-        {categoryServices.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categoryServices.map(service => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
-            <p className="text-gray-500">No services found in this category yet.</p>
-          </div>
-        )}
-      </div>
+      <ServiceListClient 
+        services={categoryServices as any} 
+        featuredServices={[]} 
+      />
     </div>
   );
 }

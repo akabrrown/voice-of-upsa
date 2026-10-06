@@ -7,8 +7,10 @@ const postingSchema = z
   .object({
     title: z.string().trim().min(3).max(120),
     organization_name: z.string().trim().min(2).max(120),
+    organization_website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
     category_id: z.string().uuid(),
     type: z.enum(["full_time", "part_time", "internship", "volunteer", "freelance"]),
+    experience_level: z.enum(["entry", "mid", "senior", "not_applicable"]).optional().default("not_applicable"),
     location_type: z.enum(["on_campus", "accra", "remote", "other"]),
     location_label: z.string().trim().max(120).optional().default(""),
     description: z.string().trim().min(30).max(5000),
@@ -38,8 +40,38 @@ const postingSchema = z
 export type PostingInput = z.input<typeof postingSchema>;
 
 export type SubmitResult =
-  | { ok: true }
+  | { ok: true; pendingReview?: boolean }
   | { ok: false; error: string; field?: string };
+
+// Must match max_window in jobs.guard_posting_write().
+export const MAX_CLOSING_DAYS = 90;
+const DAY_MS = 86_400_000;
+
+// Error codes raised deliberately by jobs.guard_posting_write(); their
+// messages are written for end users. Anything else stays server-side.
+const GUARD_ERROR_CODES = new Set(["P0001", "22023", "42501"]);
+
+function toClosingTimestamp(dateInput: string): Date | null {
+  const parsed = new Date(dateInput);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function closingDateError(closesAt: Date): string | null {
+  const now = Date.now();
+  if (closesAt.getTime() <= now) return "Pick a closing date after today.";
+  if (closesAt.getTime() > now + MAX_CLOSING_DAYS * DAY_MS) {
+    return `Closing date must be within ${MAX_CLOSING_DAYS} days.`;
+  }
+  return null;
+}
+
+function toUserError(action: string, error: { code?: string; message: string }): SubmitResult {
+  console.error(`${action} failed`, error.code, error.message);
+  if (error.code && GUARD_ERROR_CODES.has(error.code)) {
+    return { ok: false, error: error.message };
+  }
+  return { ok: false, error: "Could not save this posting. Try again in a moment." };
+}
 
 function slugify(title: string) {
   const base = title
@@ -82,6 +114,16 @@ export async function submitPosting(input: PostingInput): Promise<SubmitResult> 
     .single();
   const isAdmin = profile?.role === "admin";
 
+  const closesAt = parsed.data.expires_at ? toClosingTimestamp(parsed.data.expires_at) : null;
+  if (parsed.data.expires_at && !closesAt) {
+    return { ok: false, error: "Enter a valid closing date.", field: "expires_at" };
+  }
+  if (closesAt && !isAdmin) {
+    const dateError = closingDateError(closesAt);
+    if (dateError) return { ok: false, error: dateError, field: "expires_at" };
+  }
+
+  // The database forces pending_review for non-admins regardless of this value.
   const { error } = await supabase
     .schema("jobs")
     .from("postings")
@@ -91,17 +133,17 @@ export async function submitPosting(input: PostingInput): Promise<SubmitResult> 
       slug: slugify(parsed.data.title),
       poster_id: user.id,
       status: isAdmin ? "approved" : "pending_review",
-      expires_at: parsed.data.expires_at ? new Date(parsed.data.expires_at).toISOString() : null,
+      expires_at: closesAt ? closesAt.toISOString() : null,
     });
 
-  if (error) {
-    console.error("submitPosting failed", error.code, error.message);
-    return { ok: false, error: `Database error: ${error.message}` };
-  }
-  return { ok: true };
+  if (error) return toUserError("submitPosting", error);
+  return { ok: true, pendingReview: !isAdmin };
 }
 
 export async function editPosting(postingId: string, input: PostingInput): Promise<SubmitResult> {
+  if (!z.string().uuid().safeParse(postingId).success) {
+    return { ok: false, error: "Invalid posting." };
+  }
   const parsed = postingSchema.safeParse(input);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
@@ -114,7 +156,6 @@ export async function editPosting(postingId: string, input: PostingInput): Promi
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Sign in to edit this opportunity." };
 
-  // Check if user is admin or the poster
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -125,7 +166,7 @@ export async function editPosting(postingId: string, input: PostingInput): Promi
   const { data: existing } = await supabase
     .schema("jobs")
     .from("postings")
-    .select("poster_id")
+    .select("poster_id, expires_at")
     .eq("id", postingId)
     .single();
 
@@ -133,24 +174,47 @@ export async function editPosting(postingId: string, input: PostingInput): Promi
     return { ok: false, error: "You don't have permission to edit this posting." };
   }
 
-  const { error } = await supabase
+  // The form round-trips the date as YYYY-MM-DD; only treat it as a change
+  // when the calendar date actually differs, so an untouched date isn't
+  // re-validated against the window on every save.
+  const { expires_at: submittedDate, ...content } = parsed.data;
+  const existingDate = existing.expires_at
+    ? new Date(existing.expires_at).toISOString().split("T")[0]
+    : "";
+  const update: Record<string, unknown> = {
+    ...content,
+    image_url: content.image_url || null,
+  };
+
+  if ((submittedDate ?? "") !== existingDate) {
+    if (!submittedDate) {
+      if (!isAdmin) {
+        return { ok: false, error: "A closing date can be moved but not removed.", field: "expires_at" };
+      }
+      update.expires_at = null;
+    } else {
+      const closesAt = toClosingTimestamp(submittedDate);
+      if (!closesAt) return { ok: false, error: "Enter a valid closing date.", field: "expires_at" };
+      if (!isAdmin) {
+        const dateError = closingDateError(closesAt);
+        if (dateError) return { ok: false, error: dateError, field: "expires_at" };
+      }
+      update.expires_at = closesAt.toISOString();
+    }
+  }
+
+  // Status is never sent: jobs.guard_posting_write() moves the posting back
+  // to pending_review only when reviewable content changed.
+  const { data: saved, error } = await supabase
     .schema("jobs")
     .from("postings")
-    .update({
-      ...parsed.data,
-      image_url: parsed.data.image_url || null,
-      expires_at: parsed.data.expires_at ? new Date(parsed.data.expires_at).toISOString() : null,
-      // Status remains unchanged unless we explicitly want to reset to pending_review for non-admins?
-      // Let's reset to pending_review if not admin to prevent sneaking in bad content after approval.
-      ...(isAdmin ? {} : { status: "pending_review" })
-    })
-    .eq("id", postingId);
+    .update(update)
+    .eq("id", postingId)
+    .select("status")
+    .single();
 
-  if (error) {
-    console.error("editPosting failed", error.code, error.message);
-    return { ok: false, error: `Database error: ${error.message}` };
-  }
-  return { ok: true };
+  if (error) return toUserError("editPosting", error);
+  return { ok: true, pendingReview: saved?.status === "pending_review" };
 }
 
 export async function closePosting(postingId: string): Promise<SubmitResult> {
