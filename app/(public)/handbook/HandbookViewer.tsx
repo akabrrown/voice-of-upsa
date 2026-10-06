@@ -15,7 +15,7 @@ export default function HandbookViewer() {
                 <Viewer
                     fileUrl="/students-handbook-2018.pdf"
                     plugins={[defaultLayoutPluginInstance]}
-                    scrollMode={ScrollMode.Page}
+                    scrollMode={ScrollMode.Horizontal}
                     viewMode={ViewMode.SinglePage}
                     defaultScale={SpecialZoomLevel.PageFit}
                 />
