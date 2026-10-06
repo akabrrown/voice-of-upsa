@@ -15,6 +15,7 @@ export type MyPosting = {
   status: "pending_review" | "approved" | "rejected" | "closed";
   expires_at: string | null;
   created_at: string;
+  has_pending_revision?: boolean;
 };
 
 const STATUS_STYLES: Record<MyPosting["status"], { label: string; className: string }> = {
@@ -62,7 +63,12 @@ export default function MyPostingsList({ postings }: { postings: MyPosting[] }) 
         const status = STATUS_STYLES[posting.status];
         const canClose = posting.status === "approved" || posting.status === "pending_review";
         return (
-          <div key={posting.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div key={posting.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm relative overflow-hidden">
+            {posting.has_pending_revision && (
+              <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg">
+                Pending Edits
+              </div>
+            )}
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${status.className}`}>{status.label}</span>
@@ -73,7 +79,7 @@ export default function MyPostingsList({ postings }: { postings: MyPosting[] }) 
                 {posting.organization_name} · Posted {new Date(posting.created_at).toLocaleDateString("en-GB")}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 z-10">
               {posting.status === "approved" && (
                 <Link href={`/jobs/${posting.slug}`} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                   View

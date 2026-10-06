@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import { Search } from "lucide-react";
-import type { Database } from "@/lib/database.types";
 
-type Service = Database['public']['Tables']['directory_services']['Row'] & {
+type Service = any & {
   category?: { name: string; slug: string };
 };
 

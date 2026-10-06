@@ -2,9 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, Briefcase } from "lucide-react";
+import { Plus, Briefcase, FileEdit } from "lucide-react";
 import { format } from "date-fns";
 import { JobActionButtons } from "./JobActionButtons";
+import { RevisionActionButtons } from "./RevisionActionButtons";
 
 export const metadata = {
   title: "Manage Jobs | Admin",
@@ -37,21 +38,38 @@ export default async function AdminJobsPage() {
     console.error("Admin jobs fetch error:", JSON.stringify(error));
   }
 
+  // Fetch pending revisions
+  const { data: pendingRevisions } = await supabase
+    .schema("jobs")
+    .from("posting_revisions")
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
   // Fetch profiles separately
   let profiles: any[] = [];
-  if (postings && postings.length > 0) {
-    const posterIds = Array.from(new Set(postings.map(p => p.poster_id)));
+  const posterIds = new Set<string>();
+  
+  if (postings) {
+    postings.forEach(p => posterIds.add(p.poster_id));
+  }
+  if (pendingRevisions) {
+    pendingRevisions.forEach(r => posterIds.add(r.poster_id));
+  }
+
+  if (posterIds.size > 0) {
     const { data: fetchedProfiles } = await supabase
       .from("profiles")
       .select("id, first_name, last_name")
-      .in("id", posterIds);
+      .in("id", Array.from(posterIds));
     if (fetchedProfiles) profiles = fetchedProfiles;
   }
   
   const profileMap = Object.fromEntries(profiles.map(p => [p.id, p]));
+  const postingMap = Object.fromEntries((postings || []).map(p => [p.id, p]));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#1B2A4A]">Job Board</h1>
@@ -63,6 +81,54 @@ export default async function AdminJobsPage() {
           </Link>
         </Button>
       </div>
+
+      {pendingRevisions && pendingRevisions.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-[#1B2A4A] flex items-center gap-2">
+            <FileEdit className="w-5 h-5 text-amber-500" /> Pending Revisions ({pendingRevisions.length})
+          </h2>
+          <div className="bg-white border border-amber-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-amber-800 uppercase bg-amber-50 border-b border-amber-100">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Original Post</th>
+                    <th className="px-6 py-4 font-semibold">Poster</th>
+                    <th className="px-6 py-4 font-semibold">Date Submitted</th>
+                    <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {pendingRevisions.map((rev) => {
+                    const originalPost = postingMap[rev.posting_id];
+                    return (
+                      <tr key={rev.id} className="hover:bg-amber-50/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-gray-900 max-w-md line-clamp-1">
+                            {originalPost?.title || "Unknown Post"}
+                          </div>
+                          <div className="text-xs text-gray-500 line-clamp-1 mt-1">
+                            {Object.keys(rev.proposed_changes).length} field(s) edited
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {profileMap[rev.poster_id] ? `${profileMap[rev.poster_id].first_name} ${profileMap[rev.poster_id].last_name}` : "Unknown"}
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                          {format(new Date(rev.created_at), "MMM d, yyyy")}
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-1">
+                          <RevisionActionButtons revision={rev} originalPost={originalPost} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">

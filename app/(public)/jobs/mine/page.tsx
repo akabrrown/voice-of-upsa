@@ -16,13 +16,29 @@ export default async function MyPostingsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login?next=/jobs/mine");
 
-  const { data, error } = await supabase
-    .schema("jobs")
-    .from("postings")
-    .select("id, slug, title, organization_name, type, status, expires_at, created_at")
-    .eq("poster_id", user.id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  const [postingsResult, revisionsResult] = await Promise.all([
+    supabase
+      .schema("jobs")
+      .from("postings")
+      .select("id, slug, title, organization_name, type, status, expires_at, created_at")
+      .eq("poster_id", user.id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .schema("jobs")
+      .from("posting_revisions")
+      .select("posting_id")
+      .eq("poster_id", user.id)
+      .eq("status", "pending"),
+  ]);
+
+  const { data: rawPostings, error } = postingsResult;
+  const pendingRevisionIds = new Set(revisionsResult.data?.map(r => r.posting_id) ?? []);
+
+  const postings = (rawPostings ?? []).map(p => ({
+    ...p,
+    has_pending_revision: pendingRevisionIds.has(p.id)
+  }));
 
   return (
     <main className="min-h-screen bg-gray-50/50 pb-20">
@@ -44,7 +60,7 @@ export default async function MyPostingsPage() {
             Could not load your postings. Refresh to try again.
           </div>
         ) : (
-          <MyPostingsList postings={(data ?? []) as MyPosting[]} />
+          <MyPostingsList postings={postings as MyPosting[]} />
         )}
       </div>
     </main>
