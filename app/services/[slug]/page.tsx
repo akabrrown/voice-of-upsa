@@ -5,6 +5,7 @@ import { MapPin, Phone, Mail, Globe, Clock, ShieldCheck, ArrowLeft } from "lucid
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { ShareServiceButton } from "@/components/services/ShareServiceButton";
 
 interface ServicePageProps {
   params: Promise<{ slug: string }>;
@@ -55,13 +56,19 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           )}
           
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{service.name}</h1>
-              {service.is_featured && (
-                <Badge variant="secondary" className="bg-upsa-gold/20 text-upsa-navy hover:bg-upsa-gold/30">
-                  Featured
-                </Badge>
-              )}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2 justify-between">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{service.name}</h1>
+                {service.is_featured && (
+                  <Badge variant="secondary" className="bg-upsa-gold/20 text-upsa-navy hover:bg-upsa-gold/30">
+                    Featured
+                  </Badge>
+                )}
+              </div>
+              <ShareServiceButton 
+                title={`${service.name} | Voice of UPSA`}
+                text={`Check out ${service.name} on the Voice of UPSA Student Services Directory.`}
+              />
             </div>
             
             {service.category && (
