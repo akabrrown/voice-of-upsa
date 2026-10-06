@@ -19,9 +19,24 @@ export async function generateMetadata({ params }: ServicePageProps): Promise<Me
     return { title: "Service Not Found" };
   }
 
+  const title = `${service.name} | Student Services Directory`;
+  const description = service.description || `Contact information and operating hours for ${service.name}.`;
+
   return {
-    title: `${service.name} | Student Services Directory`,
-    description: service.description || `Contact information and operating hours for ${service.name}.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: service.logo_url ? [service.logo_url] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: service.logo_url ? [service.logo_url] : [],
+    }
   };
 }
 
