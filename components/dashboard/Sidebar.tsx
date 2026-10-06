@@ -134,7 +134,7 @@ export function Sidebar({ className }: { className?: string }) {
     fetchUnreadMessagesCount();
 
     const channel = supabase
-      .channel("admin-sidebar-counts")
+      .channel(`admin-sidebar-counts-${Math.random()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "advertisements" }, fetchPendingCount)
       .on("postgres_changes", { event: "*", schema: "public", table: "contact_messages" }, fetchUnreadMessagesCount)
       .subscribe();

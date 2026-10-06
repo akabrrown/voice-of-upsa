@@ -127,7 +127,7 @@ export function MobileDashboardNav({ className }: { className?: string }) {
     fetchUnreadMessagesCount();
 
     const channel = supabase
-      .channel("admin-mobile-counts")
+      .channel(`admin-mobile-counts-${Math.random()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "advertisements" }, fetchPendingCount)
       .on("postgres_changes", { event: "*", schema: "public", table: "contact_messages" }, fetchUnreadMessagesCount)
       .subscribe();

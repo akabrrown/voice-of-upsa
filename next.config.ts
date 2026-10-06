@@ -3,7 +3,7 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const withPWA = withPWAInit({
   dest: "public",
-  disable: process.env.NODE_ENV === "development", // Disable PWA in dev mode for faster hot reloads
+  // PWA enabled in dev for testing
 });
 
 const nextConfig: NextConfig = {
@@ -22,7 +22,13 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     proxyClientMaxBodySize: "100mb",
+    turbo: {
+      resolveAlias: {
+        canvas: "./empty.js",
+      },
+    },
   },
+  serverExternalPackages: ["canvas"],
   turbopack: {},
 };
 

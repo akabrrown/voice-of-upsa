@@ -1,9 +1,7 @@
 import { Metadata } from "next";
-import HandbookViewer from "./HandbookViewer";
+import HandbookViewerWrapper from "./HandbookViewerWrapper";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import fs from "fs";
-import path from "path";
 
 export const metadata: Metadata = {
   title: "Undergraduate Students' Handbook | Voice of UPSA",
@@ -11,11 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default function HandbookPage() {
-  // Read the JSON data on the server side
-  const filePath = path.join(process.cwd(), "public", "handbook_data.json");
-  const fileContents = fs.readFileSync(filePath, "utf8");
-  const handbookData = JSON.parse(fileContents);
-
   return (
     <>
       <Navbar />
@@ -26,11 +19,11 @@ export default function HandbookPage() {
               Undergraduate Students' Handbook
             </h1>
             <p className="text-zinc-500 max-w-2xl text-[15px]">
-              The official digital UPSA handbook. Navigate chapters, search policies, and find academic programs instantly.
+              The official digital UPSA handbook. Use the toolbar to zoom, search, and navigate through the pages.
             </p>
           </div>
           
-          <HandbookViewer pages={handbookData} />
+          <HandbookViewerWrapper />
         </div>
       </main>
       <Footer />
