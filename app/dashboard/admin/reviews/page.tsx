@@ -50,7 +50,7 @@ export default function AdminReviewsPage() {
     }
   };
 
-  const updateReview = async (id: string, updates: { status?: string, is_featured?: boolean }) => {
+  const updateReview = async (id: string, updates: { status?: "pending" | "approved" | "rejected", is_featured?: boolean }) => {
     try {
       const res = await fetch("/api/admin/reviews", {
         method: "PATCH",
