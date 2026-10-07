@@ -24,7 +24,6 @@ export default function AdminHolidaysPage() {
   const [editingHoliday, setEditingHoliday] = useState<Partial<ComputedHoliday> & { isActive?: boolean; customDateOverride?: string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [previewHoliday, setPreviewHoliday] = useState<ComputedHoliday | null>(null);
-  const [broadcastPushNow, setBroadcastPushNow] = useState(false);
   const [dbRecords, setDbRecords] = useState<any[]>([]);
 
   useEffect(() => {
@@ -76,7 +75,6 @@ export default function AdminHolidaysPage() {
       isActive,
       customDateOverride
     });
-    setBroadcastPushNow(false);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -94,7 +92,6 @@ export default function AdminHolidaysPage() {
         theme_accent: editingHoliday.themeAccent,
         academic_status: editingHoliday.academicStatus,
         is_active: editingHoliday.isActive,
-        broadcast_push_now: broadcastPushNow,
       };
 
       const res = await fetch("/api/admin/holidays", {
@@ -105,7 +102,7 @@ export default function AdminHolidaysPage() {
 
       const data = await res.json();
       if (data.success) {
-        toast.success(broadcastPushNow ? "Holiday saved & push notification sent!" : "Holiday settings saved successfully!");
+        toast.success(editingHoliday.isActive ? "Holiday saved & push notification sent!" : "Holiday settings saved successfully!");
         fetchHolidays();
       } else {
         toast.error("Failed to save: " + data.error);
@@ -270,16 +267,13 @@ export default function AdminHolidaysPage() {
                     />
                   </div>
 
-                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                  {/* Auto-broadcast notice */}
+                  <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 flex items-start gap-3">
+                    <Send className="w-5 h-5 text-blue-500 mt-0.5" />
                     <div>
-                      <h4 className="font-bold text-sm text-gray-900">Broadcast Web Push Notification immediately</h4>
-                      <p className="text-xs text-gray-500 mt-1">Send a push notification to all subscribers right now when you save.</p>
+                      <h4 className="font-bold text-sm text-blue-900">Automatic Push Notification</h4>
+                      <p className="text-xs text-blue-700/80 mt-1">When you save this holiday configuration while the modal is Active, a push notification will automatically be sent to all subscribers right now.</p>
                     </div>
-                    <Switch 
-                      checked={broadcastPushNow}
-                      onCheckedChange={setBroadcastPushNow}
-                      disabled={!editingHoliday.isActive}
-                    />
                   </div>
                   
                   <div className="pt-6 flex justify-end border-t border-gray-100">

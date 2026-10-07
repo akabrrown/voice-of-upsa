@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getAllHolidaysForYear, GHANA_STATUTORY_HOLIDAYS } from "@/lib/holidays/engine";
 import { DBHolidayWish } from "@/lib/holidays/types";
-import { getAdminMessaging } from "@/lib/firebase-admin";
+import { sendBroadcastNotification } from "@/lib/push/send";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +73,6 @@ export async function POST(request: Request) {
       featured_article_slug,
       send_push_notification,
       is_active,
-      broadcast_push_now,
     } = body;
 
     if (!holiday_key) {
@@ -115,24 +114,16 @@ export async function POST(request: Request) {
     }
 
     let pushResult = null;
-    if (broadcast_push_now && headline && body_message) {
+    if (is_active !== false && headline && body_message) {
       try {
-        const message = {
-          notification: {
-            title: title || headline,
-            body: body_message,
-            imageUrl: "https://www.voiceofupsa.com/icon-512.png",
-          },
-          data: {
-            url: "https://voiceofupsa.com/",
-          },
-          topic: "all_users",
-        };
-        const messaging = getAdminMessaging();
-        const response = await messaging.send(message);
-        pushResult = { success: true, messageId: response };
+        await sendBroadcastNotification("new_articles", "holiday", {
+          title: resolvedTitle || headline,
+          excerpt: body_message,
+          link: "/",
+        });
+        pushResult = { success: true };
       } catch (e: any) {
-        console.error("Firebase push error:", e);
+        console.error("Native Web Push error:", e);
         pushResult = { success: false, error: e.message };
       }
     }
