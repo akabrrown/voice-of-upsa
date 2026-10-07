@@ -43,6 +43,17 @@ CREATE POLICY "Staff can manage all reviews" ON public.site_reviews
         )
     );
 
+-- Create a trigger function if it doesn't exist
+CREATE OR REPLACE FUNCTION public.set_current_timestamp_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Trigger for updated_at
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON public.site_reviews
-  FOR EACH ROW EXECUTE PROCEDURE moddatetime (updated_at);
+CREATE TRIGGER handle_updated_at 
+  BEFORE UPDATE ON public.site_reviews
+  FOR EACH ROW 
+  EXECUTE PROCEDURE public.set_current_timestamp_updated_at();
