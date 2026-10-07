@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button"; 
-import { Bell, AlertCircle, CheckCircle2, Info } from "lucide-react";
+import { Bell, AlertCircle, CheckCircle2, Info, Download, Share } from "lucide-react";
 import { createClient } from "@/lib/supabase/client"; 
 
 export function urlBase64ToUint8Array(base64String: string) {
@@ -36,18 +36,22 @@ interface Props {
 export function PushPermissionPrompt({ topics = ["new_articles"] }: Props) {
   const [state, setState] = useState<PushState>("checking");
   const [errorMsg, setErrorMsg] = useState("");
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     checkState();
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const checkState = async () => {
     try {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        setState("unsupported");
-        return;
-      }
-
       // Detect iOS Safari not in standalone mode
       const isIos =
         /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -57,6 +61,11 @@ export function PushPermissionPrompt({ topics = ["new_articles"] }: Props) {
 
       if (isIos && !isStandalone) {
         setState("ios-needs-install");
+        return;
+      }
+
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        setState("unsupported");
         return;
       }
 
@@ -122,6 +131,15 @@ export function PushPermissionPrompt({ topics = ["new_articles"] }: Props) {
     }
   };
 
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
   const handleUnsubscribe = async () => {
     try {
       setState("checking");
@@ -170,12 +188,12 @@ export function PushPermissionPrompt({ topics = ["new_articles"] }: Props) {
 
       {state === "ios-needs-install" && (
         <div className="text-sm text-muted-foreground space-y-2">
-          <p className="flex gap-2 items-start">
-            <Info className="w-4 h-4 mt-0.5 shrink-0" />
-            To receive notifications on iOS:
+          <p className="flex gap-2 items-start text-gray-900 font-medium">
+            <Info className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />
+            Install to enable notifications
           </p>
-          <ol className="list-decimal pl-6 space-y-1">
-            <li>Tap the <strong>Share</strong> button at the bottom of Safari.</li>
+          <ol className="list-decimal pl-6 space-y-2 text-gray-600">
+            <li>Tap the <Share className="w-4 h-4 inline mx-1" /> <strong>Share</strong> button at the bottom of Safari.</li>
             <li>Select <strong>Add to Home Screen</strong>.</li>
             <li>Open the app from your Home Screen to turn on notifications.</li>
           </ol>
@@ -211,6 +229,19 @@ export function PushPermissionPrompt({ topics = ["new_articles"] }: Props) {
         <div className="text-sm text-muted-foreground flex gap-2 items-start">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <p>We couldn&apos;t enable notifications at this time.</p>
+        </div>
+      )}
+
+      {deferredPrompt && state !== "ios-needs-install" && (
+        <div className="pt-2 border-t mt-3">
+          <Button 
+            variant="outline" 
+            onClick={handleInstallClick} 
+            className="w-full text-xs flex items-center justify-center gap-2"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Install Voice of UPSA App
+          </Button>
         </div>
       )}
     </div>
