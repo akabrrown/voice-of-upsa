@@ -2,7 +2,7 @@
 
 import { Worker, Viewer, ScrollMode, ViewMode, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import { pageNavigationPlugin, RenderGoToNextPageProps, RenderGoToPreviousPageProps } from '@react-pdf-viewer/page-navigation';
+import { pageNavigationPlugin, RenderGoToPageProps } from '@react-pdf-viewer/page-navigation';
 
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
@@ -44,7 +44,7 @@ export default function HandbookViewer() {
                 {/* Floating Left Button */}
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
                     <GoToPreviousPage>
-                        {(props: RenderGoToPreviousPageProps) => (
+                        {(props: RenderGoToPageProps) => (
                             <button
                                 onClick={props.onClick}
                                 disabled={props.isDisabled}
@@ -60,7 +60,7 @@ export default function HandbookViewer() {
                 {/* Floating Right Button */}
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
                     <GoToNextPage>
-                        {(props: RenderGoToNextPageProps) => (
+                        {(props: RenderGoToPageProps) => (
                             <button
                                 onClick={props.onClick}
                                 disabled={props.isDisabled}
