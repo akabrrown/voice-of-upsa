@@ -6,6 +6,8 @@ import { CategoryGrid } from "@/components/layout/CategoryGrid";
 import { LatestArticles } from "@/components/articles/LatestArticles";
 import { TrendingSidebar } from "@/components/articles/TrendingSidebar";
 import { AdZone } from "@/components/layout/AdZone";
+import { ReviewMarquee } from "@/components/reviews/ReviewMarquee";
+import { SubmitReviewModal } from "@/components/reviews/SubmitReviewModal";
 
 export default function Home() {
   return (
@@ -47,6 +49,17 @@ export default function Home() {
             </div>
           </div>
         </div>
+        {/* Reviews Section */}
+        <section className="border-t border-gray-100 bg-white pt-16 pb-8 mt-12">
+          <div className="container mx-auto px-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-bold font-playfair text-upsa-navy mb-2">What Our Readers Say</h2>
+              <p className="text-gray-500">Join the conversation and share your experience with Voice of UPSA.</p>
+            </div>
+            <SubmitReviewModal />
+          </div>
+          <ReviewMarquee />
+        </section>
       </main>
       <Footer />
     </>
