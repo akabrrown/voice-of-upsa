@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getAllHolidaysForYear, GHANA_STATUTORY_HOLIDAYS } from "@/lib/holidays/engine";
 import { DBHolidayWish } from "@/lib/holidays/types";
-import { sendBroadcastNotification } from "@/lib/push/send";
+import { sendPushToTopic } from "@/lib/push/send";
 
 export const dynamic = "force-dynamic";
 
@@ -116,10 +116,11 @@ export async function POST(request: Request) {
     let pushResult = null;
     if (is_active !== false && headline && body_message) {
       try {
-        await sendBroadcastNotification("new_articles", "holiday", {
+        await sendPushToTopic("all_users", {
           title: resolvedTitle || headline,
-          excerpt: body_message,
-          link: "/",
+          body: body_message,
+          url: "/",
+          tag: "holiday",
         });
         pushResult = { success: true };
       } catch (e: any) {
