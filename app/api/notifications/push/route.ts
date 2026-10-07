@@ -1,28 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { getAdminMessaging } from "@/lib/firebase-admin";
-
-export async function GET() {
-  // Debug endpoint to verify environment variables are present on Vercel
-  const hasProjectId = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const hasClientEmail = !!process.env.FIREBASE_CLIENT_EMAIL;
-  
-  const rawKey = process.env.FIREBASE_PRIVATE_KEY || "";
-  const hasPrivateKey = !!rawKey;
-  const keyLength = rawKey.length;
-  const hasNewlines = rawKey.includes("\\n") || rawKey.includes("\n");
-
-  return NextResponse.json({
-    debug: {
-      hasProjectId,
-      hasClientEmail,
-      hasPrivateKey,
-      keyLength,
-      hasNewlines,
-      envMode: process.env.NODE_ENV,
-    }
-  });
-}
+import { sendPushToTopic } from "@/lib/push/send";
 
 export async function POST(request: Request) {
   try {
@@ -59,24 +37,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Send broadcast push to the "all_users" topic via Firebase
-    const message = {
-      notification: {
-        title: article.title,
-        body: article.excerpt || "Read the latest article on Voice of UPSA",
-        // Fallback image if cover_image_url is missing
-        imageUrl: article.cover_image_url || "https://www.voiceofupsa.com/icon-512.png", 
-      },
-      data: {
-        url: `https://voiceofupsa.com/articles/${article.slug}`,
-      },
-      topic: "all_users",
-    };
+    // Send broadcast push to the "new_articles" topic via Native Web Push
+    await sendPushToTopic("new_articles", {
+      title: article.title,
+      body: article.excerpt || "Read the latest article on Voice of UPSA",
+      imageUrl: article.cover_image_url || "https://www.voiceofupsa.com/icon-512.png",
+      url: `/articles/${article.slug}`
+    });
 
-    const messaging = getAdminMessaging();
-    const response = await messaging.send(message);
-
-    return NextResponse.json({ success: true, messageId: response });
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Push API route error:", error);
     return NextResponse.json(

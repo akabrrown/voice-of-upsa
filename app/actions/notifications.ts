@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sendPushToTopic } from "@/lib/push/send";
 
 export async function markNotificationAsRead(notificationId: string) {
   const supabase = await createClient();
@@ -105,6 +106,13 @@ export async function sendBroadcastNotification(type: string, category: string, 
     console.error("Error broadcasting notification:", error);
     return { success: false, error: error.message };
   }
+
+  // 5. Fire native web push broadcast for this topic
+  sendPushToTopic(type, {
+    title: payload?.title || "New Notification",
+    body: payload?.message || payload?.excerpt || "Check out the latest update on Voice of UPSA.",
+    url: payload?.link || "/",
+  }).catch(e => console.error("Web push broadcast error:", e));
 
   return { success: true };
 }
