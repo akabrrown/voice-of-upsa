@@ -247,7 +247,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Navbar />
-      <ViewTracker articleId={dbArticle.id} />
+      <ViewTracker articleId={dbArticle.id} slug={slug} />
       <main className="flex-1 bg-white">
         {/* Article Header & Content */}
         <article className="pt-10 pb-20">

@@ -20,6 +20,8 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { BarChart3, Eye, FileText, Award } from "lucide-react";
 import { StatsShadowLoader, ChartShadowLoader } from "@/components/ui/shadow-loaders";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 interface CategoryData {
   name: string;
@@ -55,6 +57,7 @@ export default function AnalyticsPage() {
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   const [statusData, setStatusData] = useState<StatusData[]>([]);
   const [viewTrendData, setViewTrendData] = useState<ViewTrendData[]>([]);
+  const [siteMetrics, setSiteMetrics] = useState<any[]>([]);
 
   const supabase = createClient();
 
@@ -158,6 +161,13 @@ export default function AnalyticsPage() {
           // Sort chronologically by calendar month timestamp
           const trendList = Object.values(trendMap).sort((a, b) => a.rawDate - b.rawDate);
           setViewTrendData(trendList);
+        }
+
+        // Fetch site metrics for leaderboard
+        const metricsRes = await fetch("/api/admin/metrics");
+        const metricsData = await metricsRes.json();
+        if (metricsData.success) {
+          setSiteMetrics(metricsData.data);
         }
       } catch (err) {
         console.error("Error fetching analytics data:", err);
@@ -407,6 +417,58 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Social & Engagement Leaderboard */}
+          <Card className="border-none shadow-md mt-8">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-upsa-navy">Social & Engagement Leaderboard</CardTitle>
+              <p className="text-sm text-gray-500">Top performing content tracked across views and social shares.</p>
+            </CardHeader>
+            <CardContent>
+              {siteMetrics.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
+                  No social analytics data tracked yet. Data will appear once users view or share content.
+                </div>
+              ) : (
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Content / Slug</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Total Views</TableHead>
+                        <TableHead className="text-right">Social Shares</TableHead>
+                        <TableHead className="text-right">Last Engaged</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {siteMetrics.slice(0, 10).map((metric) => (
+                        <TableRow key={metric.id}>
+                          <TableCell className="font-medium max-w-[200px] truncate" title={metric.entity_slug}>
+                            {metric.entity_slug}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize text-xs">
+                              {metric.entity_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-gray-900">
+                            {metric.views.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-green-600">
+                            {metric.shares.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right text-gray-500 text-sm">
+                            {new Date(metric.last_engaged_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
