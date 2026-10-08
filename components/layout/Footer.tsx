@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Mail, Phone, MapPin, Newspaper } from "lucide-react";
 import { SocialMediaButtons } from "@/components/shared/SocialMediaButtons";
 import { NewsletterForm } from "@/components/newsletter/NewsletterForm";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 
 export function Footer() {
   return (
@@ -58,6 +59,10 @@ export function Footer() {
             </p>
             <div className="pt-2">
               <SocialMediaButtons />
+            </div>
+            <div className="pt-4 mt-4 border-t border-upsa-gold/20">
+              <p className="text-xs font-bold text-upsa-gold uppercase tracking-wider mb-2">Share Voice of UPSA</p>
+              <ShareButtons url={process.env.NEXT_PUBLIC_SITE_URL || "https://voiceofupsa.com"} title="Voice of UPSA - The official student and campus news publication" />
             </div>
           </div>
 

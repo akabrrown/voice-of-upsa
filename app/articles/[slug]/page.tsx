@@ -21,6 +21,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArticleContent } from "@/components/articles/ArticleContent";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { ShareButtons } from "@/components/shared/ShareButtons";
 
 import { getSiteUrl } from "@/lib/auth/urls";
 import { getOptimizedOgImage } from "@/lib/utils/og-image";
@@ -318,7 +319,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 <ArticleContent content={article.content} />
 
                 {/* Article Reactions */}
-                <ArticleReactions articleId={dbArticle.id} />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-6 border-y border-gray-100 mt-8">
+                  <ArticleReactions articleId={dbArticle.id} />
+                  
+                  <div className="flex flex-col sm:items-end gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Share this story</span>
+                    <ShareButtons 
+                      url={`${siteUrl}/articles/${slug}`} 
+                      title={article.title} 
+                    />
+                  </div>
+                </div>
 
                 <div className="mt-12 p-6 md:p-8 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
                   <UserAvatar
