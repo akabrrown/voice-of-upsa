@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         user_id: user.id,
         rating,
         content: content.trim(),
-        status: "approved",
+        status: "pending",
         is_featured: false,
       })
       .select()

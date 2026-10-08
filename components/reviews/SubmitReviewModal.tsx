@@ -67,7 +67,7 @@ export function SubmitReviewModal() {
 
       const data = await res.json();
       if (data.success) {
-        toast.success("Thank you! Your review has been posted.");
+        toast.success("Thank you! Your review has been submitted for approval.");
         setIsOpen(false);
         setRating(0);
         setContent("");

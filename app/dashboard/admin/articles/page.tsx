@@ -49,6 +49,8 @@ export default function AdminArticlesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const supabase = createClient();
 
   const fetchArticles = async () => {
@@ -124,7 +126,14 @@ export default function AdminArticlesPage() {
     }
 
     setFilteredArticles(result);
+    setCurrentPage(1); // Reset to first page on filter change
   }, [searchQuery, statusFilter, articles]);
+
+  const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
+  const paginatedArticles = filteredArticles.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE, 
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleUpdateStatus = async (articleId: string, newStatus: string) => {
     try {
@@ -271,7 +280,7 @@ export default function AdminArticlesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredArticles.map((art) => (
+              {paginatedArticles.map((art) => (
                 <TableRow key={art.id} className="hover:bg-gray-50/50 transition-colors">
                   <TableCell className="font-semibold text-upsa-navy max-w-xs truncate">
                     <Link href={`/articles/${art.slug}`} className="hover:text-upsa-gold transition-colors">
@@ -389,6 +398,37 @@ export default function AdminArticlesPage() {
           </Table>
         ) : (
           <div className="py-20 text-center text-gray-500 italic">No articles found matching filters.</div>
+        )}
+
+        {filteredArticles.length > 0 && (
+          <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50">
+            <div className="text-sm text-gray-500 font-medium">
+              Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredArticles.length)} of {filteredArticles.length} articles
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="bg-white"
+              >
+                Previous
+              </Button>
+              <div className="flex items-center px-4 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="bg-white"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     </div>
