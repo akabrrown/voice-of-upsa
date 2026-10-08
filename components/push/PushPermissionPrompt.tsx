@@ -170,7 +170,7 @@ export function PushPermissionPrompt({ topics = ["new_articles"] }: Props) {
     }
   };
 
-  if (state === "checking") return null;
+  if (state === "checking" || state === "subscribed") return null;
 
   return (
     <div className="p-4 bg-card rounded-xl border shadow-sm max-w-sm w-full space-y-3">
@@ -213,17 +213,7 @@ export function PushPermissionPrompt({ topics = ["new_articles"] }: Props) {
         </Button>
       )}
 
-      {state === "subscribed" && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-[#1F7A6C] font-medium flex gap-2 items-center">
-            <CheckCircle2 className="w-4 h-4" />
-            <p>You&apos;re subscribed!</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleUnsubscribe}>
-            Turn off
-          </Button>
-        </div>
-      )}
+
 
       {state === "error" && (
         <div className="text-sm text-muted-foreground flex gap-2 items-start">
