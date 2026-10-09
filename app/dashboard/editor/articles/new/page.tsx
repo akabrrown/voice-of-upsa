@@ -27,11 +27,14 @@ import {
 import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Bot, Loader2, Trash2, User, PenTool } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
+import { ShareArticleModal } from "@/components/editor/ShareArticleModal";
 
 export default function NewArticlePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [publishedArticle, setPublishedArticle] = useState<{slug: string, title: string} | null>(null);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [teamProfiles, setTeamProfiles] = useState<{ id: string; full_name: string; role: string }[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -259,9 +262,7 @@ export default function NewArticlePage() {
         localStorage.removeItem("vou_draft_article");
       }
 
-      if (status === "draft") {
-        toast.success("Draft saved successfully!");
-      } else if (status === "published") {
+      if (status === "published") {
         toast.success("Article published successfully!");
         // Dispatch push notification to OneSignal subscribers in background
         try {
@@ -284,11 +285,18 @@ export default function NewArticlePage() {
         } catch (e) {
           console.error("Push dispatch error:", e);
         }
+
+        // Show share modal
+        setPublishedArticle({ slug: insertPayload.slug, title: data.title });
+        setShowShareModal(true);
       } else {
-        toast.success("Article submitted for review!");
+        if (status === "draft") {
+          toast.success("Draft saved successfully!");
+        } else {
+          toast.success("Article submitted for review!");
+        }
+        router.push("/dashboard/editor/articles");
       }
-      
-      router.push("/dashboard/editor/articles");
     } catch (err: unknown) {
       console.error("Error submitting article:", err);
       toast.error(err instanceof Error ? err.message : "Failed to submit article");
@@ -842,6 +850,18 @@ export default function NewArticlePage() {
           </Card>
         </div>
       </div>
+
+      {showShareModal && publishedArticle && (
+        <ShareArticleModal 
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false);
+            router.push("/dashboard/editor/articles");
+          }}
+          articleSlug={publishedArticle.slug}
+          articleTitle={publishedArticle.title}
+        />
+      )}
     </div>
   );
 }

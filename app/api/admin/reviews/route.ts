@@ -41,9 +41,8 @@ export async function GET() {
         created_at,
         profiles (
           full_name,
-          email,
-          avatar_url,
-          course
+          department,
+          avatar_url
         )
       `)
       .order("created_at", { ascending: false });

@@ -31,12 +31,19 @@ type PushState =
 
 interface Props {
   topics?: string[];
+  onStateChange?: (state: PushState) => void;
 }
 
-export function PushPermissionPrompt({ topics = ["new_articles"] }: Props) {
+export function PushPermissionPrompt({ topics = ["new_articles"], onStateChange }: Props) {
   const [state, setState] = useState<PushState>("checking");
   const [errorMsg, setErrorMsg] = useState("");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  // Helper to update both local state and notify parent
+  const updateState = (newState: PushState) => {
+    setState(newState);
+    if (onStateChange) onStateChange(newState);
+  };
 
   useEffect(() => {
     checkState();

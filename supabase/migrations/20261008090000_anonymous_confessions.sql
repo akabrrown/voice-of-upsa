@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS public.confession_posts (
     status public.confession_status NOT NULL DEFAULT 'pending_review',
     reviewed_by uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
     reviewed_at timestamptz,
+    review_note text,
     published_at timestamptz,
     archived_at timestamptz,
     created_at timestamptz DEFAULT now(),

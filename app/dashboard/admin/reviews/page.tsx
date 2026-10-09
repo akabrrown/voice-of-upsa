@@ -18,9 +18,8 @@ interface AdminReview {
   created_at: string;
   profiles: {
     full_name: string;
-    email: string;
+    department: string;
     avatar_url: string;
-    course: string;
   };
 }
 
@@ -125,7 +124,7 @@ export default function AdminReviewsPage() {
                     </Avatar>
                     <div>
                       <CardTitle className="text-sm font-bold text-gray-900">{review.profiles.full_name || "Anonymous"}</CardTitle>
-                      <CardDescription className="text-xs">{review.profiles.email || "No email"}</CardDescription>
+                      <CardDescription className="text-xs">{review.profiles.department || "No department listed"}</CardDescription>
                     </div>
                   </div>
                   <div className="flex bg-gray-50 px-2 py-1 rounded-full">

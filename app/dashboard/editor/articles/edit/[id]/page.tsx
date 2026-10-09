@@ -28,6 +28,7 @@ import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Bot, Loader2, Tra
 import { toast } from "react-hot-toast";
 import { createClient } from "@/lib/supabase/client";
 import { FormShadowLoader } from "@/components/ui/shadow-loaders";
+import { ShareArticleModal } from "@/components/editor/ShareArticleModal";
 
 interface EditArticleProps {
   params: Promise<{ id: string }>;
@@ -62,6 +63,8 @@ export default function EditArticlePage({ params }: EditArticleProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [publishedArticle, setPublishedArticle] = useState<{slug: string, title: string} | null>(null);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [teamProfiles, setTeamProfiles] = useState<{ id: string; full_name: string; role: string }[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -350,9 +353,7 @@ export default function EditArticlePage({ params }: EditArticleProps) {
         localStorage.removeItem(`vou_draft_edit_${id}`);
       }
 
-      if (status === "draft") {
-        toast.success("Article draft updated successfully!");
-      } else if (status === "published") {
+      if (status === "published") {
         toast.success("Article updated and published successfully!");
         // Dispatch push notification to OneSignal subscribers in background
         fetch("/api/notifications/push", {
@@ -367,11 +368,17 @@ export default function EditArticlePage({ params }: EditArticleProps) {
             },
           }),
         }).catch((e) => console.error("Push dispatch error:", e));
+
+        setPublishedArticle({ slug: updatePayload.slug as string || data.slug, title: data.title });
+        setShowShareModal(true);
       } else {
-        toast.success("Article edits submitted for review!");
+        if (status === "draft") {
+          toast.success("Article draft updated successfully!");
+        } else {
+          toast.success("Article edits submitted for review!");
+        }
+        router.push(userRole === "admin" ? "/dashboard/admin/articles" : "/dashboard/editor/articles");
       }
-      
-      router.push(userRole === "admin" ? "/dashboard/admin/articles" : "/dashboard/editor/articles");
     } catch (err: unknown) {
       console.error("Error updating article:", err);
       toast.error(err instanceof Error ? err.message : "Failed to update article");
@@ -929,6 +936,18 @@ export default function EditArticlePage({ params }: EditArticleProps) {
           </Card>
         </div>
       </div>
+
+      {showShareModal && publishedArticle && (
+        <ShareArticleModal 
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false);
+            router.push(userRole === "admin" ? "/dashboard/admin/articles" : "/dashboard/editor/articles");
+          }}
+          articleSlug={publishedArticle.slug}
+          articleTitle={publishedArticle.title}
+        />
+      )}
     </div>
   );
 }

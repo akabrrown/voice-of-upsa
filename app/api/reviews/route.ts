@@ -18,8 +18,8 @@ export async function GET() {
         is_featured,
         profiles (
           full_name,
-          avatar_url,
-          course
+          department,
+          avatar_url
         )
       `)
       .eq("status", "approved")

@@ -36,9 +36,9 @@ const campusLifeFeatures = [
 
 const communityMediaFeatures = [
   { title: "Video TV", href: "/tv", description: "Watch campus news, shows, and event coverage.", icon: Video, completed: false },
-  { title: "Podcasts", href: "/podcasts", description: "Listen to student voices and interviews.", icon: Mic, completed: false },
+  { title: "Podcasts", href: "/podcasts", description: "Listen to student voices and interviews.", icon: Mic, completed: true },
   { title: "Gallery", href: "/gallery", description: "Explore campus photos and event memories.", icon: Camera, completed: true },
-  { title: "Anonymous", href: "/anonymous", description: "Share confessions and opinions safely.", icon: EyeOff, completed: false },
+  { title: "Confessions", href: "/confessions", description: "Share confessions and opinions safely.", icon: EyeOff, completed: true },
   { title: "Polls", href: "/polls", description: "Vote on pressing campus issues and debates.", icon: BarChart3, completed: true },
   { title: "AI Assistant", href: "/ai-assistant", description: "Your smart virtual campus guide.", icon: Bot, completed: false },
 ];

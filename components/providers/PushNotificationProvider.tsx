@@ -6,10 +6,9 @@ import { X } from "lucide-react";
 
 export default function PushNotificationProvider() {
   const [isDismissed, setIsDismissed] = useState(false);
+  const [shouldHide, setShouldHide] = useState(true); // Start hidden until checking is done
 
-  // We rely on the internal state of PushPermissionPrompt to hide itself when subscribed
-  // But we can also add a local dismiss for the public site
-  if (isDismissed) return null;
+  if (isDismissed || shouldHide) return null;
 
   return (
     <div className="fixed bottom-5 right-5 z-50 animate-in fade-in slide-in-from-bottom-3 duration-300">
@@ -21,7 +20,12 @@ export default function PushNotificationProvider() {
         >
           <X className="w-4 h-4" />
         </button>
-        <PushPermissionPrompt topics={["new_articles"]} />
+        <PushPermissionPrompt 
+          topics={["new_articles"]} 
+          onStateChange={(state) => {
+            setShouldHide(state === "checking" || state === "subscribed");
+          }}
+        />
       </div>
     </div>
   );

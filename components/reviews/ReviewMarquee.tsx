@@ -13,7 +13,7 @@ interface Review {
   profiles: {
     full_name: string;
     avatar_url: string;
-    course: string;
+    department: string;
   };
 }
 
@@ -94,7 +94,7 @@ export function ReviewMarquee() {
               </Avatar>
               <div className="flex flex-col">
                 <span className="text-sm font-semibold text-gray-900">{review.profiles.full_name || "Anonymous User"}</span>
-                <span className="text-xs text-gray-500">{review.profiles.course || "Student"}</span>
+                <span className="text-xs text-gray-500">{review.profiles.department || "Student"}</span>
               </div>
             </div>
           </div>
