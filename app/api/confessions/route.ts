@@ -28,10 +28,8 @@ export async function POST(req: Request) {
 
     const screeningResult = screenConfession(body_text);
     
-    // If flagged, it goes to pending_review. If clean, published.
-    // Wait, the PRD says: "If flagged for self-harm... support-resource message". 
-    // We will return the flag to the client so it can show the message if needed.
-    const status = screeningResult.flag === 'none' ? 'published' : 'pending_review';
+    // All confessions are set to pending_review by default so admins must approve them
+    const status = 'pending_review';
 
     const supabase = await createClient();
 
