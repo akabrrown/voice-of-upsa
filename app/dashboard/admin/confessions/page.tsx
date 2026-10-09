@@ -21,7 +21,7 @@ export default function AdminConfessionsPage() {
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/admin/confessions?status=${statusTab}`);
+      const res = await fetch(`/api/admin/confessions?status=${statusTab}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
         const sorted = data.data.sort((a: any, b: any) => {

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+export const dynamic = 'force-dynamic';
 import { createClient } from "@/lib/supabase/server";
 import { screenConfession } from "@/lib/confessions/screening";
 import { getUser } from "@/lib/auth/user";
