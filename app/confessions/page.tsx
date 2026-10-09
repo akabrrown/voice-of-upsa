@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, ThumbsUp, Heart, Laugh, Flag, Loader2, Plus, Filter, ShieldAlert } from "lucide-react";
+import { MessageSquare, ThumbsUp, Heart, Laugh, Flag, Loader2, Plus, Filter, ShieldAlert, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -105,29 +105,7 @@ export default function ConfessionsFeedPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              <Card className="bg-upsa-navy text-white border-0 shadow-md">
-                <CardHeader>
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    <Heart className="w-5 h-5 text-upsa-gold" />
-                    Support Services
-                  </h3>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-gray-200">
-                  <p>You are not alone. If you're going through a tough time, UPSA provides free, confidential counseling to all students.</p>
-                  
-                  <div className="bg-white/10 p-3 rounded-lg border border-white/20">
-                    <p className="font-bold text-white mb-1">Counseling Unit</p>
-                    <p>LPT Block, Ground Floor</p>
-                    <p>Mon - Fri, 8:00 AM - 4:30 PM</p>
-                    <a href="tel:+233200000000" className="mt-2 inline-block text-upsa-gold font-bold hover:underline">📞 020 000 0000</a>
-                  </div>
 
-                  <div className="bg-white/10 p-3 rounded-lg border border-white/20">
-                    <p className="font-bold text-white mb-1">Peer Counselors</p>
-                    <p>Available for casual chats and emotional support across campus.</p>
-                  </div>
-                </CardContent>
-              </Card>
 
               <Card className="border-0 shadow-sm ring-1 ring-gray-100">
                 <CardHeader>
