@@ -24,7 +24,7 @@ export default function ConfessionsFeedPage() {
       if (typeFilter !== "all") url.searchParams.set("type", typeFilter);
       if (categoryFilter !== "all") url.searchParams.set("category", categoryFilter);
       
-      const res = await fetch(url.toString());
+      const res = await fetch(url.toString(), { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
         setPosts(data.data);
