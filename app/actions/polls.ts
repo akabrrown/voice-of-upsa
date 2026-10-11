@@ -138,21 +138,58 @@ export async function castVote(pollId: string, optionId: string): Promise<Action
   return { success: true, message: "Vote cast successfully!" };
 }
 
+async function verifyStaff(supabase: any) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, is_admin")
+    .eq("id", user.id)
+    .single();
+
+  const isStaff = 
+    profile?.role === "admin" || 
+    profile?.role === "editor" || 
+    profile?.role === "developer" || 
+    profile?.is_admin === true;
+
+  if (!isStaff) return null;
+  return { user, profile };
+}
+
+// ADMIN: Fetch single poll with details for editing
+export async function getPollForAdmin(pollId: string): Promise<ActionState> {
+  const supabase = await createClient();
+  const staff = await verifyStaff(supabase);
+  if (!staff) return { success: false, error: "Unauthorized" };
+
+  const { data: poll, error } = await supabase
+    .from("polls")
+    .select(`
+      *,
+      options:poll_options(*),
+      votes:poll_votes(id)
+    `)
+    .eq("id", pollId)
+    .single();
+
+  if (error || !poll) return { success: false, error: "Poll not found" };
+
+  const total_votes = (poll.options || []).reduce((sum: number, opt: any) => sum + (opt.vote_count || 0), 0);
+  return { success: true, data: { ...poll, total_votes } };
+}
+
 // ADMIN: Create Poll
 export async function createPoll(formData: FormData): Promise<ActionState> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { success: false, error: "Unauthorized" };
-
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin" && profile?.role !== "editor") return { success: false, error: "Unauthorized" };
+  const staff = await verifyStaff(supabase);
+  if (!staff) return { success: false, error: "Unauthorized" };
 
   const question = formData.get("question") as string;
   const category = formData.get("category") as PollCategory;
   const visibility = formData.get("results_visibility") as PollVisibility;
   const expires_at_str = formData.get("expires_at") as string;
-  const status = formData.get("status") as PollStatus || "draft";
+  const status = (formData.get("status") as PollStatus) || "draft";
 
   const optionsRaw = formData.getAll("options[]") as string[];
   const options = optionsRaw.filter(o => o.trim() !== "");
@@ -166,7 +203,7 @@ export async function createPoll(formData: FormData): Promise<ActionState> {
 
   const { data: poll, error: pollError } = await supabase
     .from("polls")
-    .insert({ question, slug, category, results_visibility: visibility, expires_at, status, created_by: user.id })
+    .insert({ question: question.trim(), slug, category, results_visibility: visibility, expires_at, status, created_by: staff.user.id })
     .select()
     .single();
 
@@ -177,7 +214,7 @@ export async function createPoll(formData: FormData): Promise<ActionState> {
 
   const optionsData = options.map((label, index) => ({
     poll_id: poll.id,
-    label,
+    label: label.trim(),
     sort_order: index
   }));
 
@@ -204,14 +241,75 @@ export async function createPoll(formData: FormData): Promise<ActionState> {
   return { success: true, message: "Poll created successfully." };
 }
 
+// ADMIN: Update Poll
+export async function updatePoll(pollId: string, formData: FormData): Promise<ActionState> {
+  const supabase = await createClient();
+  const staff = await verifyStaff(supabase);
+  if (!staff) return { success: false, error: "Unauthorized" };
+
+  const question = formData.get("question") as string;
+  const category = formData.get("category") as PollCategory;
+  const visibility = formData.get("results_visibility") as PollVisibility;
+  const expires_at_str = formData.get("expires_at") as string;
+  const status = (formData.get("status") as PollStatus) || "draft";
+
+  if (!question?.trim()) {
+    return { success: false, error: "Question cannot be empty" };
+  }
+
+  const expires_at = expires_at_str ? new Date(expires_at_str).toISOString() : null;
+
+  // Check if poll already has votes
+  const { count: voteCount } = await supabase
+    .from("poll_votes")
+    .select("*", { count: "exact", head: true })
+    .eq("poll_id", pollId);
+
+  const { error: pollError } = await supabase
+    .from("polls")
+    .update({
+      question: question.trim(),
+      category,
+      results_visibility: visibility,
+      expires_at,
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", pollId);
+
+  if (pollError) {
+    return { success: false, error: pollError.message };
+  }
+
+  // Only update options if pre-vote (0 votes)
+  if (!voteCount || voteCount === 0) {
+    const optionsRaw = formData.getAll("options[]") as string[];
+    const options = optionsRaw.filter(o => o.trim() !== "");
+    if (options.length >= 2) {
+      await supabase.from("poll_options").delete().eq("poll_id", pollId);
+      const optionsData = options.map((label, index) => ({
+        poll_id: pollId,
+        label: label.trim(),
+        sort_order: index,
+        vote_count: 0,
+      }));
+      await supabase.from("poll_options").insert(optionsData);
+    }
+  }
+
+  revalidatePath("/dashboard/admin/polls");
+  revalidatePath(`/dashboard/admin/polls/${pollId}/edit`);
+  revalidatePath("/polls");
+  revalidatePath(`/polls/[slug]`, "page");
+
+  return { success: true, message: "Poll updated successfully." };
+}
+
 // ADMIN: Soft-delete Poll
 export async function deletePoll(pollId: string): Promise<ActionState> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { success: false, error: "Unauthorized" };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin" && profile?.role !== "editor") return { success: false, error: "Unauthorized" };
+  const staff = await verifyStaff(supabase);
+  if (!staff) return { success: false, error: "Unauthorized" };
 
   const { error } = await supabase
     .from("polls")
@@ -229,11 +327,8 @@ export async function deletePoll(pollId: string): Promise<ActionState> {
 // ADMIN: Update Poll Status
 export async function updatePollStatus(pollId: string, status: PollStatus): Promise<ActionState> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { success: false, error: "Unauthorized" };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin" && profile?.role !== "editor") return { success: false, error: "Unauthorized" };
+  const staff = await verifyStaff(supabase);
+  if (!staff) return { success: false, error: "Unauthorized" };
 
   // Fetch poll first to get details for notification
   const { data: poll } = await supabase.from("polls").select("*").eq("id", pollId).single();

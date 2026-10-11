@@ -35,7 +35,7 @@ const campusLifeFeatures = [
 ];
 
 const communityMediaFeatures = [
-  { title: "Video TV", href: "/tv", description: "Watch campus news, shows, and event coverage.", icon: Video, completed: true },
+  { title: "Video TV", href: "/tv", description: "Watch campus news, shows, and event coverage.", icon: Video, completed: false },
   { title: "Podcasts", href: "/podcasts", description: "Listen to student voices and interviews.", icon: Mic, completed: true },
   { title: "Gallery", href: "/gallery", description: "Explore campus photos and event memories.", icon: Camera, completed: true },
   { title: "Confessions", href: "/confessions", description: "Share confessions and opinions safely.", icon: EyeOff, completed: true },
@@ -258,11 +258,11 @@ export function Navbar() {
                         </div>
                         <div className="relative z-10">
                           <h3 className="text-2xl font-black text-upsa-navy mb-2 tracking-tight">Community</h3>
-                          <p className="text-sm text-upsa-navy/80 leading-relaxed font-medium">Engage with fellow students. Participate in polls, watch campus TV, or drop an anonymous confession.</p>
+                          <p className="text-sm text-upsa-navy/80 leading-relaxed font-medium">Engage with fellow students. Participate in polls, listen to podcasts, or drop an anonymous confession.</p>
                         </div>
                         <div className="relative z-10 mt-8">
-                          <Link href="/tv" className="inline-flex items-center text-sm font-black text-upsa-navy group-hover/featured:translate-x-1 transition-transform bg-white/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                            Watch TV <span className="ml-1 text-lg leading-none">&rarr;</span>
+                          <Link href="/podcasts" className="inline-flex items-center text-sm font-black text-upsa-navy group-hover/featured:translate-x-1 transition-transform bg-white/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                            Listen to Podcasts <span className="ml-1 text-lg leading-none">&rarr;</span>
                           </Link>
                         </div>
                       </div>

@@ -6,8 +6,9 @@ import { Calendar, ImageIcon, Camera } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const result = await getAlbumBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const result = await getAlbumBySlug(slug);
   if (!result.data) return { title: "Album Not Found" };
   
   return {
@@ -16,10 +17,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function AlbumPage({ params }: { params: { slug: string } }) {
-  const [albumResult] = await Promise.all([
-    getAlbumBySlug(params.slug)
-  ]);
+export default async function AlbumPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const albumResult = await getAlbumBySlug(slug);
 
   if (!albumResult.data) {
     notFound();

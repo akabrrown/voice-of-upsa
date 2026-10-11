@@ -49,7 +49,7 @@ export async function requireAuth(): Promise<AuthResult> {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, role, full_name, username, avatar_url, is_active")
+    .select("id, role, is_admin, full_name, username, avatar_url, is_active")
     .eq("id", user.id)
     .single();
 
@@ -108,7 +108,11 @@ export async function requireStaff(): Promise<AuthResult> {
     return auth;
   }
 
-  if (!["admin", "editor"].includes(auth.profile.role)) {
+  const isStaff = 
+    ["admin", "editor", "developer"].includes(auth.profile.role) || 
+    auth.profile.is_admin === true;
+
+  if (!isStaff) {
     return {
       user: null,
       profile: null,

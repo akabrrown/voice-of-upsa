@@ -17,11 +17,12 @@ export default async function GalleryReportsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  const isStaff = ['admin', 'editor', 'developer'].includes(profile?.role) || profile?.is_admin === true;
+  if (!isStaff) {
     redirect("/dashboard");
   }
 
@@ -32,22 +33,17 @@ export default async function GalleryReportsPage() {
       *,
       reporter:profiles!reports_reporter_id_fkey(first_name, last_name, index_number)
     `)
-    .eq("entity_type", "gallery_photo")
-    .order("status", { ascending: true }) // pending first
+    .eq("resource_type", "gallery_photo")
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching reports:", error);
   }
 
-  // For each report, fetch the photo details. Since Supabase PostgREST might not easily join dynamic entity_ids without a direct relationship in some setups, we'll fetch them separately.
-  // Wait, reports table might not have a direct foreign key to gallery_photos (it's polymorphic).
-  // So we fetch the photos in a second query.
-  
   let enrichedReports = reports || [];
   
   if (enrichedReports.length > 0) {
-    const photoIds = enrichedReports.map((r: any) => r.entity_id);
+    const photoIds = enrichedReports.map((r: any) => r.resource_id);
     const { data: photos } = await supabase
       .from("gallery_photos")
       .select("id, image_url, album_id, album:gallery_albums!gallery_photos_album_id_fkey(title)")
@@ -55,7 +51,7 @@ export default async function GalleryReportsPage() {
       
     if (photos) {
       enrichedReports = enrichedReports.map((report: any) => {
-        const photo = photos.find((p: any) => p.id === report.entity_id);
+        const photo = photos.find((p: any) => p.id === report.resource_id);
         return {
           ...report,
           photo: photo || null

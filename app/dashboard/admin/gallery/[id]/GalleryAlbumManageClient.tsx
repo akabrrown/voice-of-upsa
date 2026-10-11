@@ -14,22 +14,28 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CldUploadWidget } from "next-cloudinary";
 import { ArrowLeft, CheckCircle2, XCircle, Image as ImageIcon, UploadCloud, Settings, ListFilter, Trash2, Calendar, Star } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 export function GalleryAlbumManageClient({ initialAlbum, initialPhotos }: { initialAlbum: GalleryAlbum, initialPhotos: PhotoWithAuthor[] }) {
   const [album, setAlbum] = useState<GalleryAlbum>(initialAlbum);
+  const [photos, setPhotos] = useState<PhotoWithAuthor[]>(initialPhotos);
   const [isUpdating, setIsUpdating] = useState(false);
   
   // Forms
   const [submissionsOpen, setSubmissionsOpen] = useState(album.submissions_open);
   const [isFeatured, setIsFeatured] = useState(album.is_featured);
 
-  const pendingPhotos = initialPhotos.filter(p => p.status === "pending_review");
-  const approvedPhotos = initialPhotos.filter(p => p.status === "approved");
+  const pendingPhotos = photos.filter(p => p.status === "pending_review");
+  const approvedPhotos = photos.filter(p => p.status === "approved");
 
   const handleModerate = async (photoId: string, status: "approved" | "rejected") => {
     const res = await moderatePhoto(photoId, status);
     if (res.success) {
+      if (status === "approved") {
+        setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, status: "approved" } : p));
+      } else {
+        setPhotos(prev => prev.filter(p => p.id !== photoId));
+      }
       toast.success(res.message || `Photo ${status}`);
     } else {
       toast.error(res.error || "Failed to moderate photo");

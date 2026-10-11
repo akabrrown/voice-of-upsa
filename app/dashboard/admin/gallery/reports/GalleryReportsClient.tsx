@@ -5,18 +5,18 @@ import Image from "next/image";
 import { resolveReport } from "@/app/actions/gallery";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Trash2, Check, ExternalLink, ImageOff } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import Link from "next/link";
 
 type Report = {
   id: string;
-  entity_type: string;
-  entity_id: string;
+  resource_type: string;
+  resource_id: string;
   reason: string;
   details: string | null;
   reporter_id: string;
-  status: "pending" | "investigating" | "resolved";
+  status: "open" | "investigating" | "resolved" | "dismissed";
   created_at: string;
   reporter: {
     first_name: string;
@@ -58,7 +58,7 @@ export default function GalleryReportsClient({ initialReports }: { initialReport
     }
   };
 
-  const pendingReports = reports.filter(r => r.status !== "resolved");
+  const pendingReports = reports.filter(r => !["resolved", "dismissed"].includes(r.status));
 
   if (pendingReports.length === 0) {
     return (

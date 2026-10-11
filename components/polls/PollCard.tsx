@@ -42,7 +42,14 @@ export function PollCard({ poll, isDetailedView = false }: PollCardProps) {
     if (result.success) {
       toast.success(result.message || "Vote recorded!");
     } else {
-      toast.error(result.error || "Failed to record vote.");
+      if (result.error?.toLowerCase().includes("logged in")) {
+        toast.error("Please sign in to cast your vote.");
+        setTimeout(() => {
+          window.location.href = `/auth/login?next=/polls/${poll.slug}`;
+        }, 1200);
+      } else {
+        toast.error(result.error || "Failed to record vote.");
+      }
     }
     
     setIsVoting(false);

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { MessageSquare, ThumbsUp, Heart, Laugh, Flag, Loader2, Plus, Filter, ShieldAlert, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { ReportModal } from "@/components/common/ReportModal";
 
 export default function ConfessionsFeedPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -51,9 +52,14 @@ export default function ConfessionsFeedPage() {
               <h1 className="text-3xl font-black text-upsa-navy tracking-tight mb-2">Campus Confessions</h1>
               <p className="text-gray-500 max-w-lg">The anonymous heartbeat of UPSA. Share your truth, opinions, and experiences safely.</p>
             </div>
-            <Button asChild className="bg-upsa-navy hover:bg-upsa-navy/90 text-white shrink-0">
-              <Link href="/confessions/new"><Plus className="w-4 h-4 mr-2" /> Post Anonymously</Link>
-            </Button>
+            <div className="flex items-center gap-3 shrink-0">
+              <Button asChild variant="outline" className="border-gray-200 text-upsa-navy hover:bg-gray-100">
+                <Link href="/confessions/mine">My Confessions</Link>
+              </Button>
+              <Button asChild className="bg-upsa-navy hover:bg-upsa-navy/90 text-white">
+                <Link href="/confessions/new"><Plus className="w-4 h-4 mr-2" /> Post Anonymously</Link>
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -130,43 +136,115 @@ export default function ConfessionsFeedPage() {
 }
 
 function ConfessionCard({ post }: { post: any }) {
-  // Client-side reactions state (for immediate UI feedback)
-  const [reactions, setReactions] = useState(post.confession_reactions || []);
-  
+  const [reactions, setReactions] = useState<any[]>(post.confession_reactions || []);
+  const [isReacting, setIsReacting] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isReported, setIsReported] = useState(false);
+
   const getReactionCount = (type: string) => reactions.filter((r: any) => r.reaction_type === type).length;
-  // Note: Optimistic update logic for reactions will be handled fully in the dedicated reactions endpoint.
-  // We're leaving it read-only here for the MVP slice, but it's trivial to add the fetch to /api/confessions/[id]/react
+
+  const handleReaction = async (reactionType: "relate" | "support" | "funny") => {
+    if (isReacting) return;
+    setIsReacting(true);
+
+    try {
+      const res = await fetch(`/api/confessions/${post.id}/react`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reaction_type: reactionType }),
+      });
+
+      if (res.status === 401) {
+        toast.info("Please sign in to react to confessions.", {
+          action: {
+            label: "Sign In",
+            onClick: () => {
+              window.location.href = `/auth/login?next=/confessions`;
+            },
+          },
+        });
+        return;
+      }
+
+      const data = await res.json();
+      if (data.success && data.reactions) {
+        setReactions(data.reactions);
+      } else {
+        toast.error(data.error || "Failed to update reaction");
+      }
+    } catch {
+      toast.error("Could not record reaction. Please check your connection.");
+    } finally {
+      setIsReacting(false);
+    }
+  };
 
   return (
-    <Card className="border-0 shadow-sm ring-1 ring-gray-100 hover:shadow-md transition-shadow overflow-hidden bg-white">
-      <CardHeader className="pb-3 border-b border-gray-50 flex flex-row items-center justify-between bg-gray-50/50">
-        <div className="flex items-center gap-3">
-          <Badge variant={post.type === 'confession' ? 'default' : 'secondary'} className={post.type === 'confession' ? "bg-upsa-navy" : "bg-gray-200 text-gray-700"}>
-            {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
-          </Badge>
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{post.category.replace('_', ' ')}</span>
-        </div>
-        <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
-      </CardHeader>
-      <CardContent className="pt-6 pb-6">
-        <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{post.body_text}</p>
-      </CardContent>
-      <CardFooter className="pt-0 flex justify-between items-center text-gray-500">
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 rounded-full h-9 px-3 text-xs font-semibold">
-            <ThumbsUp className="w-3.5 h-3.5 mr-1.5" /> {getReactionCount('relate') || 0} Relate
+    <>
+      <Card className="border-0 shadow-sm ring-1 ring-gray-100 hover:shadow-md transition-shadow overflow-hidden bg-white">
+        <CardHeader className="pb-3 border-b border-gray-50 flex flex-row items-center justify-between bg-gray-50/50">
+          <div className="flex items-center gap-3">
+            <Badge variant={post.type === 'confession' ? 'default' : 'secondary'} className={post.type === 'confession' ? "bg-upsa-navy" : "bg-gray-200 text-gray-700"}>
+              {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
+            </Badge>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{post.category.replace('_', ' ')}</span>
+          </div>
+          <span className="text-xs text-gray-400">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
+        </CardHeader>
+        <CardContent className="pt-6 pb-6">
+          <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{post.body_text}</p>
+        </CardContent>
+        <CardFooter className="pt-0 flex justify-between items-center text-gray-500">
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isReacting}
+              onClick={() => handleReaction('relate')}
+              className="hover:bg-blue-50 hover:text-blue-600 rounded-full h-9 px-3 text-xs font-semibold"
+            >
+              <ThumbsUp className="w-3.5 h-3.5 mr-1.5" /> {getReactionCount('relate')} Relate
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isReacting}
+              onClick={() => handleReaction('support')}
+              className="hover:bg-red-50 hover:text-red-600 rounded-full h-9 px-3 text-xs font-semibold"
+            >
+              <Heart className="w-3.5 h-3.5 mr-1.5" /> {getReactionCount('support')} Support
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isReacting}
+              onClick={() => handleReaction('funny')}
+              className="hover:bg-amber-50 hover:text-amber-600 rounded-full h-9 px-3 text-xs font-semibold"
+            >
+              <Laugh className="w-3.5 h-3.5 mr-1.5" /> {getReactionCount('funny')} Funny
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsReportOpen(true)}
+            className={`h-8 w-8 rounded-full ${isReported ? 'text-red-500' : 'hover:bg-red-50 hover:text-red-600'}`}
+            title={isReported ? "Reported" : "Report this post"}
+            disabled={isReported}
+          >
+            <Flag className="w-3.5 h-3.5" />
           </Button>
-          <Button variant="ghost" size="sm" className="hover:bg-red-50 hover:text-red-600 rounded-full h-9 px-3 text-xs font-semibold">
-            <Heart className="w-3.5 h-3.5 mr-1.5" /> {getReactionCount('support') || 0} Support
-          </Button>
-          <Button variant="ghost" size="sm" className="hover:bg-amber-50 hover:text-amber-600 rounded-full h-9 px-3 text-xs font-semibold">
-            <Laugh className="w-3.5 h-3.5 mr-1.5" /> {getReactionCount('funny') || 0} Funny
-          </Button>
-        </div>
-        <Button variant="ghost" size="icon" className="hover:bg-red-50 hover:text-red-600 h-8 w-8 rounded-full" title="Report this post">
-          <Flag className="w-3.5 h-3.5" />
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardFooter>
+      </Card>
+
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        resourceType="confession"
+        resourceId={post.id}
+        resourceTitle={`Confession #${post.id.slice(0, 6)}`}
+        onSuccess={() => setIsReported(true)}
+      />
+    </>
   );
 }

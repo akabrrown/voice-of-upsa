@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/server-auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -16,25 +18,14 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "admin") {
-    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+  const auth = await requireAdmin();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
   }
 
   const body = await request.json();
-  const { data, error } = await supabase
+  const adminSupabase = getAdminClient();
+  const { data, error } = await adminSupabase
     .from("categories")
     .insert([body])
     .select()

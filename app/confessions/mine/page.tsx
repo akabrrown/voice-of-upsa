@@ -82,6 +82,8 @@ function MyConfessionCard({ post }: { post: any }) {
         return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200"><CheckCircle2 className="w-3 h-3 mr-1" /> Published</Badge>;
       case 'pending_review':
         return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="w-3 h-3 mr-1" /> Under Review</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
       case 'removed':
         return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" /> Removed</Badge>;
       case 'hidden':
@@ -109,6 +111,16 @@ function MyConfessionCard({ post }: { post: any }) {
         <p className={`text-lg leading-relaxed whitespace-pre-wrap ${post.status === 'removed' ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
           {post.body_text}
         </p>
+        {post.status === 'rejected' && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200/80 rounded-xl text-xs text-red-800 space-y-1">
+            <span className="font-bold flex items-center gap-1.5 text-red-900">
+              <ShieldAlert className="w-3.5 h-3.5" /> Moderation Feedback:
+            </span>
+            <p className="text-red-700 leading-relaxed">
+              {post.review_note || "This submission did not meet community guidelines."}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

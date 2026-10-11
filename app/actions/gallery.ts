@@ -18,8 +18,9 @@ export async function createAlbum(formData: FormData): Promise<ActionState> {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { success: false, error: "Unauthorized" };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
+  const { data: profile } = await supabase.from("profiles").select("role, is_admin").eq("id", user.id).single();
+  const isStaff = ['admin', 'editor', 'developer'].includes(profile?.role) || profile?.is_admin === true;
+  if (!isStaff) return { success: false, error: "Unauthorized access" };
 
   const title = formData.get("title") as string;
   const description = formData.get("description") as string | null;
@@ -64,8 +65,9 @@ export async function updateAlbum(id: string, formData: FormData): Promise<Actio
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { success: false, error: "Unauthorized" };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
+  const { data: profile } = await supabase.from("profiles").select("role, is_admin").eq("id", user.id).single();
+  const isStaff = ['admin', 'editor', 'developer'].includes(profile?.role) || profile?.is_admin === true;
+  if (!isStaff) return { success: false, error: "Unauthorized access" };
 
   const title = formData.get("title") as string;
   const description = formData.get("description") as string | null;
@@ -194,12 +196,12 @@ export async function submitPhoto(formData: FormData): Promise<ActionState> {
   if (!album_id || !image_url) return { success: false, error: "Missing required fields" };
   if (!consent_confirmed) return { success: false, error: "You must confirm consent to submit a photo" };
 
-  // Check if admin
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  const isAdmin = profile?.role === "admin";
+  // Check if staff
+  const { data: profile } = await supabase.from("profiles").select("role, is_admin").eq("id", user.id).single();
+  const isStaff = ['admin', 'editor', 'developer'].includes(profile?.role) || profile?.is_admin === true;
 
-  const source: GalleryPhotoSource = isAdmin ? "admin" : "submission";
-  const status: GalleryPhotoStatus = isAdmin ? "approved" : "pending_review";
+  const source: GalleryPhotoSource = isStaff ? "admin" : "submission";
+  const status: GalleryPhotoStatus = isStaff ? "approved" : "pending_review";
 
   const { error } = await supabase
     .from("gallery_photos")
@@ -219,11 +221,11 @@ export async function submitPhoto(formData: FormData): Promise<ActionState> {
   }
 
   revalidatePath(`/gallery/[slug]`, "page");
-  if (isAdmin) revalidatePath(`/dashboard/admin/gallery/${album_id}`);
+  if (isStaff) revalidatePath(`/dashboard/admin/gallery/${album_id}`);
   
   return { 
     success: true, 
-    message: isAdmin ? "Photo uploaded successfully" : "Photo submitted and pending review" 
+    message: isStaff ? "Photo uploaded successfully" : "Photo submitted and pending review" 
   };
 }
 
@@ -232,8 +234,9 @@ export async function moderatePhoto(photoId: string, status: GalleryPhotoStatus)
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { success: false, error: "Unauthorized" };
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") return { success: false, error: "Unauthorized" };
+  const { data: profile } = await supabase.from("profiles").select("role, is_admin").eq("id", user.id).single();
+  const isStaff = ['admin', 'editor', 'developer'].includes(profile?.role) || profile?.is_admin === true;
+  if (!isStaff) return { success: false, error: "Unauthorized access" };
 
   const { error } = await supabase
     .from("gallery_photos")
@@ -252,14 +255,15 @@ export async function resolveReport(reportId: string, action: "dismiss" | "delet
 
   if (!user) return { success: false, error: "Unauthorized" };
 
-  // First, verify admin role
+  // Verify staff role
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  const isStaff = ['admin', 'editor', 'developer'].includes(profile?.role) || profile?.is_admin === true;
+  if (!isStaff) {
     return { success: false, error: "Unauthorized access" };
   }
 
@@ -277,10 +281,10 @@ export async function resolveReport(reportId: string, action: "dismiss" | "delet
   const { error: reportError } = await supabase
     .from("reports")
     .update({ 
-      status: "resolved", 
+      status: action === "delete_photo" ? "resolved" : "dismissed", 
       resolved_at: new Date().toISOString(),
       resolved_by: user.id,
-      resolution_notes: action === "delete_photo" ? "Photo deleted" : "Report dismissed"
+      resolution_note: action === "delete_photo" ? "Photo deleted" : "Report dismissed"
     })
     .eq("id", reportId);
 

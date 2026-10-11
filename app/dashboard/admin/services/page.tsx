@@ -1,10 +1,10 @@
 import { Metadata } from "next";
 import { getAllServicesForAdmin } from "@/lib/services/queries";
 import Link from "next/link";
-import { PlusCircle, Search, Edit2, ShieldCheck, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { PlusCircle, Search, ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
+import { ServiceAdminActions } from "./ServiceAdminActions";
 
 export const metadata: Metadata = {
   title: "Manage Services | Admin",
@@ -105,13 +105,7 @@ export default async function AdminServicesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button asChild variant="outline" size="sm" className="h-8 border-gray-200 text-gray-700 hover:text-upsa-navy hover:bg-gray-50">
-                        <Link href={`/dashboard/admin/services/${service.id}/edit`}>
-                          <Edit2 className="h-3.5 w-3.5 mr-1" /> Edit
-                        </Link>
-                      </Button>
-                    </div>
+                    <ServiceAdminActions service={service} />
                   </td>
                 </tr>
               ))}

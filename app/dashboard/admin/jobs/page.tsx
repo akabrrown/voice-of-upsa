@@ -20,8 +20,9 @@ export default async function AdminJobsPage() {
 
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") redirect("/dashboard");
+  const { data: profile } = await supabase.from("profiles").select("role, is_admin").eq("id", user.id).single();
+  const isStaff = ['admin', 'editor', 'developer'].includes(profile?.role) || profile?.is_admin === true;
+  if (!isStaff) redirect("/dashboard");
 
   // Fetch postings from the 'jobs' schema without joining public.profiles
   const { data: postings, error } = await supabase

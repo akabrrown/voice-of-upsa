@@ -49,10 +49,11 @@ export async function middleware(request: NextRequest) {
       .single();
 
     const role = profile?.role || "public";
+    const isAdmin = role === "admin" || role === "developer" || (profile as any)?.is_admin === true;
 
     // Root dashboard redirect
     if (request.nextUrl.pathname === "/dashboard") {
-      if (role === "admin") {
+      if (isAdmin) {
         return NextResponse.redirect(new URL("/dashboard/admin", request.url));
       }
       if (role === "editor") {
@@ -62,7 +63,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Admin only routes
-    if (request.nextUrl.pathname.startsWith("/dashboard/admin") && role !== "admin") {
+    if (request.nextUrl.pathname.startsWith("/dashboard/admin") && !isAdmin) {
       return NextResponse.redirect(new URL("/dashboard/editor", request.url));
     }
 
@@ -83,11 +84,14 @@ export async function middleware(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, is_admin")
       .eq("id", user.id)
       .single();
 
-    if (profile?.role !== "admin") {
+    const isAdmin = profile?.role === "admin" || profile?.role === "developer" || profile?.is_admin === true;
+    const isStaffAllowed = request.nextUrl.pathname.startsWith("/api/admin/reviews") && (profile?.role === "editor" || isAdmin);
+
+    if (!isAdmin && !isStaffAllowed) {
       return NextResponse.json(
         { success: false, error: "Forbidden. Administrator role required." },
         { status: 403 }

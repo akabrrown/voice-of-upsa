@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Metadata } from "next";
+import { JobReportButton } from "@/components/jobs/JobReportButton";
 
 const typeColors: Record<string, string> = {
   full_time: "bg-[#1F7A6C] text-white", // Campus Teal
@@ -255,9 +256,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ slug
               </div>
               
               <div className="pt-6 border-t border-gray-100">
-                <button className="text-sm text-gray-400 hover:text-red-500 transition-colors w-full text-center underline underline-offset-4">
-                  Report this posting
-                </button>
+                <JobReportButton jobId={job.id} jobTitle={job.title} />
               </div>
             </div>
           </div>

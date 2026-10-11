@@ -3,12 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { GalleryAlbumManageClient } from "./GalleryAlbumManageClient";
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
   const supabase = await createClient();
   const { data } = await supabase
     .from("gallery_albums")
     .select("title")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
     
   return {
@@ -16,21 +17,23 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   };
 }
 
-export default async function AdminGalleryManagePage({ params }: { params: { id: string } }) {
+export default async function AdminGalleryManagePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/auth/login?next=/dashboard/admin/gallery/" + id);
   }
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
+  const isStaff = ['admin', 'editor', 'developer'].includes(profile?.role) || profile?.is_admin === true;
+  if (!isStaff) {
     redirect("/dashboard");
   }
 
@@ -38,7 +41,7 @@ export default async function AdminGalleryManagePage({ params }: { params: { id:
   const { data: album, error: albumError } = await supabase
     .from("gallery_albums")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .is("deleted_at", null)
     .single();
 

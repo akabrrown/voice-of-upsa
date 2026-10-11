@@ -1,33 +1,16 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin, requireStaff } from "@/lib/auth/server-auth";
 import { getAllHolidaysForYear, GHANA_STATUTORY_HOLIDAYS } from "@/lib/holidays/engine";
 import { DBHolidayWish } from "@/lib/holidays/types";
 import { sendPushToTopic } from "@/lib/push/send";
 
 export const dynamic = "force-dynamic";
 
-async function verifyStaffRole() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || !["admin", "editor"].includes(profile.role)) {
-    return null;
-  }
-  return { user, role: profile.role };
-}
-
 export async function GET(request: Request) {
-  const auth = await verifyStaffRole();
-  if (!auth) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  const auth = await requireStaff();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
   }
 
   const { searchParams } = new URL(request.url);
@@ -55,9 +38,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const auth = await verifyStaffRole();
-  if (!auth || auth.role !== "admin") {
-    return NextResponse.json({ success: false, error: "Unauthorized. Admin role required." }, { status: 403 });
+  const auth = await requireAdmin();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
   }
 
   try {

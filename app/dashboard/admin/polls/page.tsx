@@ -2,8 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, BarChart2, Edit, Trash2 } from "lucide-react";
+import { Plus, BarChart2 } from "lucide-react";
 import { format } from "date-fns";
+import { PollAdminActions } from "./PollAdminActions";
 
 export const metadata = {
   title: "Manage Polls | Admin",
@@ -18,8 +19,9 @@ export default async function AdminPollsPage() {
 
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") redirect("/dashboard");
+  const { data: profile } = await supabase.from("profiles").select("role, is_admin").eq("id", user.id).single();
+  const isStaff = profile?.role === "admin" || profile?.role === "editor" || profile?.role === "developer" || profile?.is_admin === true;
+  if (!isStaff) redirect("/dashboard");
 
   const { data: polls, error } = await supabase
     .from("polls")
@@ -91,22 +93,8 @@ export default async function AdminPollsPage() {
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                       {format(new Date(poll.created_at), "MMM d, yyyy")}
                     </td>
-                    <td className="px-6 py-4 text-right space-x-1">
-                      <Button variant="ghost" size="icon" asChild title="View Results" className="text-gray-400 hover:text-upsa-navy">
-                        <Link href={`/polls/${poll.slug}`}>
-                          <BarChart2 className="w-4 h-4" />
-                        </Link>
-                      </Button>
-                      {poll.status === 'draft' && (
-                        <Button variant="ghost" size="icon" asChild title="Edit" className="text-gray-400 hover:text-amber-600">
-                          <Link href={`/dashboard/admin/polls/${poll.id}/edit`}>
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" title="Delete" className="text-gray-400 hover:text-red-600">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                    <td className="px-6 py-4 text-right">
+                      <PollAdminActions poll={poll} />
                     </td>
                   </tr>
                 ))

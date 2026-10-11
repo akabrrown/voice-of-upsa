@@ -14,11 +14,16 @@ async function checkAdmin(supabase: any) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, id")
+    .select("role, id, is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== 'admin') return null;
+  const isAdmin =
+    profile?.role === "admin" ||
+    profile?.role === "developer" ||
+    profile?.is_admin === true;
+
+  if (!isAdmin) return null;
   return profile.id;
 }
 
@@ -61,7 +66,7 @@ export async function createService(data: ServiceInput) {
   await redis.del("directory:services:active");
   
   revalidatePath("/services");
-  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/admin/services");
 
   return service;
 }
@@ -94,7 +99,7 @@ export async function updateService(id: string, data: Partial<ServiceInput>) {
   
   revalidatePath("/services");
   revalidatePath(`/services/${service.slug}`);
-  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/admin/services");
 
   return service;
 }
@@ -128,13 +133,22 @@ export async function verifyServiceToday(id: string) {
   
   revalidatePath("/services");
   revalidatePath(`/services/${service.slug}`);
-  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/admin/services");
 
   return service;
 }
 
 export async function deactivateService(id: string) {
   return updateService(id, { status: "inactive" });
+}
+
+export async function toggleServiceStatus(id: string, currentStatus: string) {
+  const newStatus = currentStatus === "active" ? "inactive" : "active";
+  return updateService(id, { status: newStatus as "active" | "inactive" });
+}
+
+export async function toggleServiceFeatured(id: string, currentFeatured: boolean) {
+  return updateService(id, { is_featured: !currentFeatured });
 }
 
 export async function softDeleteService(id: string) {
@@ -165,7 +179,7 @@ export async function softDeleteService(id: string) {
   await redis.del("directory:services:active", `directory:service:${service.slug}`);
   
   revalidatePath("/services");
-  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/admin/services");
 
   return service;
 }

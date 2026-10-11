@@ -1,74 +1,51 @@
-import { createClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "@/lib/auth/server-auth";
 import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile || profile.role !== "admin") {
-      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    const auth = await requireAdmin();
+    if (auth.errorResponse) {
+      return auth.errorResponse;
     }
 
     const adminSupabase = getAdminClient();
     
-    // Fetch profiles without the email column
+    // Fetch profiles - staff prioritized, up to 200 users
     const { data: profiles, error } = await adminSupabase
       .from("profiles")
-      .select("id, full_name, role, avatar_url, created_at")
-      .in("role", ["admin", "editor"])
-      .order("created_at", { ascending: false });
+      .select("id, full_name, role, avatar_url, created_at, is_admin")
+      .order("created_at", { ascending: false })
+      .limit(200);
 
     if (error) throw error;
 
-    // Fetch auth users to get emails (increase limit to avoid missing users)
+    // Fetch auth users to get emails
     const { data: usersData, error: usersError } = await adminSupabase.auth.admin.listUsers({ perPage: 1000 });
     
-    let mergedProfiles = profiles || [];
-    if (!usersError && usersData?.users) {
-      mergedProfiles = profiles.map(profile => {
-        const authUser = usersData.users.find(u => u.id === profile.id);
-        return {
-          ...profile,
-          email: authUser?.email || "No email"
-        };
-      });
-    }
+    let mergedProfiles = (profiles || []).map((profile) => {
+      const authUser = usersData?.users?.find((u) => u.id === profile.id);
+      return {
+        ...profile,
+        role: profile.role === "public" ? "user" : profile.role,
+        email: authUser?.email || "No email",
+      };
+    });
 
     return NextResponse.json({ success: true, data: mergedProfiles });
   } catch (error: any) {
+    console.error("Admin roles GET error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 export async function PATCH(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile || profile.role !== "admin") {
-      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    const auth = await requireAdmin();
+    if (auth.errorResponse) {
+      return auth.errorResponse;
     }
 
     const { userId, newRole } = await request.json();
@@ -78,20 +55,36 @@ export async function PATCH(request: Request) {
     }
 
     // Only allow specific roles
-    if (!["user", "editor", "admin"].includes(newRole)) {
+    const validRoles = ["user", "public", "editor", "admin"];
+    if (!validRoles.includes(newRole)) {
       return NextResponse.json({ success: false, error: "Invalid role" }, { status: 400 });
+    }
+
+    // Map "user" to database check constraint value "public"
+    const targetRole = newRole === "user" ? "public" : newRole;
+
+    // Prevent demoting self
+    if (auth.user.id === userId && targetRole !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Cannot revoke your own administrator privileges." },
+        { status: 400 }
+      );
     }
 
     const adminSupabase = getAdminClient();
     const { error } = await adminSupabase
       .from("profiles")
-      .update({ role: newRole })
+      .update({
+        role: targetRole,
+        is_admin: targetRole === "admin",
+      })
       .eq("id", userId);
 
     if (error) throw error;
 
     return NextResponse.json({ success: true, message: "Role updated successfully" });
   } catch (error: any) {
+    console.error("Admin roles PATCH error:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

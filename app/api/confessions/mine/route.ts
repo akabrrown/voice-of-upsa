@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     const { data, error } = await supabase
       .from('confession_posts')
       .select(`
-        id, type, category, body_text, created_at, status
+        id, type, category, body_text, created_at, status, review_note
       `)
       .eq('author_id', user.id)
       .order('created_at', { ascending: false });

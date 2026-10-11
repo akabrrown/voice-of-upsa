@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { requireStaff } from "@/lib/auth/server-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const auth = await requireStaff();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
+  }
+
   try {
     const supabase = getAdminClient();
 

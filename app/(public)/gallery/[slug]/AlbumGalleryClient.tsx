@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
+import { submitContentReport } from "@/app/actions/reports";
 
 export function AlbumGalleryClient({ photos, albumId, submissionsOpen }: { photos: PhotoWithAuthor[], albumId: string, submissionsOpen: boolean }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -39,30 +40,34 @@ export function AlbumGalleryClient({ photos, albumId, submissionsOpen }: { photo
     if (!reportPhotoId) return;
 
     setIsSubmittingReport(true);
-    // Use the shared report functionality (needs an action, we'll mock it for a second)
-    // We will call submitReport server action.
     try {
-      const res = await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          entity_type: 'gallery_photo',
-          entity_id: reportPhotoId,
-          reason: reportReason,
-          details: reportDetails
-        })
+      const mappedReason =
+        reportReason === "no_consent"
+          ? "inappropriate"
+          : reportReason === "copyright"
+          ? "misleading"
+          : (reportReason as any);
+      const mappedDetails =
+        reportReason === "no_consent"
+          ? `[Consent Objection] ${reportDetails}`.trim()
+          : reportDetails.trim();
+
+      const res = await submitContentReport({
+        resourceType: "gallery_photo",
+        resourceId: reportPhotoId,
+        reason: mappedReason,
+        details: mappedDetails || undefined,
       });
 
-      if (res.ok) {
-        toast.success("Report submitted successfully. Our team will review it shortly.");
+      if (res.success) {
+        toast.success(res.message || "Report submitted successfully. Our team will review it shortly.");
         setReportPhotoId(null);
         setReportDetails("");
       } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to submit report.");
+        toast.error(res.error || "Failed to submit report.");
       }
-    } catch (e) {
-      toast.error("An error occurred.");
+    } catch {
+      toast.error("An error occurred while submitting your report.");
     } finally {
       setIsSubmittingReport(false);
     }
@@ -128,12 +133,22 @@ export function AlbumGalleryClient({ photos, albumId, submissionsOpen }: { photo
       {lightboxIndex !== null && activePhoto && (
         <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center">
           {/* Controls */}
-          <button 
-            onClick={() => setLightboxIndex(null)}
-            className="absolute top-6 right-6 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors z-10"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="absolute top-6 right-6 flex items-center gap-3 z-10">
+            <button
+              onClick={() => setReportPhotoId(activePhoto.id)}
+              className="text-white/70 hover:text-red-400 bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
+              title="Report this photo"
+            >
+              <Flag className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setLightboxIndex(null)}
+              className="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
+              title="Close viewer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
           
           <button 
             onClick={prevPhoto}

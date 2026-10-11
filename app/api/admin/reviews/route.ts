@@ -1,35 +1,19 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
+import { requireStaff } from "@/lib/auth/server-auth";
 
 export const dynamic = "force-dynamic";
 
-async function verifyStaffRole() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || !["admin", "editor"].includes(profile.role)) {
-    return null;
-  }
-  return { user, role: profile.role };
-}
-
 export async function GET() {
-  const auth = await verifyStaffRole();
-  if (!auth) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  const auth = await requireStaff();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = getAdminClient();
     
-    // Fetch all reviews for admin
+    // Fetch all reviews for staff moderation
     const { data, error } = await supabase
       .from("site_reviews")
       .select(`
@@ -58,9 +42,9 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await verifyStaffRole();
-  if (!auth) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  const auth = await requireStaff();
+  if (auth.errorResponse) {
+    return auth.errorResponse;
   }
 
   try {
@@ -71,11 +55,18 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: "Review ID is required" }, { status: 400 });
     }
 
-    const updates: any = {};
-    if (status !== undefined) updates.status = status;
-    if (is_featured !== undefined) updates.is_featured = is_featured;
+    const updates: Record<string, any> = {};
+    if (status !== undefined) {
+      if (!['pending', 'approved', 'rejected'].includes(status)) {
+        return NextResponse.json({ success: false, error: "Invalid status value" }, { status: 400 });
+      }
+      updates.status = status;
+    }
+    if (is_featured !== undefined) {
+      updates.is_featured = Boolean(is_featured);
+    }
 
-    const supabase = await createClient();
+    const supabase = getAdminClient();
     const { data, error } = await supabase
       .from("site_reviews")
       .update(updates)
