@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, MailOpen, Mail, Archive, Reply, Loader2 } from "lucide-react";
 import { updateMessageStatus } from "./actions";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 interface ContactMessage {
   id: string;

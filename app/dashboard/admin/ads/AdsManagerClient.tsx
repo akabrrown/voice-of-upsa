@@ -7,9 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, XCircle, Clock, Check, Loader2, PlayCircle, ExternalLink } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Check, Loader2, PlayCircle, ExternalLink, AlertTriangle, AlertCircle } from "lucide-react";
 import { updateAdStatus } from "./actions";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 interface Advertisement {
   id: string;
@@ -32,6 +32,19 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
   const [filter, setFilter] = useState<"all" | "pending" | "active" | "approved" | "completed" | "rejected">("pending");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
+  // Structured Rejection Modal State
+  const [rejectingAd, setRejectingAd] = useState<{ id: string; companyName: string } | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isSubmittingRejection, setIsSubmittingRejection] = useState(false);
+
+  const REJECTION_PRESETS = [
+    "Creative banner image does not meet resolution or sizing requirements.",
+    "Target URL or destination landing page is non-functional.",
+    "Payment verification receipt missing or incomplete.",
+    "Violates campus advertising and institutional policies.",
+    "Promotional content deemed inappropriate for student body.",
+  ];
+
   const filteredAds = ads.filter(ad => filter === "all" || ad.status === filter);
 
   const handleStatusChange = async (adId: string, newStatus: any, notes?: string) => {
@@ -46,6 +59,29 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
       toast.error(error.message || "Failed to update status");
     } finally {
       setLoadingId(null);
+    }
+  };
+
+  const handleConfirmRejection = async () => {
+    if (!rejectingAd) return;
+    if (!rejectionReason.trim()) {
+      toast.error("Please select or write a rejection reason.");
+      return;
+    }
+
+    setIsSubmittingRejection(true);
+    try {
+      const result = await updateAdStatus(rejectingAd.id, "rejected", rejectionReason.trim());
+      if (result.error) throw new Error(result.error);
+
+      setAds(ads.map(ad => ad.id === rejectingAd.id ? { ...ad, status: "rejected", admin_notes: rejectionReason.trim() } : ad));
+      toast.success(`Ad rejected with feedback recorded.`);
+      setRejectingAd(null);
+      setRejectionReason("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to reject advertisement.");
+    } finally {
+      setIsSubmittingRejection(false);
     }
   };
 
@@ -137,6 +173,16 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                           </div>
                         )}
                       </div>
+
+                      {ad.admin_notes && (
+                        <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-100 flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                          <div className="text-xs">
+                            <span className="font-bold text-gray-700">Moderator Note: </span>
+                            <span className="text-gray-600">{ad.admin_notes}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Action Buttons */}
@@ -152,11 +198,14 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                             Approve
                           </Button>
                           <Button 
-                            onClick={() => handleStatusChange(ad.id, "rejected")}
+                            onClick={() => {
+                              setRejectingAd({ id: ad.id, companyName: ad.company_name });
+                              setRejectionReason("");
+                            }}
                             disabled={loadingId === ad.id}
                             variant="destructive"
                           >
-                            {loadingId === ad.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />}
+                            <XCircle className="w-4 h-4 mr-2" />
                             Reject
                           </Button>
                         </>
@@ -166,7 +215,7 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                         <Button 
                           onClick={() => handleStatusChange(ad.id, "active")}
                           disabled={loadingId === ad.id}
-                          className="bg-upsa-gold text-upsa-navy hover:bg-yellow-400"
+                          className="bg-upsa-gold text-upsa-navy hover:bg-yellow-400 font-bold"
                         >
                           {loadingId === ad.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PlayCircle className="w-4 h-4 mr-2" />}
                           Set as Active
@@ -191,6 +240,82 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
           ))
         )}
       </div>
+
+      {/* Structured Ad Rejection Modal */}
+      {rejectingAd && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-lg w-full p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <div className="p-2 rounded-xl bg-red-50">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Reject Advertisement</h3>
+                <p className="text-xs text-gray-500">Provide rejection reason for {rejectingAd.companyName}</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-4">
+              Select a standard preset or type customized feedback explaining why this advertising request cannot be accepted.
+            </p>
+
+            <div className="space-y-3 mb-4">
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Quick Presets</label>
+              <div className="flex flex-col gap-2">
+                {REJECTION_PRESETS.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setRejectionReason(preset)}
+                    className={`text-left text-xs p-2.5 rounded-lg border transition-all ${
+                      rejectionReason === preset
+                        ? "border-red-500 bg-red-50/50 text-red-800 font-semibold"
+                        : "border-gray-200 hover:border-gray-300 bg-white text-gray-700"
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5 mb-6">
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Custom Moderator Feedback</label>
+              <Textarea
+                placeholder="Detailed reason for ad rejection..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={3}
+                className="text-sm border-gray-200 focus:border-red-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+              <Button
+                variant="outline"
+                onClick={() => setRejectingAd(null)}
+                disabled={isSubmittingRejection}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmRejection}
+                disabled={isSubmittingRejection || !rejectionReason.trim()}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold"
+              >
+                {isSubmittingRejection ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  "Confirm Rejection"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

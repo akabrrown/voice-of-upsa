@@ -5,8 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FolderOpen, Plus, Trash2, FileText, Download, Loader2, X, UploadCloud } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { FolderOpen, Plus, Trash2, FileText, Download, Loader2, X, UploadCloud, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { TableShadowLoader } from "@/components/ui/shadow-loaders";
 
 interface DocumentItem {
@@ -30,6 +30,10 @@ export default function DocumentsAdminPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
+  // Structured delete modal state
+  const [documentToDelete, setDocumentToDelete] = useState<DocumentItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchDocuments();
@@ -104,18 +108,19 @@ export default function DocumentsAdminPage() {
     setFile(null);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this document?")) return;
+  const handleDelete = async () => {
+    if (!documentToDelete) return;
+    setIsDeleting(true);
     
-    const deleteToastId = toast.loading("Deleting document...");
-    const { error } = await supabase.from("official_documents").delete().eq("id", id);
-    toast.dismiss(deleteToastId);
+    const { error } = await supabase.from("official_documents").delete().eq("id", documentToDelete.id);
+    setIsDeleting(false);
 
     if (error) {
       toast.error("Failed to delete document: " + error.message);
     } else {
       toast.success("Document deleted successfully");
-      setDocuments(docs => docs.filter(d => d.id !== id));
+      setDocuments(docs => docs.filter(d => d.id !== documentToDelete.id));
+      setDocumentToDelete(null);
     }
   };
 
@@ -202,7 +207,7 @@ export default function DocumentsAdminPage() {
                         <Download className="h-4 w-4" />
                       </a>
                       <button
-                        onClick={() => handleDelete(doc.id)}
+                        onClick={() => setDocumentToDelete(doc)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete"
                       >
@@ -318,6 +323,51 @@ export default function DocumentsAdminPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {documentToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <div className="p-2 rounded-xl bg-red-50">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Delete Document</h3>
+                <p className="text-xs text-gray-500">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to permanently delete <strong className="text-upsa-navy">"{documentToDelete.title}"</strong>? It will no longer be available on the public website.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setDocumentToDelete(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Document"
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       )}

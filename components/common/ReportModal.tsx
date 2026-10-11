@@ -26,7 +26,7 @@ import { submitContentReport, type ReportReason } from "@/app/actions/reports";
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  resourceType: "confession" | "gallery_photo" | "job" | "mart_product" | "service";
+  resourceType: "article" | "confession" | "gallery_photo" | "job" | "mart_product" | "service";
   resourceId: string;
   resourceTitle?: string;
   onSuccess?: () => void;

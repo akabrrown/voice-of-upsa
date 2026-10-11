@@ -300,7 +300,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                       </span>
                     )}
                     <div className="flex-1 hidden md:block" />
-                    <ArticleActions slug={slug} title={article.title} />
+                    <ArticleActions slug={slug} title={article.title} articleId={dbArticle.id} />
                   </div>
                 </div>
                 {/* Cover Image */}

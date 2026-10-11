@@ -20,10 +20,10 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Trash2, CheckCircle2, AlertCircle, FileEdit, Archive, Plus, Star, RotateCcw } from "lucide-react";
+import { MoreHorizontal, Eye, Trash2, CheckCircle2, AlertCircle, FileEdit, Archive, Plus, Star, RotateCcw, AlertTriangle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import Link from "next/link";
 import { TableShadowLoader } from "@/components/ui/shadow-loaders";
 
@@ -50,6 +50,8 @@ export default function AdminArticlesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [articleToDelete, setArticleToDelete] = useState<ArticleItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const ITEMS_PER_PAGE = 10;
   const supabase = createClient();
 
@@ -188,21 +190,25 @@ export default function AdminArticlesPage() {
     }
   };
 
-  const handleDeleteArticle = async (articleId: string) => {
-    if (!confirm("Are you sure you want to permanently delete this article? This action cannot be undone.")) return;
+  const confirmDeleteArticle = async () => {
+    if (!articleToDelete) return;
+    setIsDeleting(true);
 
     try {
       const { error } = await supabase
         .from("articles")
         .delete()
-        .eq("id", articleId);
+        .eq("id", articleToDelete.id);
 
       if (error) throw error;
 
       toast.success("Article deleted successfully!");
+      setArticleToDelete(null);
       fetchArticles();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete article");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -385,7 +391,7 @@ export default function AdminArticlesPage() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                          onClick={() => handleDeleteArticle(art.id)}
+                          onClick={() => setArticleToDelete(art)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" /> Delete Permanently
                         </DropdownMenuItem>
@@ -431,6 +437,51 @@ export default function AdminArticlesPage() {
           </div>
         )}
       </div>
+
+      {/* Article Delete Confirmation Modal */}
+      {articleToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-red-600 mb-4">
+              <div className="p-2 rounded-xl bg-red-50">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Delete Article</h3>
+                <p className="text-xs text-gray-500">Permanent action</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to permanently delete <strong className="text-upsa-navy">"{articleToDelete.title}"</strong>? This will remove the story and its reader statistics permanently.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setArticleToDelete(null)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteArticle}
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Permanently"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,19 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Printer, Share2, Check, Copy, Send } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { Printer, Share2, Check, Copy, Send, Flag } from "lucide-react";
+import { toast } from "sonner";
 import { getSiteUrl } from "@/lib/auth/urls";
+import { ReportModal } from "@/components/common/ReportModal";
 
 interface ArticleActionsProps {
   slug: string;
   title: string;
+  articleId?: string;
 }
 
-export function ArticleActions({ slug, title }: ArticleActionsProps) {
+export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) {
   const [shareUrl, setShareUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -179,6 +182,24 @@ export function ArticleActions({ slug, title }: ArticleActionsProps) {
       >
         <Printer className="h-4 w-4" />
       </button>
+
+      {/* Report Article Button */}
+      <button
+        onClick={() => setIsReportOpen(true)}
+        className="p-2 hover:bg-red-50 rounded-full text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
+        title="Report story"
+        aria-label="Report story"
+      >
+        <Flag className="h-4 w-4" />
+      </button>
+
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        resourceType="article"
+        resourceId={articleId || slug}
+        resourceTitle={title}
+      />
     </div>
   );
 }

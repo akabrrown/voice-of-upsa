@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -19,10 +20,10 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, UserCog, UserMinus, ShieldCheck, Mail } from "lucide-react";
+import { MoreHorizontal, UserCog, UserMinus, ShieldCheck, Mail, Search, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { TableShadowLoader } from "@/components/ui/shadow-loaders";
 
 interface UserItem {
@@ -36,7 +37,12 @@ interface UserItem {
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const supabase = createClient();
 
   const fetchUsers = async () => {
@@ -49,16 +55,16 @@ export default function UserManagementPage() {
       if (error) throw error;
 
       if (data) {
-        setUsers(
-          data.map((user: any) => ({
-            id: user.id,
-            name: user.full_name || "Anonymous User",
-            email: user.username || "no-handle",
-            role: user.role || "public",
-            status: user.is_active ? "active" : "suspended",
-            joined: user.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A",
-          }))
-        );
+        const mapped = data.map((user: any) => ({
+          id: user.id,
+          name: user.full_name || "Anonymous User",
+          email: user.username || "no-handle",
+          role: user.role || "public",
+          status: user.is_active ? "active" : "suspended",
+          joined: user.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A",
+        }));
+        setUsers(mapped);
+        setFilteredUsers(mapped);
       }
     } catch (err: any) {
       console.error("Error fetching users:", err);
@@ -71,6 +77,30 @@ export default function UserManagementPage() {
   useEffect(() => {
     fetchUsers();
   }, [supabase]);
+
+  useEffect(() => {
+    let result = users;
+
+    if (searchQuery.trim() !== "") {
+      result = result.filter(u => 
+        u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (roleFilter !== "all") {
+      result = result.filter(u => u.role === roleFilter);
+    }
+
+    setFilteredUsers(result);
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter, users]);
+
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
@@ -107,10 +137,39 @@ export default function UserManagementPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-upsa-navy tracking-tight">User Management</h1>
+          <h1 className="text-3xl font-black text-upsa-navy tracking-tight flex items-center gap-2">
+            <Users className="w-8 h-8 text-upsa-gold" />
+            User Management
+          </h1>
           <p className="text-gray-500">Manage platform users, roles, and access permissions</p>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by name or handle..."
+            className="pl-10 bg-white border border-gray-200"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center space-x-2 self-start sm:self-center">
+          <span className="text-sm font-bold text-gray-500 uppercase tracking-widest text-[10px]">Filter Role:</span>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="bg-white border border-gray-200 rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-upsa-navy/20 outline-none"
+          >
+            <option value="all">All Roles</option>
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="public">Reader (Public)</option>
+          </select>
         </div>
       </div>
 
@@ -119,100 +178,132 @@ export default function UserManagementPage() {
           <div className="p-6">
             <TableShadowLoader rows={5} hasSearch={false} />
           </div>
-        ) : users.length > 0 ? (
-          <Table>
-            <TableHeader className="bg-gray-50">
-              <TableRow>
-                <TableHead className="font-bold text-upsa-navy">User</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Role</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Status</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Joined Date</TableHead>
-                <TableHead className="text-right font-bold text-upsa-navy">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id} className="hover:bg-gray-50/50 transition-colors">
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="h-9 w-9 rounded-full bg-upsa-navy/5 flex items-center justify-center text-upsa-navy font-black text-xs">
-                        {user.name[0]}
-                      </div>
-                      <div>
-                        <div className="font-bold text-upsa-navy">{user.name}</div>
-                        <div className="text-xs text-gray-400">@{user.email}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className={cn(
-                        "capitalize font-bold text-[10px] tracking-widest",
-                        user.role === "admin" ? "border-red-200 text-red-600 bg-red-50" : 
-                        user.role === "editor" ? "border-blue-200 text-blue-600 bg-blue-50" : 
-                        "border-gray-200 text-gray-600 bg-gray-50"
-                      )}
-                    >
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      className={cn(
-                        "capitalize font-bold text-[10px] tracking-widest",
-                        user.status === "active" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
-                      )}
-                    >
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-500">{user.joined}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="cursor-pointer"
-                          onClick={() => handleUpdateRole(user.id, "admin")}
-                        >
-                          <ShieldCheck className="mr-2 h-4 w-4 text-emerald-500" /> Promote to Admin
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="cursor-pointer"
-                          onClick={() => handleUpdateRole(user.id, "editor")}
-                        >
-                          <UserCog className="mr-2 h-4 w-4 text-blue-500" /> Change to Editor
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="cursor-pointer"
-                          onClick={() => handleUpdateRole(user.id, "public")}
-                        >
-                          <UserCog className="mr-2 h-4 w-4 text-gray-500" /> Make Reader (Public)
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                          onClick={() => handleToggleStatus(user.id, user.status)}
-                        >
-                          <UserMinus className="mr-2 h-4 w-4" /> 
-                          {user.status === "active" ? "Suspend Account" : "Activate Account"}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        ) : filteredUsers.length > 0 ? (
+          <>
+            <Table>
+              <TableHeader className="bg-gray-50">
+                <TableRow>
+                  <TableHead className="font-bold text-upsa-navy">User</TableHead>
+                  <TableHead className="font-bold text-upsa-navy">Role</TableHead>
+                  <TableHead className="font-bold text-upsa-navy">Status</TableHead>
+                  <TableHead className="font-bold text-upsa-navy">Joined Date</TableHead>
+                  <TableHead className="text-right font-bold text-upsa-navy">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {paginatedUsers.map((user) => (
+                  <TableRow key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="h-9 w-9 rounded-full bg-upsa-navy/5 flex items-center justify-center text-upsa-navy font-black text-xs">
+                          {user.name[0]}
+                        </div>
+                        <div>
+                          <div className="font-bold text-upsa-navy">{user.name}</div>
+                          <div className="text-xs text-gray-400">@{user.email}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant="outline" 
+                        className={cn(
+                          "capitalize font-bold text-[10px] tracking-widest",
+                          user.role === "admin" ? "border-red-200 text-red-600 bg-red-50" : 
+                          user.role === "editor" ? "border-blue-200 text-blue-600 bg-blue-50" : 
+                          "border-gray-200 text-gray-600 bg-gray-50"
+                        )}
+                      >
+                        {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={cn(
+                          "capitalize font-bold text-[10px] tracking-widest",
+                          user.status === "active" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
+                        )}
+                      >
+                        {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-500">{user.joined}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => handleUpdateRole(user.id, "admin")}
+                          >
+                            <ShieldCheck className="mr-2 h-4 w-4 text-emerald-500" /> Promote to Admin
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => handleUpdateRole(user.id, "editor")}
+                          >
+                            <UserCog className="mr-2 h-4 w-4 text-blue-500" /> Change to Editor
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => handleUpdateRole(user.id, "public")}
+                          >
+                            <UserCog className="mr-2 h-4 w-4 text-gray-500" /> Make Reader (Public)
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                            onClick={() => handleToggleStatus(user.id, user.status)}
+                          >
+                            <UserMinus className="mr-2 h-4 w-4" /> 
+                            {user.status === "active" ? "Suspend Account" : "Activate Account"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50">
+              <div className="text-sm text-gray-500 font-medium">
+                Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)} of {filteredUsers.length} users
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="bg-white"
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center px-4 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="bg-white"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
         ) : (
-          <div className="py-20 text-center text-gray-500 italic">No users found.</div>
+          <div className="py-20 text-center text-gray-500 italic">No users found matching filters.</div>
         )}
       </div>
     </div>

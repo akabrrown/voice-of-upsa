@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "react-hot-toast";
-import { User as UserIcon, Settings, Bookmark, Bell, Shield, LogOut, Eye, EyeOff, Lock, ExternalLink, CheckCheck, ArrowLeft, Home } from "lucide-react";
+import { toast } from "sonner";
+import { User as UserIcon, Settings, Bookmark, Bell, Shield, LogOut, Eye, EyeOff, Lock, ExternalLink, CheckCheck, ArrowLeft, Home, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import Link from "next/link";
@@ -127,6 +127,41 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteNotification = async (notifId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const { error } = await supabase.from("notifications").delete().eq("id", notifId);
+      if (!error) {
+        setNotifications((prev) => prev.filter((n) => n.id !== notifId));
+        toast.success("Notification removed");
+      } else {
+        toast.error("Failed to delete notification");
+      }
+    } catch (err) {
+      console.error("Error deleting notification:", err);
+    }
+  };
+
+  const handleClearReadNotifications = async () => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("is_read", true);
+
+      if (!error) {
+        setNotifications((prev) => prev.filter((n) => !n.is_read));
+        toast.success("Read notifications cleared");
+      } else {
+        toast.error("Failed to clear read notifications");
+      }
+    } catch (err) {
+      console.error("Error clearing read notifications:", err);
+    }
+  };
+
   const handleTestNotification = async () => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator && typeof Notification !== "undefined") {
       if (Notification.permission === "granted") {
@@ -163,6 +198,7 @@ export default function ProfilePage() {
         full_name: profile.full_name,
         username: profile.username,
         bio: profile.bio,
+        avatar_url: profile.avatar_url || null,
       })
       .eq("id", user.id);
 
@@ -337,6 +373,17 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="avatar_url">Profile Picture / Avatar URL</Label>
+                      <Input 
+                        id="avatar_url"
+                        value={profile?.avatar_url || ""} 
+                        onChange={(e) => setProfile(prev => prev ? {...prev, avatar_url: e.target.value} : null)}
+                        placeholder="https://images.unsplash.com/... or direct image link"
+                      />
+                      <p className="text-xs text-gray-400">Direct image URL to customize your campus profile picture.</p>
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="bio">Professional Bio</Label>
                       <Textarea 
                         id="bio"
@@ -472,6 +519,17 @@ export default function ProfilePage() {
                         Mark all as read
                       </Button>
                     )}
+                    {notifications.some(n => n.is_read) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleClearReadNotifications}
+                        className="border-gray-200 text-xs font-bold text-gray-500 hover:text-red-600 hover:bg-red-50 gap-1.5 rounded-xl cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Clear Read
+                      </Button>
+                    )}
                   </div>
                 </div>
                 
@@ -493,14 +551,14 @@ export default function ProfilePage() {
                           notif.is_read ? 'border-gray-100 bg-white' : 'border-amber-200/80 bg-amber-50/20 shadow-sm'
                         } flex items-start justify-between gap-4 transition-all hover:border-upsa-navy/30 cursor-pointer group`}
                       >
-                        <div className="flex items-start space-x-3.5">
+                        <div className="flex items-start space-x-3.5 flex-1 min-w-0">
                           <div className={`mt-1.5 h-2.5 w-2.5 rounded-full flex-shrink-0 ${notif.is_read ? 'bg-transparent' : 'bg-amber-500 ring-4 ring-amber-100'}`} />
-                          <div>
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <h4 className="font-bold text-sm text-gray-900 group-hover:text-upsa-navy transition-colors">{notif.title}</h4>
                               {!notif.is_read && (
                                 <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white px-2 py-0.2 rounded-full">
-                                  New
+                                   New
                                 </span>
                               )}
                             </div>
@@ -515,6 +573,16 @@ export default function ProfilePage() {
                             </div>
                           </div>
                         </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteNotification(notif.id, e)}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                          title="Delete notification"
+                          aria-label="Delete notification"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     ))}
                   </div>

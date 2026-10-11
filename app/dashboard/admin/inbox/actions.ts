@@ -14,12 +14,13 @@ export async function updateMessageStatus(messageId: string, newStatus: "unread"
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, is_admin")
     .eq("id", user.id)
     .single();
 
-  if (profile?.role !== "admin") {
-    return { error: "Forbidden: Admin access required" };
+  const isStaff = ['admin', 'editor', 'developer'].includes((profile as any)?.role) || (profile as any)?.is_admin === true;
+  if (!isStaff) {
+    return { error: "Forbidden: Staff access required" };
   }
 
   const updateData: any = { status: newStatus };

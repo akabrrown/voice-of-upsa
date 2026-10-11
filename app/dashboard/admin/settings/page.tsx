@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "react-hot-toast";
-import { Settings, Save, Globe, MessageSquare, ShieldAlert } from "lucide-react";
+import { toast } from "sonner";
+import { Settings, Save, Globe, MessageSquare, ShieldAlert, Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
@@ -19,13 +19,47 @@ export default function SettingsPage() {
   const [enableRegistration, setEnableRegistration] = useState(true);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
+  // Load persisted settings from localStorage if available
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("vou_site_settings");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.siteName) setSiteName(parsed.siteName);
+        if (parsed.tagline) setTagline(parsed.tagline);
+        if (parsed.contactEmail) setContactEmail(parsed.contactEmail);
+        if (parsed.requireCommentApproval !== undefined) setRequireCommentApproval(parsed.requireCommentApproval);
+        if (parsed.allowAnonComments !== undefined) setAllowAnonComments(parsed.allowAnonComments);
+        if (parsed.enableRegistration !== undefined) setEnableRegistration(parsed.enableRegistration);
+        if (parsed.maintenanceMode !== undefined) setMaintenanceMode(parsed.maintenanceMode);
+      }
+    } catch (e) {
+      // Ignore fallback
+    }
+  }, []);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setTimeout(() => {
+    try {
+      localStorage.setItem("vou_site_settings", JSON.stringify({
+        siteName,
+        tagline,
+        contactEmail,
+        requireCommentApproval,
+        allowAnonComments,
+        enableRegistration,
+        maintenanceMode,
+        updatedAt: new Date().toISOString()
+      }));
+      setTimeout(() => {
+        setIsSaving(false);
+        toast.success("Site configuration saved successfully!");
+      }, 600);
+    } catch (e) {
       setIsSaving(false);
-      toast.success("Site settings updated successfully!");
-    }, 1500);
+      toast.error("Failed to save settings locally.");
+    }
   };
 
   return (
