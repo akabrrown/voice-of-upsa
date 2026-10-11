@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
-import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { getUser } from "@/lib/auth/user";
 import { logAudit } from "@/lib/audit/logger";
 
 export async function GET(req: Request) {
   try {
     const user = await getUser();
-    if (!user || !user.is_admin) {
+    const isAdmin = Boolean(user && (user.is_admin === true || user.role === 'admin' || user.role === 'developer'));
+    if (!isAdmin) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = await createClient();
+    const supabase = getAdminClient();
     const url = new URL(req.url);
     const statusParam = url.searchParams.get("status") || "pending_review";
     
@@ -47,7 +48,8 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
   try {
     const user = await getUser();
-    if (!user || !user.is_admin) {
+    const isAdmin = Boolean(user && (user.is_admin === true || user.role === 'admin' || user.role === 'developer'));
+    if (!isAdmin) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
@@ -64,7 +66,7 @@ export async function PUT(req: Request) {
 
     const newStatus = action === 'approve' ? 'published' : 'removed';
 
-    const supabase = await createClient();
+    const supabase = getAdminClient();
     
     // Check if post exists and is pending
     const { data: post, error: fetchError } = await supabase

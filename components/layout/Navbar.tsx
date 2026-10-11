@@ -35,7 +35,7 @@ const campusLifeFeatures = [
 ];
 
 const communityMediaFeatures = [
-  { title: "Video TV", href: "/tv", description: "Watch campus news, shows, and event coverage.", icon: Video, completed: false },
+  { title: "Video TV", href: "/tv", description: "Watch campus news, shows, and event coverage.", icon: Video, completed: true },
   { title: "Podcasts", href: "/podcasts", description: "Listen to student voices and interviews.", icon: Mic, completed: true },
   { title: "Gallery", href: "/gallery", description: "Explore campus photos and event memories.", icon: Camera, completed: true },
   { title: "Confessions", href: "/confessions", description: "Share confessions and opinions safely.", icon: EyeOff, completed: true },

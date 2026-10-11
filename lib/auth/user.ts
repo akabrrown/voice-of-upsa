@@ -13,5 +13,11 @@ export async function getUser() {
 
   if (!profile) return null;
 
-  return { ...user, ...profile };
+  const is_admin = Boolean(
+    profile.is_admin === true || 
+    profile.role === "admin" || 
+    profile.role === "developer"
+  );
+
+  return { ...user, ...profile, is_admin };
 }

@@ -63,7 +63,7 @@ const adminGroups: AdminGroup[] = [
       { name: "All Articles", href: "/dashboard/admin/articles", icon: FileText },
       { name: "Podcasts", href: "/dashboard/admin/podcasts", icon: Megaphone },
       { name: "Polls", href: "/dashboard/admin/polls", icon: Vote },
-      { name: "Campus Mart", href: "/dashboard/admin/mart", icon: Store },
+      { name: "Campus Mart", href: "/dashboard/admin/mart/sellers", icon: Store },
       { name: "Job Board", href: "/dashboard/admin/jobs", icon: Briefcase },
       { name: "Holiday Wishes", href: "/dashboard/admin/holidays", icon: CalendarHeart },
       { name: "Documents", href: "/dashboard/admin/documents", icon: FolderOpen },
@@ -76,9 +76,6 @@ const adminGroups: AdminGroup[] = [
       { name: "Gallery", href: "/dashboard/admin/gallery", icon: Camera },
       { name: "Reviews", href: "/dashboard/admin/reviews", icon: Star },
       { name: "Confessions", href: "/dashboard/admin/confessions", icon: MessageSquare },
-      ...(process.env.NODE_ENV !== "production"
-        ? [{ name: "Mart Sellers", href: "/dashboard/admin/mart/sellers", icon: Store }]
-        : []),
     ],
   },
   {

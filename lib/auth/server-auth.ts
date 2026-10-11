@@ -4,7 +4,8 @@ import type { User } from "@supabase/supabase-js";
 
 export interface UserProfile {
   id: string;
-  role: "admin" | "editor" | "public";
+  role: "admin" | "editor" | "public" | string;
+  is_admin?: boolean;
   full_name?: string | null;
   username?: string | null;
   avatar_url?: string | null;
@@ -79,7 +80,12 @@ export async function requireAdmin(): Promise<AuthResult> {
     return auth;
   }
 
-  if (auth.profile.role !== "admin") {
+  const isAdmin = 
+    auth.profile.role === "admin" || 
+    (auth.profile as any).is_admin === true || 
+    auth.profile.role === "developer";
+
+  if (!isAdmin) {
     return {
       user: null,
       profile: null,
