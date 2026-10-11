@@ -1,15 +1,19 @@
-import { createClient } from "@/lib/supabase/server";
+import { getAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { logAudit } from "@/lib/audit/logger";
 import { getUser } from "@/lib/auth/user";
 
-export async function GET(request: Request) {
-  const supabase = await createClient();
-  const user = await getUser();
+export const dynamic = 'force-dynamic';
 
-  if (!user || !user.is_admin) {
+export async function GET(request: Request) {
+  const user = await getUser();
+  const isAdmin = Boolean(user && (user.is_admin === true || user.role === 'admin' || user.role === 'developer'));
+
+  if (!isAdmin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const supabase = getAdminClient();
 
   try {
     const { data, error } = await supabase
@@ -27,12 +31,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
   const user = await getUser();
+  const isAdmin = Boolean(user && (user.is_admin === true || user.role === 'admin' || user.role === 'developer'));
 
-  if (!user || !user.is_admin) {
+  if (!isAdmin || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const supabase = getAdminClient();
 
   try {
     const body = await request.json();
