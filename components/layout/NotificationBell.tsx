@@ -14,7 +14,8 @@ import { createClient } from "@/lib/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { markNotificationAsRead, markAllNotificationsAsRead } from "@/app/actions/notifications";
 import Link from "next/link";
-import { toast } from "react-hot-toast";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type Notification = {
   id: string;
@@ -25,7 +26,7 @@ type Notification = {
   created_at: string;
 };
 
-export function NotificationBell({ user }: { user: any }) {
+export function NotificationBell({ user, className }: { user: any; className?: string }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const supabase = createClient();
@@ -145,10 +146,10 @@ export function NotificationBell({ user }: { user: any }) {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="text-white hover:bg-upsa-gold hover:text-upsa-navy relative px-3">
+        <Button variant="ghost" className={cn("text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold relative px-3 transition-colors", className)}>
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-sm ring-2 ring-upsa-navy">
+            <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-sm ring-2 ring-white">
               {displayCount}
             </span>
           )}

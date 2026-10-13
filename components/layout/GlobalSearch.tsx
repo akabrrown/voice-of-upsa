@@ -14,7 +14,7 @@ type SearchResult = {
   date: string;
 };
 
-export default function GlobalSearch({ className }: { className?: string }) {
+export default function GlobalSearch({ className, inputClassName }: { className?: string; inputClassName?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -93,8 +93,8 @@ export default function GlobalSearch({ className }: { className?: string }) {
   return (
     <div ref={searchRef} className="relative w-full">
       {/* Inline Search Input */}
-      <div className={className || "flex items-center gap-3 px-4 py-2 text-sm text-gray-300 bg-white/10 hover:bg-white/15 rounded-full border border-white/10 transition-colors w-full focus-within:ring-2 focus-within:ring-upsa-gold/50 shadow-sm"}>
-        <Search className="h-5 w-5 shrink-0 opacity-70" />
+      <div className={className || "flex items-center gap-3 px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200/70 rounded-full border border-gray-200 transition-colors w-full focus-within:ring-2 focus-within:ring-upsa-navy/20 shadow-xs"}>
+        <Search className="h-4 w-4 shrink-0 opacity-60 text-gray-500" />
         <input
           ref={inputRef}
           type="text"
@@ -105,7 +105,7 @@ export default function GlobalSearch({ className }: { className?: string }) {
             if (!isOpen) setIsOpen(true);
           }}
           placeholder="Search news, documents, gallery, or campus mart..."
-          className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-gray-300/70"
+          className={inputClassName || "flex-1 bg-transparent border-0 outline-none text-gray-900 placeholder:text-gray-400 text-sm"}
         />
         {query && (
           <button 
@@ -113,12 +113,12 @@ export default function GlobalSearch({ className }: { className?: string }) {
               setQuery("");
               inputRef.current?.focus();
             }} 
-            className="p-1 hover:bg-white/20 rounded-full transition-colors"
+            className="p-1 hover:bg-gray-200/70 text-gray-500 rounded-full transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         )}
-        <kbd className="hidden md:inline-flex h-5 items-center gap-1 rounded border border-white/20 bg-white/10 px-1.5 font-mono text-[10px] font-medium text-gray-300">
+        <kbd className="hidden md:inline-flex h-5 items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-500">
           <span className="text-xs">⌘</span>K
         </kbd>
       </div>
