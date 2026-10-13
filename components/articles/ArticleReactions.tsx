@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ArticleReactionsProps {
@@ -19,11 +19,11 @@ interface ReactionConfig {
 }
 
 const REACTIONS: ReactionConfig[] = [
-  { type: "like", emoji: "👍", label: "Like", color: "bg-blue-50 text-blue-600 border-blue-200" },
-  { type: "love", emoji: "❤️", label: "Love", color: "bg-red-50 text-red-600 border-red-200" },
-  { type: "insightful", emoji: "💡", label: "Insightful", color: "bg-amber-50 text-amber-600 border-amber-200" },
-  { type: "wow", emoji: "😮", label: "Wow", color: "bg-purple-50 text-purple-600 border-purple-200" },
-  { type: "sad", emoji: "😢", label: "Sad", color: "bg-gray-50 text-gray-600 border-gray-200" },
+  { type: "like", emoji: "👍", label: "Like", color: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border-blue-200 dark:border-blue-800" },
+  { type: "love", emoji: "❤️", label: "Love", color: "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300 border-red-200 dark:border-red-800" },
+  { type: "insightful", emoji: "💡", label: "Insightful", color: "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-800" },
+  { type: "wow", emoji: "😮", label: "Wow", color: "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border-purple-200 dark:border-purple-800" },
+  { type: "sad", emoji: "😢", label: "Sad", color: "bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700" },
 ];
 
 export function ArticleReactions({ articleId }: ArticleReactionsProps) {
@@ -172,12 +172,12 @@ export function ArticleReactions({ articleId }: ArticleReactionsProps) {
   const totalReactions = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="py-6 border-t border-b border-gray-100 my-8">
+    <div className="py-6 border-t border-b border-gray-100 dark:border-white/10 my-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h4 className="text-sm font-bold text-upsa-navy uppercase tracking-wider">How do you feel about this article?</h4>
+          <h4 className="text-sm font-bold text-upsa-navy dark:text-gray-100 uppercase tracking-wider">How do you feel about this article?</h4>
           {totalReactions > 0 && (
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">
               {totalReactions} {totalReactions === 1 ? "reaction" : "reactions"} so far
             </p>
           )}
@@ -195,7 +195,7 @@ export function ArticleReactions({ articleId }: ArticleReactionsProps) {
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold border transition-all duration-300 ${
                   isSelected
                     ? `${color} border-upsa-gold ring-2 ring-upsa-gold/20 shadow-sm scale-105`
-                    : "bg-white hover:bg-gray-50 text-gray-500 border-gray-200"
+                    : "bg-white dark:bg-[#0C1729] hover:bg-gray-50 dark:hover:bg-white/5 text-gray-500 dark:text-gray-300 border-gray-200 dark:border-white/10"
                 }`}
                 title={label}
               >

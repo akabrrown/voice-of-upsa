@@ -8,7 +8,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
  }) {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-[#060D1A] transition-colors">
       <Navbar />
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         <Sidebar className="hidden lg:flex" />

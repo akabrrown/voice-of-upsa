@@ -249,7 +249,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       />
       <Navbar />
       <ViewTracker articleId={dbArticle.id} slug={slug} />
-      <main className="flex-1 bg-white">
+      <main className="flex-1 bg-white dark:bg-[#060D1A]">
         {/* Article Header & Content */}
         <article className="pt-10 pb-20">
           <div className="container mx-auto px-4 max-w-7xl">
@@ -259,31 +259,31 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 {/* Header: Breadcrumbs, Badge, Title & Meta */}
                 <div className="space-y-4 text-left">
                   <nav className="flex items-center justify-start space-x-2 text-sm text-gray-400">
-                    <Link href="/" className="hover:text-upsa-navy transition-colors">Home</Link>
+                    <Link href="/" className="hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors">Home</Link>
                     <span>/</span>
-                    <Link href={`/categories/${article.categorySlug}`} className="hover:text-upsa-navy transition-colors">{article.category}</Link>
+                    <Link href={`/categories/${article.categorySlug}`} className="hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors">{article.category}</Link>
                   </nav>
 
                   <Badge className="bg-upsa-gold text-upsa-navy font-bold uppercase tracking-widest text-[10px]">
                     {article.category}
                   </Badge>
 
-                  <h1 className="text-3xl md:text-5xl font-black text-black leading-tight tracking-tight text-left">
+                  <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-gray-100 leading-tight tracking-tight text-left">
                     {article.title}
                   </h1>
 
-                  <div className="flex flex-wrap items-center justify-start gap-4 sm:gap-6 pt-2 text-sm text-gray-500 pb-2">
+                  <div className="flex flex-wrap items-center justify-start gap-4 sm:gap-6 pt-2 text-sm text-gray-500 dark:text-gray-400 pb-2">
                     <div className="flex items-center">
                       <UserAvatar
                         src={article.author.avatar}
                         name={article.author.name}
                         size="md"
-                        className="mr-3 border border-gray-200"
+                        className="mr-3 border border-gray-200 dark:border-white/10"
                       />
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs text-gray-400">By</span>
-                          <span className="font-bold text-upsa-navy">{article.author.name}</span>
+                          <span className="font-bold text-upsa-navy dark:text-upsa-gold">{article.author.name}</span>
                         </div>
                         {article.author.role && (
                           <span className="text-[11px] text-gray-400 block">
@@ -296,7 +296,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
                     {article.publisherName && article.publisherName !== article.author.name && (
                       <span className="hidden sm:inline-flex items-center text-xs text-gray-400">
-                        Published by <span className="font-medium text-gray-600 ml-1">{article.publisherName}</span>
+                        Published by <span className="font-medium text-gray-600 dark:text-gray-300 ml-1">{article.publisherName}</span>
                       </span>
                     )}
                     <div className="flex-1 hidden md:block" />
@@ -304,7 +304,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   </div>
                 </div>
                 {/* Cover Image */}
-                <div className="relative aspect-video md:aspect-[16/9] w-full rounded-2xl overflow-hidden shadow-xl border border-gray-100">
+                <div className="relative aspect-video md:aspect-[16/9] w-full rounded-2xl overflow-hidden shadow-xl border border-gray-100 dark:border-white/10">
                   <Image
                     src={article.coverImage}
                     alt={article.title}
@@ -319,7 +319,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                 <ArticleContent content={article.content} />
 
                 {/* Article Reactions */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-6 border-y border-gray-100 mt-8">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-6 border-y border-gray-100 dark:border-white/10 mt-8">
                   <ArticleReactions articleId={dbArticle.id} />
                   
                   <div className="flex flex-col sm:items-end gap-2">
@@ -331,28 +331,28 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                   </div>
                 </div>
 
-                <div className="mt-12 p-6 md:p-8 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
+                <div className="mt-12 p-6 md:p-8 bg-gray-50 dark:bg-[#0C1729] rounded-2xl border border-gray-100 dark:border-white/10 flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
                   <UserAvatar
                     src={article.author.avatar}
                     name={article.author.name}
                     size="2xl"
-                    className="shrink-0 border-4 border-white shadow-md"
+                    className="shrink-0 border-4 border-white dark:border-[#1E3557] shadow-md"
                   />
                   <div className="text-center md:text-left w-full">
                     <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
                       About the Author
                     </span>
-                    <h4 className="text-lg font-bold text-upsa-navy mb-1">{article.author.name}</h4>
+                    <h4 className="text-lg font-bold text-upsa-navy dark:text-white mb-1">{article.author.name}</h4>
                     <p className="text-xs uppercase tracking-widest text-upsa-gold font-bold mb-2">
                       {article.author.role}
                     </p>
-                    <p className="text-sm text-gray-500 leading-relaxed">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                       {article.author.bio}
                     </p>
                     
                     {article.publisherName && article.publisherName !== article.author.name && (
-                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-center md:justify-start gap-2 text-[11px] text-gray-400">
-                        <span className="font-semibold text-gray-500">Published to Voice of UPSA by:</span> {article.publisherName}
+                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-center md:justify-start gap-2 text-[11px] text-gray-400">
+                        <span className="font-semibold text-gray-500 dark:text-gray-300">Published to Voice of UPSA by:</span> {article.publisherName}
                       </div>
                     )}
                   </div>
@@ -372,10 +372,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
             {/* Related Articles Across Full Width */}
             {relatedArticles.length > 0 && (
-              <div className="mt-20 pt-12 border-t border-gray-100 max-w-7xl mx-auto">
+              <div className="mt-20 pt-12 border-t border-gray-100 dark:border-white/10 max-w-7xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-2xl font-bold text-upsa-navy uppercase tracking-tight">Related Stories & Campus Highlights</h3>
-                  <Link href={`/categories/${article.categorySlug}`} className="text-sm font-semibold text-upsa-gold hover:text-upsa-navy transition-colors">
+                  <h3 className="text-2xl font-bold text-upsa-navy dark:text-white uppercase tracking-tight">Related Stories & Campus Highlights</h3>
+                  <Link href={`/categories/${article.categorySlug}`} className="text-sm font-semibold text-upsa-gold hover:text-upsa-navy dark:hover:text-white transition-colors">
                     View All in {article.category} →
                   </Link>
                 </div>

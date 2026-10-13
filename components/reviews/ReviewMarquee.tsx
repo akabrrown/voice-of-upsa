@@ -72,29 +72,29 @@ export function ReviewMarquee() {
         {displayReviews.map((review, i) => (
           <div 
             key={`${review.id}-${i}`} 
-            className="w-[350px] shrink-0 rounded-2xl border border-gray-100 bg-white/60 backdrop-blur-md p-6 shadow-sm hover:shadow-md hover:bg-white transition-all"
+            className="w-[350px] shrink-0 rounded-2xl border border-gray-100 dark:border-white/10 bg-white/60 dark:bg-[#0C1729]/80 backdrop-blur-md p-6 shadow-sm hover:shadow-md hover:bg-white dark:hover:bg-[#0F1E36] transition-all"
           >
             <div className="flex gap-1 mb-3">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(5)].map((_, idx) => (
                 <Star 
-                  key={i} 
-                  className={`w-4 h-4 ${i < review.rating ? 'fill-upsa-gold text-upsa-gold' : 'fill-gray-100 text-gray-200'}`} 
+                  key={idx} 
+                  className={`w-4 h-4 ${idx < review.rating ? 'fill-upsa-gold text-upsa-gold' : 'fill-gray-100 dark:fill-white/10 text-gray-200 dark:text-white/20'}`} 
                 />
               ))}
             </div>
-            <p className="text-gray-700 text-sm leading-relaxed mb-6 line-clamp-4">
+            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6 line-clamp-4">
               "{review.content}"
             </p>
             <div className="flex items-center gap-3 mt-auto">
-              <Avatar className="h-10 w-10 border border-gray-100">
+              <Avatar className="h-10 w-10 border border-gray-100 dark:border-white/10">
                 <AvatarImage src={review.profiles.avatar_url || ""} />
-                <AvatarFallback className="bg-upsa-navy/5 text-upsa-navy text-xs font-bold">
+                <AvatarFallback className="bg-upsa-navy/5 dark:bg-white/10 text-upsa-navy dark:text-upsa-gold text-xs font-bold">
                   {review.profiles.full_name?.substring(0, 2).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-900">{review.profiles.full_name || "Anonymous User"}</span>
-                <span className="text-xs text-gray-500">{review.profiles.department || "Student"}</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{review.profiles.full_name || "Anonymous User"}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{review.profiles.department || "Student"}</span>
               </div>
             </div>
           </div>

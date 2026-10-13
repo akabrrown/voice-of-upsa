@@ -50,11 +50,11 @@ export default function Home() {
           </div>
         </div>
         {/* Reviews Section */}
-        <section className="border-t border-gray-100 bg-white pt-16 pb-8 mt-12">
+        <section className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#081224] pt-16 pb-8 mt-12">
           <div className="container mx-auto px-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-bold font-playfair text-upsa-navy mb-2">What Our Readers Say</h2>
-              <p className="text-gray-500">Join the conversation and share your experience with Voice of UPSA.</p>
+              <h2 className="text-3xl font-bold font-playfair text-upsa-navy dark:text-white mb-2">What Our Readers Say</h2>
+              <p className="text-gray-500 dark:text-gray-400">Join the conversation and share your experience with Voice of UPSA.</p>
             </div>
             <SubmitReviewModal />
           </div>

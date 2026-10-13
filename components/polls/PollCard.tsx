@@ -61,30 +61,30 @@ export function PollCard({ poll, isDetailedView = false }: PollCardProps) {
   };
 
   return (
-    <Card className="w-full transition-all duration-200 hover:shadow-md border-gray-200">
+    <Card className="w-full transition-all duration-200 hover:shadow-md border-gray-200 dark:border-white/10 dark:bg-[#0C1729]">
       <CardHeader>
         <div className="flex justify-between items-start mb-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-upsa-gold bg-upsa-navy px-2.5 py-1 rounded-full">
+          <span className="text-xs font-semibold uppercase tracking-wider text-upsa-gold bg-upsa-navy dark:bg-upsa-navy/90 border border-upsa-gold/20 px-2.5 py-1 rounded-full">
             {poll.category.replace("_", " ")}
           </span>
           {isClosed ? (
-            <span className="text-xs font-medium text-gray-500 flex items-center bg-gray-100 px-2 py-1 rounded-full">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center bg-gray-100 dark:bg-white/10 px-2 py-1 rounded-full">
               <Clock className="w-3 h-3 mr-1" /> Closed
             </span>
           ) : poll.expires_at ? (
-            <span className="text-xs font-medium text-gray-500 flex items-center bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center bg-gray-50 dark:bg-white/5 px-2 py-1 rounded-full border border-gray-100 dark:border-white/10">
               <Clock className="w-3 h-3 mr-1" />
               Ends {formatDistanceToNow(new Date(poll.expires_at), { addSuffix: true })}
             </span>
           ) : null}
         </div>
-        <CardTitle className="text-xl md:text-2xl leading-snug text-[#1B2A4A] mt-2">
+        <CardTitle className="text-xl md:text-2xl leading-snug text-[#1B2A4A] dark:text-white mt-2">
           {poll.question}
         </CardTitle>
-        <CardDescription className="flex items-center gap-2 mt-2">
+        <CardDescription className="flex items-center gap-2 mt-2 dark:text-gray-400">
           <span>{poll.total_votes} {poll.total_votes === 1 ? 'vote' : 'votes'}</span>
           {hasVoted && (
-            <span className="flex items-center text-green-600 font-medium">
+            <span className="flex items-center text-green-600 dark:text-green-400 font-medium">
               • <CheckCircle2 className="w-3.5 h-3.5 ml-1.5 mr-1" /> You voted
             </span>
           )}
@@ -97,8 +97,8 @@ export function PollCard({ poll, isDetailedView = false }: PollCardProps) {
             <RadioGroup value={selectedOption} onValueChange={setSelectedOption} className="gap-3">
               {poll.options.sort((a, b) => a.sort_order - b.sort_order).map((option) => (
                 <div key={option.id} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option.id} id={option.id} className="text-upsa-navy" />
-                  <Label htmlFor={option.id} className="text-base font-normal cursor-pointer w-full p-1 leading-normal">
+                  <RadioGroupItem value={option.id} id={option.id} className="text-upsa-navy dark:text-upsa-gold dark:border-white/20" />
+                  <Label htmlFor={option.id} className="text-base font-normal cursor-pointer w-full p-1 leading-normal text-gray-900 dark:text-gray-200">
                     {option.label}
                   </Label>
                 </div>
@@ -114,17 +114,17 @@ export function PollCard({ poll, isDetailedView = false }: PollCardProps) {
               return (
                 <div key={option.id} className="space-y-1.5 relative">
                   <div className="flex justify-between text-sm font-medium">
-                    <span className={`flex items-center ${isUserChoice ? 'text-upsa-navy font-bold' : 'text-gray-700'}`}>
+                    <span className={`flex items-center ${isUserChoice ? 'text-upsa-navy dark:text-upsa-gold font-bold' : 'text-gray-700 dark:text-gray-300'}`}>
                       {option.label}
                       {isUserChoice && <CheckCircle2 className="w-4 h-4 ml-1.5 text-green-500 inline" />}
                     </span>
-                    <span className="text-gray-600">{percentage}%</span>
+                    <span className="text-gray-600 dark:text-gray-400">{percentage}%</span>
                   </div>
                   <Progress 
                     value={percentage} 
-                    className={`h-2.5 ${isUserChoice ? 'bg-upsa-navy/10 [&>div]:bg-upsa-navy' : 'bg-gray-100 [&>div]:bg-gray-400'}`} 
+                    className={`h-2.5 ${isUserChoice ? 'bg-upsa-navy/10 dark:bg-white/10 [&>div]:bg-upsa-navy dark:[&>div]:bg-upsa-gold' : 'bg-gray-100 dark:bg-white/5 [&>div]:bg-gray-400 dark:[&>div]:bg-gray-500'}`} 
                   />
-                  <span className="text-xs text-gray-500 absolute -bottom-4 right-0">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 absolute -bottom-4 right-0">
                     {option.vote_count} votes
                   </span>
                 </div>
@@ -132,7 +132,7 @@ export function PollCard({ poll, isDetailedView = false }: PollCardProps) {
             })}
           </div>
         ) : (
-          <div className="text-center p-6 bg-gray-50 rounded-lg border border-gray-100 text-gray-500 text-sm">
+          <div className="text-center p-6 bg-gray-50 dark:bg-[#060D1A] rounded-lg border border-gray-100 dark:border-white/10 text-gray-500 dark:text-gray-400 text-sm">
             Results are hidden until {poll.results_visibility === "after_vote" ? "you cast your vote" : "the poll closes"}.
           </div>
         )}
@@ -143,12 +143,12 @@ export function PollCard({ poll, isDetailedView = false }: PollCardProps) {
           <Button 
             onClick={handleVote} 
             disabled={!selectedOption || isVoting} 
-            className="w-full bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy transition-colors rounded-xl font-bold"
+            className="w-full bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-gold dark:hover:bg-white hover:text-upsa-navy transition-colors rounded-xl font-bold"
           >
             {isVoting ? "Casting vote..." : "Submit Vote"}
           </Button>
         ) : !isDetailedView ? (
-          <Button asChild variant="outline" className="w-full rounded-xl">
+          <Button asChild variant="outline" className="w-full rounded-xl dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
             <a href={`/polls/${poll.slug}`}>View Details</a>
           </Button>
         ) : null}

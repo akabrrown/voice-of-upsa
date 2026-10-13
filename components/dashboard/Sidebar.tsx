@@ -169,11 +169,11 @@ export function Sidebar({ className }: { className?: string }) {
         className={cn(
           "flex items-center px-3 py-2.5 text-sm font-semibold rounded-xl transition-all",
           isActive
-            ? "bg-upsa-navy text-white shadow-md"
-            : "text-gray-500 hover:bg-upsa-navy/5 hover:text-upsa-navy"
+            ? "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy shadow-md font-bold"
+            : "text-gray-500 dark:text-gray-400 hover:bg-upsa-navy/5 dark:hover:bg-white/5 hover:text-upsa-navy dark:hover:text-upsa-gold"
         )}
       >
-        <Icon className={cn("h-4 w-4 mr-3 shrink-0", isActive ? "text-upsa-gold" : "text-gray-400")} />
+        <Icon className={cn("h-4 w-4 mr-3 shrink-0", isActive ? "text-upsa-gold dark:text-upsa-navy" : "text-gray-400 dark:text-gray-500")} />
         <span className="truncate">{link.name}</span>
         {badgeCount > 0 && (
           <span className={cn(
@@ -188,7 +188,7 @@ export function Sidebar({ className }: { className?: string }) {
   };
 
   return (
-    <div className={cn("w-64 border-r bg-white flex flex-col", className)}>
+    <div className={cn("w-64 border-r border-gray-100 dark:border-white/10 bg-white dark:bg-[#0C1729] flex flex-col transition-colors", className)}>
       <div className="p-5 flex-1 overflow-y-auto">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3 mb-6 px-1 group">
@@ -197,13 +197,13 @@ export function Sidebar({ className }: { className?: string }) {
           </div>
           <div className="flex flex-col">
             <span className="text-[9px] font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
-            <span className="text-sm font-black tracking-tight text-upsa-navy uppercase">UPSA</span>
+            <span className="text-sm font-black tracking-tight text-upsa-navy dark:text-white uppercase">UPSA</span>
           </div>
         </Link>
 
         {/* Section label */}
         <div className="mb-4 px-1">
-          <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+          <h2 className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
             {isAdmin ? "Admin Portal" : isUser ? "My Account" : "Editor Workspace"}
           </h2>
         </div>
@@ -213,7 +213,7 @@ export function Sidebar({ className }: { className?: string }) {
           <div className="space-y-5">
             {adminGroups.map((group) => (
               <div key={group.label}>
-                <p className="px-3 mb-1.5 text-[10px] font-black uppercase tracking-widest text-gray-300">
+                <p className="px-3 mb-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">
                   {group.label}
                 </p>
                 <div className="space-y-0.5">
@@ -230,10 +230,10 @@ export function Sidebar({ className }: { className?: string }) {
       </div>
 
       {/* Logout */}
-      <div className="p-4 border-t">
+      <div className="p-4 border-t border-gray-100 dark:border-white/10">
         <button
           onClick={handleLogout}
-          className="flex items-center w-full px-3 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+          className="flex items-center w-full px-3 py-2.5 text-sm font-bold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-colors cursor-pointer"
         >
           <LogOut className="h-4 w-4 mr-3" />
           Logout

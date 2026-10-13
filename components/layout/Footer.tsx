@@ -7,7 +7,7 @@ import { ShareButtons } from "@/components/shared/ShareButtons";
 
 export function Footer() {
   return (
-    <footer className="bg-upsa-navy text-white pt-16 pb-8 relative overflow-hidden">
+    <footer className="bg-upsa-navy dark:bg-[#030712] dark:border-t dark:border-white/10 text-white pt-16 pb-8 relative overflow-hidden transition-colors">
       {/* Decorative ambient background elements */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-upsa-gold/30 to-transparent" />
       <div className="absolute -top-[500px] -right-[300px] w-[800px] h-[800px] rounded-full bg-upsa-gold/5 blur-[120px] pointer-events-none" />

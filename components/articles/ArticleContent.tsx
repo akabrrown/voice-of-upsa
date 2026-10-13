@@ -25,7 +25,7 @@ export function ArticleContent({ content }: ArticleContentProps) {
 
   return (
     <div
-      className="prose prose-lg max-w-none whitespace-pre-wrap prose-headings:text-upsa-navy prose-headings:font-black prose-p:text-gray-600 prose-p:leading-relaxed prose-a:text-upsa-gold prose-strong:text-upsa-navy prose-blockquote:border-upsa-gold prose-blockquote:bg-gray-50 prose-blockquote:rounded-r-xl"
+      className="prose prose-lg dark:prose-invert max-w-none whitespace-pre-wrap prose-headings:text-upsa-navy dark:prose-headings:text-white prose-headings:font-black prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-p:leading-relaxed prose-a:text-upsa-gold dark:prose-a:text-upsa-gold prose-strong:text-upsa-navy dark:prose-strong:text-white prose-blockquote:border-upsa-gold prose-blockquote:bg-gray-50 dark:prose-blockquote:bg-[#0C1729] dark:prose-blockquote:text-gray-300 prose-blockquote:rounded-r-xl"
       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
     />
   );
