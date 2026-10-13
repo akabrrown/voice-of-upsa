@@ -24,11 +24,12 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Bot, Loader2, Trash2, ArrowLeft, RotateCcw, Undo2, PenTool, UserCheck } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { Save, Send, Image as ImageIcon, Settings, PlusCircle, Bot, Loader2, Trash2, ArrowLeft, RotateCcw, Undo2, PenTool, UserCheck, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { FormShadowLoader } from "@/components/ui/shadow-loaders";
 import { ShareArticleModal } from "@/components/editor/ShareArticleModal";
+import { generateArticleSEO } from "@/lib/utils";
 
 interface EditArticleProps {
   params: Promise<{ id: string }>;
@@ -72,6 +73,9 @@ export default function EditArticlePage({ params }: EditArticleProps) {
   const [publisherName, setPublisherName] = useState<string>("");
   const [userRole, setUserRole] = useState<string>("editor");
   const [originalArticle, setOriginalArticle] = useState<ArticleData | null>(null);
+  const [isCustomMetaTitle, setIsCustomMetaTitle] = useState(false);
+  const [isCustomMetaDesc, setIsCustomMetaDesc] = useState(false);
+  const [isCustomMetaKeywords, setIsCustomMetaKeywords] = useState(false);
   const supabase = createClient();
 
   const form = useForm<ArticleFormValues>({
@@ -193,7 +197,15 @@ export default function EditArticlePage({ params }: EditArticleProps) {
             } catch (e) {
               console.error("Error loading draft edits:", e);
             }
-          } else {
+            const autoSEO = generateArticleSEO(articleData.title || "", articleData.excerpt || "", articleData.content || "");
+            const initialMetaTitle = articleData.meta_title || autoSEO.meta_title || "";
+            const initialMetaDesc = articleData.meta_description || autoSEO.meta_description || "";
+            const initialMetaKeywords = articleData.meta_keywords || autoSEO.meta_keywords || "";
+
+            if (articleData.meta_title) setIsCustomMetaTitle(true);
+            if (articleData.meta_description) setIsCustomMetaDesc(true);
+            if (articleData.meta_keywords) setIsCustomMetaKeywords(true);
+
             form.reset({
               title: articleData.title || "",
               slug: articleData.slug || "",
@@ -208,9 +220,9 @@ export default function EditArticlePage({ params }: EditArticleProps) {
               allow_comments: articleData.allow_comments !== false,
               cover_image_url: articleData.cover_image_url || "",
               cover_image_alt: articleData.cover_image_alt || "",
-              meta_title: articleData.meta_title || "",
-              meta_description: articleData.meta_description || "",
-              meta_keywords: articleData.meta_keywords || "",
+              meta_title: initialMetaTitle,
+              meta_description: initialMetaDesc,
+              meta_keywords: initialMetaKeywords,
             });
           }
         }
@@ -298,6 +310,12 @@ export default function EditArticlePage({ params }: EditArticleProps) {
       const resolvedAuthorName = isGuestAuthor ? (data.author_name?.trim() || null) : null;
       const resolvedAuthorTitle = isGuestAuthor ? (data.author_title?.trim() || null) : null;
 
+      // Automated SEO Guarantee: ensure meta fields are never empty when saving or publishing
+      const autoSEO = generateArticleSEO(data.title, data.excerpt, data.content);
+      const resolvedMetaTitle = data.meta_title?.trim() || autoSEO.meta_title || null;
+      const resolvedMetaDescription = data.meta_description?.trim() || autoSEO.meta_description || null;
+      const resolvedMetaKeywords = data.meta_keywords?.trim() || autoSEO.meta_keywords || null;
+
       const updatePayload: Record<string, unknown> = {
         title: data.title,
         slug: data.slug,
@@ -308,9 +326,9 @@ export default function EditArticlePage({ params }: EditArticleProps) {
         author_name: resolvedAuthorName,
         author_title: resolvedAuthorTitle,
         status,
-        meta_title: data.meta_title || null,
-        meta_description: data.meta_description || null,
-        meta_keywords: data.meta_keywords || null,
+        meta_title: resolvedMetaTitle,
+        meta_description: resolvedMetaDescription,
+        meta_keywords: resolvedMetaKeywords,
         cover_image_url: data.cover_image_url || null,
         cover_image_alt: data.cover_image_alt || null,
         is_featured: data.is_featured || false,
@@ -431,7 +449,37 @@ export default function EditArticlePage({ params }: EditArticleProps) {
     form.setValue("title", title, { shouldValidate: true });
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     form.setValue("slug", slug, { shouldValidate: true });
+
+    // Real-time automatic SEO generation
+    if (title.trim()) {
+      const seo = generateArticleSEO(title, form.getValues("excerpt"), form.getValues("content"));
+      if (!isCustomMetaTitle) {
+        form.setValue("meta_title", seo.meta_title, { shouldValidate: false });
+      }
+      if (!isCustomMetaDesc && seo.meta_description) {
+        form.setValue("meta_description", seo.meta_description, { shouldValidate: false });
+      }
+      if (!isCustomMetaKeywords && seo.meta_keywords) {
+        form.setValue("meta_keywords", seo.meta_keywords, { shouldValidate: false });
+      }
+    }
   };
+
+  // Watch excerpt and content to auto-update SEO description and keywords if not customized
+  const watchedExcerpt = form.watch("excerpt");
+  const watchedContent = form.watch("content");
+  useEffect(() => {
+    const title = form.getValues("title");
+    if (!title || !title.trim()) return;
+
+    const seo = generateArticleSEO(title, watchedExcerpt, watchedContent);
+    if (!isCustomMetaDesc && seo.meta_description) {
+      form.setValue("meta_description", seo.meta_description, { shouldValidate: false });
+    }
+    if (!isCustomMetaKeywords && seo.meta_keywords) {
+      form.setValue("meta_keywords", seo.meta_keywords, { shouldValidate: false });
+    }
+  }, [watchedExcerpt, watchedContent, isCustomMetaDesc, isCustomMetaKeywords]);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingSEO, setIsGeneratingSEO] = useState(false);
@@ -449,61 +497,22 @@ export default function EditArticlePage({ params }: EditArticleProps) {
     setIsGeneratingSEO(true);
 
     setTimeout(() => {
-      let metaTitle = `${title.trim()} | Voice of UPSA`;
-      if (metaTitle.length > 60) {
-        metaTitle = title.trim().slice(0, 57) + "...";
+      const seo = generateArticleSEO(title, excerpt, rawContent);
+      form.setValue("meta_title", seo.meta_title, { shouldValidate: true });
+      if (seo.meta_description) {
+        form.setValue("meta_description", seo.meta_description, { shouldValidate: true });
       }
-      form.setValue("meta_title", metaTitle, { shouldValidate: true });
-
-      let metaDesc = "";
-      if (excerpt && excerpt.trim() !== "") {
-        metaDesc = excerpt.trim();
-      } else if (rawContent && rawContent.trim() !== "" && rawContent !== "<p></p>") {
-        const tmp = document.createElement("div");
-        tmp.innerHTML = rawContent;
-        metaDesc = (tmp.textContent || tmp.innerText || "").trim();
-      }
-      
-      if (metaDesc.length > 155) {
-        metaDesc = metaDesc.slice(0, 152).trim() + "...";
-      }
-      if (metaDesc) {
-        form.setValue("meta_description", metaDesc, { shouldValidate: true });
+      if (seo.meta_keywords) {
+        form.setValue("meta_keywords", seo.meta_keywords, { shouldValidate: true });
       }
 
-      const stopWords = new Set([
-        "the", "a", "an", "and", "or", "but", "for", "with", "about", "against", "between", 
-        "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", 
-        "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once",
-        "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", 
-        "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", 
-        "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now",
-        "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", 
-        "do", "does", "did", "doing", "of", "at", "by", "i", "we", "you", "he", "she", "it", 
-        "they", "them", "us"
-      ]);
+      setIsCustomMetaTitle(false);
+      setIsCustomMetaDesc(false);
+      setIsCustomMetaKeywords(false);
 
-      const sourceText = `${title} ${excerpt || ""}`.toLowerCase();
-      const words = sourceText.match(/[a-z0-9]+/g) || [];
-      const keywordsMap: { [key: string]: number } = {};
-
-      words.forEach(word => {
-        if (word.length >= 3 && !stopWords.has(word) && isNaN(Number(word))) {
-          keywordsMap[word] = (keywordsMap[word] || 0) + 1;
-        }
-      });
-
-      const sortedKeywords = Object.keys(keywordsMap)
-        .sort((a, b) => keywordsMap[b] - keywordsMap[a])
-        .slice(0, 8);
-
-      if (sortedKeywords.length > 0) {
-        form.setValue("meta_keywords", sortedKeywords.join(", "), { shouldValidate: true });
-      }
-
-      toast.success("SEO Metadata auto-generated!");
+      toast.success("SEO Metadata auto-generated and refreshed!");
       setIsGeneratingSEO(false);
-    }, 600);
+    }, 300);
   };
 
   const generateExcerpt = () => {
@@ -904,9 +913,14 @@ export default function EditArticlePage({ params }: EditArticleProps) {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm uppercase tracking-widest text-gray-400 flex items-center">
-                <Settings className="mr-2 h-4 w-4" /> SEO Optimization
-              </CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-sm uppercase tracking-widest text-gray-500 flex items-center font-bold">
+                  <Settings className="mr-2 h-4 w-4 text-upsa-navy" /> SEO Optimization
+                </CardTitle>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <Sparkles className="h-2.5 w-2.5 text-emerald-600" /> Auto-Generated
+                </span>
+              </div>
               <Button
                 type="button"
                 variant="outline"
@@ -916,21 +930,47 @@ export default function EditArticlePage({ params }: EditArticleProps) {
                 disabled={isGeneratingSEO}
               >
                 <Bot className={`h-3 w-3 ${isGeneratingSEO ? "animate-pulse" : ""}`} />
-                {isGeneratingSEO ? "Generating..." : "Generate SEO"}
+                {isGeneratingSEO ? "Regenerating..." : "Regenerate SEO"}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
+              <p className="text-[11px] text-gray-500 italic">SEO tags are auto-generated from your article title and content. You can fine-tune or override them anytime.</p>
               <div className="space-y-1">
                 <Label htmlFor="meta_title" className="text-xs">Meta Title</Label>
-                <Input id="meta_title" {...form.register("meta_title")} className="h-8 text-xs" />
+                <Input 
+                  id="meta_title" 
+                  {...form.register("meta_title")} 
+                  onChange={(e) => {
+                    form.setValue("meta_title", e.target.value, { shouldValidate: true });
+                    setIsCustomMetaTitle(e.target.value.trim().length > 0);
+                  }}
+                  className="h-8 text-xs" 
+                />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="meta_description" className="text-xs">Meta Description</Label>
-                <Textarea id="meta_description" {...form.register("meta_description")} className="h-20 text-xs resize-none" />
+                <Textarea 
+                  id="meta_description" 
+                  {...form.register("meta_description")} 
+                  onChange={(e) => {
+                    form.setValue("meta_description", e.target.value, { shouldValidate: true });
+                    setIsCustomMetaDesc(e.target.value.trim().length > 0);
+                  }}
+                  className="h-20 text-xs resize-none" 
+                />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="meta_keywords" className="text-xs">Meta Keywords (comma-separated)</Label>
-                <Input id="meta_keywords" placeholder="e.g. upsa, awards, students" {...form.register("meta_keywords")} className="h-8 text-xs" />
+                <Input 
+                  id="meta_keywords" 
+                  placeholder="e.g. upsa, awards, students" 
+                  {...form.register("meta_keywords")} 
+                  onChange={(e) => {
+                    form.setValue("meta_keywords", e.target.value, { shouldValidate: true });
+                    setIsCustomMetaKeywords(e.target.value.trim().length > 0);
+                  }}
+                  className="h-8 text-xs" 
+                />
               </div>
             </CardContent>
           </Card>
