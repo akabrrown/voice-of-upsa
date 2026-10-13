@@ -13,8 +13,6 @@ import { cn } from "@/lib/utils";
 import { getSiteUrl } from "@/lib/auth/urls";
 import { getOptimizedOgImage } from "@/lib/utils/og-image";
 
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
-
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const siteUrl = getSiteUrl();
@@ -81,18 +79,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("antialiased", "font-sans", geist.variable)} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col bg-background text-foreground font-arial" suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ToastProvider />
-          <PushNotificationProvider />
-          <HolidayAmbientBar />
-          <HolidayGreetingModal />
-          {children}
-        </ThemeProvider>
+
+        <ToastProvider />
+        <PushNotificationProvider />
+        <HolidayAmbientBar />
+        <HolidayGreetingModal />
+        {children}
       </body>
     </html>
   );

@@ -47,9 +47,9 @@ export function TableShadowLoader({
         </div>
       )}
 
-      <div className="rounded-xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#0C1729] overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm">
         {/* Table Header Skeleton */}
-        <div className="bg-gray-50/80 dark:bg-[#060D1A] px-6 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between gap-4">
+        <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-24 hidden sm:block" />
           <Skeleton className="h-4 w-20 hidden md:block" />
@@ -58,7 +58,7 @@ export function TableShadowLoader({
         </div>
 
         {/* Table Rows Skeleton */}
-        <div className="divide-y divide-gray-100 dark:divide-white/5">
+        <div className="divide-y divide-gray-100">
           {Array.from({ length: rows }).map((_, r) => (
             <div key={r} className="px-6 py-4 flex items-center justify-between gap-4">
               <div className="flex items-center space-x-3 flex-1">
@@ -116,7 +116,7 @@ export function ArticleGridShadowLoader({ count = 6 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#0C1729] overflow-hidden shadow-sm space-y-4 pb-4">
+        <div key={i} className="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm space-y-4 pb-4">
           <Skeleton className="aspect-video w-full" />
           <div className="px-5 space-y-3">
             <Skeleton className="h-4 w-20 rounded-full" />
@@ -124,7 +124,7 @@ export function ArticleGridShadowLoader({ count = 6 }: { count?: number }) {
             <Skeleton className="h-5 w-4/5" />
             <Skeleton className="h-3.5 w-full" />
             <Skeleton className="h-3.5 w-2/3" />
-            <div className="pt-2 flex items-center justify-between border-t border-gray-50 dark:border-white/5">
+            <div className="pt-2 flex items-center justify-between border-t border-gray-50">
               <div className="flex items-center space-x-2">
                 <Skeleton className="h-7 w-7 rounded-full" />
                 <Skeleton className="h-3.5 w-24" />
@@ -145,7 +145,7 @@ export function FormShadowLoader() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-6">
       {/* Header bar skeleton */}
-      <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-4">
+      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
         <div className="space-y-2">
           <Skeleton className="h-7 w-48" />
           <Skeleton className="h-4 w-32" />
@@ -196,7 +196,7 @@ export function FormShadowLoader() {
 export function ProfileShadowLoader() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-10">
-      <div className="bg-white dark:bg-[#0C1729] rounded-2xl border border-gray-100 dark:border-white/10 p-8 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
         <Skeleton className="h-24 w-24 rounded-full shrink-0" />
         <div className="space-y-3 flex-1 text-center sm:text-left">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -210,7 +210,7 @@ export function ProfileShadowLoader() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex gap-4 border-b border-gray-100 dark:border-white/10 pb-2">
+        <div className="flex gap-4 border-b border-gray-100 pb-2">
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-8 w-32" />
         </div>

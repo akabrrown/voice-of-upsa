@@ -159,11 +159,11 @@ export function MobileDashboardNav({ className }: { className?: string }) {
         className={cn(
           "flex items-center px-3 py-2 text-xs font-bold rounded-xl whitespace-nowrap transition-all flex-shrink-0",
           isActive
-            ? "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy shadow-md font-bold"
-            : "text-gray-500 dark:text-gray-400 hover:bg-upsa-navy/5 dark:hover:bg-white/5 hover:text-upsa-navy dark:hover:text-upsa-gold"
+            ? "bg-upsa-navy text-white shadow-md"
+            : "text-gray-500 hover:bg-upsa-navy/5 hover:text-upsa-navy"
         )}
       >
-        <Icon className={cn("h-3.5 w-3.5 mr-1.5", isActive ? "text-upsa-gold dark:text-upsa-navy" : "text-gray-400 dark:text-gray-500")} />
+        <Icon className={cn("h-3.5 w-3.5 mr-1.5", isActive ? "text-upsa-gold" : "text-gray-400")} />
         <span>{link.name}</span>
         {badgeCount > 0 && (
           <span className={cn(
@@ -178,13 +178,13 @@ export function MobileDashboardNav({ className }: { className?: string }) {
   };
 
   return (
-    <div className={cn("bg-white dark:bg-[#0C1729] border-b border-gray-100 dark:border-white/10 shadow-sm transition-colors", className)}>
+    <div className={cn("bg-white border-b border-gray-100 shadow-sm", className)}>
       {isAdmin ? (
         <div className="overflow-x-auto scrollbar-none">
           <div className="flex items-start gap-4 px-4 py-2 w-max">
             {adminGroups.map((group) => (
               <div key={group.label} className="flex flex-col gap-1">
-                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 px-1">
+                <span className="text-[9px] font-black uppercase tracking-widest text-gray-300 px-1">
                   {group.label}
                 </span>
                 <div className="flex items-center gap-1">

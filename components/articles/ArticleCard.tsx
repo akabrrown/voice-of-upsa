@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Share2, Check, Copy, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,7 +96,7 @@ export function ArticleCard({ title, excerpt, category, date, image, slug, autho
   };
 
   return (
-    <article className="group flex flex-col bg-white dark:bg-[#0C1729] rounded-xl overflow-hidden border border-gray-100 dark:border-white/10 hover:shadow-xl hover:border-upsa-gold/40 dark:hover:border-upsa-gold/40 transition-all duration-300">
+    <article className="group flex flex-col bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300">
       <Link href={`/articles/${slug}`} className="relative h-48 overflow-hidden">
         <Image
           src={image}
@@ -105,33 +105,33 @@ export function ArticleCard({ title, excerpt, category, date, image, slug, autho
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute top-4 left-4">
-          <Badge className="bg-upsa-navy dark:bg-upsa-gold text-white dark:text-[#060D1A] hover:bg-upsa-gold hover:text-upsa-navy font-bold">
+          <Badge className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold">
             {category}
           </Badge>
         </div>
       </Link>
       
       <div className="p-5 flex-1 flex flex-col">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-400 mb-3 font-bold">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] uppercase tracking-widest text-gray-400 mb-3 font-bold">
           <span className="flex items-center"><Calendar className="h-3 w-3 mr-1" /> {date}</span>
 
           {author && <span className="flex items-center normal-case">By {author}</span>}
         </div>
         
         <Link href={`/articles/${slug}`}>
-          <h3 className="text-xl font-bold text-upsa-navy dark:text-gray-100 mb-2 line-clamp-2 hover:text-upsa-gold dark:hover:text-upsa-gold transition-colors">
+          <h3 className="text-xl font-bold text-upsa-navy mb-2 line-clamp-2 hover:text-upsa-gold transition-colors">
             {title}
           </h3>
         </Link>
         
-        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 mb-6 flex-1">
+        <p className="text-sm text-gray-500 line-clamp-3 mb-6 flex-1">
           {excerpt}
         </p>
         
-        <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-white/10">
+        <div className="flex items-center justify-between pt-4 border-t border-gray-50">
           <Link 
             href={`/articles/${slug}`} 
-            className="text-sm font-bold text-upsa-navy dark:text-upsa-gold hover:text-upsa-gold dark:hover:text-amber-300 flex items-center transition-colors"
+            className="text-sm font-bold text-upsa-navy hover:text-upsa-gold flex items-center transition-colors"
             aria-label={`Read more about ${title}`}
           >
             Read More
@@ -144,7 +144,7 @@ export function ArticleCard({ title, excerpt, category, date, image, slug, autho
                 onClick={(e) => e.stopPropagation()}
                 aria-label={`Share ${title}`}
                 title="Share article"
-                className="text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold hover:bg-gray-50 dark:hover:bg-white/10 p-1.5 rounded-full transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-upsa-gold/40"
+                className="text-gray-400 hover:text-upsa-navy hover:bg-gray-50 p-1.5 rounded-full transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-upsa-gold/40"
               >
                 {copied ? (
                   <Check className="h-4 w-4 text-emerald-600" />
@@ -153,17 +153,17 @@ export function ArticleCard({ title, excerpt, category, date, image, slug, autho
                 )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 p-1.5 bg-white dark:bg-[#081224] shadow-xl border border-gray-100 dark:border-white/10 rounded-xl z-50">
+            <DropdownMenuContent align="end" className="w-52 p-1.5 bg-white shadow-xl border border-gray-100 rounded-xl z-50">
               <DropdownMenuLabel className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-2 py-1">
                 Share Article
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-white/10" />
+              <DropdownMenuSeparator className="my-1 bg-gray-100" />
               
               <DropdownMenuItem
                 onClick={handleCopyLink}
-                className="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200"
+                className="flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg cursor-pointer hover:bg-gray-50 text-gray-700"
               >
-                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-gray-500" />}
                 <span>{copied ? "Link Copied!" : "Copy Link"}</span>
               </DropdownMenuItem>
 

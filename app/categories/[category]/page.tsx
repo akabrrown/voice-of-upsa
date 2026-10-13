@@ -228,12 +228,12 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   return (
     <>
       <Navbar />
-      <main className="flex-1 bg-white dark:bg-[#060D1A] transition-colors">
+      <main className="flex-1 bg-white">
         {/* Category Header */}
-        <section className="relative bg-upsa-navy dark:bg-[#0C1729] text-white py-12 overflow-hidden border-b border-upsa-navy/10 dark:border-white/10">
+        <section className="relative bg-upsa-navy text-white py-12 overflow-hidden">
           {/* Cover background layout */}
           <div className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-overlay" style={{ backgroundImage: `url(${category.image})` }} />
-          <div className="absolute inset-0 bg-gradient-to-r from-upsa-navy dark:from-[#0C1729] via-upsa-navy/90 dark:via-[#0C1729]/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-upsa-navy via-upsa-navy/90 to-transparent" />
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-upsa-gold via-yellow-400 to-upsa-gold" />
           
           <div className="container relative mx-auto px-4 max-w-5xl">
@@ -270,7 +270,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
                 </>
               ) : (
                 <div className="py-24 text-center max-w-md mx-auto space-y-4">
-                  <p className="text-gray-400 dark:text-gray-500 italic text-lg">No articles found in this category.</p>
+                  <p className="text-gray-400 italic text-lg">No articles found in this category.</p>
                 </div>
               )}
             </div>

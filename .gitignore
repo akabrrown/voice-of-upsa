@@ -37,8 +37,7 @@ yarn-error.log*
 .env*
 
 # vercel
-# reports
-*seobolt*.md
+.vercel
 
 # typescript
 *.tsbuildinfo

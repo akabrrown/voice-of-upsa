@@ -64,14 +64,14 @@ export function PollShare({ slug, title }: PollShareProps) {
   };
 
   return (
-    <div className="flex items-center space-x-2 sm:space-x-3 mt-4 pt-4 border-t border-gray-100 dark:border-white/10 w-full justify-center">
-      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mr-2 uppercase tracking-wider">Share Poll:</span>
+    <div className="flex items-center space-x-2 sm:space-x-3 mt-4 pt-4 border-t border-gray-100 w-full justify-center">
+      <span className="text-xs font-medium text-gray-500 mr-2 uppercase tracking-wider">Share Poll:</span>
       
       {/* Native Web Share button (Mobile & supported browsers) */}
       {canNativeShare && (
         <button
           onClick={handleNativeShare}
-          className="p-2 hover:bg-blue-50 dark:hover:bg-white/10 rounded-full text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold transition-all duration-200 hover:scale-110 active:scale-95 flex items-center gap-1.5"
+          className="p-2 hover:bg-blue-50 rounded-full text-gray-400 hover:text-upsa-blue transition-all duration-200 hover:scale-110 active:scale-95 flex items-center gap-1.5"
           title="Share Poll"
         >
           <Share2 className="h-4 w-4" />
@@ -83,7 +83,7 @@ export function PollShare({ slug, title }: PollShareProps) {
         href={shareLinks.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-full text-gray-400 hover:text-[#25D366] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-emerald-50 rounded-full text-gray-400 hover:text-[#25D366] transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on WhatsApp"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@ export function PollShare({ slug, title }: PollShareProps) {
         href={shareLinks.twitter}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 hover:text-black dark:hover:text-white transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black dark:hover:text-white transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on X"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -109,7 +109,7 @@ export function PollShare({ slug, title }: PollShareProps) {
         href={shareLinks.telegram}
         target="_blank"
         rel="noopener noreferrer"
-        className="p-2 hover:bg-sky-50 dark:hover:bg-sky-950/30 rounded-full text-gray-400 hover:text-[#229ED9] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-sky-50 rounded-full text-gray-400 hover:text-[#229ED9] transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on Telegram"
       >
         <Send className="h-4 w-4" />
@@ -118,7 +118,7 @@ export function PollShare({ slug, title }: PollShareProps) {
       {/* Copy Link Button */}
       <button
         onClick={handleCopyLink}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-900 transition-all duration-200 hover:scale-110 active:scale-95"
         title="Copy link"
       >
         {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}

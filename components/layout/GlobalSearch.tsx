@@ -93,8 +93,8 @@ export default function GlobalSearch({ className, inputClassName }: { className?
   return (
     <div ref={searchRef} className="relative w-full">
       {/* Inline Search Input */}
-      <div className={className || "flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-white/10 hover:bg-gray-200/70 dark:hover:bg-white/15 rounded-full border border-gray-200 dark:border-white/10 transition-colors w-full focus-within:ring-2 focus-within:ring-upsa-navy/20 dark:focus-within:ring-upsa-gold/30 shadow-xs"}>
-        <Search className="h-4 w-4 shrink-0 opacity-60 text-gray-500 dark:text-gray-400" />
+      <div className={className || "flex items-center gap-3 px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200/70 rounded-full border border-gray-200 transition-colors w-full focus-within:ring-2 focus-within:ring-upsa-navy/20 shadow-xs"}>
+        <Search className="h-4 w-4 shrink-0 opacity-60 text-gray-500" />
         <input
           ref={inputRef}
           type="text"
@@ -105,7 +105,7 @@ export default function GlobalSearch({ className, inputClassName }: { className?
             if (!isOpen) setIsOpen(true);
           }}
           placeholder="Search news, documents, gallery, or campus mart..."
-          className={inputClassName || "flex-1 bg-transparent border-0 outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder-gray-500 text-sm"}
+          className={inputClassName || "flex-1 bg-transparent border-0 outline-none text-gray-900 placeholder:text-gray-400 text-sm"}
         />
         {query && (
           <button 
@@ -113,43 +113,43 @@ export default function GlobalSearch({ className, inputClassName }: { className?
               setQuery("");
               inputRef.current?.focus();
             }} 
-            className="p-1 hover:bg-gray-200/70 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 rounded-full transition-colors"
+            className="p-1 hover:bg-gray-200/70 text-gray-500 rounded-full transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
         )}
-        <kbd className="hidden md:inline-flex h-5 items-center gap-1 rounded border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-1.5 font-mono text-[10px] font-medium text-gray-500 dark:text-gray-400">
+        <kbd className="hidden md:inline-flex h-5 items-center gap-1 rounded border border-gray-200 bg-gray-50 px-1.5 font-mono text-[10px] font-medium text-gray-500">
           <span className="text-xs">⌘</span>K
         </kbd>
       </div>
 
       {/* Dropdown Results */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#0C1729] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-4 duration-200">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-4 duration-200">
           {/* Header Row when searching */}
           {isSearching && (
-            <div className="flex items-center px-4 py-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#060D1A]/60">
-              <Loader2 className="h-4 w-4 text-gray-400 dark:text-upsa-gold animate-spin mr-2 shrink-0" />
-              <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Searching across platform...</span>
+            <div className="flex items-center px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+              <Loader2 className="h-4 w-4 text-gray-400 animate-spin mr-2 shrink-0" />
+              <span className="text-sm text-gray-500 font-medium">Searching across platform...</span>
             </div>
           )}
 
-          <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
             {query.trim() === "" ? (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                <p className="font-medium text-gray-900 dark:text-white mb-2">Search Voice of UPSA</p>
+              <div className="p-8 text-center text-gray-500">
+                <p className="font-medium text-gray-900 mb-2">Search Voice of UPSA</p>
                 <p className="text-sm">Start typing to search across the entire platform.</p>
                 <div className="flex flex-wrap justify-center gap-2 mt-6">
-                  <span className="px-3 py-1 bg-gray-100 dark:bg-white/10 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300">News</span>
-                  <span className="px-3 py-1 bg-gray-100 dark:bg-white/10 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300">Documents</span>
-                  <span className="px-3 py-1 bg-gray-100 dark:bg-white/10 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300">Gallery</span>
-                  <span className="px-3 py-1 bg-gray-100 dark:bg-white/10 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300">Mart</span>
+                  <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-600">News</span>
+                  <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-600">Documents</span>
+                  <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-600">Gallery</span>
+                  <span className="px-3 py-1 bg-gray-100 rounded-full text-xs font-medium text-gray-600">Mart</span>
                 </div>
               </div>
             ) : results.length === 0 && !isSearching ? (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                <Search className="h-8 w-8 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <p className="font-medium text-gray-900 dark:text-white">No results found.</p>
+              <div className="p-8 text-center text-gray-500">
+                <Search className="h-8 w-8 text-gray-300 mx-auto mb-3" />
+                <p className="font-medium text-gray-900">No results found.</p>
                 <p className="text-sm">We couldn't find anything matching "{query}".</p>
               </div>
             ) : (
@@ -158,20 +158,20 @@ export default function GlobalSearch({ className, inputClassName }: { className?
                   <button
                     key={`${result.type}-${result.id}`}
                     onClick={() => handleSelect(result.url)}
-                    className="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-100/80 dark:hover:bg-white/5 transition-colors text-left group"
+                    className="flex items-start gap-4 p-3 rounded-xl hover:bg-gray-100/80 transition-colors text-left group"
                   >
-                    <div className="p-2 bg-white dark:bg-[#060D1A] rounded-lg shadow-sm group-hover:shadow border border-gray-100 dark:border-white/10 transition-all shrink-0">
+                    <div className="p-2 bg-white rounded-lg shadow-sm group-hover:shadow border border-gray-100 transition-all shrink-0">
                       {getIcon(result.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                      <h4 className="text-sm font-bold text-gray-900 truncate">
                         {result.title}
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
+                      <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
                         {result.description}
                       </p>
                     </div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-400 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded shrink-0">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-100 px-2 py-1 rounded shrink-0">
                       {result.type}
                     </div>
                   </button>
@@ -179,7 +179,7 @@ export default function GlobalSearch({ className, inputClassName }: { className?
               </div>
             )}
           </div>
-          <div className="bg-gray-50/80 dark:bg-[#060D1A] border-t border-gray-100 dark:border-white/10 p-3 text-xs text-gray-500 dark:text-gray-400 flex justify-between items-center">
+          <div className="bg-gray-50/80 border-t border-gray-100 p-3 text-xs text-gray-500 flex justify-between items-center">
             <span>Results from 4 campus sources</span>
           </div>
         </div>

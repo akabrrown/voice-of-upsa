@@ -90,7 +90,7 @@ export function SubmitReviewModal() {
         onClick={handleOpenClick}
         variant="outline"
         disabled={isCheckingAuth}
-        className="rounded-full shadow-sm hover:shadow-md border-upsa-gold/30 bg-white dark:bg-[#0C1729] dark:border-white/10 hover:bg-upsa-gold/5 dark:hover:bg-white/10 text-upsa-navy dark:text-white transition-all"
+        className="rounded-full shadow-sm hover:shadow-md border-upsa-gold/30 bg-white hover:bg-upsa-gold/5 text-upsa-navy transition-all"
       >
         {isCheckingAuth ? (
           <Loader2 className="w-4 h-4 mr-2 animate-spin text-upsa-gold" />
@@ -102,24 +102,24 @@ export function SubmitReviewModal() {
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0C1729] border dark:border-white/10 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#060D1A]/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50">
               <div className="flex items-center gap-3">
                 {step === 2 && (
                   <button 
                     onClick={() => setStep(1)}
-                    className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10 rounded-full transition-colors"
+                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                 )}
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-bold text-gray-900">
                   {step === 1 ? "Rate your experience" : "Share more details"}
                 </h2>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -128,7 +128,7 @@ export function SubmitReviewModal() {
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {step === 1 ? (
                 <div className="flex flex-col items-center justify-center space-y-6 py-8">
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tap a star to rate</span>
+                  <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Tap a star to rate</span>
                   <div 
                     className="flex gap-3"
                     onMouseLeave={() => setHoverRating(0)}
@@ -145,7 +145,7 @@ export function SubmitReviewModal() {
                           className={`w-12 h-12 transition-colors ${
                             star <= (hoverRating || rating) 
                               ? "fill-upsa-gold text-upsa-gold" 
-                              : "fill-gray-100 dark:fill-white/5 text-gray-200 dark:text-white/10"
+                              : "fill-gray-100 text-gray-200"
                           }`}
                         />
                       </button>
@@ -162,7 +162,7 @@ export function SubmitReviewModal() {
                           className={`w-5 h-5 ${
                             star <= rating 
                               ? "fill-upsa-gold text-upsa-gold" 
-                              : "fill-gray-100 dark:fill-white/5 text-gray-200 dark:text-white/10"
+                              : "fill-gray-100 text-gray-200"
                           }`}
                         />
                       ))}
@@ -170,15 +170,15 @@ export function SubmitReviewModal() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Your Review</label>
+                    <label className="text-sm font-medium text-gray-700">Your Review</label>
                     <Textarea 
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                       placeholder="What do you think about Voice of UPSA? How has it helped you?"
-                      className="min-h-[140px] resize-none focus:ring-upsa-gold/20 dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder-gray-500"
+                      className="min-h-[140px] resize-none focus:ring-upsa-gold/20"
                       autoFocus
                     />
-                    <p className="text-xs text-gray-400 dark:text-gray-500 text-right">
+                    <p className="text-xs text-gray-400 text-right">
                       {content.length} characters (min 10)
                     </p>
                   </div>
@@ -186,7 +186,7 @@ export function SubmitReviewModal() {
                   <div className="flex gap-3 pt-2">
                     <Button 
                       type="submit" 
-                      className="w-full bg-upsa-navy dark:bg-upsa-gold hover:bg-upsa-navy/90 dark:hover:bg-white text-white dark:text-upsa-navy font-bold py-6 transition-all"
+                      className="w-full bg-upsa-navy hover:bg-upsa-navy/90 text-white py-6"
                       disabled={isSubmitting || content.length < 10}
                     >
                       {isSubmitting ? (

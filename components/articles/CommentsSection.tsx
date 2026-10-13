@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import Image from "next/image";
 import Link from "next/link";
 import { MessageSquare, Trash2, Reply, CornerDownRight, LogIn } from "lucide-react";
@@ -147,8 +147,8 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
   if (isLoading) {
     return (
       <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-upsa-navy dark:border-upsa-gold border-t-transparent" />
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-2 font-medium">Loading discussion...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-upsa-navy border-t-transparent" />
+        <p className="text-sm text-gray-400 mt-2 font-medium">Loading discussion...</p>
       </div>
     );
   }
@@ -177,10 +177,10 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
   };
 
   return (
-    <div className="mt-16 bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 rounded-[2rem] shadow-xl p-6 sm:p-10 transition-colors">
-      <div className="flex items-center space-x-3 mb-8 border-b border-gray-100 dark:border-white/10 pb-6">
-        <MessageSquare className="h-7 w-7 text-upsa-navy dark:text-upsa-gold" />
-        <h3 className="text-2xl font-black text-upsa-navy dark:text-white uppercase tracking-tight">
+    <div className="mt-16 bg-white border border-gray-100 rounded-[2rem] shadow-xl p-6 sm:p-10">
+      <div className="flex items-center space-x-3 mb-8 border-b pb-6">
+        <MessageSquare className="h-7 w-7 text-upsa-navy" />
+        <h3 className="text-2xl font-black text-upsa-navy uppercase tracking-tight">
           Discussion ({comments.length})
         </h3>
       </div>
@@ -192,20 +192,20 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
             src={currentUser.user_metadata?.avatar_url}
             name={currentUser.user_metadata?.full_name || "You"}
             size="md"
-            className="border border-gray-200 dark:border-white/10"
+            className="border border-gray-200"
           />
           <div className="flex-1 space-y-3">
             <Textarea
               placeholder="What are your thoughts on this story? Share nicely..."
               value={newCommentText}
               onChange={(e) => setNewCommentText(e.target.value)}
-              className="w-full min-h-[100px] rounded-2xl border-gray-200 dark:border-white/10 dark:bg-[#060D1A] dark:text-white dark:placeholder-gray-500 focus:border-upsa-navy dark:focus:border-upsa-gold focus:ring-1 focus:ring-upsa-navy/20 dark:focus:ring-upsa-gold/20 p-4 text-sm"
+              className="w-full min-h-[100px] rounded-2xl border-gray-200 focus:border-upsa-navy focus:ring-1 focus:ring-upsa-navy/20 p-4 text-sm"
             />
             <div className="flex justify-end">
               <Button
                 onClick={() => handlePostComment(null)}
                 disabled={isPosting || !newCommentText.trim()}
-                className="bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-gold dark:hover:bg-upsa-gold/90 hover:text-upsa-navy font-bold rounded-xl px-6 py-2 transition-all duration-300 disabled:opacity-50"
+                className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold rounded-xl px-6 py-2 transition-all duration-300"
               >
                 {isPosting ? "Posting..." : "Post Comment"}
               </Button>
@@ -213,9 +213,9 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
           </div>
         </div>
       ) : (
-        <div className="mb-10 p-6 bg-gray-50 dark:bg-[#060D1A]/50 border border-dashed border-gray-200 dark:border-white/10 rounded-3xl text-center space-y-4">
-          <p className="text-sm font-bold text-gray-500 dark:text-gray-400">You must be logged in to join the discussion.</p>
-          <Button asChild className="bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-gold dark:hover:bg-white hover:text-upsa-navy font-bold rounded-2xl px-6 py-5">
+        <div className="mb-10 p-6 bg-gray-50 border border-dashed rounded-3xl text-center space-y-4">
+          <p className="text-sm font-bold text-gray-500">You must be logged in to join the discussion.</p>
+          <Button asChild className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold rounded-2xl px-6 py-5">
             <Link href="/auth/login">
               <LogIn className="h-4 w-4 mr-2" /> Login / Create Account
             </Link>
@@ -226,7 +226,7 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
       {/* Comments List */}
       <div className="space-y-6">
         {rootComments.length === 0 ? (
-          <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm font-medium">
+          <div className="text-center py-8 text-gray-400 text-sm font-medium">
             No comments yet. Be the first to start the conversation!
           </div>
         ) : (
@@ -236,24 +236,24 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
             const isAdmin = userRole === "admin" || userRole === "editor";
 
             return (
-              <div key={comment.id} className="border-b border-gray-50 dark:border-white/5 pb-6 last:border-0 last:pb-0">
+              <div key={comment.id} className="border-b border-gray-50 pb-6 last:border-0 last:pb-0">
                 <div className="flex gap-4">
                   {/* Avatar */}
                   <UserAvatar
                     src={comment.user?.avatar_url}
                     name={comment.user?.full_name || "Editorial Reader"}
                     size="md"
-                    className="border border-gray-100 dark:border-white/10"
+                    className="border border-gray-100"
                   />
                   
                   {/* Body */}
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-sm font-bold text-upsa-navy dark:text-white">
+                        <span className="text-sm font-bold text-upsa-navy">
                           {comment.user?.full_name || "Editorial Reader"}
                         </span>
-                        <span className="text-xs text-gray-400 dark:text-gray-500 ml-2 font-medium">
+                        <span className="text-xs text-gray-400 ml-2 font-medium">
                           {formatRelativeTime(comment.created_at)}
                         </span>
                       </div>
@@ -266,7 +266,7 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
                               setReplyToId(replyToId === comment.id ? null : comment.id);
                               setReplyText("");
                             }}
-                            className="p-1.5 text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-xs font-bold flex items-center gap-1"
+                            className="p-1.5 text-gray-400 hover:text-upsa-navy rounded-lg hover:bg-gray-50 transition-colors text-xs font-bold flex items-center gap-1"
                             title="Reply to comment"
                           >
                             <Reply className="h-3.5 w-3.5" /> Reply
@@ -275,7 +275,7 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
                         {(isOwner || isAdmin) && (
                           <button
                             onClick={() => handleDeleteComment(comment.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-50 transition-colors"
                             title="Delete comment"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -284,7 +284,7 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-light">
+                    <p className="text-sm text-gray-600 leading-relaxed font-light">
                       {comment.content}
                     </p>
                   </div>
@@ -298,20 +298,20 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
                         placeholder={`Reply to ${comment.user?.full_name || "Reader"}...`}
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
-                        className="w-full min-h-[80px] rounded-xl border-gray-200 dark:border-white/10 dark:bg-[#060D1A] dark:text-white dark:placeholder-gray-500 focus:border-upsa-navy dark:focus:border-upsa-gold p-3 text-sm"
+                        className="w-full min-h-[80px] rounded-xl border-gray-200 focus:border-upsa-navy p-3 text-sm"
                       />
                       <div className="flex justify-end space-x-2">
                         <Button
                           variant="ghost"
                           onClick={() => setReplyToId(null)}
-                          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-bold text-xs"
+                          className="text-gray-400 hover:text-gray-600 font-bold text-xs"
                         >
                           Cancel
                         </Button>
                         <Button
                           onClick={() => handlePostComment(comment.id)}
                           disabled={isPosting || !replyText.trim()}
-                          className="bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-gold dark:hover:bg-upsa-gold/90 hover:text-upsa-navy font-bold rounded-lg px-4 py-1 text-xs transition-all"
+                          className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold rounded-lg px-4 py-1 text-xs transition-all"
                         >
                           {isPosting ? "Replying..." : "Post Reply"}
                         </Button>
@@ -322,44 +322,44 @@ export function CommentsSection({ articleId }: CommentsSectionProps) {
 
                 {/* Sub-Replies Nested */}
                 {commentReplies.length > 0 && (
-                  <div className="mt-4 ml-10 pl-4 border-l-2 border-gray-100 dark:border-white/10 space-y-4">
+                  <div className="mt-4 ml-10 pl-4 border-l-2 border-gray-100 space-y-4">
                     {commentReplies.map((reply) => {
                       const isReplyOwner = currentUser?.id === reply.user_id;
                       return (
                         <div key={reply.id} className="flex gap-3">
                           {/* Corner icon */}
-                          <CornerDownRight className="h-4 w-4 text-gray-300 dark:text-gray-600 mt-1 shrink-0" />
+                          <CornerDownRight className="h-4 w-4 text-gray-300 mt-1 shrink-0" />
                           
                           {/* Avatar */}
                           <UserAvatar
                             src={reply.user?.avatar_url}
                             name={reply.user?.full_name || "Editorial Reader"}
                             size="sm"
-                            className="border border-gray-50 dark:border-white/10"
+                            className="border border-gray-50"
                           />
 
                           {/* Body */}
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center justify-between">
                               <div>
-                                <span className="text-xs font-bold text-upsa-navy dark:text-white">
+                                <span className="text-xs font-bold text-upsa-navy">
                                   {reply.user?.full_name || "Editorial Reader"}
                                 </span>
-                                <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-2 font-medium">
+                                <span className="text-[10px] text-gray-400 ml-2 font-medium">
                                   {formatRelativeTime(reply.created_at)}
                                 </span>
                               </div>
                               {(isReplyOwner || isAdmin) && (
                                 <button
                                   onClick={() => handleDeleteComment(reply.id)}
-                                  className="p-1 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                                  className="p-1 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-50 transition-colors"
                                   title="Delete reply"
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </button>
                               )}
                             </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-light">
+                            <p className="text-xs text-gray-600 leading-relaxed font-light">
                               {reply.content}
                             </p>
                           </div>

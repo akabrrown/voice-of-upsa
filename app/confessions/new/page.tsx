@@ -96,17 +96,17 @@ export default function NewConfessionPage() {
   return (
     <div className="container max-w-2xl mx-auto px-4 py-12">
       <div className="mb-8 space-y-2">
-        <Link href="/confessions" className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold flex items-center mb-6 transition-colors">
+        <Link href="/confessions" className="text-sm font-medium text-gray-500 hover:text-upsa-navy flex items-center mb-6">
           <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to feed
         </Link>
-        <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Post Anonymously</h1>
-        <p className="text-gray-500 dark:text-gray-400">Share your thoughts, experiences, or opinions with the UPSA community.</p>
+        <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Post Anonymously</h1>
+        <p className="text-gray-500">Share your thoughts, experiences, or opinions with the UPSA community.</p>
       </div>
 
-      <Alert className="mb-8 bg-blue-50/50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/40">
-        <Lock className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-        <AlertTitle className="text-blue-800 dark:text-blue-300 font-bold">Important Privacy Notice</AlertTitle>
-        <AlertDescription className="text-blue-700 dark:text-blue-200 mt-1 text-sm">
+      <Alert className="mb-8 bg-blue-50/50 border-blue-100">
+        <Lock className="h-5 w-5 text-blue-500" />
+        <AlertTitle className="text-blue-800 font-bold">Important Privacy Notice</AlertTitle>
+        <AlertDescription className="text-blue-700 mt-1 text-sm">
           Your post will appear without your name or profile. However, this is a <strong>pseudo-anonymous</strong> system. 
           For trust and safety, the platform securely logs your account ID. In cases of severe policy violation (like specific, credible threats), trusted platform administrators can unmask your identity. 
           <strong> Do not use real names to target other students.</strong>
@@ -114,36 +114,36 @@ export default function NewConfessionPage() {
       </Alert>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="space-y-6 bg-white dark:bg-[#0C1729] p-6 md:p-8 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm transition-colors">
+        <div className="space-y-6 bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
           
           <div className="space-y-3">
-            <Label className="text-sm font-bold text-gray-900 dark:text-white">What are you sharing?</Label>
+            <Label className="text-sm font-bold text-gray-900">What are you sharing?</Label>
             <RadioGroup 
               value={formData.type}
               onValueChange={(v) => setFormData(prev => ({ ...prev, type: v }))}
               className="flex space-x-4"
             >
-              <div className="flex items-center space-x-2 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex-1 data-[state=checked]:border-upsa-gold data-[state=checked]:bg-upsa-gold/5 dark:data-[state=checked]:bg-upsa-gold/10" data-state={formData.type === 'confession' ? 'checked' : 'unchecked'} onClick={() => setFormData(prev => ({ ...prev, type: 'confession' }))}>
-                <RadioGroupItem value="confession" id="r1" className="text-upsa-navy dark:text-upsa-gold" />
-                <Label htmlFor="r1" className="cursor-pointer font-semibold text-gray-900 dark:text-gray-200">Confession</Label>
+              <div className="flex items-center space-x-2 border rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors flex-1 data-[state=checked]:border-upsa-gold data-[state=checked]:bg-upsa-gold/5" data-state={formData.type === 'confession' ? 'checked' : 'unchecked'} onClick={() => setFormData(prev => ({ ...prev, type: 'confession' }))}>
+                <RadioGroupItem value="confession" id="r1" />
+                <Label htmlFor="r1" className="cursor-pointer font-semibold">Confession</Label>
               </div>
-              <div className="flex items-center space-x-2 border border-gray-200 dark:border-white/10 rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors flex-1 data-[state=checked]:border-upsa-gold data-[state=checked]:bg-upsa-gold/5 dark:data-[state=checked]:bg-upsa-gold/10" data-state={formData.type === 'opinion' ? 'checked' : 'unchecked'} onClick={() => setFormData(prev => ({ ...prev, type: 'opinion' }))}>
-                <RadioGroupItem value="opinion" id="r2" className="text-upsa-navy dark:text-upsa-gold" />
-                <Label htmlFor="r2" className="cursor-pointer font-semibold text-gray-900 dark:text-gray-200">Opinion</Label>
+              <div className="flex items-center space-x-2 border rounded-lg px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors flex-1 data-[state=checked]:border-upsa-gold data-[state=checked]:bg-upsa-gold/5" data-state={formData.type === 'opinion' ? 'checked' : 'unchecked'} onClick={() => setFormData(prev => ({ ...prev, type: 'opinion' }))}>
+                <RadioGroupItem value="opinion" id="r2" />
+                <Label htmlFor="r2" className="cursor-pointer font-semibold">Opinion</Label>
               </div>
             </RadioGroup>
           </div>
 
           <div className="space-y-3">
-            <Label className="text-sm font-bold text-gray-900 dark:text-white">Category</Label>
+            <Label className="text-sm font-bold text-gray-900">Category</Label>
             <Select 
               value={formData.category} 
               onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}
             >
-              <SelectTrigger className="w-full h-12 dark:bg-[#060D1A] dark:border-white/10 dark:text-white">
+              <SelectTrigger className="w-full h-12">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent className="dark:bg-[#0C1729] dark:border-white/10">
+              <SelectContent>
                 <SelectItem value="academics">Academics</SelectItem>
                 <SelectItem value="campus_life">Campus Life</SelectItem>
                 <SelectItem value="relationships">Relationships</SelectItem>
@@ -156,28 +156,28 @@ export default function NewConfessionPage() {
 
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <Label className="text-sm font-bold text-gray-900 dark:text-white">Your Message</Label>
-              <span className={`text-xs font-semibold ${formData.body_text.length > 500 ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'}`}>
+              <Label className="text-sm font-bold text-gray-900">Your Message</Label>
+              <span className={`text-xs font-semibold ${formData.body_text.length > 500 ? 'text-red-500' : 'text-gray-400'}`}>
                 {formData.body_text.length}/500
               </span>
             </div>
             <Textarea 
               placeholder="What's on your mind? Keep it respectful."
-              className="resize-none h-40 dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder-gray-500"
+              className="resize-none h-40"
               value={formData.body_text}
               onChange={(e) => setFormData(prev => ({ ...prev, body_text: e.target.value }))}
             />
           </div>
 
-          <div className="flex items-start space-x-3 pt-4 border-t border-gray-100 dark:border-white/10">
+          <div className="flex items-start space-x-3 pt-4 border-t border-gray-100">
             <Checkbox 
               id="ack" 
               checked={formData.acknowledgment_confirmed}
               onCheckedChange={(checked) => setFormData(prev => ({ ...prev, acknowledgment_confirmed: checked as boolean }))}
-              className="mt-1 dark:border-white/20"
+              className="mt-1"
             />
             <div className="grid gap-1.5 leading-none">
-              <Label htmlFor="ack" className="text-sm font-semibold leading-relaxed cursor-pointer text-gray-700 dark:text-gray-300">
+              <Label htmlFor="ack" className="text-sm font-semibold leading-relaxed cursor-pointer">
                 I understand this post is pseudo-anonymous and I confirm it does not target specific individuals with harassment or threats.
               </Label>
             </div>
@@ -185,12 +185,12 @@ export default function NewConfessionPage() {
         </div>
 
         <div className="flex justify-end gap-3">
-          <Button variant="outline" type="button" onClick={() => router.push("/confessions")} className="dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10">
+          <Button variant="outline" type="button" onClick={() => router.push("/confessions")}>
             Cancel
           </Button>
           <Button 
             type="submit" 
-            className="bg-upsa-navy dark:bg-upsa-gold hover:bg-upsa-navy/90 dark:hover:bg-white text-white dark:text-upsa-navy font-bold min-w-[120px]"
+            className="bg-upsa-navy hover:bg-upsa-navy/90 text-white min-w-[120px]"
             disabled={isSubmitting || !formData.acknowledgment_confirmed || formData.body_text.length === 0 || formData.body_text.length > 500}
           >
             {isSubmitting ? "Submitting..." : "Post Anonymously"}
