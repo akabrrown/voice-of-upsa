@@ -97,32 +97,36 @@ export default function CartPage() {
   }, 0);
 
   if (loading) {
-    return <div className="flex min-h-[60vh] items-center justify-center bg-[#F9FAFB]"><Loader2 className="h-10 w-10 animate-spin text-upsa-navy" /></div>;
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#F9FAFB] dark:bg-[#060D1A]">
+        <Loader2 className="h-10 w-10 animate-spin text-upsa-navy dark:text-upsa-gold" />
+      </div>
+    );
   }
 
   return (
-    <div className="bg-[#F9FAFB] min-h-[100dvh]">
+    <div className="bg-[#F9FAFB] dark:bg-[#060D1A] min-h-[100dvh] transition-colors duration-300">
       <div className="container px-6 lg:px-16 xl:px-24 py-16 max-w-[1400px] mx-auto">
-        <h1 className="mb-10 text-4xl font-extrabold tracking-tight text-upsa-navy uppercase">Shopping Bag</h1>
+        <h1 className="mb-10 text-4xl font-extrabold tracking-tight text-upsa-navy dark:text-white uppercase">Shopping Bag</h1>
         
         {cartItems.length === 0 ? (
-          <div className="flex min-h-[40vh] flex-col items-center justify-center border border-dashed border-border/60 bg-white py-20 text-center">
-            <ShoppingBag className="h-12 w-12 text-gray-300 mb-6" />
-            <h3 className="text-2xl font-bold text-upsa-navy">Your bag is empty</h3>
-            <p className="mt-4 text-gray-500 max-w-sm text-balance">
+          <div className="flex min-h-[40vh] flex-col items-center justify-center border border-dashed border-border/60 dark:border-white/10 bg-white dark:bg-[#0C1729] rounded-xl py-20 text-center">
+            <ShoppingBag className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-6" />
+            <h3 className="text-2xl font-bold text-upsa-navy dark:text-white">Your bag is empty</h3>
+            <p className="mt-4 text-gray-500 dark:text-gray-400 max-w-sm text-balance">
               Looks like you haven't added anything yet. Explore the marketplace to find what you need.
             </p>
-            <Button asChild className="mt-10 rounded-none bg-upsa-navy h-14 px-10 font-bold uppercase tracking-widest text-white hover:bg-upsa-navy/90">
+            <Button asChild className="mt-10 rounded-none bg-upsa-navy dark:bg-upsa-gold h-14 px-10 font-bold uppercase tracking-widest text-white dark:text-upsa-navy hover:bg-upsa-navy/90 dark:hover:bg-white">
               <Link href="/mart/products">Start Shopping</Link>
             </Button>
           </div>
         ) : (
           <div className="grid gap-12 lg:grid-cols-3 items-start">
             <div className="lg:col-span-2">
-              <div className="border-t border-border/40">
+              <div className="border-t border-border/40 dark:border-white/10">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex flex-col sm:flex-row items-center gap-8 py-8 border-b border-border/40">
-                    <div className="h-40 w-32 flex-shrink-0 bg-muted relative">
+                  <div key={item.id} className="flex flex-col sm:flex-row items-center gap-8 py-8 border-b border-border/40 dark:border-white/10">
+                    <div className="h-40 w-32 flex-shrink-0 bg-muted dark:bg-[#080F1E] relative">
                       <Image 
                         src={item.product.images?.[0]?.url || "/images/placeholder-product.jpg"} 
                         alt={item.product.name} 
@@ -133,16 +137,16 @@ export default function CartPage() {
                     <div className="flex flex-1 flex-col justify-between py-2 w-full h-full">
                       <div className="flex justify-between items-start w-full gap-4">
                         <div>
-                          <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">{item.product.store?.name}</p>
-                          <h3 className="font-extrabold text-xl text-upsa-navy leading-tight">{item.product.name}</h3>
+                          <p className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-2">{item.product.store?.name}</p>
+                          <h3 className="font-extrabold text-xl text-upsa-navy dark:text-white leading-tight">{item.product.name}</h3>
                         </div>
-                        <button onClick={() => removeItem(item.id)} className="text-gray-400 hover:text-red-600 transition-colors">
+                        <button onClick={() => removeItem(item.id)} className="text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                           <Trash2 className="h-5 w-5" />
                         </button>
                       </div>
                       <div className="flex items-center justify-between mt-8">
-                        <div className="text-sm font-bold text-gray-500">QTY: {item.quantity}</div>
-                        <div className="font-extrabold text-2xl text-upsa-navy">GHS {(item.product.discount_price ?? item.product.price).toFixed(2)}</div>
+                        <div className="text-sm font-bold text-gray-500 dark:text-gray-400">QTY: {item.quantity}</div>
+                        <div className="font-extrabold text-2xl text-upsa-navy dark:text-upsa-gold">GHS {(item.product.discount_price ?? item.product.price).toFixed(2)}</div>
                       </div>
                     </div>
                   </div>
@@ -151,29 +155,29 @@ export default function CartPage() {
             </div>
 
             <div className="lg:col-span-1 sticky top-32">
-              <Card className="rounded-none border border-border/60 bg-white shadow-none">
-                <CardHeader className="border-b border-border/40 pb-6">
-                  <CardTitle className="text-xl font-extrabold text-upsa-navy uppercase">Order Summary</CardTitle>
+              <Card className="rounded-none border border-border/60 dark:border-white/10 bg-white dark:bg-[#0C1729] shadow-none">
+                <CardHeader className="border-b border-border/40 dark:border-white/10 pb-6">
+                  <CardTitle className="text-xl font-extrabold text-upsa-navy dark:text-white uppercase">Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
-                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <div className="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-300">
                     <span>Subtotal</span>
                     <span>GHS {subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm font-medium text-gray-600">
+                  <div className="flex justify-between text-sm font-medium text-gray-600 dark:text-gray-300">
                     <span>Delivery (On Campus)</span>
-                    <span className="text-emerald-600 font-bold">FREE</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">FREE</span>
                   </div>
                   
-                  <div className="space-y-3 pt-6 border-t border-border/40">
-                    <label className="text-xs font-bold uppercase tracking-widest text-upsa-navy">Select Delivery Location</label>
+                  <div className="space-y-3 pt-6 border-t border-border/40 dark:border-white/10">
+                    <label className="text-xs font-bold uppercase tracking-widest text-upsa-navy dark:text-white">Select Delivery Location</label>
                     <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                      <SelectTrigger className="w-full rounded-none border-border/60 h-12 focus:ring-0 focus:border-upsa-navy">
+                      <SelectTrigger className="w-full rounded-none border-border/60 dark:border-white/10 bg-transparent text-gray-900 dark:text-white h-12 focus:ring-0 focus:border-upsa-navy dark:focus:border-upsa-gold">
                         <SelectValue placeholder="Choose campus location" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-none">
+                      <SelectContent className="rounded-none dark:bg-[#0C1729] dark:border-white/10 text-gray-900 dark:text-gray-100">
                         {locations.map((loc) => (
-                          <SelectItem key={loc.id} value={loc.id} className="rounded-none">
+                          <SelectItem key={loc.id} value={loc.id} className="rounded-none dark:hover:bg-white/10">
                             {loc.label}
                           </SelectItem>
                         ))}
@@ -181,14 +185,14 @@ export default function CartPage() {
                     </Select>
                   </div>
 
-                  <div className="flex justify-between items-end pt-6 border-t border-border/40">
-                    <span className="text-sm font-bold uppercase tracking-widest text-upsa-navy">Total</span>
-                    <span className="text-3xl font-extrabold text-upsa-navy">GHS {subtotal.toFixed(2)}</span>
+                  <div className="flex justify-between items-end pt-6 border-t border-border/40 dark:border-white/10">
+                    <span className="text-sm font-bold uppercase tracking-widest text-upsa-navy dark:text-white">Total</span>
+                    <span className="text-3xl font-extrabold text-upsa-navy dark:text-upsa-gold">GHS {subtotal.toFixed(2)}</span>
                   </div>
                 </CardContent>
                 <CardFooter className="pt-2 pb-8">
                   <Button 
-                    className="w-full h-14 rounded-none bg-upsa-navy text-white hover:bg-upsa-navy/90 font-bold uppercase tracking-widest"
+                    className="w-full h-14 rounded-none bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-navy/90 dark:hover:bg-white font-bold uppercase tracking-widest"
                     onClick={handleCheckout}
                     disabled={checkoutLoading}
                   >
@@ -202,15 +206,15 @@ export default function CartPage() {
               </Card>
               
               <div className="mt-6 space-y-4">
-                <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-                  <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                    <span className="text-emerald-700 text-xs font-bold">✓</span>
+                <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                  <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center shrink-0">
+                    <span className="text-emerald-700 dark:text-emerald-400 text-xs font-bold">✓</span>
                   </div>
                   100% Secure Checkout
                 </div>
-                <div className="flex items-center gap-3 text-sm text-gray-500 font-medium">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                    <span className="text-blue-700 text-xs font-bold">✓</span>
+                <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                  <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-950/60 flex items-center justify-center shrink-0">
+                    <span className="text-blue-700 dark:text-blue-400 text-xs font-bold">✓</span>
                   </div>
                   Pay on Delivery Available
                 </div>

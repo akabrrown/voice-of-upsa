@@ -21,6 +21,7 @@ import { User } from "@supabase/supabase-js";
 import { InstallPWA } from "./InstallPWA";
 import { NotificationBell } from "./NotificationBell";
 import GlobalSearch from "./GlobalSearch";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface AuthenticatedUser extends User {
   role?: string;
@@ -126,11 +127,11 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200/80 bg-white/95 backdrop-blur-md text-gray-900 shadow-xs">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200/80 dark:border-white/10 bg-white/95 dark:bg-[#060D1A]/95 backdrop-blur-md text-gray-900 dark:text-gray-100 shadow-xs transition-colors">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 relative">
         {/* Logo */}
         <Link href="/" className="flex items-center group z-10" aria-label="Voice of UPSA Home">
-          <div className="relative h-11 w-11 sm:h-12 sm:w-12 rounded-full overflow-hidden border-2 border-upsa-navy/10 transition-transform group-hover:scale-105 shadow-xs shrink-0">
+          <div className="relative h-11 w-11 sm:h-12 sm:w-12 rounded-full overflow-hidden border-2 border-upsa-navy/10 dark:border-white/20 transition-transform group-hover:scale-105 shadow-xs shrink-0">
             <Image
               src="/logo.png"
               alt="Voice of UPSA"
@@ -146,7 +147,7 @@ export function Navbar() {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold font-semibold transition-colors")}>
+                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
                   <Link href="/">
                     <div className="flex items-center gap-1.5">
                       <HomeIcon className="h-4 w-4" />
@@ -157,22 +158,22 @@ export function Navbar() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold data-[state=open]:bg-gray-100 data-[state=open]:text-upsa-navy font-semibold transition-colors">
+                <NavigationMenuTrigger className="bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold data-[state=open]:bg-gray-100 dark:data-[state=open]:bg-white/10 data-[state=open]:text-upsa-navy dark:data-[state=open]:text-upsa-gold font-semibold transition-colors">
                   Categories
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-full p-4 md:p-6 bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6">
+                  <div className="w-full p-4 md:p-6 bg-white/95 dark:bg-[#0C1729]/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6 border-x border-b border-gray-100 dark:border-white/10">
                     {/* Featured Panel */}
-                    <div className="w-full md:w-[30%] shrink-0 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 p-6 flex flex-col justify-between border border-gray-200/60 relative overflow-hidden group/featured">
-                      <div className="absolute -top-4 -right-4 p-4 opacity-5 group-hover/featured:scale-110 group-hover/featured:rotate-12 transition-all duration-700">
-                        <Layers className="w-40 h-40 text-upsa-navy" />
+                    <div className="w-full md:w-[30%] shrink-0 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#081224] dark:to-[#0C1729] p-6 flex flex-col justify-between border border-gray-200/60 dark:border-white/10 relative overflow-hidden group/featured">
+                      <div className="absolute -top-4 -right-4 p-4 opacity-5 dark:opacity-10 group-hover/featured:scale-110 group-hover/featured:rotate-12 transition-all duration-700">
+                        <Layers className="w-40 h-40 text-upsa-navy dark:text-upsa-gold" />
                       </div>
                       <div className="relative z-10">
-                        <h3 className="text-2xl font-black text-upsa-navy mb-2 tracking-tight">Browse Topics</h3>
-                        <p className="text-sm text-gray-500 leading-relaxed font-medium">Explore articles across academics, campus events, sports, and student lifestyle.</p>
+                        <h3 className="text-2xl font-black text-upsa-navy dark:text-white mb-2 tracking-tight">Browse Topics</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium">Explore articles across academics, campus events, sports, and student lifestyle.</p>
                       </div>
                       <div className="relative z-10 mt-8">
-                        <Link href="/categories/all" className="inline-flex items-center text-sm font-bold text-upsa-gold group-hover/featured:translate-x-1 transition-transform">
+                        <Link href="/categories/all" className="inline-flex items-center text-sm font-bold text-upsa-gold hover:text-upsa-navy dark:hover:text-white group-hover/featured:translate-x-1 transition-transform">
                           View all articles <span className="ml-1 text-lg leading-none">&rarr;</span>
                         </Link>
                       </div>
@@ -195,22 +196,22 @@ export function Navbar() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-transparent text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold data-[state=open]:bg-gray-100 data-[state=open]:text-upsa-navy font-semibold transition-colors">
+                <NavigationMenuTrigger className="bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold data-[state=open]:bg-gray-100 dark:data-[state=open]:bg-white/10 data-[state=open]:text-upsa-navy dark:data-[state=open]:text-upsa-gold font-semibold transition-colors">
                   Campus Life
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="w-full p-4 md:p-6 bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6">
+                  <div className="w-full p-4 md:p-6 bg-white/95 dark:bg-[#0C1729]/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6 border-x border-b border-gray-100 dark:border-white/10">
                     {/* Featured Panel */}
-                    <div className="w-full md:w-[35%] shrink-0 rounded-2xl bg-gradient-to-br from-upsa-navy to-gray-900 p-6 flex flex-col justify-between border border-upsa-navy relative overflow-hidden group/featured">
+                    <div className="w-full md:w-[35%] shrink-0 rounded-2xl bg-gradient-to-br from-upsa-navy to-gray-900 dark:from-[#060D1A] dark:to-[#0C1729] p-6 flex flex-col justify-between border border-upsa-navy dark:border-white/10 relative overflow-hidden group/featured">
                       <div className="absolute -bottom-4 -right-4 p-4 opacity-10 group-hover/featured:scale-110 transition-transform duration-700">
                         <Map className="w-40 h-40 text-white" />
                       </div>
                       <div className="relative z-10">
                         <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Campus Life</h3>
-                        <p className="text-sm text-gray-300 leading-relaxed font-medium">Everything you need to thrive at UPSA. Discover services, campus map, jobs, and the marketplace.</p>
+                        <p className="text-sm text-gray-300 dark:text-gray-300 leading-relaxed font-medium">Everything you need to thrive at UPSA. Discover services, campus map, jobs, and the marketplace.</p>
                       </div>
                       <div className="relative z-10 mt-8">
-                        <Link href="/services" className="inline-flex items-center text-sm font-bold text-upsa-gold group-hover/featured:translate-x-1 transition-transform">
+                        <Link href="/services" className="inline-flex items-center text-sm font-bold text-upsa-gold hover:text-white group-hover/featured:translate-x-1 transition-transform">
                           Explore services <span className="ml-1 text-lg leading-none">&rarr;</span>
                         </Link>
                       </div>
@@ -234,22 +235,22 @@ export function Navbar() {
 
               {visibleCommunity.length > 0 && (
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold data-[state=open]:bg-gray-100 data-[state=open]:text-upsa-navy font-semibold transition-colors">
+                  <NavigationMenuTrigger className="bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold data-[state=open]:bg-gray-100 dark:data-[state=open]:bg-white/10 data-[state=open]:text-upsa-navy dark:data-[state=open]:text-upsa-gold font-semibold transition-colors">
                     Community
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <div className="w-full p-4 md:p-6 bg-white/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6">
+                    <div className="w-full p-4 md:p-6 bg-white/95 dark:bg-[#0C1729]/95 backdrop-blur-3xl shadow-2xl rounded-b-2xl border-t-2 border-upsa-gold flex flex-col md:flex-row gap-6 border-x border-b border-gray-100 dark:border-white/10">
                       {/* Featured Panel */}
-                      <div className="w-full md:w-[30%] shrink-0 rounded-2xl bg-gradient-to-br from-upsa-gold to-yellow-500 p-6 flex flex-col justify-between relative overflow-hidden group/featured shadow-inner">
+                      <div className="w-full md:w-[30%] shrink-0 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 dark:from-amber-600 dark:to-amber-800 p-6 flex flex-col justify-between relative overflow-hidden group/featured shadow-inner border border-amber-300 dark:border-amber-500/20">
                         <div className="absolute -top-4 -right-4 p-4 opacity-20 group-hover/featured:scale-110 group-hover/featured:-rotate-12 transition-all duration-700">
-                          <Users className="w-40 h-40 text-upsa-navy" />
+                          <Users className="w-40 h-40 text-upsa-navy dark:text-slate-900" />
                         </div>
                         <div className="relative z-10">
-                          <h3 className="text-2xl font-black text-upsa-navy mb-2 tracking-tight">Community</h3>
-                          <p className="text-sm text-upsa-navy/80 leading-relaxed font-medium">Engage with fellow students. Participate in polls, listen to podcasts, or drop an anonymous confession.</p>
+                          <h3 className="text-2xl font-black text-upsa-navy dark:text-slate-900 mb-2 tracking-tight">Community</h3>
+                          <p className="text-sm text-upsa-navy/90 dark:text-slate-900/90 leading-relaxed font-semibold">Engage with fellow students. Participate in polls, listen to podcasts, or drop an anonymous confession.</p>
                         </div>
                         <div className="relative z-10 mt-8">
-                          <Link href="/podcasts" className="inline-flex items-center text-sm font-black text-upsa-navy group-hover/featured:translate-x-1 transition-transform bg-white/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                          <Link href="/podcasts" className="inline-flex items-center text-sm font-black text-upsa-navy dark:text-slate-900 group-hover/featured:translate-x-1 transition-transform bg-white/40 px-3 py-1.5 rounded-full backdrop-blur-sm hover:bg-white/60">
                             Listen to Podcasts <span className="ml-1 text-lg leading-none">&rarr;</span>
                           </Link>
                         </div>
@@ -273,7 +274,7 @@ export function Navbar() {
               )}
 
               <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold font-semibold transition-colors")}>
+                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
                   <Link href="/advertise">
                     <div className="flex items-center gap-1.5">
                       <Megaphone className="h-4 w-4" />
@@ -284,7 +285,7 @@ export function Navbar() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold font-semibold transition-colors")}>
+                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
                   <Link href="/about">
                     <div className="flex items-center gap-1.5">
                       <Info className="h-4 w-4" />
@@ -295,7 +296,7 @@ export function Navbar() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold font-semibold transition-colors")}>
+                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
                   <Link href="/contact">
                     <div className="flex items-center gap-1.5">
                       <PhoneCall className="h-4 w-4" />
@@ -309,21 +310,21 @@ export function Navbar() {
         </div>
 
         {/* Right Side Controls */}
-        <div className="flex items-center space-x-2 md:space-x-4">
-          
-          <div className="hidden sm:flex items-center space-x-2 border-l border-gray-200 pl-4">
+        <div className="flex items-center space-x-2 md:space-x-3">
+          <ThemeToggle />
+          <div className="hidden sm:flex items-center space-x-2 border-l border-gray-200 dark:border-white/10 pl-3">
             <InstallPWA />
             {user ? (
               <>
                 <NotificationBell user={user} />
-                <Button asChild variant="ghost" className="text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold font-medium">
+                <Button asChild variant="ghost" className="text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-gold dark:hover:text-upsa-gold font-medium">
                   <Link href="/profile">
                     <UserIcon className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
                 </Button>
                 {user.role !== "public" && (
-                  <Button asChild variant="ghost" className="text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold font-medium">
+                  <Button asChild variant="ghost" className="text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-gold dark:hover:text-upsa-gold font-medium">
                     <Link href="/dashboard">
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard
@@ -333,7 +334,7 @@ export function Navbar() {
                 <Button 
                   onClick={handleLogout}
                   variant="ghost" 
-                  className="text-gray-600 hover:bg-red-50 hover:text-red-600 font-medium transition-colors"
+                  className="text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 font-medium transition-colors"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
@@ -341,13 +342,13 @@ export function Navbar() {
               </>
             ) : (
               <>
-                <Button asChild variant="ghost" className="text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold rounded-lg px-3 py-2 text-xs font-semibold cursor-pointer transition-colors">
+                <Button asChild variant="ghost" className="text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-gold dark:hover:text-upsa-gold rounded-lg px-3 py-2 text-xs font-semibold cursor-pointer transition-colors">
                   <Link href="/auth/login" className="flex items-center">
                     <LogIn className="mr-1.5 h-3.5 w-3.5" />
                     Login
                   </Link>
                 </Button>
-                <Button asChild className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy transition-colors font-bold rounded-lg px-4 py-2 text-xs cursor-pointer shadow-xs">
+                <Button asChild className="bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-gold dark:hover:bg-amber-400 hover:text-upsa-navy transition-colors font-bold rounded-lg px-4 py-2 text-xs cursor-pointer shadow-xs">
                   <Link href="/auth/register">Register</Link>
                 </Button>
               </>
@@ -358,8 +359,9 @@ export function Navbar() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="lg:hidden text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold"
+            className="lg:hidden text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-gold dark:hover:text-upsa-gold"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle mobile menu"
           >
             <Menu className="h-6 w-6" />
           </Button>
@@ -372,11 +374,11 @@ export function Navbar() {
 
       {/* Mobile Drawer Overlay & Content */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-gray-200 px-4 py-6 space-y-4 shadow-xl animate-in slide-in-from-top duration-300">
+        <div className="lg:hidden bg-white dark:bg-[#060D1A] border-t border-gray-200 dark:border-white/10 px-4 py-6 space-y-4 shadow-xl animate-in slide-in-from-top duration-300">
           <nav className="flex flex-col space-y-3">
             <Link 
               href="/" 
-              className="flex items-center gap-2 text-upsa-navy hover:text-upsa-gold py-2 font-bold transition-colors"
+              className="flex items-center gap-2 text-upsa-navy dark:text-upsa-gold hover:text-upsa-gold dark:hover:text-amber-300 py-2 font-bold transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               <HomeIcon className="h-5 w-5" />
@@ -387,10 +389,10 @@ export function Navbar() {
             <div className="space-y-1">
               <button 
                 onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
-                className="w-full flex items-center justify-between text-gray-700 py-2 hover:text-upsa-navy transition-colors"
+                className="w-full flex items-center justify-between text-gray-700 dark:text-gray-200 py-2 hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <Layers className="h-5 w-5 text-upsa-navy" />
+                  <Layers className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
                   <span className="text-xs font-bold uppercase tracking-wider">Categories</span>
                 </div>
                 <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCategoriesOpen ? "rotate-180" : "")} />
@@ -401,7 +403,7 @@ export function Navbar() {
                     <Link
                       key={category.title}
                       href={category.href}
-                      className="text-gray-600 hover:text-upsa-gold text-sm py-1.5 transition-colors font-medium"
+                      className="text-gray-600 dark:text-gray-300 hover:text-upsa-gold dark:hover:text-upsa-gold text-sm py-1.5 transition-colors font-medium"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {category.title}
@@ -411,13 +413,13 @@ export function Navbar() {
               )}
             </div>
 
-            <div className="space-y-1 pt-2 border-t border-gray-100">
+            <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-white/10">
               <button 
                 onClick={() => setMobileCampusLifeOpen(!mobileCampusLifeOpen)}
-                className="w-full flex items-center justify-between text-gray-700 py-2 hover:text-upsa-navy transition-colors"
+                className="w-full flex items-center justify-between text-gray-700 dark:text-gray-200 py-2 hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-upsa-navy" />
+                  <Briefcase className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
                   <span className="text-xs font-bold uppercase tracking-wider">Campus Life</span>
                 </div>
                 <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCampusLifeOpen ? "rotate-180" : "")} />
@@ -428,7 +430,7 @@ export function Navbar() {
                     <Link
                       key={feature.title}
                       href={feature.href}
-                      className="text-gray-600 hover:text-upsa-gold text-sm py-1.5 transition-colors font-medium"
+                      className="text-gray-600 dark:text-gray-300 hover:text-upsa-gold dark:hover:text-upsa-gold text-sm py-1.5 transition-colors font-medium"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {feature.title}
@@ -439,13 +441,13 @@ export function Navbar() {
             </div>
 
             {visibleCommunity.length > 0 && (
-              <div className="space-y-1 pt-2 border-t border-gray-100">
+              <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-white/10">
                 <button 
                   onClick={() => setMobileCommunityOpen(!mobileCommunityOpen)}
-                  className="w-full flex items-center justify-between text-gray-700 py-2 hover:text-upsa-navy transition-colors"
+                  className="w-full flex items-center justify-between text-gray-700 dark:text-gray-200 py-2 hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-upsa-navy" />
+                    <Users className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
                     <span className="text-xs font-bold uppercase tracking-wider">Community</span>
                   </div>
                   <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCommunityOpen ? "rotate-180" : "")} />
@@ -456,7 +458,7 @@ export function Navbar() {
                       <Link
                         key={feature.title}
                         href={feature.href}
-                        className="text-gray-600 hover:text-upsa-gold text-sm py-1.5 transition-colors font-medium"
+                        className="text-gray-600 dark:text-gray-300 hover:text-upsa-gold dark:hover:text-upsa-gold text-sm py-1.5 transition-colors font-medium"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         {feature.title}
@@ -468,39 +470,39 @@ export function Navbar() {
             )}
             <Link 
               href="/advertise" 
-              className="flex items-center gap-2 text-upsa-navy hover:text-upsa-gold py-2 font-bold transition-colors"
+              className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <Megaphone className="h-5 w-5" />
+              <Megaphone className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
               Advertise
             </Link>
             <Link 
               href="/about" 
-              className="flex items-center gap-2 text-upsa-navy hover:text-upsa-gold py-2 font-bold transition-colors"
+              className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <Info className="h-5 w-5" />
+              <Info className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
               About
             </Link>
             <Link 
               href="/contact" 
-              className="flex items-center gap-2 text-upsa-navy hover:text-upsa-gold py-2 font-bold transition-colors"
+              className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              <PhoneCall className="h-5 w-5" />
+              <PhoneCall className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
               Contact
             </Link>
           </nav>
 
           {/* User Auth controls inside mobile menu */}
-          <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
+          <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex flex-col gap-3">
             {/* Show PWA Install button on mobile without the hidden class */}
             <div className="[&>button]:w-full [&>button]:justify-center [&>button]:flex sm:[&>button]:hidden">
               <InstallPWA />
             </div>
             {user ? (
               <>
-                <Button asChild variant="outline" className="w-full bg-transparent text-upsa-navy border-gray-200 hover:bg-gray-50 hover:text-upsa-gold justify-between">
+                <Button asChild variant="outline" className="w-full bg-transparent text-upsa-navy dark:text-gray-200 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-upsa-gold dark:hover:text-upsa-gold justify-between">
                   <Link href="/profile?tab=notifications" onClick={() => setMobileMenuOpen(false)}>
                     <span className="flex items-center">
                       <Bell className="mr-2 h-4 w-4" />
@@ -513,14 +515,14 @@ export function Navbar() {
                     )}
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full bg-transparent text-upsa-navy border-gray-200 hover:bg-gray-50 hover:text-upsa-gold">
+                <Button asChild variant="outline" className="w-full bg-transparent text-upsa-navy dark:text-gray-200 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-upsa-gold dark:hover:text-upsa-gold">
                   <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
                     <UserIcon className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
                 </Button>
                 {user.role !== "public" && (
-                  <Button asChild variant="outline" className="w-full bg-transparent text-upsa-navy border-gray-200 hover:bg-gray-50 hover:text-upsa-gold">
+                  <Button asChild variant="outline" className="w-full bg-transparent text-upsa-navy dark:text-gray-200 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-upsa-gold dark:hover:text-upsa-gold">
                     <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard
@@ -541,12 +543,12 @@ export function Navbar() {
               </>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                <Button asChild variant="outline" className="bg-transparent text-upsa-navy border-gray-200 hover:bg-gray-50 hover:text-upsa-gold">
+                <Button asChild variant="outline" className="bg-transparent text-upsa-navy dark:text-gray-200 border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-upsa-gold dark:hover:text-upsa-gold">
                   <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>
                     Login
                   </Link>
                 </Button>
-                <Button asChild className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold">
+                <Button asChild className="bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-gold dark:hover:bg-amber-400 hover:text-upsa-navy font-bold">
                   <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)}>
                     Register
                   </Link>
@@ -558,9 +560,9 @@ export function Navbar() {
       )}
 
       {/* Secondary Search Bar Row (Under Nav Buttons) */}
-      <div className="border-t border-gray-200/80 bg-gray-50/80 py-2 px-4 shadow-2xs flex justify-center backdrop-blur-md">
+      <div className="border-t border-gray-200/80 dark:border-white/10 bg-gray-50/80 dark:bg-[#060D1A]/90 py-2 px-4 shadow-2xs flex justify-center backdrop-blur-md">
         <div className="container px-4 flex justify-center w-full max-w-3xl">
-          <GlobalSearch className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 bg-white hover:bg-gray-50 rounded-full border border-gray-200 transition-colors w-full focus-within:ring-2 focus-within:ring-upsa-navy/20 shadow-xs" inputClassName="flex-1 bg-transparent border-0 outline-none text-gray-900 placeholder:text-gray-400 text-sm" />
+          <GlobalSearch className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-[#0C1729] hover:bg-gray-50 dark:hover:bg-[#111F36] rounded-full border border-gray-200 dark:border-white/10 transition-colors w-full focus-within:ring-2 focus-within:ring-upsa-navy/20 dark:focus-within:ring-upsa-gold/30 shadow-xs" inputClassName="flex-1 bg-transparent border-0 outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm" />
         </div>
       </div>
     </header>
@@ -578,19 +580,19 @@ const ListItem = React.forwardRef<
           ref={ref}
           href={props.href ?? "#"}
           className={cn(
-            "group flex items-start select-none space-x-4 rounded-xl p-3 no-underline outline-none transition-all duration-200 hover:bg-gray-100/70 focus:bg-gray-100/70 active:scale-[0.98] bg-transparent w-full",
+            "group flex items-start select-none space-x-4 rounded-xl p-3 no-underline outline-none transition-all duration-200 hover:bg-gray-100/70 dark:hover:bg-white/5 focus:bg-gray-100/70 dark:focus:bg-white/5 active:scale-[0.98] bg-transparent w-full",
             className
           )}
           {...props}
         >
           {Icon && (
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-gray-200/50 text-gray-500 group-hover:bg-upsa-navy group-hover:text-upsa-gold group-hover:ring-upsa-navy transition-all duration-300">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-[#111F36] shadow-sm ring-1 ring-gray-200/50 dark:ring-white/10 text-gray-500 dark:text-gray-300 group-hover:bg-upsa-navy group-hover:text-upsa-gold dark:group-hover:bg-upsa-gold dark:group-hover:text-upsa-navy group-hover:ring-upsa-navy dark:group-hover:ring-upsa-gold transition-all duration-300">
               <Icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
             </div>
           )}
           <div className="space-y-1 pt-0.5 w-full text-left">
-            <div className="text-sm font-bold tracking-tight leading-none text-gray-900 group-hover:text-upsa-navy transition-colors">{title}</div>
-            <p className="line-clamp-2 text-xs font-medium leading-relaxed text-gray-500 group-hover:text-gray-600 transition-colors">
+            <div className="text-sm font-bold tracking-tight leading-none text-gray-900 dark:text-white group-hover:text-upsa-navy dark:group-hover:text-upsa-gold transition-colors">{title}</div>
+            <p className="line-clamp-2 text-xs font-medium leading-relaxed text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
               {children}
             </p>
           </div>

@@ -2,8 +2,12 @@
 
 import { useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
+import { Toaster as SonnerToaster } from "sonner";
+import { useTheme } from "next-themes";
 
 export function ToastProvider() {
+  const { resolvedTheme } = useTheme();
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -37,23 +41,27 @@ export function ToastProvider() {
   }, []);
 
   return (
-    <Toaster
-      position="top-right"
-      toastOptions={{
-        duration: 4000,
-        style: {
-          background: "#003366",
-          color: "#fff",
-          borderRadius: "12px",
-          fontWeight: "bold",
-        },
-        success: {
-          iconTheme: {
-            primary: "#C9A84C",
-            secondary: "#003366",
+    <>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#0C1729",
+            color: "#fff",
+            borderRadius: "12px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            fontWeight: "bold",
           },
-        },
-      }}
-    />
+          success: {
+            iconTheme: {
+              primary: "#D4AF37",
+              secondary: "#0C1729",
+            },
+          },
+        }}
+      />
+      <SonnerToaster richColors position="top-right" theme={resolvedTheme === "dark" ? "dark" : "light"} />
+    </>
   );
 }

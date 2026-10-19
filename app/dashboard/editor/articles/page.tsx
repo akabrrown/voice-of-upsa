@@ -190,10 +190,10 @@ export default function EditorArticlesPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-upsa-navy tracking-tight">My Articles</h1>
-          <p className="text-gray-500">Draft, edit, and track status of all your submissions</p>
+          <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">My Articles</h1>
+          <p className="text-gray-500 dark:text-slate-400">Draft, edit, and track status of all your submissions</p>
         </div>
-        <Button asChild className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold">
+        <Button asChild className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-amber-400 font-bold">
           <Link href="/dashboard/editor/articles/new">
             <Plus className="mr-2 h-4 w-4" /> Create Article
           </Link>
@@ -203,16 +203,16 @@ export default function EditorArticlesPage() {
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <Input
           placeholder="Search by title..."
-          className="max-w-md bg-white border border-gray-200"
+          className="max-w-md bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
         <div className="flex items-center space-x-2">
-          <span className="text-sm font-bold text-gray-500 uppercase tracking-widest text-[10px]">Filter Status:</span>
+          <span className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest text-[10px]">Filter Status:</span>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white border border-gray-200 rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-upsa-navy/20 outline-none"
+            className="bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 rounded-lg p-2 text-sm font-medium text-gray-800 dark:text-slate-200 focus:ring-2 focus:ring-upsa-navy/20 dark:focus:ring-upsa-gold/20 outline-none"
           >
             <option value="all">All Statuses</option>
             <option value="draft">Draft</option>
@@ -223,54 +223,54 @@ export default function EditorArticlesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
         {isLoading ? (
           <div className="p-6">
             <TableShadowLoader rows={6} hasSearch={false} />
           </div>
         ) : filteredArticles.length > 0 ? (
           <Table>
-            <TableHeader className="bg-gray-50">
-              <TableRow>
-                <TableHead className="font-bold text-upsa-navy">Article Title</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Author</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Category</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Views</TableHead>
-                <TableHead className="font-bold text-upsa-navy text-center">Featured</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Status</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Created</TableHead>
-                <TableHead className="text-right font-bold text-upsa-navy">Actions</TableHead>
+            <TableHeader className="bg-gray-50 dark:bg-white/[0.02]">
+              <TableRow className="border-b border-gray-100 dark:border-white/10">
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Article Title</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Author</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Category</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Views</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white text-center">Featured</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Status</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Created</TableHead>
+                <TableHead className="text-right font-bold text-upsa-navy dark:text-white">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredArticles.map((art) => (
-                <TableRow key={art.id} className="hover:bg-gray-50/50 transition-colors">
-                  <TableCell className="font-semibold text-upsa-navy max-w-xs truncate">
+                <TableRow key={art.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] border-b border-gray-100 dark:border-white/5 transition-colors">
+                  <TableCell className="font-semibold text-upsa-navy dark:text-white max-w-xs truncate">
                     {art.status === "published" ? (
                       <Link href={`/articles/${art.slug}`} className="hover:text-upsa-gold transition-colors">
                         {art.title}
                       </Link>
                     ) : (
-                      <span className="text-upsa-navy">{art.title}</span>
+                      <span className="text-upsa-navy dark:text-white">{art.title}</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm font-medium text-gray-700">
+                  <TableCell className="text-sm font-medium text-gray-700 dark:text-slate-300">
                     <div>
                       <span>{art.author}</span>
                       {art.author_title && (
-                        <span className="block text-[10px] text-gray-400 font-normal">{art.author_title}</span>
+                        <span className="block text-[10px] text-gray-400 dark:text-slate-500 font-normal">{art.author_title}</span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-gray-500">{art.category}</TableCell>
-                  <TableCell className="text-sm font-bold text-gray-600">{art.views.toLocaleString()}</TableCell>
+                  <TableCell className="text-sm text-gray-500 dark:text-slate-400">{art.category}</TableCell>
+                  <TableCell className="text-sm font-bold text-gray-600 dark:text-slate-300">{art.views.toLocaleString()}</TableCell>
                   <TableCell>
                     <button 
                       onClick={() => handleToggleFeatured(art.id, art.is_featured)}
-                      className="mx-auto block p-1.5 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none"
+                      className="mx-auto block p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors focus:outline-none"
                       title={art.is_featured ? "Remove from featured" : "Mark as featured"}
                     >
-                      <Star className={cn("h-5 w-5 transition-transform hover:scale-110", art.is_featured ? "fill-upsa-gold text-upsa-gold" : "text-gray-300")} />
+                      <Star className={cn("h-5 w-5 transition-transform hover:scale-110", art.is_featured ? "fill-upsa-gold text-upsa-gold" : "text-gray-300 dark:text-slate-600")} />
                     </button>
                   </TableCell>
                   <TableCell>
@@ -286,31 +286,31 @@ export default function EditorArticlesPage() {
                       {art.status === "review" ? "in review" : art.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-gray-400">
+                  <TableCell className="text-sm text-gray-400 dark:text-slate-500">
                     <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-2 text-gray-400" />
+                      <Calendar className="h-3 w-3 mr-2 text-gray-400 dark:text-slate-500" />
                       {art.date}
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button variant="ghost" className="h-8 w-8 p-0 text-gray-600 dark:text-slate-300 hover:text-upsa-navy dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuLabel>Article Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
+                      <DropdownMenuContent align="end" className="w-52 bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 text-gray-700 dark:text-slate-200">
+                        <DropdownMenuLabel className="dark:text-white">Article Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator className="dark:border-white/10" />
                         
-                        <DropdownMenuItem asChild className="cursor-pointer">
+                        <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100 dark:hover:bg-white/5 dark:focus:bg-white/5">
                           <Link href={`/dashboard/editor/articles/edit/${art.id}`}>
                             <FileEdit className="mr-2 h-4 w-4 text-emerald-500" /> Edit Article
                           </Link>
                         </DropdownMenuItem>
                         
                         {art.status === "published" && (
-                          <DropdownMenuItem asChild className="cursor-pointer">
+                          <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100 dark:hover:bg-white/5 dark:focus:bg-white/5">
                             <Link href={`/articles/${art.slug}`} target="_blank">
                               <Eye className="mr-2 h-4 w-4 text-blue-500" /> View Live Article
                             </Link>
@@ -319,7 +319,7 @@ export default function EditorArticlesPage() {
                         
                         {art.status === "draft" && (
                           <DropdownMenuItem 
-                            className="cursor-pointer"
+                            className="cursor-pointer hover:bg-gray-100 dark:hover:bg-white/5 dark:focus:bg-white/5"
                             onClick={() => handleUpdateStatus(art.id, "review")}
                           >
                             <AlertCircle className="mr-2 h-4 w-4 text-amber-500" /> Submit for Review
@@ -328,7 +328,7 @@ export default function EditorArticlesPage() {
                         
                         {art.status === "published" && (
                           <DropdownMenuItem 
-                            className="cursor-pointer text-amber-600 focus:text-amber-600 focus:bg-amber-50"
+                            className="cursor-pointer text-amber-600 dark:text-amber-400 focus:text-amber-600 focus:bg-amber-50 dark:focus:bg-amber-950/30"
                             onClick={() => handleUpdateStatus(art.id, "draft")}
                           >
                             <RotateCcw className="mr-2 h-4 w-4" /> Revert to Draft
@@ -337,9 +337,9 @@ export default function EditorArticlesPage() {
 
                         {art.status === "draft" && (
                           <>
-                            <DropdownMenuSeparator />
+                            <DropdownMenuSeparator className="dark:border-white/10" />
                             <DropdownMenuItem 
-                              className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                              className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
                               onClick={() => handleDeleteArticle(art.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" /> Delete Article
@@ -354,7 +354,7 @@ export default function EditorArticlesPage() {
             </TableBody>
           </Table>
         ) : (
-          <div className="py-20 text-center text-gray-500 italic">You have no articles matching this filter.</div>
+          <div className="py-20 text-center text-gray-500 dark:text-slate-400 italic">You have no articles matching this filter.</div>
         )}
       </div>
     </div>

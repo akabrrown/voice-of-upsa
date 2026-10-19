@@ -34,19 +34,19 @@ export default function HandbookPage() {
 
   return (
     <>
-      <main className="bg-white min-h-screen pt-4 pb-16 flex-1">
+      <main className="bg-white dark:bg-[#060D1A] min-h-screen pt-4 pb-16 flex-1 transition-colors">
         <div className="container mx-auto px-4 max-w-[1400px]">
           {/* Header & Quick Action Bar */}
-          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-gray-100">
+          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-gray-100 dark:border-white/10">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-upsa-navy/5 text-upsa-navy text-xs font-bold uppercase tracking-wider mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-upsa-navy/5 dark:bg-white/10 text-upsa-navy dark:text-upsa-gold text-xs font-bold uppercase tracking-wider mb-3">
                 <FileText className="w-3.5 h-3.5 text-upsa-gold" />
                 University of Professional Studies, Accra
               </div>
-              <h1 className="text-3xl md:text-4xl font-black text-upsa-navy tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-black text-upsa-navy dark:text-white tracking-tight">
                 Undergraduate Students' Handbook
               </h1>
-              <p className="text-gray-500 max-w-2xl text-sm md:text-base mt-2">
+              <p className="text-gray-500 dark:text-gray-400 max-w-2xl text-sm md:text-base mt-2">
                 Official institutional handbook covering academic regulations, grading systems, codes of conduct, and student privileges.
               </p>
             </div>
@@ -55,18 +55,18 @@ export default function HandbookPage() {
               <a
                 href="/students-handbook-2018.pdf"
                 download="UPSA-Undergraduate-Students-Handbook.pdf"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-upsa-navy text-white text-sm font-bold shadow-sm hover:bg-upsa-navy/90 hover:shadow transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy text-sm font-bold shadow-sm hover:bg-upsa-navy/90 dark:hover:bg-white hover:shadow transition-all"
               >
-                <Download className="w-4 h-4 text-upsa-gold" />
+                <Download className="w-4 h-4 text-upsa-gold dark:text-upsa-navy" />
                 <span>Download PDF</span>
               </a>
               <a
                 href="/students-handbook-2018.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold shadow-sm hover:bg-gray-50 transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0C1729] text-gray-700 dark:text-gray-200 text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
               >
-                <ExternalLink className="w-4 h-4 text-gray-500" />
+                <ExternalLink className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 <span>Open in Tab</span>
               </a>
             </div>
@@ -79,22 +79,22 @@ export default function HandbookPage() {
               return (
                 <div
                   key={topic.title}
-                  className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-upsa-gold/30 hover:shadow-md transition-all duration-200"
+                  className="p-4 rounded-xl border border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-[#0C1729] hover:bg-white dark:hover:bg-[#0F1E36] hover:border-upsa-gold/30 dark:hover:border-upsa-gold/40 hover:shadow-md transition-all duration-200"
                 >
                   <div className="flex items-center gap-2.5 mb-2">
-                    <div className="p-2 rounded-lg bg-upsa-navy/5 text-upsa-navy">
+                    <div className="p-2 rounded-lg bg-upsa-navy/5 dark:bg-white/10 text-upsa-navy dark:text-upsa-gold">
                       <Icon className="w-4 h-4 text-upsa-gold" />
                     </div>
-                    <h3 className="text-sm font-bold text-upsa-navy">{topic.title}</h3>
+                    <h3 className="text-sm font-bold text-upsa-navy dark:text-white">{topic.title}</h3>
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed">{topic.desc}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{topic.desc}</p>
                 </div>
               );
             })}
           </div>
 
           {/* PDF Viewer */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 sm:p-4">
+          <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 p-2 sm:p-4 transition-colors">
             <HandbookViewerWrapper />
           </div>
 

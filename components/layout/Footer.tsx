@@ -7,7 +7,7 @@ import { ShareButtons } from "@/components/shared/ShareButtons";
 
 export function Footer() {
   return (
-    <footer className="bg-upsa-navy text-white pt-16 pb-8 relative overflow-hidden">
+    <footer className="bg-upsa-navy dark:bg-[#040810] border-t border-transparent dark:border-white/10 text-white pt-16 pb-8 relative overflow-hidden transition-colors duration-300">
       {/* Decorative ambient background elements */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-upsa-gold/30 to-transparent" />
       <div className="absolute -top-[500px] -right-[300px] w-[800px] h-[800px] rounded-full bg-upsa-gold/5 blur-[120px] pointer-events-none" />
@@ -15,7 +15,7 @@ export function Footer() {
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Newsletter Subscription Banner */}
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 mb-16 relative overflow-hidden backdrop-blur-sm">
+        <div className="bg-white/5 dark:bg-[#0C1729]/90 border border-white/10 dark:border-white/10 rounded-3xl p-8 md:p-12 mb-16 relative overflow-hidden backdrop-blur-sm shadow-xl">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
             <Mail className="w-32 h-32 text-upsa-gold" />
           </div>

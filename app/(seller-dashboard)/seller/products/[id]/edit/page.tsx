@@ -184,27 +184,27 @@ export default function EditProductPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild className="rounded-full">
-          <Link href="/seller/products"><ArrowLeft className="h-5 w-5" /></Link>
+        <Button variant="ghost" size="icon" asChild className="rounded-full dark:hover:bg-white/10">
+          <Link href="/seller/products"><ArrowLeft className="h-5 w-5 dark:text-white" /></Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Edit Product</h1>
-          <p className="text-gray-500 mt-1">Update details, pricing, and stock for your listing.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Edit Product</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Update details, pricing, and stock for your listing.</p>
         </div>
       </div>
 
-      <Card className="border border-gray-200 bg-white shadow-sm rounded-2xl">
+      <Card className="border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0C1729] shadow-sm rounded-2xl">
         <CardContent className="p-6 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
             
             {/* Title */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-900">
+              <label className="text-sm font-bold text-gray-900 dark:text-gray-200">
                 Product Title <span className="text-red-500">*</span>
               </label>
               <Input
                 placeholder="Product Name"
-                className="h-11"
+                className="h-11 dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder:text-gray-500"
                 {...register("name")}
               />
               {errors.name && <p className="text-xs text-red-600 font-medium">{errors.name.message}</p>}
@@ -213,17 +213,17 @@ export default function EditProductPage() {
             {/* Category & Condition */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-gray-200">
                   Category <span className="text-red-500">*</span>
                 </label>
                 <Select
                   value={watch("category_id")}
                   onValueChange={(val) => setValue("category_id", val)}
                 >
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-11 dark:bg-[#060D1A] dark:border-white/10 dark:text-white">
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-[#0C1729] dark:border-white/10 dark:text-white">
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
@@ -235,17 +235,17 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-gray-200">
                   Item Condition <span className="text-red-500">*</span>
                 </label>
                 <Select
                   value={watch("condition")}
                   onValueChange={(val: any) => setValue("condition", val)}
                 >
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-11 dark:bg-[#060D1A] dark:border-white/10 dark:text-white">
                     <SelectValue placeholder="Select Condition" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-[#0C1729] dark:border-white/10 dark:text-white">
                     <SelectItem value="new">Brand New</SelectItem>
                     <SelectItem value="like_new">Like New (Barely used)</SelectItem>
                     <SelectItem value="good">Good (Normal wear)</SelectItem>
@@ -259,40 +259,40 @@ export default function EditProductPage() {
             {/* Price & Discount */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-gray-200">
                   Regular Price (GHS) <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="number"
                   step="1"
                   min="1"
-                  className="h-11"
+                  className="h-11 dark:bg-[#060D1A] dark:border-white/10 dark:text-white"
                   {...register("price")}
                 />
                 {errors.price && <p className="text-xs text-red-600 font-medium">{errors.price.message}</p>}
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-gray-200">
                   Discount Price (Optional)
                 </label>
                 <Input
                   type="number"
                   step="1"
                   min="0"
-                  className="h-11"
+                  className="h-11 dark:bg-[#060D1A] dark:border-white/10 dark:text-white"
                   {...register("discount_price")}
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-gray-200">
                   Stock Quantity <span className="text-red-500">*</span>
                 </label>
                 <Input
                   type="number"
                   min="0"
-                  className="h-11"
+                  className="h-11 dark:bg-[#060D1A] dark:border-white/10 dark:text-white"
                   {...register("stock_qty")}
                 />
                 {errors.stock_qty && <p className="text-xs text-red-600 font-medium">{errors.stock_qty.message}</p>}
@@ -301,17 +301,17 @@ export default function EditProductPage() {
 
             {/* Description */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-900">Product Description</label>
+              <label className="text-sm font-bold text-gray-900 dark:text-gray-200">Product Description</label>
               <Textarea 
                 placeholder="Product description..." 
-                className="min-h-[120px] resize-none"
+                className="min-h-[120px] resize-none dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder:text-gray-500"
                 {...register("description")} 
               />
             </div>
 
             {/* Image URLs */}
-            <div className="space-y-3 pt-2 border-t border-gray-100">
-              <label className="text-sm font-bold text-gray-900 flex items-center justify-between">
+            <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-white/10">
+              <label className="text-sm font-bold text-gray-900 dark:text-gray-200 flex items-center justify-between">
                 <span>Product Images</span>
                 <span className="text-xs font-normal text-gray-400">Add 1 or more image URLs</span>
               </label>
@@ -321,7 +321,7 @@ export default function EditProductPage() {
                   placeholder="Paste direct image URL"
                   value={newImageUrl}
                   onChange={(e) => setNewImageUrl(e.target.value)}
-                  className="h-11"
+                  className="h-11 dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder:text-gray-500"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
@@ -333,7 +333,7 @@ export default function EditProductPage() {
                   type="button"
                   variant="outline"
                   onClick={addImageUrl}
-                  className="h-11 shrink-0"
+                  className="h-11 shrink-0 dark:border-white/10 dark:hover:bg-white/5 dark:text-white"
                 >
                   <Plus className="w-4 h-4 mr-1.5" /> Add
                 </Button>
@@ -344,7 +344,7 @@ export default function EditProductPage() {
                   {imageUrls.map((url, i) => (
                     <div
                       key={i}
-                      className="relative w-24 h-24 rounded-xl border border-gray-200 overflow-hidden group bg-gray-50"
+                      className="relative w-24 h-24 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden group bg-gray-50 dark:bg-slate-800"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={url} alt="" className="w-full h-full object-cover" />
@@ -363,19 +363,20 @@ export default function EditProductPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
               <Button
                 variant="outline"
                 type="button"
                 onClick={() => router.back()}
                 disabled={isSubmitting}
+                className="dark:border-white/10 dark:hover:bg-white/5 dark:text-white"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-upsa-navy hover:bg-upsa-navy/90 text-white min-w-[140px]"
+                className="bg-upsa-navy dark:bg-upsa-gold hover:bg-upsa-navy/90 dark:hover:bg-upsa-gold/90 text-white dark:text-upsa-navy font-bold min-w-[140px]"
               >
                 {isSubmitting ? (
                   <>

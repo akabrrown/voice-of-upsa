@@ -86,33 +86,33 @@ export function ReportModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md bg-white">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-[#0C1729] border dark:border-white/10 text-slate-900 dark:text-white">
         <form onSubmit={handleSubmit}>
           <DialogHeader className="space-y-2">
-            <div className="flex items-center gap-2 text-red-600 font-bold">
+            <div className="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold">
               <ShieldAlert className="w-5 h-5" />
               <span>Report Community Content</span>
             </div>
-            <DialogTitle className="text-lg font-bold text-gray-900">
+            <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white">
               {resourceTitle ? `Report "${resourceTitle}"` : "Flag for Moderation"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-500">
+            <DialogDescription className="text-xs text-gray-500 dark:text-gray-400">
               Reports are treated confidentially and reviewed by campus moderators. False or malicious reports violate platform guidelines.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-1.5">
-              <Label htmlFor="report-reason" className="text-xs font-bold text-gray-700">
+              <Label htmlFor="report-reason" className="text-xs font-bold text-gray-700 dark:text-gray-300">
                 Primary Reason <span className="text-red-500">*</span>
               </Label>
               <Select value={reason} onValueChange={(val) => setReason(val as ReportReason)}>
-                <SelectTrigger id="report-reason" className="w-full text-xs">
+                <SelectTrigger id="report-reason" className="w-full text-xs dark:bg-slate-900 dark:border-white/10 dark:text-gray-200">
                   <SelectValue placeholder="Select a reason" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dark:bg-[#0C1729] dark:border-white/10">
                   {REPORT_REASONS.map((r) => (
-                    <SelectItem key={r.value} value={r.value} className="text-xs">
+                    <SelectItem key={r.value} value={r.value} className="text-xs dark:text-gray-200 dark:focus:bg-slate-800">
                       {r.label}
                     </SelectItem>
                   ))}
@@ -121,7 +121,7 @@ export function ReportModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="report-details" className="text-xs font-bold text-gray-700">
+              <Label htmlFor="report-details" className="text-xs font-bold text-gray-700 dark:text-gray-300">
                 Additional Details (Optional)
               </Label>
               <Textarea
@@ -130,9 +130,9 @@ export function ReportModal({
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 maxLength={400}
-                className="resize-none h-24 text-xs"
+                className="resize-none h-24 text-xs dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
               />
-              <span className="text-[10px] text-gray-400 block text-right">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 block text-right">
                 {details.length}/400
               </span>
             </div>
@@ -145,6 +145,7 @@ export function ReportModal({
               size="sm"
               onClick={onClose}
               disabled={isSubmitting}
+              className="dark:border-white/10 dark:hover:bg-slate-800 dark:text-gray-300"
             >
               Cancel
             </Button>

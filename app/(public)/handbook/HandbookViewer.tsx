@@ -17,7 +17,7 @@ export default function HandbookViewer() {
 
     return (
         <div className="max-w-4xl mx-auto flex flex-col items-center justify-center space-y-4">
-            <div className="relative h-[650px] w-full border border-zinc-200 rounded-lg overflow-hidden shadow-sm bg-white flex">
+            <div className="relative h-[650px] w-full border border-zinc-200 dark:border-white/10 rounded-lg overflow-hidden shadow-sm bg-white dark:bg-[#0C1729] flex">
                 <Worker workerUrl="/pdf.worker.min.js">
                     <Viewer
                         fileUrl="/students-handbook-2018.pdf"
@@ -27,15 +27,15 @@ export default function HandbookViewer() {
                         defaultScale={SpecialZoomLevel.PageFit}
                         theme="light"
                         renderLoader={(percentages: number) => (
-                            <div className="flex flex-col items-center justify-center w-full h-full space-y-4 bg-gray-50">
-                                <Loader2 className="w-8 h-8 animate-spin text-upsa-navy" />
-                                <div className="w-64 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div className="flex flex-col items-center justify-center w-full h-full space-y-4 bg-gray-50 dark:bg-[#060D1A]">
+                                <Loader2 className="w-8 h-8 animate-spin text-upsa-navy dark:text-upsa-gold" />
+                                <div className="w-64 bg-gray-200 dark:bg-white/10 rounded-full h-2.5 overflow-hidden">
                                     <div 
                                         className="bg-[#1F7A6C] h-2.5 rounded-full transition-all duration-300" 
                                         style={{ width: `${Math.round(percentages)}%` }}
                                     ></div>
                                 </div>
-                                <p className="text-sm font-medium text-gray-600">Loading Handbook ({Math.round(percentages)}%)</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-slate-400">Loading Handbook ({Math.round(percentages)}%)</p>
                             </div>
                         )}
                     />
@@ -48,7 +48,7 @@ export default function HandbookViewer() {
                             <button
                                 onClick={props.onClick}
                                 disabled={props.isDisabled}
-                                className={`p-2 rounded-full shadow-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all ${props.isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 hover:shadow-lg'}`}
+                                className={`p-2 rounded-full shadow-md bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-all ${props.isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 hover:shadow-lg'}`}
                                 aria-label="Previous page"
                             >
                                 <ChevronLeft className="w-6 h-6" />
@@ -64,7 +64,7 @@ export default function HandbookViewer() {
                             <button
                                 onClick={props.onClick}
                                 disabled={props.isDisabled}
-                                className={`p-2 rounded-full shadow-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all ${props.isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 hover:shadow-lg'}`}
+                                className={`p-2 rounded-full shadow-md bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-white/10 transition-all ${props.isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 hover:shadow-lg'}`}
                                 aria-label="Next page"
                             >
                                 <ChevronRight className="w-6 h-6" />

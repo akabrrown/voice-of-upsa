@@ -101,7 +101,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {canNativeShare && (
         <button
           onClick={handleNativeShare}
-          className="p-2 hover:bg-blue-50 rounded-full text-gray-400 hover:text-upsa-blue transition-all duration-200 hover:scale-110 active:scale-95 flex items-center gap-1.5"
+          className="p-2 hover:bg-blue-50 dark:hover:bg-white/10 rounded-full text-gray-400 dark:text-gray-400 hover:text-upsa-blue dark:hover:text-upsa-gold transition-all duration-200 hover:scale-110 active:scale-95 flex items-center gap-1.5"
           title="Share article"
         >
           <Share2 className="h-4 w-4" />
@@ -111,7 +111,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on WhatsApp */}
       <button
         onClick={() => handleSocialClick(shareLinks.whatsapp)}
-        className="p-2 hover:bg-emerald-50 rounded-full text-gray-400 hover:text-[#25D366] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-[#25D366] transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on WhatsApp"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -122,7 +122,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on Facebook */}
       <button
         onClick={() => handleSocialClick(shareLinks.facebook)}
-        className="p-2 hover:bg-blue-50 rounded-full text-gray-400 hover:text-[#1877F2] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-blue-50 dark:hover:bg-blue-600/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-[#1877F2] transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on Facebook"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -133,7 +133,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on X */}
       <button
         onClick={() => handleSocialClick(shareLinks.twitter)}
-        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black dark:hover:text-white transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 dark:text-gray-400 hover:text-black dark:hover:text-white transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on X"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on LinkedIn */}
       <button
         onClick={() => handleSocialClick(shareLinks.linkedin)}
-        className="p-2 hover:bg-blue-50 rounded-full text-gray-400 hover:text-[#0A66C2] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-blue-50 dark:hover:bg-blue-600/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-[#0A66C2] transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on LinkedIn"
       >
         <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on Telegram */}
       <button
         onClick={() => handleSocialClick(shareLinks.telegram)}
-        className="p-2 hover:bg-sky-50 rounded-full text-gray-400 hover:text-[#229ED9] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-sky-50 dark:hover:bg-sky-500/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-[#229ED9] transition-all duration-200 hover:scale-110 active:scale-95"
         title="Share on Telegram"
       >
         <Send className="h-4 w-4" />
@@ -164,7 +164,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Copy Link Button */}
       <button
         onClick={handleCopyLink}
-        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-upsa-navy transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 dark:text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold transition-all duration-200 hover:scale-110 active:scale-95"
         title="Copy article link"
       >
         {copied ? (
@@ -177,7 +177,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Print Button */}
       <button
         onClick={handlePrint}
-        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-upsa-navy transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 dark:text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold transition-all duration-200 hover:scale-110 active:scale-95"
         title="Print article"
       >
         <Printer className="h-4 w-4" />
@@ -186,7 +186,7 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Report Article Button */}
       <button
         onClick={() => setIsReportOpen(true)}
-        className="p-2 hover:bg-red-50 rounded-full text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
+        className="p-2 hover:bg-red-50 dark:hover:bg-red-500/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
         title="Report story"
         aria-label="Report story"
       >

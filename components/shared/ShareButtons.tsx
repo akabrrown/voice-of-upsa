@@ -99,7 +99,7 @@ export function ShareButtons({ url, title, className, orientation = "horizontal"
       <Button
         size="icon"
         variant="outline"
-        className="rounded-full shadow-sm transition-all hover:scale-110 bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+        className="rounded-full shadow-sm transition-all hover:scale-110 bg-white dark:bg-[#0C1729] hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-white/10"
         onClick={() => handleShare("copy", "")}
         title="Copy link"
       >

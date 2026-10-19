@@ -33,8 +33,8 @@ export default async function GalleryPage({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
-          <h1 className="text-4xl font-extrabold text-[#1B2A4A] mb-2 tracking-tight">Campus Gallery</h1>
-          <p className="text-gray-600 max-w-2xl text-lg">
+          <h1 className="text-4xl font-extrabold text-[#1B2A4A] dark:text-white mb-2 tracking-tight">Campus Gallery</h1>
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl text-lg">
             Explore photo albums curated by the editorial team and contributed by students.
           </p>
         </div>
@@ -44,7 +44,7 @@ export default async function GalleryPage({
       <div className="flex flex-wrap gap-2 mb-8">
         <Button
           variant={!category ? "default" : "outline"}
-          className={!category ? "bg-upsa-navy text-white hover:bg-upsa-navy/90" : "hover:text-upsa-navy"}
+          className={!category ? "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-navy/90 dark:hover:bg-upsa-gold/90 font-bold" : "border-gray-200 dark:border-white/10 dark:text-gray-300 dark:hover:bg-slate-800"}
           asChild
         >
           <Link href="/gallery">All Albums</Link>
@@ -53,7 +53,7 @@ export default async function GalleryPage({
           <Button
             key={cat.id}
             variant={category === cat.id ? "default" : "outline"}
-            className={category === cat.id ? "bg-upsa-navy text-white hover:bg-upsa-navy/90" : "hover:text-upsa-navy"}
+            className={category === cat.id ? "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-navy/90 dark:hover:bg-upsa-gold/90 font-bold" : "border-gray-200 dark:border-white/10 dark:text-gray-300 dark:hover:bg-slate-800"}
             asChild
           >
             <Link href={`/gallery?category=${cat.id}`}>{cat.label}</Link>
@@ -66,8 +66,8 @@ export default async function GalleryPage({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {albums.map((album) => (
             <Link href={`/gallery/${album.slug}`} key={album.id} className="group">
-              <div className="bg-white rounded-2xl overflow-hidden border shadow-sm hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+              <div className="bg-white dark:bg-[#0C1729] rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                <div className="aspect-[4/3] bg-gray-100 dark:bg-slate-800 relative overflow-hidden">
                   {album.cover_photo?.image_url ? (
                     <Image
                       src={album.cover_photo.image_url}
@@ -76,13 +76,13 @@ export default async function GalleryPage({
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 dark:text-slate-500">
                       <ImageOff className="w-12 h-12 mb-2 opacity-20" />
                       <span className="text-sm font-medium">No cover photo</span>
                     </div>
                   )}
                   {album.is_featured && (
-                    <div className="absolute top-4 right-4 bg-upsa-gold text-upsa-navy text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                    <div className="absolute top-4 right-4 bg-upsa-gold text-upsa-navy dark:text-upsa-navy text-xs font-bold px-3 py-1 rounded-full shadow-md">
                       FEATURED
                     </div>
                   )}
@@ -97,22 +97,22 @@ export default async function GalleryPage({
                   </div>
                 </div>
                 <div className="p-6">
-                  <div className="flex items-center gap-2 mb-3 text-sm font-medium text-upsa-navy/80">
+                  <div className="flex items-center gap-2 mb-3 text-sm font-medium text-upsa-navy/80 dark:text-upsa-gold">
                     <span className="uppercase tracking-wider">{album.category.replace('_', ' ')}</span>
                     {album.event_date && (
                       <>
-                        <span className="text-gray-300">•</span>
-                        <div className="flex items-center gap-1.5 text-gray-500">
+                        <span className="text-gray-300 dark:text-slate-600">•</span>
+                        <div className="flex items-center gap-1.5 text-gray-500 dark:text-slate-400">
                           <Calendar className="w-3.5 h-3.5" />
                           {new Date(album.event_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </>
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-upsa-navy transition-colors line-clamp-1 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-upsa-navy dark:group-hover:text-upsa-gold transition-colors line-clamp-1 mb-2">
                     {album.title}
                   </h3>
-                  <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
+                  <p className="text-gray-600 dark:text-slate-400 text-sm line-clamp-2 leading-relaxed">
                     {album.description || "No description provided."}
                   </p>
                 </div>
@@ -121,10 +121,10 @@ export default async function GalleryPage({
           ))}
         </div>
       ) : (
-        <div className="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-          <ImageIcon className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No albums found</h3>
-          <p className="text-gray-500 max-w-md mx-auto">
+        <div className="text-center py-24 bg-gray-50 dark:bg-[#0C1729] rounded-3xl border border-dashed border-gray-200 dark:border-white/10">
+          <ImageIcon className="w-16 h-16 mx-auto text-gray-300 dark:text-slate-600 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No albums found</h3>
+          <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
             {category 
               ? `There are currently no published albums in the ${category.replace('_', ' ')} category.`
               : "Check back soon for new photos from campus events and activities."}

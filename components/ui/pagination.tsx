@@ -17,8 +17,8 @@ export function Pagination({ currentPage, totalPages, baseHref, onPageChange }: 
     const baseClass = cn(
       "inline-flex items-center justify-center px-4 py-2 text-sm font-bold border transition-colors",
       pageNum === currentPage
-        ? "bg-upsa-navy text-white border-upsa-navy"
-        : "bg-white text-slate-800 border-gray-200 hover:bg-gray-50 hover:text-upsa-navy",
+        ? "bg-upsa-navy text-white border-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:border-upsa-gold"
+        : "bg-white text-slate-800 border-gray-200 hover:bg-gray-50 hover:text-upsa-navy dark:bg-[#0C1729] dark:text-gray-200 dark:border-white/10 dark:hover:bg-white/5 dark:hover:text-upsa-gold",
       disabled && "opacity-50 pointer-events-none",
       className
     );
@@ -71,7 +71,7 @@ export function Pagination({ currentPage, totalPages, baseHref, onPageChange }: 
           const prev = index > 0 ? visiblePages[index - 1] : p - 1;
           return (
             <React.Fragment key={p}>
-              {p - prev > 1 && <span className="px-2 text-gray-400">...</span>}
+              {p - prev > 1 && <span className="px-2 text-gray-400 dark:text-gray-500">...</span>}
               {renderPageLink(p, p, "rounded-md px-3.5")}
             </React.Fragment>
           );
@@ -79,7 +79,7 @@ export function Pagination({ currentPage, totalPages, baseHref, onPageChange }: 
       </div>
 
       {/* Mobile view simple page indicator */}
-      <span className="sm:hidden text-sm font-bold text-gray-500 mx-4">
+      <span className="sm:hidden text-sm font-bold text-gray-500 dark:text-gray-400 mx-4">
         Page {currentPage} of {totalPages}
       </span>
 

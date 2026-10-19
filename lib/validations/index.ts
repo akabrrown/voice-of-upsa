@@ -16,9 +16,11 @@ export const articleSchema = z.object({
 });
 
 export const commentSchema = z.object({
-  article_id: z.string().uuid(),
-  content: z.string().min(1).max(1000),
-  parent_id: z.string().uuid().optional(),
+  article_id: z.string().uuid("Invalid article ID"),
+  content: z.string().min(2, "Comment must be at least 2 characters").max(2000, "Comment cannot exceed 2000 characters"),
+  parent_id: z.string().uuid("Invalid parent comment ID").nullable().optional(),
+  author_name: z.string().min(2, "Name must be at least 2 characters").max(50, "Name cannot exceed 50 characters").optional(),
+  guest_id: z.string().min(10, "Valid device identifier required").optional(),
 });
 
 export const contactSchema = z.object({

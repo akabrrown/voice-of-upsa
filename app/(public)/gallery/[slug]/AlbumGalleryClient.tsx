@@ -75,10 +75,10 @@ export function AlbumGalleryClient({ photos, albumId, submissionsOpen }: { photo
 
   if (photos.length === 0) {
     return (
-      <div className="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-        <Camera className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No photos yet</h3>
-        <p className="text-gray-500 max-w-md mx-auto">
+      <div className="text-center py-24 bg-gray-50 dark:bg-[#0C1729] rounded-3xl border border-dashed border-gray-200 dark:border-white/10">
+        <Camera className="w-16 h-16 mx-auto text-gray-300 dark:text-slate-600 mb-4" />
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No photos yet</h3>
+        <p className="text-gray-500 dark:text-slate-400 max-w-md mx-auto">
           {submissionsOpen 
             ? "Be the first to submit a photo for this album!"
             : "The editorial team hasn't added photos to this album yet."}
@@ -93,7 +93,7 @@ export function AlbumGalleryClient({ photos, albumId, submissionsOpen }: { photo
         {photos.map((photo, i) => (
           <div 
             key={photo.id} 
-            className="break-inside-avoid relative group cursor-zoom-in rounded-xl overflow-hidden shadow-sm border border-gray-200/50 bg-gray-100 transition-all hover:shadow-xl hover:border-upsa-gold/50"
+            className="break-inside-avoid relative group cursor-zoom-in rounded-xl overflow-hidden shadow-sm border border-gray-200/50 dark:border-white/10 bg-gray-100 dark:bg-slate-800 transition-all hover:shadow-xl hover:border-upsa-gold/50"
             onClick={() => setLightboxIndex(i)}
           >
             {/* Aspect ratio could be varied if we used masonry properly, Next Image requires width/height or fill */}
@@ -200,12 +200,12 @@ export function AlbumGalleryClient({ photos, albumId, submissionsOpen }: { photo
 
       {/* Report Dialog */}
       <Dialog open={!!reportPhotoId} onOpenChange={(open) => !open && setReportPhotoId(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-white dark:bg-[#0C1729] border dark:border-white/10 text-slate-900 dark:text-white">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
+            <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
               <AlertTriangle className="w-5 h-5" /> Report Photo
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-gray-500 dark:text-gray-400">
               Help us keep the gallery safe. Our editorial team reviews all reports.
             </DialogDescription>
           </DialogHeader>
@@ -213,41 +213,41 @@ export function AlbumGalleryClient({ photos, albumId, submissionsOpen }: { photo
           <form onSubmit={handleReport} className="space-y-6 pt-4">
             <div className="space-y-4">
               <RadioGroup value={reportReason} onValueChange={setReportReason}>
-                <div className="flex items-start space-x-3 p-3 rounded-lg border border-red-100 bg-red-50/50">
+                <div className="flex items-start space-x-3 p-3 rounded-lg border border-red-100 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20">
                   <RadioGroupItem value="no_consent" id="no_consent" className="mt-1" />
-                  <Label htmlFor="no_consent" className="font-semibold text-gray-900 cursor-pointer">
+                  <Label htmlFor="no_consent" className="font-semibold text-gray-900 dark:text-white cursor-pointer">
                     I am in this photo and do not consent
-                    <p className="font-normal text-gray-500 text-xs mt-1">This is a priority report and will be handled urgently.</p>
+                    <p className="font-normal text-gray-500 dark:text-gray-400 text-xs mt-1">This is a priority report and will be handled urgently.</p>
                   </Label>
                 </div>
                 <div className="flex items-center space-x-3 p-2">
                   <RadioGroupItem value="inappropriate" id="inappropriate" />
-                  <Label htmlFor="inappropriate" className="cursor-pointer text-gray-700">Inappropriate content</Label>
+                  <Label htmlFor="inappropriate" className="cursor-pointer text-gray-700 dark:text-gray-300">Inappropriate content</Label>
                 </div>
                 <div className="flex items-center space-x-3 p-2">
                   <RadioGroupItem value="copyright" id="copyright" />
-                  <Label htmlFor="copyright" className="cursor-pointer text-gray-700">Copyright violation</Label>
+                  <Label htmlFor="copyright" className="cursor-pointer text-gray-700 dark:text-gray-300">Copyright violation</Label>
                 </div>
                 <div className="flex items-center space-x-3 p-2">
                   <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other" className="cursor-pointer text-gray-700">Other</Label>
+                  <Label htmlFor="other" className="cursor-pointer text-gray-700 dark:text-gray-300">Other</Label>
                 </div>
               </RadioGroup>
             </div>
 
             <div className="space-y-2">
-              <Label>Additional Details (Optional)</Label>
+              <Label className="text-gray-700 dark:text-gray-300">Additional Details (Optional)</Label>
               <Textarea 
                 placeholder="Provide any helpful context..." 
                 value={reportDetails}
                 onChange={(e) => setReportDetails(e.target.value)}
                 rows={3}
-                className="resize-none"
+                className="resize-none dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
               />
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setReportPhotoId(null)}>
+              <Button type="button" variant="outline" onClick={() => setReportPhotoId(null)} className="dark:border-white/10 dark:hover:bg-slate-800 dark:text-gray-300">
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmittingReport} variant="destructive">

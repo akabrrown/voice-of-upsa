@@ -52,16 +52,16 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black text-[#1B2A4A] tracking-tight mb-2">
+          <h1 className="text-3xl md:text-4xl font-black text-[#1B2A4A] dark:text-white tracking-tight mb-2">
             Job & Internship Board
           </h1>
-          <p className="text-gray-500 text-lg">
+          <p className="text-gray-500 dark:text-slate-400 text-lg">
             Discover career opportunities, internships, and campus gigs.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Link href="/jobs/mine">
-            <Button variant="outline" className="w-full sm:w-auto border-gray-200 text-[#1B2A4A] rounded-full px-6 shadow-sm transition-all hover:bg-gray-50">
+            <Button variant="outline" className="w-full sm:w-auto border-gray-200 dark:border-white/10 text-[#1B2A4A] dark:text-gray-200 rounded-full px-6 shadow-sm transition-all hover:bg-gray-50 dark:hover:bg-slate-800">
               Manage My Postings
             </Button>
           </Link>
@@ -75,14 +75,14 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 mb-8">
+      <div className="bg-white dark:bg-[#0C1729] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-white/10 flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by role or organization..."
-            className="pl-10 bg-gray-50/50 border-gray-200 focus-visible:ring-[#1F7A6C] rounded-xl"
+            className="pl-10 bg-gray-50/50 dark:bg-slate-900 border-gray-200 dark:border-white/10 dark:text-gray-200 focus-visible:ring-[#1F7A6C] rounded-xl"
           />
         </div>
         
@@ -90,7 +90,7 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
           <Button 
             variant={selectedType === "all" ? "default" : "outline"}
             onClick={() => setSelectedType("all")}
-            className={`rounded-xl whitespace-nowrap ${selectedType === "all" ? "bg-[#1B2A4A] text-white" : ""}`}
+            className={`rounded-xl whitespace-nowrap ${selectedType === "all" ? "bg-[#1B2A4A] dark:bg-upsa-gold dark:text-upsa-navy text-white font-bold" : "border-gray-200 dark:border-white/10 dark:text-gray-300 dark:hover:bg-slate-800"}`}
           >
             All Types
           </Button>
@@ -99,7 +99,7 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
               key={key}
               variant={selectedType === key ? "default" : "outline"}
               onClick={() => setSelectedType(key)}
-              className={`rounded-xl whitespace-nowrap ${selectedType === key ? typeColors[key] : "text-gray-600"}`}
+              className={`rounded-xl whitespace-nowrap ${selectedType === key ? typeColors[key] : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 dark:hover:bg-slate-800"}`}
             >
               {label}
             </Button>
@@ -110,10 +110,10 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
       {/* Listings */}
       <div className="space-y-4">
         {filteredJobs.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
-            <Briefcase className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-[#1B2A4A]">No opportunities found</h3>
-            <p className="text-gray-500 mt-2">Try adjusting your search or filters.</p>
+          <div className="text-center py-20 bg-white dark:bg-[#0C1729] rounded-3xl border border-dashed border-gray-200 dark:border-white/10">
+            <Briefcase className="h-12 w-12 text-gray-300 dark:text-slate-600 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-[#1B2A4A] dark:text-white">No opportunities found</h3>
+            <p className="text-gray-500 dark:text-slate-400 mt-2">Try adjusting your search or filters.</p>
           </div>
         ) : (
           filteredJobs.map((job) => {
@@ -121,17 +121,17 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
             
             return (
               <Link key={job.id} href={`/jobs/${job.slug}`} className="block group">
-                <div className={`bg-white rounded-2xl p-5 md:p-6 border transition-all duration-200 hover:shadow-lg ${job.is_featured ? 'border-[#1F7A6C]/30 bg-[#1F7A6C]/5' : 'border-gray-100 hover:border-gray-200'}`}>
+                <div className={`bg-white dark:bg-[#0C1729] rounded-2xl p-5 md:p-6 border transition-all duration-200 hover:shadow-lg ${job.is_featured ? 'border-[#1F7A6C]/30 dark:border-teal-500/40 bg-[#1F7A6C]/5 dark:bg-teal-950/20' : 'border-gray-100 dark:border-white/10 hover:border-gray-200 dark:hover:border-white/20'}`}>
                   <div className="flex flex-col md:flex-row gap-5 items-start">
                     
                     {/* Organization Logo Placeholder */}
-                    <div className="h-16 w-16 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-center shrink-0">
-                      <Building className="h-8 w-8 text-gray-400" />
+                    <div className="h-16 w-16 bg-gray-50 dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-white/10 flex items-center justify-center shrink-0">
+                      <Building className="h-8 w-8 text-gray-400 dark:text-slate-500" />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap gap-2 items-center mb-2">
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md tracking-wide ${typeColors[job.type] || 'bg-gray-100'}`}>
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-md tracking-wide ${typeColors[job.type] || 'bg-gray-100 dark:bg-slate-800'}`}>
                           {typeLabels[job.type] || job.type}
                         </span>
                         
@@ -143,22 +143,22 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                         )}
                         
                         {job.is_featured && (
-                          <span className="text-xs font-bold px-2.5 py-1 rounded-md tracking-wide bg-yellow-100 text-yellow-800 border border-yellow-200">
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-md tracking-wide bg-yellow-100 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800/50">
                             Featured
                           </span>
                         )}
                       </div>
                       
-                      <h3 className="text-xl font-bold text-[#1B2A4A] group-hover:text-[#1F7A6C] transition-colors line-clamp-1">
+                      <h3 className="text-xl font-bold text-[#1B2A4A] dark:text-white group-hover:text-[#1F7A6C] dark:group-hover:text-teal-400 transition-colors line-clamp-1">
                         {job.title}
                       </h3>
-                      <p className="text-gray-500 font-medium mb-4 flex items-center gap-1">
+                      <p className="text-gray-500 dark:text-slate-400 font-medium mb-4 flex items-center gap-1">
                         {job.organization_name}
                       </p>
 
-                      <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-gray-500">
+                      <div className="flex flex-wrap gap-y-2 gap-x-6 text-sm text-gray-500 dark:text-slate-400">
                         <div className="flex items-center gap-1.5">
-                          <MapPin className="h-4 w-4 text-gray-400" />
+                          <MapPin className="h-4 w-4 text-gray-400 dark:text-slate-500" />
                           <span className="capitalize">
                             {job.location_type.replace('_', ' ')} 
                             {job.location_label ? ` • ${job.location_label}` : ''}
@@ -166,20 +166,20 @@ export default function JobsClient({ initialJobs }: { initialJobs: any[] }) {
                         </div>
                         
                         <div className="flex items-center gap-1.5">
-                          <Banknote className="h-4 w-4 text-gray-400" />
+                          <Banknote className="h-4 w-4 text-gray-400 dark:text-slate-500" />
                           <span className="capitalize">{job.compensation_type}</span>
                         </div>
                         
                         {job.expires_at && (
                           <div className="flex items-center gap-1.5">
-                            <Clock className="h-4 w-4 text-gray-400" />
+                            <Clock className="h-4 w-4 text-gray-400 dark:text-slate-500" />
                             <span>Closes {formatDistanceToNow(new Date(job.expires_at), { addSuffix: true })}</span>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="mt-4 md:mt-0 flex items-center text-gray-400 group-hover:text-[#1F7A6C] transition-colors self-center">
+                    <div className="mt-4 md:mt-0 flex items-center text-gray-400 dark:text-slate-500 group-hover:text-[#1F7A6C] dark:group-hover:text-teal-400 transition-colors self-center">
                       <span className="text-sm font-semibold mr-1">Details</span>
                       <ChevronRight className="h-5 w-5" />
                     </div>

@@ -62,21 +62,21 @@ export default async function UserHistoryPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-3 border-b pb-6">
+      <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-6">
         <div className="p-3 bg-upsa-gold/10 text-upsa-gold rounded-xl">
           <History className="h-8 w-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Reading History</h1>
-          <p className="text-gray-500 mt-1">Articles you've recently viewed.</p>
+          <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Reading History</h1>
+          <p className="text-gray-500 dark:text-slate-400 mt-1">Articles you've recently viewed.</p>
         </div>
       </div>
 
       {readArticles.length === 0 ? (
-        <div className="text-center py-24 bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <History className="h-16 w-16 text-gray-200 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">No history found</h3>
-          <p className="text-gray-500">
+        <div className="text-center py-24 bg-white dark:bg-[#0C1729] rounded-3xl border border-gray-100 dark:border-white/10 shadow-sm">
+          <History className="h-16 w-16 text-gray-200 dark:text-slate-700 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No history found</h3>
+          <p className="text-gray-500 dark:text-slate-400">
             You haven't read any articles recently while logged in.
           </p>
         </div>

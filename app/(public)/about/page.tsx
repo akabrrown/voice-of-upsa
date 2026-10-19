@@ -1,7 +1,23 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { Users, Target, ShieldCheck, Award, FileText, Download } from "lucide-react";
 import { AboutSlideshow } from "@/components/about/AboutSlideshow";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "About Us | Voice of UPSA",
+  description: "Learn about Voice of UPSA, our journalistic mission, the editorial team, and our commitment to serving the University of Professional Studies, Accra community.",
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    title: "About Us | Voice of UPSA",
+    description: "Learn about Voice of UPSA, our journalistic mission, the editorial team, and our commitment to serving the University of Professional Studies, Accra community.",
+    url: "/about",
+    type: "website",
+  },
+};
+
 export default async function AboutPage() {
   const supabase = await createClient();
 
@@ -20,14 +36,14 @@ export default async function AboutPage() {
 
   return (
     <>
-      <main className="flex-1 bg-white">
+      <main className="flex-1 bg-white dark:bg-[#060D1A] transition-colors">
         {/* Hero Section */}
-        <section className="relative py-20 bg-upsa-navy text-white overflow-hidden">
+        <section className="relative py-20 bg-upsa-navy dark:bg-[#0C1729] text-white overflow-hidden border-b border-upsa-navy/10 dark:border-white/10">
           <div className="absolute top-0 right-0 w-1/3 h-full bg-upsa-gold/10 skew-x-12 translate-x-1/2" />
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">About Voice of UPSA</h1>
-              <p className="text-xl text-gray-300 leading-relaxed">
+              <p className="text-xl text-gray-300 dark:text-gray-300 leading-relaxed">
                 The official digital gateway to news, events, and professional insights from the University of Professional Studies, Accra.
               </p>
             </div>
@@ -39,25 +55,25 @@ export default async function AboutPage() {
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
               <div>
-                <div className="inline-block p-3 bg-upsa-gold/10 rounded-2xl mb-6">
+                <div className="inline-block p-3 bg-upsa-gold/10 dark:bg-white/10 rounded-2xl mb-6">
                   <Target className="h-8 w-8 text-upsa-gold" />
                 </div>
-                <h2 className="text-3xl font-bold text-upsa-navy mb-6">Our Mission</h2>
-                <p className="text-gray-600 leading-relaxed mb-6">
+                <h2 className="text-3xl font-bold text-upsa-navy dark:text-white mb-6">Our Mission</h2>
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
                   To provide a credible, timely, and engaging platform that informs, educates, and connects the UPSA community, alumni, and stakeholders while upholding the highest standards of professional journalism.
                 </p>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="flex items-start space-x-3">
                     <ShieldCheck className="h-5 w-5 text-upsa-gold shrink-0 mt-1" />
-                    <span className="text-sm font-bold text-upsa-navy">Credibility</span>
+                    <span className="text-sm font-bold text-upsa-navy dark:text-white">Credibility</span>
                   </div>
                   <div className="flex items-start space-x-3">
                     <Users className="h-5 w-5 text-upsa-gold shrink-0 mt-1" />
-                    <span className="text-sm font-bold text-upsa-navy">Community</span>
+                    <span className="text-sm font-bold text-upsa-navy dark:text-white">Community</span>
                   </div>
                   <div className="flex items-start space-x-3">
                     <Award className="h-5 w-5 text-upsa-gold shrink-0 mt-1" />
-                    <span className="text-sm font-bold text-upsa-navy">Excellence</span>
+                    <span className="text-sm font-bold text-upsa-navy dark:text-white">Excellence</span>
                   </div>
                 </div>
               </div>
@@ -67,18 +83,18 @@ export default async function AboutPage() {
         </section>
 
         {/* Editorial Team */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-20 bg-gray-50 dark:bg-[#081224] border-y border-gray-100 dark:border-white/10">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-upsa-navy mb-4">The Editorial Team</h2>
-            <p className="text-gray-500 max-w-xl mx-auto mb-12 text-sm">
+            <h2 className="text-3xl font-bold text-upsa-navy dark:text-white mb-4">The Editorial Team</h2>
+            <p className="text-gray-500 dark:text-gray-400 max-w-xl mx-auto mb-12 text-sm">
               The journalists, editors, and multimedia creators dedicated to delivering verified news and student perspectives across the UPSA campus.
             </p>
 
             {teamMembers && teamMembers.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {teamMembers.map((member: any) => (
-                  <div key={member.id || member.name} className="bg-white p-7 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all duration-200 flex flex-col items-center">
-                    <div className="relative w-24 h-24 mx-auto mb-5 rounded-full overflow-hidden border-2 border-upsa-gold shadow-sm bg-gray-50 shrink-0">
+                  <div key={member.id || member.name} className="bg-white dark:bg-[#0C1729] p-7 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-white/20 transition-all duration-200 flex flex-col items-center">
+                    <div className="relative w-24 h-24 mx-auto mb-5 rounded-full overflow-hidden border-2 border-upsa-gold shadow-sm bg-gray-50 dark:bg-white/5 shrink-0">
                       <Image 
                         src={member.image_url || "/logo.png"} 
                         alt={member.name} 
@@ -87,10 +103,10 @@ export default async function AboutPage() {
                         className="object-cover" 
                       />
                     </div>
-                    <h3 className="text-base font-bold text-upsa-navy text-center">{member.name}</h3>
+                    <h3 className="text-base font-bold text-upsa-navy dark:text-white text-center">{member.name}</h3>
                     <p className="text-[11px] text-upsa-gold font-bold uppercase tracking-wider mt-1 text-center">{member.role}</p>
                     {member.bio && (
-                      <p className="text-xs text-gray-500 mt-2.5 line-clamp-3 leading-relaxed text-center">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2.5 line-clamp-3 leading-relaxed text-center">
                         {member.bio}
                       </p>
                     )}
@@ -98,12 +114,12 @@ export default async function AboutPage() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-2xl p-10 max-w-md mx-auto border border-dashed border-gray-200">
+              <div className="bg-white dark:bg-[#0C1729] rounded-2xl p-10 max-w-md mx-auto border border-dashed border-gray-200 dark:border-white/10">
                 <div className="relative w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-2 border-upsa-gold shadow-sm">
                   <Image src="/logo.png" alt="Voice of UPSA" fill sizes="64px" className="object-cover" />
                 </div>
-                <h3 className="font-bold text-upsa-navy text-sm">Editorial Board</h3>
-                <p className="text-xs text-gray-500 mt-1">
+                <h3 className="font-bold text-upsa-navy dark:text-white text-sm">Editorial Board</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Our newsroom roster is being updated by the university administration.
                 </p>
               </div>
@@ -112,11 +128,11 @@ export default async function AboutPage() {
         </section>
 
         {/* Documents & Reports */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-[#060D1A]">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mb-12">
-              <h2 className="text-3xl font-bold text-upsa-navy mb-4">Documents & Reports</h2>
-              <p className="text-gray-600 leading-relaxed">
+              <h2 className="text-3xl font-bold text-upsa-navy dark:text-white mb-4">Documents & Reports</h2>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 Access our annual reports and official documents to stay informed about our progress and activities.
               </p>
             </div>
@@ -129,19 +145,19 @@ export default async function AboutPage() {
                     href={doc.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex flex-col p-6 border border-gray-100 rounded-2xl hover:border-upsa-gold/30 hover:shadow-xl transition-all duration-300 bg-gray-50/50 hover:bg-white"
+                    className="group flex flex-col p-6 border border-gray-100 dark:border-white/10 rounded-2xl hover:border-upsa-gold/30 hover:shadow-xl transition-all duration-300 bg-gray-50/50 dark:bg-[#0C1729] hover:bg-white dark:hover:bg-[#111F36]"
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div className="p-3 bg-white rounded-xl shadow-sm text-upsa-gold group-hover:bg-upsa-gold group-hover:text-white transition-colors">
+                      <div className="p-3 bg-white dark:bg-white/10 rounded-xl shadow-sm text-upsa-gold group-hover:bg-upsa-gold group-hover:text-white transition-colors">
                         <FileText className="h-6 w-6" />
                       </div>
-                      <Download className="h-5 w-5 text-gray-300 group-hover:text-upsa-navy transition-colors" />
+                      <Download className="h-5 w-5 text-gray-300 dark:text-gray-500 group-hover:text-upsa-navy dark:group-hover:text-upsa-gold transition-colors" />
                     </div>
-                    <h3 className="font-bold text-upsa-navy mb-2 line-clamp-2">{doc.title}</h3>
+                    <h3 className="font-bold text-upsa-navy dark:text-white mb-2 line-clamp-2">{doc.title}</h3>
                     {doc.description && (
-                      <p className="text-sm text-gray-500 line-clamp-2 mb-4">{doc.description}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">{doc.description}</p>
                     )}
-                    <div className="flex items-center text-[10px] font-bold text-gray-400 uppercase tracking-wider space-x-4 mt-auto pt-4 border-t border-gray-100">
+                    <div className="flex items-center text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider space-x-4 mt-auto pt-4 border-t border-gray-100 dark:border-white/10">
                       <span>{doc.file_type}</span>
                       <span>•</span>
                       <span>{(doc.file_size_bytes / 1024 / 1024).toFixed(2)} MB</span>
@@ -150,9 +166,9 @@ export default async function AboutPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                <FileText className="h-10 w-10 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 font-medium">No official documents available at this time.</p>
+              <div className="text-center py-12 bg-gray-50 dark:bg-[#0C1729] rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+                <FileText className="h-10 w-10 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-500 dark:text-gray-400 font-medium">No official documents available at this time.</p>
               </div>
             )}
           </div>

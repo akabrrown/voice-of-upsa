@@ -58,26 +58,26 @@ export function CreatePollClient() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild className="-ml-2">
+        <Button variant="ghost" size="icon" asChild className="-ml-2 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-white/10">
           <Link href="/dashboard/admin/polls"><ChevronLeft className="w-5 h-5" /></Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-[#1B2A4A]">Create New Poll</h1>
-          <p className="text-sm text-gray-500">Engage the student body with a new poll.</p>
+          <h1 className="text-2xl font-bold text-[#1B2A4A] dark:text-white">Create New Poll</h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400">Engage the student body with a new poll.</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <form onSubmit={handleSubmit} className="space-y-8 bg-white dark:bg-[#0C1729] p-6 rounded-xl shadow-sm border border-gray-100 dark:border-white/10">
         
         {/* Question */}
         <div className="space-y-2">
-          <Label htmlFor="question" className="text-base font-semibold">Question</Label>
+          <Label htmlFor="question" className="text-base font-semibold text-gray-900 dark:text-white">Question</Label>
           <Textarea 
             id="question" 
             name="question" 
             placeholder="e.g., Should the library extend its opening hours during weekends?" 
             required 
-            className="text-base resize-none"
+            className="text-base resize-none bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
             rows={3}
           />
         </div>
@@ -85,12 +85,12 @@ export function CreatePollClient() {
         {/* Category & Status & Visibility */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="category" className="font-semibold">Category</Label>
+            <Label htmlFor="category" className="font-semibold text-gray-900 dark:text-white">Category</Label>
             <Select name="category" defaultValue="campus_life" required>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white dark:bg-[#0C1729] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                 <SelectItem value="academics">Academics</SelectItem>
                 <SelectItem value="campus_life">Campus Life</SelectItem>
                 <SelectItem value="events">Events</SelectItem>
@@ -101,12 +101,12 @@ export function CreatePollClient() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status" className="font-semibold">Status</Label>
+            <Label htmlFor="status" className="font-semibold text-gray-900 dark:text-white">Status</Label>
             <Select name="status" defaultValue="published" required>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white dark:bg-[#0C1729] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                 <SelectItem value="published">Published (Live immediately)</SelectItem>
                 <SelectItem value="draft">Draft (Hidden)</SelectItem>
                 <SelectItem value="closed">Closed</SelectItem>
@@ -115,12 +115,12 @@ export function CreatePollClient() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="results_visibility" className="font-semibold">Results Visibility</Label>
+            <Label htmlFor="results_visibility" className="font-semibold text-gray-900 dark:text-white">Results Visibility</Label>
             <Select name="results_visibility" defaultValue="after_vote" required>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                 <SelectValue placeholder="When can students see results?" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white dark:bg-[#0C1729] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                 <SelectItem value="after_vote">After voting (Recommended)</SelectItem>
                 <SelectItem value="always">Always visible</SelectItem>
                 <SelectItem value="after_close">Only after poll closes</SelectItem>
@@ -129,41 +129,42 @@ export function CreatePollClient() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="expires_at" className="font-semibold">Expires At (Optional)</Label>
+            <Label htmlFor="expires_at" className="font-semibold text-gray-900 dark:text-white">Expires At (Optional)</Label>
             <Input 
               type="datetime-local" 
               id="expires_at" 
               name="expires_at" 
-              className="w-full"
+              className="w-full bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
             />
-            <p className="text-xs text-gray-500">Leave blank for manual closing.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">Leave blank for manual closing.</p>
           </div>
         </div>
 
         {/* Options */}
-        <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-white/10">
           <div className="flex items-center justify-between">
-            <Label className="text-base font-semibold">Options</Label>
-            <span className="text-xs text-gray-500">{options.length}/6</span>
+            <Label className="text-base font-semibold text-gray-900 dark:text-white">Options</Label>
+            <span className="text-xs text-gray-500 dark:text-slate-400">{options.length}/6</span>
           </div>
           
           <div className="space-y-3">
             {options.map((opt, index) => (
               <div key={index} className="flex items-center gap-2">
-                <div className="bg-gray-100 text-gray-500 w-8 h-10 flex items-center justify-center rounded-md font-mono text-sm shrink-0">
+                <div className="bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-slate-400 w-8 h-10 flex items-center justify-center rounded-md font-mono text-sm shrink-0">
                   {index + 1}
                 </div>
                 <Input 
                   value={opt}
                   onChange={(e) => handleOptionChange(index, e.target.value)}
                   placeholder={`Option ${index + 1}`}
+                  className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
                   required
                 />
                 <Button 
                   type="button" 
                   variant="ghost" 
                   size="icon"
-                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0"
+                  className="text-gray-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
                   onClick={() => removeOption(index)}
                   disabled={options.length <= 2}
                 >
@@ -177,7 +178,7 @@ export function CreatePollClient() {
             <Button 
               type="button" 
               variant="outline" 
-              className="w-full border-dashed"
+              className="w-full border-dashed border-gray-200 dark:border-white/20 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-white/5"
               onClick={addOption}
             >
               <Plus className="w-4 h-4 mr-2" /> Add Option
@@ -185,11 +186,11 @@ export function CreatePollClient() {
           )}
         </div>
 
-        <div className="pt-6 border-t flex justify-end gap-3">
-          <Button type="button" variant="ghost" asChild>
+        <div className="pt-6 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3">
+          <Button type="button" variant="ghost" asChild className="text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-white/10">
             <Link href="/dashboard/admin/polls">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy font-bold px-8">
+          <Button type="submit" disabled={isSubmitting} className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-gray-950 dark:hover:bg-upsa-gold/90 font-bold px-8">
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Create Poll
           </Button>

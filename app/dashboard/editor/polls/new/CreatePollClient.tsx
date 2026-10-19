@@ -62,12 +62,12 @@ export function CreatePollClient() {
           <Link href="/dashboard/editor/polls"><ChevronLeft className="w-5 h-5" /></Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-[#1B2A4A]">Create New Poll</h1>
-          <p className="text-sm text-gray-500">Engage the student body with a new poll.</p>
+          <h1 className="text-2xl font-bold text-[#1B2A4A] dark:text-white">Create New Poll</h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400">Engage the student body with a new poll.</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <form onSubmit={handleSubmit} className="space-y-8 bg-white dark:bg-[#0C1729] p-6 rounded-xl shadow-sm border border-gray-100 dark:border-white/10">
         
         {/* Question */}
         <div className="space-y-2">
@@ -136,21 +136,21 @@ export function CreatePollClient() {
               name="expires_at" 
               className="w-full"
             />
-            <p className="text-xs text-gray-500">Leave blank for manual closing.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">Leave blank for manual closing.</p>
           </div>
         </div>
 
         {/* Options */}
-        <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-white/10">
           <div className="flex items-center justify-between">
             <Label className="text-base font-semibold">Options</Label>
-            <span className="text-xs text-gray-500">{options.length}/6</span>
+            <span className="text-xs text-gray-500 dark:text-slate-400">{options.length}/6</span>
           </div>
           
           <div className="space-y-3">
             {options.map((opt, index) => (
               <div key={index} className="flex items-center gap-2">
-                <div className="bg-gray-100 text-gray-500 w-8 h-10 flex items-center justify-center rounded-md font-mono text-sm shrink-0">
+                <div className="bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-slate-400 w-8 h-10 flex items-center justify-center rounded-md font-mono text-sm shrink-0 border border-gray-200 dark:border-white/10">
                   {index + 1}
                 </div>
                 <Input 
@@ -163,7 +163,7 @@ export function CreatePollClient() {
                   type="button" 
                   variant="ghost" 
                   size="icon"
-                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0"
+                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
                   onClick={() => removeOption(index)}
                   disabled={options.length <= 2}
                 >
@@ -177,7 +177,7 @@ export function CreatePollClient() {
             <Button 
               type="button" 
               variant="outline" 
-              className="w-full border-dashed"
+              className="w-full border-dashed border-gray-300 dark:border-white/20 dark:hover:bg-white/5 dark:text-slate-200"
               onClick={addOption}
             >
               <Plus className="w-4 h-4 mr-2" /> Add Option
@@ -185,11 +185,11 @@ export function CreatePollClient() {
           )}
         </div>
 
-        <div className="pt-6 border-t flex justify-end gap-3">
+        <div className="pt-6 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3">
           <Button type="button" variant="ghost" asChild>
             <Link href="/dashboard/editor/polls">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy font-bold px-8">
+          <Button type="submit" disabled={isSubmitting} className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 font-bold px-8">
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Create Poll
           </Button>

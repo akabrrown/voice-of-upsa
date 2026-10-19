@@ -211,18 +211,18 @@ export default function NewProductPage() {
           <Link href="/seller/products"><ArrowLeft className="h-5 w-5" /></Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Add New Product</h1>
-          <p className="text-gray-500 mt-1">List a new item for sale in your campus store.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Add New Product</h1>
+          <p className="text-gray-500 dark:text-slate-400 mt-1">List a new item for sale in your campus store.</p>
         </div>
       </div>
 
-      <Card className="border border-gray-200 bg-white shadow-sm rounded-2xl">
+      <Card className="border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0C1729] shadow-sm rounded-2xl">
         <CardContent className="p-6 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
             
             {/* Title */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-900">
+              <label className="text-sm font-bold text-gray-900 dark:text-white">
                 Product Title <span className="text-red-500">*</span>
               </label>
               <Input
@@ -236,7 +236,7 @@ export default function NewProductPage() {
             {/* Category & Condition */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-white">
                   Category <span className="text-red-500">*</span>
                 </label>
                 <Select
@@ -258,7 +258,7 @@ export default function NewProductPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-white">
                   Item Condition <span className="text-red-500">*</span>
                 </label>
                 <Select
@@ -282,7 +282,7 @@ export default function NewProductPage() {
             {/* Price & Discount */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-white">
                   Regular Price (GHS) <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -297,7 +297,7 @@ export default function NewProductPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-white">
                   Discount Price (Optional)
                 </label>
                 <Input
@@ -308,11 +308,11 @@ export default function NewProductPage() {
                   className="h-11"
                   {...register("discount_price")}
                 />
-                <span className="text-[11px] text-gray-400">Must be lower than regular price</span>
+                <span className="text-[11px] text-gray-400 dark:text-slate-400">Must be lower than regular price</span>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-900">
+                <label className="text-sm font-bold text-gray-900 dark:text-white">
                   Stock Quantity <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -327,7 +327,7 @@ export default function NewProductPage() {
 
             {/* Description */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-900">Product Description</label>
+              <label className="text-sm font-bold text-gray-900 dark:text-white">Product Description</label>
               <Textarea 
                 placeholder="Include specifications, edition, reason for selling, or campus pickup instructions..." 
                 className="min-h-[120px] resize-none"
@@ -336,10 +336,10 @@ export default function NewProductPage() {
             </div>
 
             {/* Image URLs */}
-            <div className="space-y-3 pt-2 border-t border-gray-100">
-              <label className="text-sm font-bold text-gray-900 flex items-center justify-between">
+            <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-white/10">
+              <label className="text-sm font-bold text-gray-900 dark:text-white flex items-center justify-between">
                 <span>Product Images</span>
-                <span className="text-xs font-normal text-gray-400">Add 1 or more image URLs</span>
+                <span className="text-xs font-normal text-gray-400 dark:text-slate-400">Add 1 or more image URLs</span>
               </label>
 
               <div className="flex gap-2">
@@ -359,7 +359,7 @@ export default function NewProductPage() {
                   type="button"
                   variant="outline"
                   onClick={addImageUrl}
-                  className="h-11 shrink-0"
+                  className="h-11 shrink-0 border-gray-200 dark:border-white/10 dark:hover:bg-white/5"
                 >
                   <Plus className="w-4 h-4 mr-1.5" /> Add
                 </Button>
@@ -370,7 +370,7 @@ export default function NewProductPage() {
                   {imageUrls.map((url, i) => (
                     <div
                       key={i}
-                      className="relative w-24 h-24 rounded-xl border border-gray-200 overflow-hidden group bg-gray-50"
+                      className="relative w-24 h-24 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden group bg-gray-50 dark:bg-white/5"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={url} alt="" className="w-full h-full object-cover" />
@@ -389,19 +389,20 @@ export default function NewProductPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
               <Button
                 variant="outline"
                 type="button"
                 onClick={() => router.back()}
                 disabled={isSubmitting}
+                className="border-gray-200 dark:border-white/10 dark:hover:bg-white/5"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-upsa-navy hover:bg-upsa-navy/90 text-white min-w-[140px]"
+                className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 font-bold min-w-[140px]"
               >
                 {isSubmitting ? (
                   <>

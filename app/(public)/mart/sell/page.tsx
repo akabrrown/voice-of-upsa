@@ -109,15 +109,15 @@ export default function SellOnMartPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#060D1A] transition-colors duration-300">
       {/* Header */}
-      <div className="bg-upsa-navy text-white py-16 px-6 relative overflow-hidden">
+      <div className="bg-upsa-navy dark:bg-[#080F1E] text-white py-16 px-6 relative overflow-hidden border-b dark:border-white/10">
         <div className="container max-w-3xl relative z-10 mx-auto text-center">
           <Store className="h-12 w-12 mx-auto mb-6 text-upsa-gold" />
           <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight mb-4 uppercase">
             Become a Seller
           </h1>
-          <p className="text-lg text-white/80 max-w-lg mx-auto leading-relaxed">
+          <p className="text-lg text-white/80 dark:text-gray-300 max-w-lg mx-auto leading-relaxed">
             Join Campus Mart and start selling to the UPSA community today. Fast, trusted, and zero commissions.
           </p>
         </div>
@@ -127,62 +127,62 @@ export default function SellOnMartPage() {
 
       {/* Main Form Area */}
       <div className="container max-w-3xl mx-auto px-6 py-12 -mt-8 relative z-20">
-        <div className="bg-white border border-border/60 p-8 lg:p-12 shadow-sm rounded-none">
-          <div className="mb-10 pb-6 border-b border-border/40">
-            <h2 className="text-2xl font-extrabold text-upsa-navy uppercase tracking-widest">Application Details</h2>
-            <p className="text-sm text-gray-500 mt-2 font-medium">We verify all sellers to keep our community safe. Please provide accurate information.</p>
+        <div className="bg-white dark:bg-[#0C1729] border border-border/60 dark:border-white/10 p-8 lg:p-12 shadow-sm rounded-none">
+          <div className="mb-10 pb-6 border-b border-border/40 dark:border-white/10">
+            <h2 className="text-2xl font-extrabold text-upsa-navy dark:text-white uppercase tracking-widest">Application Details</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 font-medium">We verify all sellers to keep our community safe. Please provide accurate information.</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
             {errorMsg && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4">
-                <p className="text-sm font-bold text-red-800">{errorMsg}</p>
+              <div className="bg-red-50 dark:bg-red-950/40 border-l-4 border-red-500 p-4">
+                <p className="text-sm font-bold text-red-800 dark:text-red-300">{errorMsg}</p>
               </div>
             )}
 
             {/* Seller Type */}
             <div className="space-y-4">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">I am applying as a...</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">I am applying as a...</Label>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div
                   className={`cursor-pointer border-2 p-6 transition-all ${
                     sellerType === "student"
-                      ? "border-upsa-navy bg-upsa-navy/5"
-                      : "border-border/60 hover:border-upsa-navy/50"
+                      ? "border-upsa-navy dark:border-upsa-gold bg-upsa-navy/5 dark:bg-upsa-gold/10"
+                      : "border-border/60 dark:border-white/10 hover:border-upsa-navy/50 dark:hover:border-white/20 bg-transparent"
                   }`}
                   onClick={() => setValue("seller_type", "student")}
                 >
-                  <GraduationCap className={`mb-4 h-8 w-8 ${sellerType === "student" ? "text-upsa-navy" : "text-gray-400"}`} />
-                  <h3 className={`font-extrabold text-lg mb-1 ${sellerType === "student" ? "text-upsa-navy" : "text-gray-700"}`}>Student Individual</h3>
-                  <p className="text-xs font-medium text-gray-500">Selling personal items, books, or small side-hustles.</p>
+                  <GraduationCap className={`mb-4 h-8 w-8 ${sellerType === "student" ? "text-upsa-navy dark:text-upsa-gold" : "text-gray-400 dark:text-gray-500"}`} />
+                  <h3 className={`font-extrabold text-lg mb-1 ${sellerType === "student" ? "text-upsa-navy dark:text-upsa-gold" : "text-gray-700 dark:text-gray-200"}`}>Student Individual</h3>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Selling personal items, books, or small side-hustles.</p>
                 </div>
                 
                 <div
                   className={`cursor-pointer border-2 p-6 transition-all ${
                     sellerType === "student_business"
-                      ? "border-upsa-navy bg-upsa-navy/5"
-                      : "border-border/60 hover:border-upsa-navy/50"
+                      ? "border-upsa-navy dark:border-upsa-gold bg-upsa-navy/5 dark:bg-upsa-gold/10"
+                      : "border-border/60 dark:border-white/10 hover:border-upsa-navy/50 dark:hover:border-white/20 bg-transparent"
                   }`}
                   onClick={() => setValue("seller_type", "student_business")}
                 >
-                  <Building className={`mb-4 h-8 w-8 ${sellerType === "student_business" ? "text-upsa-navy" : "text-gray-400"}`} />
-                  <h3 className={`font-extrabold text-lg mb-1 ${sellerType === "student_business" ? "text-upsa-navy" : "text-gray-700"}`}>Student Business</h3>
-                  <p className="text-xs font-medium text-gray-500">Running a formal business on campus.</p>
+                  <Building className={`mb-4 h-8 w-8 ${sellerType === "student_business" ? "text-upsa-navy dark:text-upsa-gold" : "text-gray-400 dark:text-gray-500"}`} />
+                  <h3 className={`font-extrabold text-lg mb-1 ${sellerType === "student_business" ? "text-upsa-navy dark:text-upsa-gold" : "text-gray-700 dark:text-gray-200"}`}>Student Business</h3>
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Running a formal business on campus.</p>
                 </div>
               </div>
             </div>
 
-            <div className="h-px w-full bg-border/40" />
+            <div className="h-px w-full bg-border/40 dark:bg-white/10" />
 
             {/* Business Details (Conditional) */}
             {sellerType === "student_business" && (
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <Label htmlFor="business_name" className="text-xs font-bold uppercase tracking-widest text-upsa-navy">Business / Store Name</Label>
-                  <Input id="business_name" {...register("business_name")} placeholder="e.g. Campus Kicks" className="rounded-none h-12 border-border/60 focus-visible:ring-0 focus-visible:border-upsa-navy" />
+                  <Label htmlFor="business_name" className="text-xs font-bold uppercase tracking-widest text-upsa-navy dark:text-white">Business / Store Name</Label>
+                  <Input id="business_name" {...register("business_name")} placeholder="e.g. Campus Kicks" className="rounded-none h-12 border-border/60 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-0 focus-visible:border-upsa-navy dark:focus-visible:border-upsa-gold" />
                   {errors.business_name && <p className="text-xs font-bold text-red-500">{errors.business_name.message}</p>}
                 </div>
-                <div className="h-px w-full bg-border/40" />
+                <div className="h-px w-full bg-border/40 dark:bg-white/10" />
               </div>
             )}
 
@@ -190,38 +190,38 @@ export default function SellOnMartPage() {
             <div className="space-y-6">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-3">
-                  <Label htmlFor="full_name" className="text-xs font-bold uppercase tracking-widest text-upsa-navy">{sellerType === "student_business" ? "Owner's Full Name" : "Full Name"}</Label>
-                  <Input id="full_name" {...register("full_name")} placeholder="e.g. John Doe" className="rounded-none h-12 border-border/60 focus-visible:ring-0 focus-visible:border-upsa-navy" />
+                  <Label htmlFor="full_name" className="text-xs font-bold uppercase tracking-widest text-upsa-navy dark:text-white">{sellerType === "student_business" ? "Owner's Full Name" : "Full Name"}</Label>
+                  <Input id="full_name" {...register("full_name")} placeholder="e.g. John Doe" className="rounded-none h-12 border-border/60 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-0 focus-visible:border-upsa-navy dark:focus-visible:border-upsa-gold" />
                   {errors.full_name && <p className="text-xs font-bold text-red-500">{errors.full_name.message}</p>}
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="index_number" className="text-xs font-bold uppercase tracking-widest text-upsa-navy">Student ID / Index No.</Label>
-                  <Input id="index_number" {...register("index_number")} placeholder="e.g. 10XXXXXX" className="rounded-none h-12 border-border/60 focus-visible:ring-0 focus-visible:border-upsa-navy" />
-                  <p className="text-xs font-medium text-gray-400">Required for student verification</p>
+                  <Label htmlFor="index_number" className="text-xs font-bold uppercase tracking-widest text-upsa-navy dark:text-white">Student ID / Index No.</Label>
+                  <Input id="index_number" {...register("index_number")} placeholder="e.g. 10XXXXXX" className="rounded-none h-12 border-border/60 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-0 focus-visible:border-upsa-navy dark:focus-visible:border-upsa-gold" />
+                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500">Required for student verification</p>
                   {errors.index_number && <p className="text-xs font-bold text-red-500">{errors.index_number.message}</p>}
                 </div>
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-3">
-                  <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-upsa-navy">Phone Number</Label>
-                  <Input id="phone" {...register("phone")} placeholder="024XXXXXXX" className="rounded-none h-12 border-border/60 focus-visible:ring-0 focus-visible:border-upsa-navy" />
+                  <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-widest text-upsa-navy dark:text-white">Phone Number</Label>
+                  <Input id="phone" {...register("phone")} placeholder="024XXXXXXX" className="rounded-none h-12 border-border/60 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-0 focus-visible:border-upsa-navy dark:focus-visible:border-upsa-gold" />
                   {errors.phone && <p className="text-xs font-bold text-red-500">{errors.phone.message}</p>}
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="whatsapp_number" className="text-xs font-bold uppercase tracking-widest text-upsa-navy">WhatsApp Number</Label>
-                  <Input id="whatsapp_number" {...register("whatsapp_number")} placeholder="024XXXXXXX" className="rounded-none h-12 border-border/60 focus-visible:ring-0 focus-visible:border-upsa-navy" />
+                  <Label htmlFor="whatsapp_number" className="text-xs font-bold uppercase tracking-widest text-upsa-navy dark:text-white">WhatsApp Number</Label>
+                  <Input id="whatsapp_number" {...register("whatsapp_number")} placeholder="024XXXXXXX" className="rounded-none h-12 border-border/60 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-0 focus-visible:border-upsa-navy dark:focus-visible:border-upsa-gold" />
                   {errors.whatsapp_number && <p className="text-xs font-bold text-red-500">{errors.whatsapp_number.message}</p>}
                 </div>
               </div>
             </div>
 
-            <div className="h-px w-full bg-border/40" />
+            <div className="h-px w-full bg-border/40 dark:bg-white/10" />
 
             {/* Verification Upload */}
             <div className="space-y-4">
-              <Label className="text-xs font-bold uppercase tracking-widest text-upsa-navy">Student ID Upload</Label>
-              <p className="text-sm text-gray-500 font-medium">Please upload a clear photo of your UPSA Student ID card. This helps us verify you are an active student since Campus Mart isn't linked to the central student database.</p>
+              <Label className="text-xs font-bold uppercase tracking-widest text-upsa-navy dark:text-white">Student ID Upload</Label>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Please upload a clear photo of your UPSA Student ID card. This helps us verify you are an active student since Campus Mart isn't linked to the central student database.</p>
               
               <div className="mt-4">
                 <input 
@@ -233,13 +233,13 @@ export default function SellOnMartPage() {
                 />
                 
                 {studentIdUrl ? (
-                  <div className="relative border-2 border-emerald-500 bg-emerald-50 p-4 flex items-center justify-between">
+                  <div className="relative border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-16 relative bg-white border border-border/40 overflow-hidden">
+                      <div className="h-12 w-16 relative bg-white dark:bg-[#060D1A] border border-border/40 dark:border-white/10 overflow-hidden">
                         <img src={studentIdUrl} alt="ID Preview" className="w-full h-full object-cover" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-emerald-800 flex items-center gap-2">
+                        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4" /> ID Uploaded Successfully
                         </p>
                         <button type="button" onClick={() => setValue("student_id_url", "")} className="text-xs font-bold text-red-500 hover:underline mt-1">Remove & Re-upload</button>
@@ -251,24 +251,24 @@ export default function SellOnMartPage() {
                     type="button" 
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="w-full border-2 border-dashed border-border/60 hover:border-upsa-navy hover:bg-upsa-navy/5 transition-all py-12 flex flex-col items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full border-2 border-dashed border-border/60 dark:border-white/10 hover:border-upsa-navy dark:hover:border-upsa-gold hover:bg-upsa-navy/5 dark:hover:bg-white/5 transition-all py-12 flex flex-col items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isUploading ? (
-                      <Loader2 className="h-8 w-8 text-upsa-navy animate-spin" />
+                      <Loader2 className="h-8 w-8 text-upsa-navy dark:text-upsa-gold animate-spin" />
                     ) : (
-                      <UploadCloud className="h-8 w-8 text-gray-400" />
+                      <UploadCloud className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                     )}
-                    <span className="text-sm font-bold text-upsa-navy">
+                    <span className="text-sm font-bold text-upsa-navy dark:text-white">
                       {isUploading ? "Uploading image..." : "Click to upload Student ID"}
                     </span>
-                    <span className="text-xs font-medium text-gray-400">JPG, PNG (Max 5MB)</span>
+                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500">JPG, PNG (Max 5MB)</span>
                   </button>
                 )}
                 {errors.student_id_url && <p className="text-xs font-bold text-red-500 mt-2">{errors.student_id_url.message}</p>}
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-14 rounded-none bg-upsa-navy hover:bg-upsa-navy/90 text-white font-bold uppercase tracking-widest text-sm" disabled={isSubmitting || isUploading}>
+            <Button type="submit" className="w-full h-14 rounded-none bg-upsa-navy hover:bg-upsa-navy/90 text-white dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-white font-bold uppercase tracking-widest text-sm" disabled={isSubmitting || isUploading}>
               {isSubmitting ? (
                 <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Submitting Application...</>
               ) : (

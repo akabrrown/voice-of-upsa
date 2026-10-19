@@ -28,8 +28,8 @@ export default async function CreateAlbumPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Create New Album</h1>
-        <p className="text-gray-500 mt-1">Set up a new photo gallery album for the community.</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Create New Album</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Set up a new photo gallery album for the community.</p>
       </div>
 
       <GalleryAlbumCreateClient />

@@ -53,9 +53,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#060D1A] py-12 px-4 sm:px-6 lg:px-8 relative transition-colors duration-300">
       <div className="absolute top-4 left-4 sm:top-8 sm:left-8">
-        <Button asChild variant="ghost" className="text-gray-500 hover:text-upsa-navy hover:bg-gray-200/50">
+        <Button asChild variant="ghost" className="text-gray-500 dark:text-gray-400 hover:text-upsa-navy dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-white/10">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Home
@@ -63,10 +63,10 @@ export default function LoginPage() {
         </Button>
       </div>
 
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100 relative z-10">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-[#0C1729] p-10 rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 relative z-10 transition-colors">
         <div className="text-center">
           <Link href="/" className="flex flex-col items-center group">
-            <div className="relative h-20 w-20 rounded-full overflow-hidden border-4 border-upsa-gold/20 shadow-lg transition-transform group-hover:scale-105 mb-3">
+            <div className="relative h-20 w-20 rounded-full border-4 border-upsa-gold/20 shadow-lg transition-transform group-hover:scale-105 mb-3">
               <Image
                 src="/logo.png"
                 alt="Voice of UPSA"
@@ -76,28 +76,28 @@ export default function LoginPage() {
             </div>
             <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-1.5 items-center justify-center">
               <span className="text-[10px] sm:text-xl font-black tracking-widest text-upsa-gold uppercase leading-none">Voice of</span>
-              <span className="text-2xl font-black tracking-tight text-upsa-navy uppercase leading-tight">UPSA</span>
+              <span className="text-2xl font-black tracking-tight text-upsa-navy dark:text-white uppercase leading-tight">UPSA</span>
             </div>
           </Link>
-          <h2 className="mt-6 text-3xl font-black text-upsa-navy tracking-tight">
+          <h2 className="mt-6 text-3xl font-black text-upsa-navy dark:text-white tracking-tight">
             Welcome Back
           </h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Please enter your credentials to access your account
           </p>
         </div>
 
-        <div className="mt-6 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-4 text-sm flex items-start space-x-3 shadow-sm">
-          <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="mt-6 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-300 rounded-lg p-4 text-sm flex items-start space-x-3 shadow-sm">
+          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <p>
-            <strong>Existing Users:</strong> We've upgraded our system! If you had an account on the old website, please use the <Link href="/auth/forgot-password" className="font-bold underline text-blue-700 hover:text-blue-900">Forgot password</Link> flow to set a new password and access your account.
+            <strong>Existing Users:</strong> We've upgraded our system! If you had an account on the old website, please use the <Link href="/auth/forgot-password" className="font-bold underline text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100">Forgot password</Link> flow to set a new password and access your account.
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="text-gray-700 dark:text-gray-200">Email Address</Label>
               <Input
                 id="email"
                 type="email"
@@ -113,7 +113,7 @@ export default function LoginPage() {
 
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-gray-700 dark:text-gray-200">Password</Label>
                 <Link
                   href="/auth/forgot-password"
                   className="text-xs font-semibold text-upsa-gold hover:underline"
@@ -132,7 +132,7 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-upsa-navy"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-upsa-navy dark:hover:text-white cursor-pointer"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -146,7 +146,7 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            className="w-full bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy py-6 text-lg font-bold transition-all"
+            className="w-full bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy dark:hover:bg-upsa-gold/90 py-6 text-lg font-bold transition-all shadow-md"
             disabled={isLoading}
           >
             {isLoading ? "Signing in..." : (
@@ -159,7 +159,7 @@ export default function LoginPage() {
         </form>
 
         <div className="text-center pt-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Don't have an account?{" "}
             <Link href="/auth/register" className="font-bold text-upsa-gold hover:underline">
               Register now
@@ -169,7 +169,7 @@ export default function LoginPage() {
         </div>
       </div>
       
-      <div className="mt-8 text-center text-xs text-gray-400">
+      <div className="mt-8 text-center text-xs text-gray-400 dark:text-gray-600">
         <p>© 2025 Voice of UPSA. Official Communications Hub.</p>
       </div>
     </div>

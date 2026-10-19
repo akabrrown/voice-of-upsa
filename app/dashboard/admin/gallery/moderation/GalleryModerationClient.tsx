@@ -49,14 +49,14 @@ export default function GalleryModerationClient({ initialPhotos }: { initialPhot
 
   if (photos.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden text-center py-24">
+      <div className="bg-white dark:bg-[#0C1729] rounded-xl shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden text-center py-24">
         <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center">
-            <Check className="w-8 h-8 text-green-500" />
+          <div className="w-16 h-16 bg-green-50 dark:bg-green-950/40 rounded-full flex items-center justify-center">
+            <Check className="w-8 h-8 text-green-500 dark:text-green-400" />
           </div>
         </div>
-        <h3 className="text-lg font-bold text-gray-900">Queue is empty</h3>
-        <p className="text-gray-500 max-w-sm mx-auto mt-2">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Queue is empty</h3>
+        <p className="text-gray-500 dark:text-slate-400 max-w-sm mx-auto mt-2">
           All student photo submissions have been reviewed. Great job!
         </p>
       </div>
@@ -66,8 +66,8 @@ export default function GalleryModerationClient({ initialPhotos }: { initialPhot
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {photos.map((photo) => (
-        <div key={photo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-          <div className="relative aspect-[4/3] bg-gray-100">
+        <div key={photo.id} className="bg-white dark:bg-[#0C1729] rounded-xl shadow-sm border border-gray-200 dark:border-white/10 overflow-hidden flex flex-col">
+          <div className="relative aspect-[4/3] bg-gray-100 dark:bg-white/5">
             <Image
               src={photo.image_url}
               alt={photo.caption || "Submitted photo"}
@@ -78,36 +78,36 @@ export default function GalleryModerationClient({ initialPhotos }: { initialPhot
           </div>
           <div className="p-4 flex flex-col flex-grow">
             <div className="mb-4">
-              <p className="text-sm font-semibold text-gray-900 line-clamp-2">
-                {photo.caption || <span className="text-gray-400 italic">No caption provided</span>}
+              <p className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
+                {photo.caption || <span className="text-gray-400 dark:text-slate-500 italic">No caption provided</span>}
               </p>
             </div>
             
             <div className="mt-auto space-y-3">
-              <div className="bg-gray-50 rounded-lg p-3 text-sm border border-gray-100">
+              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-3 text-sm border border-gray-100 dark:border-white/10">
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-gray-500">Album:</span>
-                  <span className="font-medium text-gray-900 truncate ml-2" title={photo.album?.title}>
+                  <span className="text-gray-500 dark:text-slate-400">Album:</span>
+                  <span className="font-medium text-gray-900 dark:text-white truncate ml-2" title={photo.album?.title}>
                     {photo.album?.title || "Unknown Album"}
                   </span>
                 </div>
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-gray-500">Submitter:</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="text-gray-500 dark:text-slate-400">Submitter:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
                     {photo.submitter ? `${photo.submitter.first_name} ${photo.submitter.last_name}` : "Anonymous"}
                   </span>
                 </div>
                 {photo.submitter?.index_number && (
                   <div className="flex justify-between mb-1.5">
-                    <span className="text-gray-500">Index:</span>
-                    <span className="font-medium text-gray-900 font-mono">
+                    <span className="text-gray-500 dark:text-slate-400">Index:</span>
+                    <span className="font-medium text-gray-900 dark:text-white font-mono">
                       {photo.submitter.index_number}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Date:</span>
-                  <span className="text-gray-700">
+                  <span className="text-gray-500 dark:text-slate-400">Date:</span>
+                  <span className="text-gray-700 dark:text-slate-300">
                     {format(new Date(photo.created_at), 'MMM d, h:mm a')}
                   </span>
                 </div>
@@ -118,7 +118,7 @@ export default function GalleryModerationClient({ initialPhotos }: { initialPhot
                   onClick={() => handleModerate(photo.id, "rejected")} 
                   disabled={isProcessing === photo.id}
                   variant="outline" 
-                  className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  className="flex-1 border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300"
                 >
                   <X className="w-4 h-4 mr-2" />
                   Reject

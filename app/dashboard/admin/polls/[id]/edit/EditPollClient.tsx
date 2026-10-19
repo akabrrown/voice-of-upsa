@@ -88,24 +88,24 @@ export function EditPollClient({ poll }: EditPollClientProps) {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-[#1B2A4A]">Edit Poll</h1>
-          <p className="text-sm text-gray-500">Update poll settings and options.</p>
+          <h1 className="text-2xl font-bold text-[#1B2A4A] dark:text-white">Edit Poll</h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400">Update poll settings and options.</p>
         </div>
       </div>
 
       {hasVotes && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-sm flex items-start gap-3">
+        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-xl text-amber-900 dark:text-amber-200 text-sm flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold">Votes have already been cast ({poll.total_votes} total)</p>
-            <p className="text-xs text-amber-800 mt-1">
+            <p className="text-xs text-amber-800 dark:text-amber-300 mt-1">
               To preserve voter integrity, options cannot be added, removed, or rewritten once voting has started. You can still modify the status, category, results visibility, and expiry date.
             </p>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <form onSubmit={handleSubmit} className="space-y-8 bg-white dark:bg-[#0C1729] p-6 rounded-xl shadow-sm border border-gray-100 dark:border-white/10">
         {/* Question */}
         <div className="space-y-2">
           <Label htmlFor="question" className="text-base font-semibold">
@@ -184,21 +184,21 @@ export function EditPollClient({ poll }: EditPollClientProps) {
               defaultValue={defaultExpiresAt}
               className="w-full"
             />
-            <p className="text-xs text-gray-500">Leave blank for manual closing.</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">Leave blank for manual closing.</p>
           </div>
         </div>
 
         {/* Options */}
-        <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-white/10">
           <div className="flex items-center justify-between">
             <Label className="text-base font-semibold">Options</Label>
-            <span className="text-xs text-gray-500">{options.length}/6</span>
+            <span className="text-xs text-gray-500 dark:text-slate-400">{options.length}/6</span>
           </div>
 
           <div className="space-y-3">
             {options.map((opt, index) => (
               <div key={index} className="flex items-center gap-2">
-                <div className="bg-gray-100 text-gray-500 w-8 h-10 flex items-center justify-center rounded-md font-mono text-sm shrink-0">
+                <div className="bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-slate-400 w-8 h-10 flex items-center justify-center rounded-md font-mono text-sm shrink-0 border border-gray-200 dark:border-white/10">
                   {index + 1}
                 </div>
                 <Input
@@ -213,7 +213,7 @@ export function EditPollClient({ poll }: EditPollClientProps) {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0"
+                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
                     onClick={() => removeOption(index)}
                     disabled={options.length <= 2}
                   >
@@ -228,7 +228,7 @@ export function EditPollClient({ poll }: EditPollClientProps) {
             <Button
               type="button"
               variant="outline"
-              className="w-full border-dashed"
+              className="w-full border-dashed border-gray-300 dark:border-white/20 dark:hover:bg-white/5 dark:text-slate-200"
               onClick={addOption}
             >
               <Plus className="w-4 h-4 mr-2" /> Add Option
@@ -236,14 +236,14 @@ export function EditPollClient({ poll }: EditPollClientProps) {
           )}
         </div>
 
-        <div className="pt-6 border-t flex justify-end gap-3">
+        <div className="pt-6 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3">
           <Button type="button" variant="ghost" asChild>
             <Link href="/dashboard/admin/polls">Cancel</Link>
           </Button>
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy font-bold px-8"
+            className="bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 font-bold px-8"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Save Changes

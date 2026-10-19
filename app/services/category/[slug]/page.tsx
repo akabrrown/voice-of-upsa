@@ -47,8 +47,8 @@ export default async function ServicesCategoryPage({ params }: CategoryPageProps
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-upsa-navy mb-3">{category.name}</h1>
-        <p className="text-gray-600 max-w-2xl">
+        <h1 className="text-3xl md:text-4xl font-bold text-upsa-navy dark:text-white mb-3">{category.name}</h1>
+        <p className="text-gray-600 dark:text-slate-400 max-w-2xl">
           Browse all {category.name.toLowerCase()} campus services, contact information, and operating hours.
         </p>
       </div>

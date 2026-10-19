@@ -162,9 +162,9 @@ export function ArticleReactions({ articleId }: ArticleReactionsProps) {
   if (isLoading) {
     return (
       <div className="flex items-center space-x-2 py-4 justify-center">
-        <div className="h-2 w-2 bg-upsa-navy rounded-full animate-bounce" />
-        <div className="h-2 w-2 bg-upsa-navy rounded-full animate-bounce [animation-delay:0.2s]" />
-        <div className="h-2 w-2 bg-upsa-navy rounded-full animate-bounce [animation-delay:0.4s]" />
+        <div className="h-2 w-2 bg-upsa-navy dark:bg-upsa-gold rounded-full animate-bounce" />
+        <div className="h-2 w-2 bg-upsa-navy dark:bg-upsa-gold rounded-full animate-bounce [animation-delay:0.2s]" />
+        <div className="h-2 w-2 bg-upsa-navy dark:bg-upsa-gold rounded-full animate-bounce [animation-delay:0.4s]" />
       </div>
     );
   }
@@ -172,12 +172,12 @@ export function ArticleReactions({ articleId }: ArticleReactionsProps) {
   const totalReactions = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="py-6 border-t border-b border-gray-100 my-8">
+    <div className="py-6 border-t border-b border-gray-100 dark:border-white/10 my-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h4 className="text-sm font-bold text-upsa-navy uppercase tracking-wider">How do you feel about this article?</h4>
+          <h4 className="text-sm font-bold text-upsa-navy dark:text-white uppercase tracking-wider">How do you feel about this article?</h4>
           {totalReactions > 0 && (
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 dark:text-gray-400 mt-0.5">
               {totalReactions} {totalReactions === 1 ? "reaction" : "reactions"} so far
             </p>
           )}
@@ -195,7 +195,7 @@ export function ArticleReactions({ articleId }: ArticleReactionsProps) {
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-bold border transition-all duration-300 ${
                   isSelected
                     ? `${color} border-upsa-gold ring-2 ring-upsa-gold/20 shadow-sm scale-105`
-                    : "bg-white hover:bg-gray-50 text-gray-500 border-gray-200"
+                    : "bg-white dark:bg-[#0C1729] hover:bg-gray-50 dark:hover:bg-white/10 text-gray-500 dark:text-gray-300 border-gray-200 dark:border-white/10"
                 }`}
                 title={label}
               >
@@ -208,7 +208,7 @@ export function ArticleReactions({ articleId }: ArticleReactionsProps) {
       </div>
       
       {dbError && (
-        <div className="mt-3 text-[10px] text-amber-600 bg-amber-50 rounded-lg p-2 text-center border border-amber-100">
+        <div className="mt-3 text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2 text-center border border-amber-100 dark:border-amber-800/30">
           ⚠️ Reactions are running in local mock mode. Please execute the migration SQL in your Supabase SQL editor to enable database saving.
         </div>
       )}

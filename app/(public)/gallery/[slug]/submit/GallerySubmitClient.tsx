@@ -56,9 +56,9 @@ export function GallerySubmitClient({ albumId, albumSlug }: { albumId: string, a
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border border-gray-100">
+    <div className="bg-white dark:bg-[#0C1729] rounded-3xl p-6 sm:p-10 shadow-xl border border-gray-100 dark:border-white/10">
       <div className="mb-6">
-        <Link href={`/gallery/${albumSlug}`} className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-upsa-navy transition-colors">
+        <Link href={`/gallery/${albumSlug}`} className="inline-flex items-center text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors">
           <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Album
         </Link>
       </div>
@@ -67,8 +67,8 @@ export function GallerySubmitClient({ albumId, albumSlug }: { albumId: string, a
         
         {/* Upload Section */}
         <div className="space-y-3">
-          <Label className="text-base font-semibold text-gray-900">Upload Photo</Label>
-          <div className="text-sm text-gray-500 mb-2">Location data is automatically stripped from your photo for privacy.</div>
+          <Label className="text-base font-semibold text-gray-900 dark:text-white">Upload Photo</Label>
+          <div className="text-sm text-gray-500 dark:text-slate-400 mb-2">Location data is automatically stripped from your photo for privacy.</div>
           
           {!imageUrl ? (
             <CldUploadWidget 
@@ -84,18 +84,18 @@ export function GallerySubmitClient({ albumId, albumSlug }: { albumId: string, a
                 <button
                   type="button"
                   onClick={() => open()}
-                  className="w-full h-48 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center hover:bg-gray-50 hover:border-upsa-navy transition-colors group"
+                  className="w-full h-48 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center hover:bg-gray-50 dark:hover:bg-slate-800/50 hover:border-upsa-navy dark:hover:border-upsa-gold transition-colors group"
                 >
-                  <UploadCloud className="w-10 h-10 text-gray-400 group-hover:text-upsa-navy mb-3 transition-colors" />
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-upsa-navy">
+                  <UploadCloud className="w-10 h-10 text-gray-400 dark:text-slate-500 group-hover:text-upsa-navy dark:group-hover:text-upsa-gold mb-3 transition-colors" />
+                  <span className="text-sm font-medium text-gray-600 dark:text-slate-300 group-hover:text-upsa-navy dark:group-hover:text-upsa-gold">
                     Click to browse or drag and drop
                   </span>
-                  <span className="text-xs text-gray-400 mt-1">JPG, PNG up to 5MB</span>
+                  <span className="text-xs text-gray-400 dark:text-slate-500 mt-1">JPG, PNG up to 5MB</span>
                 </button>
               )}
             </CldUploadWidget>
           ) : (
-            <div className="relative w-full h-64 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200">
+            <div className="relative w-full h-64 rounded-2xl overflow-hidden bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-white/10">
               <Image src={imageUrl} alt="Uploaded preview" fill className="object-contain" />
               <button 
                 type="button"
@@ -110,21 +110,21 @@ export function GallerySubmitClient({ albumId, albumSlug }: { albumId: string, a
 
         {/* Caption Section */}
         <div className="space-y-3">
-          <Label htmlFor="caption" className="text-base font-semibold text-gray-900">Caption (Optional)</Label>
+          <Label htmlFor="caption" className="text-base font-semibold text-gray-900 dark:text-white">Caption (Optional)</Label>
           <Textarea 
             id="caption"
             placeholder="Tell us about this moment..."
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            className="resize-none rounded-xl"
+            className="resize-none rounded-xl dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
             rows={3}
             maxLength={200}
           />
-          <div className="text-right text-xs text-gray-400 font-medium">{caption.length}/200</div>
+          <div className="text-right text-xs text-gray-400 dark:text-slate-500 font-medium">{caption.length}/200</div>
         </div>
 
         {/* Consent Section */}
-        <div className="bg-upsa-gold/10 p-5 rounded-2xl border border-upsa-gold/20 flex items-start gap-4">
+        <div className="bg-upsa-gold/10 dark:bg-upsa-gold/5 p-5 rounded-2xl border border-upsa-gold/20 dark:border-upsa-gold/30 flex items-start gap-4">
           <Checkbox 
             id="consent" 
             checked={consentConfirmed} 
@@ -132,10 +132,10 @@ export function GallerySubmitClient({ albumId, albumSlug }: { albumId: string, a
             className="mt-1"
           />
           <div className="grid gap-1.5">
-            <Label htmlFor="consent" className="font-bold text-upsa-navy cursor-pointer">
+            <Label htmlFor="consent" className="font-bold text-upsa-navy dark:text-upsa-gold cursor-pointer">
               Privacy & Consent Confirmation
             </Label>
-            <p className="text-sm text-gray-700 leading-relaxed">
+            <p className="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
               I took this photo (or have the right to share it) and everyone clearly identifiable in it is okay with it being shown publicly on Voice of UPSA.
             </p>
           </div>
@@ -145,7 +145,7 @@ export function GallerySubmitClient({ albumId, albumSlug }: { albumId: string, a
         <Button 
           type="submit" 
           disabled={!imageUrl || !consentConfirmed || isSubmitting}
-          className="w-full h-12 text-base font-bold bg-upsa-navy text-white hover:bg-upsa-navy/90 rounded-xl"
+          className="w-full h-12 text-base font-bold bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-navy/90 dark:hover:bg-upsa-gold/90 rounded-xl"
         >
           {isSubmitting ? (
             <>
@@ -160,7 +160,7 @@ export function GallerySubmitClient({ albumId, albumSlug }: { albumId: string, a
           )}
         </Button>
 
-        <p className="text-center text-xs text-gray-500 font-medium">
+        <p className="text-center text-xs text-gray-500 dark:text-slate-400 font-medium">
           Photos must be approved by the editorial team before appearing in the gallery.
         </p>
       </form>

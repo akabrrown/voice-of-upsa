@@ -24,17 +24,17 @@ export async function TrendingSidebar() {
       <UpcomingHolidayWidget />
 
       {/* Trending Articles */}
-      <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-        <div className="flex items-center space-x-2 mb-6 border-b border-gray-200 pb-4">
+      <div className="bg-gray-50 dark:bg-[#0C1729] rounded-xl p-6 border border-gray-100 dark:border-white/10">
+        <div className="flex items-center space-x-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-4">
           <TrendingUp className="h-5 w-5 text-upsa-gold" />
-          <h2 className="text-lg font-bold text-upsa-navy uppercase tracking-tight">Trending This Week</h2>
+          <h2 className="text-lg font-bold text-upsa-navy dark:text-white uppercase tracking-tight">Trending This Week</h2>
         </div>
         
         <div className="space-y-6">
           {trendingArticles && trendingArticles.length > 0 ? (
             trendingArticles.map((article, index) => (
               <div key={article.id} className="flex space-x-4 items-start group">
-                <span className="text-3xl font-black text-gray-200 group-hover:text-upsa-gold transition-colors leading-none">
+                <span className="text-3xl font-black text-gray-200 dark:text-gray-700 group-hover:text-upsa-gold dark:group-hover:text-upsa-gold transition-colors leading-none">
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 <div className="space-y-1">
@@ -42,7 +42,7 @@ export async function TrendingSidebar() {
                     {article.categories?.name || "News"}
                   </Badge>
                   <Link href={`/articles/${article.slug}`}>
-                    <h3 className="text-sm font-bold text-upsa-navy line-clamp-2 hover:text-upsa-gold transition-colors leading-tight">
+                    <h3 className="text-sm font-bold text-upsa-navy dark:text-white line-clamp-2 hover:text-upsa-gold dark:hover:text-upsa-gold transition-colors leading-tight">
                       {article.title}
                     </h3>
                   </Link>
@@ -60,7 +60,7 @@ export async function TrendingSidebar() {
       </div>
 
       {/* Newsletter Signup */}
-      <div className="bg-upsa-navy rounded-xl p-6 text-white overflow-hidden relative shadow-lg">
+      <div className="bg-upsa-navy dark:bg-[#0A1628] rounded-xl p-6 text-white overflow-hidden relative shadow-lg border border-transparent dark:border-white/10">
         <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-upsa-gold rounded-full opacity-10" />
         <h3 className="text-lg font-bold mb-1 relative z-10">Stay In The Loop!</h3>
         <p className="text-xs text-gray-300 mb-4 relative z-10 leading-relaxed">Subscribe to the official Voice of UPSA weekly digest for academics, SRC news, and campus events.</p>

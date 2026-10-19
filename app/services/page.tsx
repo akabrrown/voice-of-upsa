@@ -25,8 +25,8 @@ export default async function ServicesDirectoryPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-upsa-navy mb-3">Student Services Directory</h1>
-        <p className="text-gray-600 max-w-2xl">
+        <h1 className="text-3xl md:text-4xl font-bold text-upsa-navy dark:text-white mb-3">Student Services Directory</h1>
+        <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
           Find critical campus services, contact information, and operating hours. 
           Information here is regularly verified for accuracy.
         </p>

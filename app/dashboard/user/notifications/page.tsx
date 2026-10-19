@@ -25,17 +25,17 @@ export default async function NotificationPreferencesPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#1B2A4A]">Settings</h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <h1 className="text-2xl font-bold tracking-tight text-[#1B2A4A] dark:text-white">Settings</h1>
+        <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">
           Manage your account settings and preferences.
         </p>
       </div>
 
       <PreferencesClient initialPreferences={preferences || []} />
       
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold text-[#1B2A4A] mb-4">Web Push Notifications</h2>
-        <p className="text-sm text-gray-500 mb-6">Manage browser-level push notifications for major announcements.</p>
+      <div className="bg-white dark:bg-[#0C1729] p-6 rounded-lg shadow-sm border border-gray-100 dark:border-white/10">
+        <h2 className="text-lg font-semibold text-[#1B2A4A] dark:text-white mb-4">Web Push Notifications</h2>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">Manage browser-level push notifications for major announcements.</p>
         <PushPermissionPrompt topics={["new_articles"]} />
       </div>
     </div>

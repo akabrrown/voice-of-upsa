@@ -60,37 +60,37 @@ export default function RoleManagementPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Role Management</h1>
-        <p className="text-gray-500">Manage user access levels and permissions</p>
+        <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Role Management</h1>
+        <p className="text-gray-500 dark:text-slate-400">Manage user access levels and permissions</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
         {isLoading ? (
           <div className="p-6">
             <TableShadowLoader rows={5} hasSearch={false} />
           </div>
         ) : (
           <Table>
-            <TableHeader className="bg-gray-50">
-              <TableRow>
-                <TableHead className="font-bold text-upsa-navy">User</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Email</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Registered</TableHead>
-                <TableHead className="font-bold text-upsa-navy">Current Role</TableHead>
-                <TableHead className="text-right font-bold text-upsa-navy">Change Role</TableHead>
+            <TableHeader className="bg-gray-50 dark:bg-white/5">
+              <TableRow className="dark:border-white/10">
+                <TableHead className="font-bold text-upsa-navy dark:text-white">User</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Email</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Registered</TableHead>
+                <TableHead className="font-bold text-upsa-navy dark:text-white">Current Role</TableHead>
+                <TableHead className="text-right font-bold text-upsa-navy dark:text-white">Change Role</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                <TableRow key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 dark:border-white/10 transition-colors">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <UserAvatar src={user.avatar_url} name={user.full_name} size="md" />
-                      <span className="font-semibold text-upsa-navy">{user.full_name}</span>
+                      <span className="font-semibold text-upsa-navy dark:text-white">{user.full_name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-gray-500">{user.email}</TableCell>
-                  <TableCell className="text-sm text-gray-500">
+                  <TableCell className="text-sm text-gray-500 dark:text-slate-400">{user.email}</TableCell>
+                  <TableCell className="text-sm text-gray-500 dark:text-slate-400">
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
@@ -108,7 +108,7 @@ export default function RoleManagementPage() {
                     <select
                       value={user.role}
                       onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      className="bg-white border border-gray-200 rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-upsa-navy/20 outline-none cursor-pointer"
+                      className="bg-white dark:bg-[#060D1A] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-upsa-navy/20 outline-none cursor-pointer"
                     >
                       <option value="user">User</option>
                       <option value="editor">Editor</option>

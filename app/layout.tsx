@@ -30,11 +30,14 @@ export const metadata: Metadata = {
     default: "Voice of UPSA | Official Communications Hub",
     template: "%s | Voice of UPSA",
   },
-  description: "The official digital news and communications platform for the University of Professional Studies, Accra (UPSA).",
-  keywords: ["UPSA", "University of Professional Studies Accra", "Voice of UPSA", "Campus News", "Academic News"],
+  description: "The official digital news, student journalism, and campus communications platform for the University of Professional Studies, Accra (UPSA).",
+  keywords: ["UPSA", "University of Professional Studies Accra", "Voice of UPSA", "Campus News", "Academic News", "Student Journalism", "Accra Ghana"],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Voice of UPSA | Official Communications Hub",
-    description: "The official digital news and communications platform for the University of Professional Studies, Accra (UPSA).",
+    description: "The official digital news, student journalism, and campus communications platform for the University of Professional Studies, Accra (UPSA).",
     url: siteUrl,
     siteName: "Voice of UPSA",
     images: [
@@ -53,7 +56,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Voice of UPSA | Official Communications Hub",
-    description: "The official digital news and communications platform for the University of Professional Studies, Accra (UPSA).",
+    description: "The official digital news, student journalism, and campus communications platform for the University of Professional Studies, Accra (UPSA).",
     images: [defaultOgImage.url],
     site: "@voiceofupsa",
     creator: "@voiceofupsa",
@@ -71,6 +74,59 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "NewsMediaOrganization",
+  name: "Voice of UPSA",
+  alternateName: ["VOU", "Voice of UPSA News"],
+  url: siteUrl,
+  logo: {
+    "@type": "ImageObject",
+    url: `${siteUrl}/logo.png`,
+    width: 512,
+    height: 512,
+  },
+  sameAs: [
+    "https://twitter.com/voiceofupsa",
+    "https://facebook.com/voiceofupsa",
+    "https://instagram.com/voiceofupsa",
+    "https://linkedin.com/company/voiceofupsa",
+    "https://youtube.com/@voiceofupsa",
+  ],
+  parentOrganization: {
+    "@type": "CollegeOrUniversity",
+    name: "University of Professional Studies, Accra",
+    alternateName: "UPSA",
+    url: "https://upsa.edu.gh",
+  },
+  publishingPrinciples: `${siteUrl}/guidelines`,
+  masthead: `${siteUrl}/about`,
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "Editorial Desk",
+    email: "contact@voiceofupsa.com",
+    availableLanguage: ["en", "English"],
+  },
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Voice of UPSA",
+  alternateName: "VOU",
+  url: siteUrl,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -78,13 +134,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("antialiased", "font-sans", geist.variable)} suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col bg-background text-foreground font-arial" suppressHydrationWarning>
-
-        <ToastProvider />
-        <PushNotificationProvider />
-        <HolidayAmbientBar />
-        <HolidayGreetingModal />
-        {children}
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+      </head>
+      <body className="min-h-screen flex flex-col bg-background text-foreground font-arial transition-colors duration-200" suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+          <ToastProvider />
+          <PushNotificationProvider />
+          <HolidayAmbientBar />
+          <HolidayGreetingModal />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

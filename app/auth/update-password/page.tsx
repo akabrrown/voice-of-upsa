@@ -184,13 +184,13 @@ export default function UpdatePasswordPage() {
 
   if (isVerifying) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl border border-gray-100 text-center space-y-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#060D1A] py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full bg-white dark:bg-[#0C1729] p-10 rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 text-center space-y-4">
           <div className="relative h-16 w-16 mx-auto rounded-full overflow-hidden border-2 border-upsa-gold/20 shadow-md">
             <Image src="/logo.png" alt="Voice of UPSA" fill sizes="64px" className="object-cover" />
           </div>
-          <div className="flex items-center justify-center space-x-2 text-upsa-navy">
-            <span className="h-4 w-4 border-2 border-upsa-navy/30 border-t-upsa-navy rounded-full animate-spin"></span>
+          <div className="flex items-center justify-center space-x-2 text-upsa-navy dark:text-white">
+            <span className="h-4 w-4 border-2 border-upsa-navy/30 dark:border-white/30 border-t-upsa-navy dark:border-t-upsa-gold rounded-full animate-spin"></span>
             <span className="text-sm font-semibold">Verifying reset link...</span>
           </div>
         </div>
@@ -200,27 +200,27 @@ export default function UpdatePasswordPage() {
 
   if (!hasValidSession) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full bg-white p-10 rounded-2xl shadow-xl border border-gray-100 text-center space-y-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#060D1A] py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full bg-white dark:bg-[#0C1729] p-10 rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 text-center space-y-6">
           <div className="relative h-20 w-20 mx-auto rounded-full overflow-hidden border-4 border-upsa-gold/20 shadow-lg mb-2">
             <Image src="/logo.png" alt="Voice of UPSA" fill sizes="80px" className="object-cover" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-upsa-navy">Reset Link Expired</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
+            <h3 className="text-xl font-bold text-upsa-navy dark:text-white">Reset Link Expired</h3>
+            <p className="text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
               {errorMessage || "This password reset link has expired or has already been used."}
             </p>
           </div>
           <div className="pt-2 flex flex-col gap-3">
             <Link
               href="/auth/forgot-password"
-              className="w-full bg-upsa-navy text-white hover:bg-upsa-navy/90 py-3.5 rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center space-x-2"
+              className="w-full bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-navy/90 dark:hover:bg-upsa-gold/90 py-3.5 rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center space-x-2"
             >
               <span>Request a New Reset Link</span>
             </Link>
             <Link
               href="/auth/login"
-              className="text-xs font-semibold text-gray-500 hover:text-upsa-navy transition-colors py-2"
+              className="text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-upsa-navy dark:hover:text-white transition-colors py-2"
             >
               Back to Login
             </Link>
@@ -231,8 +231,8 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#060D1A] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-[#0C1729] p-10 rounded-2xl shadow-xl border border-gray-100 dark:border-white/10">
         <div className="text-center">
           <Link href="/" className="flex flex-col items-center group">
             <div className="relative h-20 w-20 rounded-full overflow-hidden border-4 border-upsa-gold/20 shadow-lg transition-transform group-hover:scale-105 mb-3">
@@ -245,10 +245,10 @@ export default function UpdatePasswordPage() {
               />
             </div>
           </Link>
-          <h2 className="mt-6 text-3xl font-black text-upsa-navy tracking-tight">
+          <h2 className="mt-6 text-3xl font-black text-upsa-navy dark:text-white tracking-tight">
             Update Password
           </h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
             Enter your new password below to update your account.
           </p>
         </div>
@@ -256,18 +256,18 @@ export default function UpdatePasswordPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password" className="text-gray-700 dark:text-slate-300">New Password</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("password")}
-                  className={errors.password ? "border-red-500" : ""}
+                  className={`dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder:text-slate-500 ${errors.password ? "border-red-500" : ""}`}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-upsa-navy"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400 hover:text-upsa-navy dark:hover:text-white"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -279,14 +279,14 @@ export default function UpdatePasswordPage() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Label htmlFor="confirmPassword" className="text-gray-700 dark:text-slate-300">Confirm New Password</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   {...register("confirmPassword")}
-                  className={errors.confirmPassword ? "border-red-500" : ""}
+                  className={`dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder:text-slate-500 ${errors.confirmPassword ? "border-red-500" : ""}`}
                 />
               </div>
               {errors.confirmPassword && (
@@ -297,7 +297,7 @@ export default function UpdatePasswordPage() {
 
           <Button
             type="submit"
-            className="w-full bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy py-6 text-lg font-bold transition-all"
+            className="w-full bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 py-6 text-lg font-bold transition-all"
             disabled={isLoading}
           >
             {isLoading ? "Updating..." : (

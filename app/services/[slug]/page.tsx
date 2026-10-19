@@ -52,30 +52,30 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Link href="/services" className="inline-flex items-center text-sm font-medium text-upsa-navy hover:underline mb-8">
+      <Link href="/services" className="inline-flex items-center text-sm font-medium text-upsa-navy dark:text-upsa-gold hover:underline mb-8">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Directory
       </Link>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden transition-colors">
         {/* Header */}
-        <div className="p-8 border-b border-gray-100 flex flex-col md:flex-row md:items-start gap-6">
+        <div className="p-8 border-b border-gray-100 dark:border-white/10 flex flex-col md:flex-row md:items-start gap-6">
           {service.logo_url ? (
-            <div className="h-24 w-24 rounded-xl bg-gray-50 border border-gray-200 overflow-hidden flex-shrink-0">
+            <div className="h-24 w-24 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 overflow-hidden flex-shrink-0">
               <img src={service.logo_url} alt={service.name} className="h-full w-full object-cover" />
             </div>
           ) : (
-            <div className="h-24 w-24 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center flex-shrink-0">
-              <span className="text-4xl font-bold text-gray-400">{service.name.charAt(0)}</span>
+            <div className="h-24 w-24 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-4xl font-bold text-gray-400 dark:text-gray-500">{service.name.charAt(0)}</span>
             </div>
           )}
           
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2 justify-between">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{service.name}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{service.name}</h1>
                 {service.is_featured && (
-                  <Badge variant="secondary" className="bg-upsa-gold/20 text-upsa-navy hover:bg-upsa-gold/30">
+                  <Badge variant="secondary" className="bg-upsa-gold/20 text-upsa-navy dark:text-upsa-gold hover:bg-upsa-gold/30 font-bold">
                     Featured
                   </Badge>
                 )}
@@ -87,13 +87,13 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
             </div>
             
             {service.category && (
-              <Badge variant="outline" className="text-upsa-navy border-upsa-navy/20 mb-4">
+              <Badge variant="outline" className="text-upsa-navy dark:text-upsa-gold border-upsa-navy/20 dark:border-white/10 mb-4">
                 {service.category.name}
               </Badge>
             )}
             
             {service.description && (
-              <p className="text-gray-600 text-lg leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
                 {service.description}
               </p>
             )}
@@ -101,18 +101,18 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
         </div>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-white/10">
           
           {/* Left Column: Contact & Location */}
           <div className="p-8 space-y-6">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Contact & Location</h3>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4">Contact & Location</h3>
             
             {service.location_label && (
               <div className="flex items-start">
                 <MapPin className="h-5 w-5 mr-3 text-upsa-gold mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Location</p>
-                  <p className="text-gray-600 mt-1">{service.location_label}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Location</p>
+                  <p className="text-gray-600 dark:text-gray-300 mt-1">{service.location_label}</p>
                 </div>
               </div>
             )}
@@ -121,8 +121,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               <div className="flex items-start">
                 <Phone className="h-5 w-5 mr-3 text-upsa-gold mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Phone</p>
-                  <a href={`tel:${service.contact_phone}`} className="text-upsa-navy hover:underline mt-1 block">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Phone</p>
+                  <a href={`tel:${service.contact_phone}`} className="text-upsa-navy dark:text-upsa-gold hover:underline mt-1 block">
                     {service.contact_phone}
                   </a>
                 </div>
@@ -133,8 +133,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               <div className="flex items-start">
                 <Mail className="h-5 w-5 mr-3 text-upsa-gold mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Email</p>
-                  <a href={`mailto:${service.contact_email}`} className="text-upsa-navy hover:underline mt-1 block break-all">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Email</p>
+                  <a href={`mailto:${service.contact_email}`} className="text-upsa-navy dark:text-upsa-gold hover:underline mt-1 block break-all">
                     {service.contact_email}
                   </a>
                 </div>
@@ -145,8 +145,8 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               <div className="flex items-start">
                 <Globe className="h-5 w-5 mr-3 text-upsa-gold mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Website</p>
-                  <a href={service.website_url} target="_blank" rel="noopener noreferrer" className="text-upsa-navy hover:underline mt-1 block break-all">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Website</p>
+                  <a href={service.website_url} target="_blank" rel="noopener noreferrer" className="text-upsa-navy dark:text-upsa-gold hover:underline mt-1 block break-all">
                     {service.website_url.replace(/^https?:\/\//, '')}
                   </a>
                 </div>
@@ -155,16 +155,16 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
           </div>
 
           {/* Right Column: Hours & Verification */}
-          <div className="p-8 space-y-6 bg-gray-50/50">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Operating Hours</h3>
+          <div className="p-8 space-y-6 bg-gray-50/50 dark:bg-[#060D1A]/50">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4">Operating Hours</h3>
             
             {!service.hours ? (
-              <div className="flex items-center text-gray-500">
-                <Clock className="h-5 w-5 mr-3 text-gray-400" />
+              <div className="flex items-center text-gray-500 dark:text-gray-400">
+                <Clock className="h-5 w-5 mr-3 text-gray-400 dark:text-gray-500" />
                 <p>Hours not specified</p>
               </div>
             ) : typeof service.hours === 'string' ? (
-              <div className="flex items-center text-gray-900">
+              <div className="flex items-center text-gray-900 dark:text-white">
                 <Clock className="h-5 w-5 mr-3 text-upsa-gold" />
                 <p>{service.hours}</p>
               </div>
@@ -172,19 +172,19 @@ export default async function ServiceDetailPage({ params }: ServicePageProps) {
               <div className="space-y-3">
                 {Object.entries(service.hours as Record<string, string>).map(([day, time]) => (
                   <div key={day} className="flex justify-between items-center">
-                    <span className="text-gray-600 font-medium capitalize">{day}</span>
-                    <span className="text-gray-900">{time}</span>
+                    <span className="text-gray-600 dark:text-gray-400 font-medium capitalize">{day}</span>
+                    <span className="text-gray-900 dark:text-white font-semibold">{time}</span>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <div className="flex items-start bg-green-50 p-4 rounded-lg">
-                <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5 mr-3 shrink-0" />
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-white/10">
+              <div className="flex items-start bg-green-50 dark:bg-emerald-950/30 border border-green-200 dark:border-emerald-500/20 p-4 rounded-xl">
+                <ShieldCheck className="h-5 w-5 text-green-600 dark:text-emerald-400 mt-0.5 mr-3 shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-green-900">Verified Information</p>
-                  <p className="text-sm text-green-800 mt-1">
+                  <p className="text-sm font-bold text-green-900 dark:text-emerald-300">Verified Information</p>
+                  <p className="text-sm text-green-800 dark:text-emerald-400/90 mt-1">
                     This listing's details were last verified by an administrator {verifiedAgo}.
                   </p>
                 </div>

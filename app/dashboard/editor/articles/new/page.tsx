@@ -468,20 +468,20 @@ export default function NewArticlePage() {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Create New Article</h1>
-          <p className="text-gray-500">Draft a new story for Voice of UPSA</p>
+          <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Create New Article</h1>
+          <p className="text-gray-500 dark:text-slate-400">Draft a new story for Voice of UPSA</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Button 
             variant="ghost" 
             type="button"
-            className="text-red-600 hover:bg-red-50 hover:text-red-700 font-bold"
+            className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300 font-bold"
             onClick={handleClearForm}
             disabled={isLoading}
           >
             <Trash2 className="mr-2 h-4 w-4" /> Clear Draft
           </Button>
-          <Button variant="outline" type="button" onClick={() => router.back()} disabled={isLoading}>Cancel</Button>
+          <Button variant="outline" type="button" onClick={() => router.back()} disabled={isLoading} className="dark:bg-[#0C1729] dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5">Cancel</Button>
           <Button 
             variant="outline" 
             type="button"
@@ -490,12 +490,13 @@ export default function NewArticlePage() {
               submitArticle(data, "draft");
             }}
             disabled={isLoading}
+            className="dark:bg-[#0C1729] dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
           >
             <Save className="mr-2 h-4 w-4" /> Save Draft
           </Button>
           <Button 
             type="button"
-            className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold"
+            className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-amber-400 font-bold"
             onClick={form.handleSubmit(
               (data) => submitArticle(data, "published"),
               (errors) => handleFormErrors(errors)
@@ -510,18 +511,18 @@ export default function NewArticlePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Editor Column */}
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          <Card className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10">
             <CardHeader>
-              <CardTitle>Article Content</CardTitle>
-              <CardDescription>The core of your story</CardDescription>
+              <CardTitle className="text-upsa-navy dark:text-white">Article Content</CardTitle>
+              <CardDescription className="text-gray-500 dark:text-slate-400">The core of your story</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="title">Article Title</Label>
+                <Label htmlFor="title" className="text-gray-700 dark:text-slate-200 font-semibold">Article Title</Label>
                 <Input 
                   id="title" 
                   placeholder="e.g. UPSA Wins Global Impact Award" 
-                  className="text-lg font-bold"
+                  className="text-lg font-bold bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
                   {...form.register("title")}
                   onChange={handleTitleChange}
                 />
@@ -532,12 +533,12 @@ export default function NewArticlePage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="excerpt">Excerpt / Summary</Label>
+                  <Label htmlFor="excerpt" className="text-gray-700 dark:text-slate-200 font-semibold">Excerpt / Summary</Label>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2.5 text-xs font-bold border-upsa-gold/40 text-upsa-gold hover:bg-upsa-gold/10 hover:text-upsa-gold transition-all gap-1.5"
+                    className="h-7 px-2.5 text-xs font-bold border-upsa-gold/40 text-upsa-gold hover:bg-upsa-gold/10 hover:text-upsa-gold dark:bg-transparent dark:hover:bg-upsa-gold/10 transition-all gap-1.5"
                     onClick={generateExcerpt}
                     disabled={isGenerating}
                   >
@@ -548,7 +549,7 @@ export default function NewArticlePage() {
                 <Textarea 
                   id="excerpt" 
                   placeholder="A short summary of the article for cards and social media..." 
-                  className="resize-none h-24"
+                  className="resize-none h-24 bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
                   {...form.register("excerpt")}
                 />
                 {form.formState.errors.excerpt && (
@@ -557,7 +558,7 @@ export default function NewArticlePage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Content Body</Label>
+                <Label className="text-gray-700 dark:text-slate-200 font-semibold">Content Body</Label>
                 <TiptapEditor 
                   content={form.watch("content") || ""} 
                   onChange={(val) => form.setValue("content", val, { shouldValidate: true })} 
@@ -573,17 +574,17 @@ export default function NewArticlePage() {
         {/* Sidebar Settings Column */}
         <div className="space-y-6">
           {/* Author Attribution Card */}
-          <Card className="border-upsa-navy/10 shadow-sm">
+          <Card className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xs uppercase tracking-widest font-bold text-gray-500 flex items-center gap-1.5">
+                <CardTitle className="text-xs uppercase tracking-widest font-bold text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
                   <PenTool className="h-3.5 w-3.5 text-upsa-gold" /> Written By
                 </CardTitle>
-                <span className="text-[10px] bg-upsa-navy/5 text-upsa-navy font-bold px-2 py-0.5 rounded-full">
+                <span className="text-[10px] bg-upsa-navy/5 dark:bg-white/10 text-upsa-navy dark:text-upsa-gold font-bold px-2 py-0.5 rounded-full">
                   Author Credit
                 </span>
               </div>
-              <CardDescription className="text-xs text-gray-500">
+              <CardDescription className="text-xs text-gray-500 dark:text-slate-400">
                 Credit the person who wrote this piece. You will be logged as the publisher.
               </CardDescription>
             </CardHeader>
@@ -592,7 +593,7 @@ export default function NewArticlePage() {
                 <input
                   type="checkbox"
                   id="is_guest_author"
-                  className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy cursor-pointer"
+                  className="h-4 w-4 rounded border-gray-300 dark:border-white/20 dark:bg-[#060D1A] text-upsa-navy dark:text-upsa-gold focus:ring-upsa-navy dark:focus:ring-upsa-gold cursor-pointer"
                   checked={isGuestAuthor}
                   onChange={(e) => {
                     const checked = e.target.checked;
@@ -606,22 +607,22 @@ export default function NewArticlePage() {
                     }
                   }}
                 />
-                <Label htmlFor="is_guest_author" className="cursor-pointer text-xs font-semibold text-gray-700">
+                <Label htmlFor="is_guest_author" className="cursor-pointer text-xs font-semibold text-gray-700 dark:text-slate-200">
                   Guest / External Contributor
                 </Label>
               </div>
 
               {!isGuestAuthor ? (
                 <div className="space-y-2">
-                  <Label htmlFor="author_id" className="text-xs text-gray-600">Staff Author</Label>
+                  <Label htmlFor="author_id" className="text-xs text-gray-600 dark:text-slate-300">Staff Author</Label>
                   <Select
                     value={form.watch("author_id") || currentUserId || ""}
                     onValueChange={(val) => form.setValue("author_id", val, { shouldValidate: true })}
                   >
-                    <SelectTrigger id="author_id" className="h-9 text-xs">
+                    <SelectTrigger id="author_id" className="h-9 text-xs bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                       <SelectValue placeholder="Choose staff author" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white dark:bg-[#0C1729] border-gray-200 dark:border-white/10 text-gray-800 dark:text-slate-200">
                       {teamProfiles.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.full_name} ({member.role}) {member.id === currentUserId ? "— You" : ""}
@@ -631,22 +632,22 @@ export default function NewArticlePage() {
                   </Select>
                 </div>
               ) : (
-                <div className="space-y-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="space-y-3 p-3 bg-gray-50 dark:bg-white/[0.02] rounded-xl border border-gray-100 dark:border-white/10">
                   <div className="space-y-1">
-                    <Label htmlFor="author_name" className="text-xs font-bold text-gray-700">Author Name *</Label>
+                    <Label htmlFor="author_name" className="text-xs font-bold text-gray-700 dark:text-slate-200">Author Name *</Label>
                     <Input
                       id="author_name"
                       placeholder="e.g. Kofi Mensah"
-                      className="h-8 text-xs bg-white"
+                      className="h-8 text-xs bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
                       {...form.register("author_name")}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="author_title" className="text-xs text-gray-500">Author Title / Role</Label>
+                    <Label htmlFor="author_title" className="text-xs text-gray-500 dark:text-slate-400">Author Title / Role</Label>
                     <Input
                       id="author_title"
                       placeholder="e.g. SRC PRO / Level 400 Student"
-                      className="h-8 text-xs bg-white"
+                      className="h-8 text-xs bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
                       {...form.register("author_title")}
                     />
                   </div>
@@ -655,21 +656,21 @@ export default function NewArticlePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10">
             <CardHeader>
-              <CardTitle className="text-sm uppercase tracking-widest text-gray-400">Settings</CardTitle>
+              <CardTitle className="text-sm uppercase tracking-widest text-gray-400 dark:text-slate-400 font-bold">Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category" className="text-gray-700 dark:text-slate-200 font-semibold">Category</Label>
                 <Select 
                   value={form.watch("category_id") || undefined}
                   onValueChange={(val) => form.setValue("category_id", val, { shouldValidate: true })}
                 >
-                  <SelectTrigger id="category">
+                  <SelectTrigger id="category" className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-[#0C1729] border-gray-200 dark:border-white/10 text-gray-800 dark:text-slate-200">
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                     ))}
@@ -681,10 +682,10 @@ export default function NewArticlePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug</Label>
+                <Label htmlFor="slug" className="text-gray-700 dark:text-slate-200 font-semibold">URL Slug</Label>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-gray-400">/articles/</span>
-                  <Input id="slug" {...form.register("slug")} className="h-8 text-xs" />
+                  <span className="text-xs text-gray-400 dark:text-slate-500">/articles/</span>
+                  <Input id="slug" {...form.register("slug")} className="h-8 text-xs bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white" />
                 </div>
               </div>
 
@@ -693,11 +694,11 @@ export default function NewArticlePage() {
                   <input
                     type="checkbox"
                     id="is_featured"
-                    className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy cursor-pointer"
+                    className="h-4 w-4 rounded border-gray-300 dark:border-white/20 dark:bg-[#060D1A] text-upsa-navy dark:text-upsa-gold focus:ring-upsa-navy dark:focus:ring-upsa-gold cursor-pointer"
                     checked={form.watch("is_featured") || false}
                     onChange={(e) => form.setValue("is_featured", e.target.checked, { shouldValidate: true })}
                   />
-                  <Label htmlFor="is_featured" className="cursor-pointer font-bold text-gray-700 text-sm">
+                  <Label htmlFor="is_featured" className="cursor-pointer font-bold text-gray-700 dark:text-slate-200 text-sm">
                     Feature on Homepage
                   </Label>
                 </div>
@@ -706,11 +707,11 @@ export default function NewArticlePage() {
                   <input
                     type="checkbox"
                     id="is_pinned"
-                    className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy cursor-pointer"
+                    className="h-4 w-4 rounded border-gray-300 dark:border-white/20 dark:bg-[#060D1A] text-upsa-navy dark:text-upsa-gold focus:ring-upsa-navy dark:focus:ring-upsa-gold cursor-pointer"
                     checked={form.watch("is_pinned") || false}
                     onChange={(e) => form.setValue("is_pinned", e.target.checked, { shouldValidate: true })}
                   />
-                  <Label htmlFor="is_pinned" className="cursor-pointer font-bold text-gray-700 text-sm">
+                  <Label htmlFor="is_pinned" className="cursor-pointer font-bold text-gray-700 dark:text-slate-200 text-sm">
                     Pin/Highlight Article
                   </Label>
                 </div>
@@ -719,19 +720,19 @@ export default function NewArticlePage() {
                   <input
                     type="checkbox"
                     id="allow_comments"
-                    className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy cursor-pointer"
+                    className="h-4 w-4 rounded border-gray-300 dark:border-white/20 dark:bg-[#060D1A] text-upsa-navy dark:text-upsa-gold focus:ring-upsa-navy dark:focus:ring-upsa-gold cursor-pointer"
                     checked={form.watch("allow_comments") !== false}
                     onChange={(e) => form.setValue("allow_comments", e.target.checked, { shouldValidate: true })}
                   />
-                  <Label htmlFor="allow_comments" className="cursor-pointer font-bold text-gray-700 text-sm">
+                  <Label htmlFor="allow_comments" className="cursor-pointer font-bold text-gray-700 dark:text-slate-200 text-sm">
                     Allow Reader Comments
                   </Label>
                 </div>
               </div>
 
-              <div className="space-y-2 pt-4 border-t">
+              <div className="space-y-2 pt-4 border-t border-gray-100 dark:border-white/10">
                 <div className="flex items-center justify-between">
-                  <Label className="flex items-center">
+                  <Label className="flex items-center text-gray-700 dark:text-slate-200 font-semibold">
                     <ImageIcon className="mr-2 h-4 w-4" /> Cover Image
                   </Label>
                   {coverImageUrl && (
@@ -739,7 +740,7 @@ export default function NewArticlePage() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-6 text-red-500 hover:text-red-700 hover:bg-red-50 text-xs px-2 gap-1"
+                      className="h-6 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs px-2 gap-1"
                       onClick={() => {
                         form.setValue("cover_image_url", "", { shouldValidate: true });
                         form.setValue("cover_image_alt", "", { shouldValidate: true });
@@ -761,7 +762,7 @@ export default function NewArticlePage() {
                   />
 
                   {coverImageUrl ? (
-                    <div className="group relative aspect-video rounded-xl overflow-hidden border border-gray-200">
+                    <div className="group relative aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
                       <img
                         src={coverImageUrl}
                         alt="Article Cover"
@@ -778,18 +779,18 @@ export default function NewArticlePage() {
                   ) : (
                     <label
                       htmlFor="cover_image_input"
-                      className="aspect-video rounded-xl bg-gray-100 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="aspect-video rounded-xl bg-gray-100 dark:bg-white/5 border-2 border-dashed border-gray-200 dark:border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.08] transition-colors"
                     >
                       {isUploading ? (
                         <>
-                          <Loader2 className="h-8 w-8 text-upsa-navy animate-spin mb-2" />
-                          <span className="text-xs font-medium text-gray-500">Uploading to Cloudinary...</span>
+                          <Loader2 className="h-8 w-8 text-upsa-navy dark:text-upsa-gold animate-spin mb-2" />
+                          <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Uploading to Cloudinary...</span>
                         </>
                       ) : (
                         <>
-                          <PlusCircle className="h-8 w-8 text-gray-300 mb-2" />
-                          <span className="text-xs font-medium text-gray-500">Upload Cover Image</span>
-                          <span className="text-[10px] text-gray-400 mt-1">Recommended: 16:9 ratio, max 5MB</span>
+                          <PlusCircle className="h-8 w-8 text-gray-300 dark:text-slate-600 mb-2" />
+                          <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Upload Cover Image</span>
+                          <span className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">Recommended: 16:9 ratio, max 5MB</span>
                         </>
                       )}
                     </label>
@@ -800,12 +801,12 @@ export default function NewArticlePage() {
                 )}
 
                 {coverImageUrl && (
-                  <div className="space-y-2 mt-4 pt-2 border-t border-gray-100">
-                    <Label htmlFor="cover_image_alt" className="text-xs font-bold text-gray-500">Image Alt Text (SEO & Access)</Label>
+                  <div className="space-y-2 mt-4 pt-2 border-t border-gray-100 dark:border-white/10">
+                    <Label htmlFor="cover_image_alt" className="text-xs font-bold text-gray-500 dark:text-slate-400">Image Alt Text (SEO & Access)</Label>
                     <Input 
                       id="cover_image_alt" 
                       placeholder="e.g. Students inside the library" 
-                      className="h-8 text-xs"
+                      className="h-8 text-xs bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
                       {...form.register("cover_image_alt")}
                     />
                     {form.formState.errors.cover_image_alt && (
@@ -817,21 +818,21 @@ export default function NewArticlePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-sm uppercase tracking-widest text-gray-500 flex items-center font-bold">
-                  <Settings className="mr-2 h-4 w-4 text-upsa-navy" /> SEO Optimization
+                <CardTitle className="text-sm uppercase tracking-widest text-gray-500 dark:text-slate-400 flex items-center font-bold">
+                  <Settings className="mr-2 h-4 w-4 text-upsa-navy dark:text-upsa-gold" /> SEO Optimization
                 </CardTitle>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <Sparkles className="h-2.5 w-2.5 text-emerald-600" /> Auto-Generated
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
+                  <Sparkles className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" /> Auto-Generated
                 </span>
               </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 px-2 text-xs font-bold border-upsa-gold/40 text-upsa-gold hover:bg-upsa-gold/10 hover:text-upsa-gold transition-all gap-1"
+                className="h-7 px-2 text-xs font-bold border-upsa-gold/40 text-upsa-gold hover:bg-upsa-gold/10 hover:text-upsa-gold dark:bg-transparent dark:hover:bg-upsa-gold/10 transition-all gap-1"
                 onClick={generateSEO}
                 disabled={isGeneratingSEO}
               >
@@ -840,9 +841,9 @@ export default function NewArticlePage() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-[11px] text-gray-500 italic">SEO tags are auto-generated from your article title and content. You can fine-tune or override them anytime.</p>
+              <p className="text-[11px] text-gray-500 dark:text-slate-400 italic">SEO tags are auto-generated from your article title and content. You can fine-tune or override them anytime.</p>
               <div className="space-y-1">
-                <Label htmlFor="meta_title" className="text-xs">Meta Title</Label>
+                <Label htmlFor="meta_title" className="text-xs text-gray-700 dark:text-slate-300">Meta Title</Label>
                 <Input 
                   id="meta_title" 
                   {...form.register("meta_title")} 
@@ -850,11 +851,11 @@ export default function NewArticlePage() {
                     form.setValue("meta_title", e.target.value, { shouldValidate: true });
                     setIsCustomMetaTitle(e.target.value.trim().length > 0);
                   }}
-                  className="h-8 text-xs" 
+                  className="h-8 text-xs bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white" 
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="meta_description" className="text-xs">Meta Description</Label>
+                <Label htmlFor="meta_description" className="text-xs text-gray-700 dark:text-slate-300">Meta Description</Label>
                 <Textarea 
                   id="meta_description" 
                   {...form.register("meta_description")} 
@@ -862,11 +863,11 @@ export default function NewArticlePage() {
                     form.setValue("meta_description", e.target.value, { shouldValidate: true });
                     setIsCustomMetaDesc(e.target.value.trim().length > 0);
                   }}
-                  className="h-20 text-xs resize-none" 
+                  className="h-20 text-xs resize-none bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white" 
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="meta_keywords" className="text-xs">Meta Keywords (comma-separated)</Label>
+                <Label htmlFor="meta_keywords" className="text-xs text-gray-700 dark:text-slate-300">Meta Keywords (comma-separated)</Label>
                 <Input 
                   id="meta_keywords" 
                   placeholder="e.g. upsa, awards, students" 
@@ -875,7 +876,7 @@ export default function NewArticlePage() {
                     form.setValue("meta_keywords", e.target.value, { shouldValidate: true });
                     setIsCustomMetaKeywords(e.target.value.trim().length > 0);
                   }}
-                  className="h-8 text-xs" 
+                  className="h-8 text-xs bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white" 
                 />
               </div>
             </CardContent>

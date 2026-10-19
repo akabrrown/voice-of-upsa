@@ -43,8 +43,8 @@ export default async function GalleryModerationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Photo Moderation</h1>
-        <p className="text-gray-500 mt-1">Review and approve photo submissions from students.</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Photo Moderation</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Review and approve photo submissions from students.</p>
       </div>
 
       <GalleryModerationClient initialPhotos={pendingPhotos || []} />

@@ -109,91 +109,93 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-3xl">
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-[#0C1729] p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm space-y-6">
         <div>
-          <h3 className="text-lg font-bold text-gray-900 border-b pb-3 mb-4">Basic Information</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/10 pb-3 mb-4">Basic Information</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Service Name *</Label>
+              <Label htmlFor="name" className="text-gray-900 dark:text-gray-200">Service Name *</Label>
               <Input
                 id="name"
                 placeholder="e.g. Campus Clinic"
+                className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("name")}
                 onBlur={handleNameBlur}
               />
               {form.formState.errors.name && (
-                <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">{form.formState.errors.name.message}</p>
               )}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="slug">Slug (URL) *</Label>
+              <Label htmlFor="slug" className="text-gray-900 dark:text-gray-200">Slug (URL) *</Label>
               <Input
                 id="slug"
                 placeholder="campus-clinic"
+                className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("slug")}
               />
               {form.formState.errors.slug && (
-                <p className="text-sm text-red-500">{form.formState.errors.slug.message}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">{form.formState.errors.slug.message}</p>
               )}
             </div>
           </div>
 
           <div className="space-y-2 mb-4">
-            <Label>Category *</Label>
+            <Label className="text-gray-900 dark:text-gray-200">Category *</Label>
             <Select 
               value={form.watch("category_id")} 
               onValueChange={(val) => form.setValue("category_id", val)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200">
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="dark:bg-[#0C1729] dark:border-white/10 dark:text-gray-200">
                 {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  <SelectItem key={cat.id} value={cat.id} className="dark:focus:bg-slate-800 dark:text-gray-200">{cat.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {form.formState.errors.category_id && (
-              <p className="text-sm text-red-500">{form.formState.errors.category_id.message}</p>
+              <p className="text-sm text-red-500 dark:text-red-400">{form.formState.errors.category_id.message}</p>
             )}
           </div>
 
             <div className="space-y-2 mb-4">
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description" className="text-gray-900 dark:text-gray-200">Description *</Label>
               <Textarea
                 id="description"
                 placeholder="What does this service provide?"
-                className="min-h-[100px]"
+                className="min-h-[100px] dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("description")}
               />
               {form.formState.errors.description && (
-                <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">{form.formState.errors.description.message}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label>Service Logo</Label>
+              <Label className="text-gray-900 dark:text-gray-200">Service Logo</Label>
               <div className="flex items-center gap-4">
                 {logoUrl ? (
-                  <div className="relative h-20 w-20 rounded-full overflow-hidden border border-gray-200">
+                  <div className="relative h-20 w-20 rounded-full overflow-hidden border border-gray-200 dark:border-white/10">
                     <Image src={logoUrl} alt="Logo" fill className="object-cover" />
                     <button
                       type="button"
                       onClick={() => form.setValue("logo_url", "")}
-                      className="absolute top-0 right-0 bg-white/80 p-1 rounded-bl text-red-500 hover:bg-white z-10"
+                      className="absolute top-0 right-0 bg-white/80 dark:bg-black/80 p-1 rounded-bl text-red-500 hover:bg-white dark:hover:bg-black z-10"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                 ) : (
-                  <div className="h-20 w-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400">
+                  <div className="h-20 w-20 rounded-full border-2 border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-slate-500">
                     <Upload className="h-6 w-6" />
                   </div>
                 )}
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="logo_upload" className="cursor-pointer bg-white border border-gray-300 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 text-center flex items-center gap-2 max-w-fit">
+                  <Label htmlFor="logo_upload" className="cursor-pointer bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/10 text-gray-900 dark:text-gray-200 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-slate-800 text-center flex items-center gap-2 max-w-fit">
                     {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
                     {isUploading ? "Uploading..." : "Upload Logo"}
                   </Label>
@@ -205,73 +207,79 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
                     onChange={handleImageUpload}
                     disabled={isUploading}
                   />
-                  <p className="text-xs text-gray-500">Square image recommended. Max 2MB.</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">Square image recommended. Max 2MB.</p>
                 </div>
               </div>
               {form.formState.errors.logo_url && (
-                <p className="text-sm text-red-500">{form.formState.errors.logo_url.message}</p>
+                <p className="text-sm text-red-500 dark:text-red-400">{form.formState.errors.logo_url.message}</p>
               )}
             </div>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-[#0C1729] p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm space-y-6">
         <div>
-          <h3 className="text-lg font-bold text-gray-900 border-b pb-3 mb-4">Contact & Location</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/10 pb-3 mb-4">Contact & Location</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="location_label">Location / Building</Label>
+              <Label htmlFor="location_label" className="text-gray-900 dark:text-gray-200">Location / Building</Label>
               <Input
                 id="location_label"
                 placeholder="e.g. LBC Block, Ground Floor"
+                className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("location_label")}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="contact_phone">Phone Number(s)</Label>
+              <Label htmlFor="contact_phone" className="text-gray-900 dark:text-gray-200">Phone Number(s)</Label>
               <Input
                 id="contact_phone"
                 placeholder="e.g. 024..., 050... (separate with commas)"
+                className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("contact_phone")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="contact_email">Email Address</Label>
+              <Label htmlFor="contact_email" className="text-gray-900 dark:text-gray-200">Email Address</Label>
               <Input
                 id="contact_email"
                 type="email"
                 placeholder="e.g. clinic@upsa.edu.gh"
+                className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("contact_email")}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="contact_whatsapp">WhatsApp Number</Label>
+              <Label htmlFor="contact_whatsapp" className="text-gray-900 dark:text-gray-200">WhatsApp Number</Label>
               <Input
                 id="contact_whatsapp"
                 placeholder="e.g. +233 24..."
+                className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("contact_whatsapp")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="website_url">Website URL</Label>
+              <Label htmlFor="website_url" className="text-gray-900 dark:text-gray-200">Website URL</Label>
               <Input
                 id="website_url"
                 type="url"
                 placeholder="https://..."
+                className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("website_url")}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="hours">Operating Hours</Label>
+              <Label htmlFor="hours" className="text-gray-900 dark:text-gray-200">Operating Hours</Label>
               <Input
                 id="hours"
                 placeholder="e.g. Mon-Fri, 9am - 5pm"
+                className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200"
                 {...form.register("hours" as any)}
               />
             </div>
@@ -279,23 +287,23 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-[#0C1729] p-6 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm space-y-6">
         <div>
-          <h3 className="text-lg font-bold text-gray-900 border-b pb-3 mb-4">Status & Display</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-white/10 pb-3 mb-4">Status & Display</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label className="text-gray-900 dark:text-gray-200">Status</Label>
               <Select 
                 value={form.watch("status")} 
                 onValueChange={(val: any) => form.setValue("status", val)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="dark:bg-slate-900 dark:border-white/10 dark:text-gray-200">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active (Visible to public)</SelectItem>
-                  <SelectItem value="inactive">Inactive (Hidden)</SelectItem>
+                <SelectContent className="dark:bg-[#0C1729] dark:border-white/10 dark:text-gray-200">
+                  <SelectItem value="active" className="dark:focus:bg-slate-800 dark:text-gray-200">Active (Visible to public)</SelectItem>
+                  <SelectItem value="inactive" className="dark:focus:bg-slate-800 dark:text-gray-200">Inactive (Hidden)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -304,20 +312,20 @@ export function ServiceForm({ initialData, categories }: ServiceFormProps) {
               <input 
                 type="checkbox" 
                 id="is_featured" 
-                className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy"
+                className="h-4 w-4 rounded border-gray-300 dark:border-slate-700 text-upsa-navy dark:text-upsa-gold focus:ring-upsa-navy dark:focus:ring-upsa-gold"
                 {...form.register("is_featured")}
               />
-              <Label htmlFor="is_featured" className="cursor-pointer">Feature this service (shows at top of directory)</Label>
+              <Label htmlFor="is_featured" className="cursor-pointer text-gray-900 dark:text-gray-200">Feature this service (shows at top of directory)</Label>
             </div>
           </div>
         </div>
       </div>
 
       <div className="flex justify-end gap-4">
-        <Button asChild variant="outline" type="button">
+        <Button asChild variant="outline" type="button" className="border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800">
           <Link href="/dashboard/admin/services">Cancel</Link>
         </Button>
-        <Button type="submit" className="bg-upsa-navy text-white hover:bg-[#001f40]" disabled={isSubmitting}>
+        <Button type="submit" className="bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-[#001f40] dark:hover:bg-upsa-gold/90 font-bold" disabled={isSubmitting}>
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

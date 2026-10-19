@@ -2,26 +2,29 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Editorial Disclaimer | Voice of UPSA",
-  description: "Editorial disclaimer regarding opinions and content on Voice of UPSA.",
+  description: "Read the Voice of UPSA editorial disclaimer regarding published content, student opinions, third-party contributors, and external campus links.",
+  alternates: {
+    canonical: "/disclaimer",
+  },
 };
 
 export default function EditorialDisclaimerPage() {
   return (
-    <div className="min-h-screen bg-gray-50/50 py-16 md:py-24">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A] py-16 md:py-24">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12">
+        <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 p-8 md:p-12">
           
-          <div className="mb-12 border-b border-gray-100 pb-8">
-            <h1 className="text-3xl md:text-5xl font-black text-upsa-navy tracking-tight mb-4">
+          <div className="mb-12 border-b border-gray-100 dark:border-white/10 pb-8">
+            <h1 className="text-3xl md:text-5xl font-black text-upsa-navy dark:text-white tracking-tight mb-4">
               Editorial Disclaimer
             </h1>
-            <p className="text-gray-500 font-medium">Clarification of liability and representation.</p>
+            <p className="text-gray-500 dark:text-slate-400 font-medium">Clarification of liability and representation.</p>
           </div>
 
-          <div className="prose prose-lg prose-headings:text-upsa-navy prose-a:text-upsa-gold max-w-none text-gray-700">
+          <div className="prose prose-lg prose-headings:text-upsa-navy dark:prose-headings:text-white prose-a:text-upsa-gold max-w-none text-gray-700 dark:text-slate-300 dark:prose-invert">
             
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8 rounded-r-md">
-              <p className="text-sm text-blue-800 m-0 font-medium">
+            <div className="bg-blue-50 dark:bg-blue-950/40 border-l-4 border-blue-400 dark:border-blue-500 p-4 mb-8 rounded-r-md">
+              <p className="text-sm text-blue-800 dark:text-blue-200 m-0 font-medium">
                 The Voice of UPSA is an independent, student-driven digital media platform.
               </p>
             </div>

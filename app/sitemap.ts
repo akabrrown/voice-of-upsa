@@ -15,10 +15,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${siteUrl}/categories`,
+      url: `${siteUrl}/categories/all`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/podcasts`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/mart`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/confessions`,
+      lastModified: new Date(),
+      changeFrequency: "hourly",
+      priority: 0.7,
+    },
+    {
+      url: `${siteUrl}/services`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.6,
     },
     {
       url: `${siteUrl}/advertise`,
@@ -30,22 +54,71 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${siteUrl}/about`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.4,
+      priority: 0.5,
     },
     {
       url: `${siteUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${siteUrl}/guidelines`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
       priority: 0.4,
+    },
+    {
+      url: `${siteUrl}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${siteUrl}/terms`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${siteUrl}/cookies`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${siteUrl}/disclaimer`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
     },
   ];
 
   try {
     const supabase = getAdminClient();
 
-    const { data: categories } = await supabase
-      .from("categories")
-      .select("slug, created_at");
+    const [
+      { data: categories },
+      { data: articles },
+      { data: podcasts },
+      { data: products },
+    ] = await Promise.all([
+      supabase.from("categories").select("slug, created_at"),
+      supabase
+        .from("articles")
+        .select("slug, updated_at, published_at")
+        .eq("status", "published")
+        .order("published_at", { ascending: false }),
+      supabase
+        .from("podcast_shows")
+        .select("slug, updated_at")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("mart_products")
+        .select("slug, updated_at")
+        .eq("status", "active")
+        .order("created_at", { ascending: false }),
+    ]);
 
     const categoryRoutes: MetadataRoute.Sitemap = (categories || []).map((cat) => ({
       url: `${siteUrl}/categories/${cat.slug}`,
@@ -53,12 +126,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.8,
     }));
-
-    const { data: articles } = await supabase
-      .from("articles")
-      .select("slug, updated_at, published_at")
-      .eq("status", "published")
-      .order("published_at", { ascending: false });
 
     const articleRoutes: MetadataRoute.Sitemap = (articles || []).map((article) => ({
       url: `${siteUrl}/articles/${article.slug}`,
@@ -71,7 +138,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     }));
 
-    return [...staticRoutes, ...categoryRoutes, ...articleRoutes];
+    const podcastRoutes: MetadataRoute.Sitemap = (podcasts || []).map((show) => ({
+      url: `${siteUrl}/podcasts/${show.slug}`,
+      lastModified: show.updated_at ? new Date(show.updated_at) : new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
+
+    const productRoutes: MetadataRoute.Sitemap = (products || []).map((prod) => ({
+      url: `${siteUrl}/mart/products/${prod.slug}`,
+      lastModified: prod.updated_at ? new Date(prod.updated_at) : new Date(),
+      changeFrequency: "daily",
+      priority: 0.6,
+    }));
+
+    return [
+      ...staticRoutes,
+      ...categoryRoutes,
+      ...articleRoutes,
+      ...podcastRoutes,
+      ...productRoutes,
+    ];
   } catch {
     return staticRoutes;
   }

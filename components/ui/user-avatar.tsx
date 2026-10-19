@@ -54,19 +54,19 @@ const sizeClasses: Record<NonNullable<UserAvatarProps["size"]>, { container: str
 };
 
 const variantClasses: Record<NonNullable<UserAvatarProps["variant"]>, string> = {
-  navy: "bg-upsa-navy text-white",
-  subtle: "bg-gray-100 text-upsa-navy border border-gray-200",
-  gold: "bg-upsa-gold/15 text-upsa-navy border border-upsa-gold/30",
+  navy: "bg-upsa-navy text-white dark:bg-upsa-navy dark:text-upsa-gold",
+  subtle: "bg-gray-100 dark:bg-white/10 text-upsa-navy dark:text-white border border-gray-200 dark:border-white/10",
+  gold: "bg-upsa-gold/15 dark:bg-upsa-gold/20 text-upsa-navy dark:text-upsa-gold border border-upsa-gold/30",
 };
 
 /**
- * Extracts clean 1-2 letter initials from a display name.
+ * Extracts clean 1-2 letter initials from a display name (e.g., Kofi Mensah -> KM, Akua -> AK).
  */
-function getInitials(name?: string | null): string {
+export function getInitials(name?: string | null): string {
   if (!name || !name.trim()) return "";
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 1) {
-    return parts[0].charAt(0).toUpperCase();
+    return parts[0].slice(0, 2).toUpperCase();
   }
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }

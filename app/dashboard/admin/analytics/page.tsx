@@ -184,8 +184,8 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-black text-upsa-navy tracking-tight">System Analytics</h1>
-        <p className="text-gray-500">Insights into content performance and reader engagement</p>
+        <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">System Analytics</h1>
+        <p className="text-gray-500 dark:text-slate-400">Insights into content performance and reader engagement</p>
       </div>
 
       {isLoading ? (
@@ -200,87 +200,87 @@ export default function AnalyticsPage() {
         <>
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Articles</CardTitle>
-                <FileText className="h-4 w-4 text-upsa-navy" />
+                <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Total Articles</CardTitle>
+                <FileText className="h-4 w-4 text-upsa-navy dark:text-upsa-gold" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-upsa-navy">{stats.totalArticles}</div>
-                <p className="text-xs text-gray-400 mt-1">All content created</p>
+                <div className="text-3xl font-black text-upsa-navy dark:text-white">{stats.totalArticles}</div>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">All content created</p>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Views</CardTitle>
-                <Eye className="h-4 w-4 text-upsa-navy" />
+                <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Total Views</CardTitle>
+                <Eye className="h-4 w-4 text-upsa-navy dark:text-upsa-gold" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-upsa-navy">{stats.totalViews.toLocaleString()}</div>
-                <p className="text-xs text-gray-400 mt-1">Direct page views</p>
+                <div className="text-3xl font-black text-upsa-navy dark:text-white">{stats.totalViews.toLocaleString()}</div>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Direct page views</p>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">Avg Views / Post</CardTitle>
-                <BarChart3 className="h-4 w-4 text-upsa-navy" />
+                <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Avg Views / Post</CardTitle>
+                <BarChart3 className="h-4 w-4 text-upsa-navy dark:text-upsa-gold" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-upsa-navy">{stats.avgViews.toLocaleString()}</div>
-                <p className="text-xs text-gray-400 mt-1">Engagement ratio</p>
+                <div className="text-3xl font-black text-upsa-navy dark:text-white">{stats.avgViews.toLocaleString()}</div>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Engagement ratio</p>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">Featured Stories</CardTitle>
-                <Award className="h-4 w-4 text-upsa-navy" />
+                <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Featured Stories</CardTitle>
+                <Award className="h-4 w-4 text-upsa-navy dark:text-upsa-gold" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-upsa-navy">{stats.featuredCount}</div>
-                <p className="text-xs text-gray-400 mt-1">Hero placement status</p>
+                <div className="text-3xl font-black text-upsa-navy dark:text-white">{stats.featuredCount}</div>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Hero placement status</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Charts Row 1 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-upsa-navy">Views by Category</CardTitle>
+                <CardTitle className="text-lg font-bold text-upsa-navy dark:text-white">Views by Category</CardTitle>
               </CardHeader>
               <CardContent className="h-80">
                 {categoryData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={categoryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="name" stroke="#9ca3af" tick={{ fontSize: 11, fontWeight: "bold" }} />
-                      <YAxis stroke="#9ca3af" tick={{ fontSize: 11 }} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#94a3b8" strokeOpacity={0.2} />
+                      <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 11, fontWeight: "bold" }} />
+                      <YAxis stroke="#94a3b8" tick={{ fontSize: 11 }} />
                       <Tooltip />
                       <Bar dataKey="views" fill="#0f2942" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-gray-400 italic">No category data.</div>
+                  <div className="h-full flex items-center justify-center text-gray-400 dark:text-slate-500 italic">No category data.</div>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-2">
                 <div>
-                  <CardTitle className="text-lg font-bold text-upsa-navy">Publication Trend & Performance</CardTitle>
-                  <p className="text-xs text-gray-400 mt-0.5">Dual-axis view: Monthly volume vs readership velocity (*ongoing month)</p>
+                  <CardTitle className="text-lg font-bold text-upsa-navy dark:text-white">Publication Trend & Performance</CardTitle>
+                  <p className="text-xs text-gray-400 dark:text-slate-400 mt-0.5">Dual-axis view: Monthly volume vs readership velocity (*ongoing month)</p>
                 </div>
               </CardHeader>
               <CardContent className="h-80">
                 {viewTrendData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <LineChart data={viewTrendData} margin={{ top: 10, right: 15, left: -10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="month" stroke="#9ca3af" tick={{ fontSize: 11, fontWeight: "bold" }} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#94a3b8" strokeOpacity={0.2} />
+                      <XAxis dataKey="month" stroke="#94a3b8" tick={{ fontSize: 11, fontWeight: "bold" }} />
                       
                       {/* Left Axis: Views & Avg Views */}
                       <YAxis 
@@ -339,14 +339,14 @@ export default function AnalyticsPage() {
                         type="monotone" 
                         dataKey="articles" 
                         name="Published Articles" 
-                        stroke="#0f2942" 
+                        stroke="#38bdf8" 
                         strokeWidth={2} 
-                        activeDot={{ r: 4 }}
+                        activeDot={{ r: 4 }} 
                       />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-gray-400 italic">No published trend data.</div>
+                  <div className="h-full flex items-center justify-center text-gray-400 dark:text-slate-500 italic">No published trend data.</div>
                 )}
               </CardContent>
             </Card>
@@ -354,9 +354,9 @@ export default function AnalyticsPage() {
 
           {/* Charts Row 2 */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card className="lg:col-span-1 border-none shadow-md">
+            <Card className="lg:col-span-1 border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-upsa-navy">Content States</CardTitle>
+                <CardTitle className="text-lg font-bold text-upsa-navy dark:text-white">Content States</CardTitle>
               </CardHeader>
               <CardContent className="h-72 flex flex-col justify-between">
                 {statusData.length > 0 ? (
@@ -385,80 +385,80 @@ export default function AnalyticsPage() {
                       {statusData.map((item, index) => (
                         <div key={index} className="flex items-center space-x-2">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="font-bold text-gray-500">{item.name} ({item.value})</span>
+                          <span className="font-bold text-gray-500 dark:text-slate-300">{item.name} ({item.value})</span>
                         </div>
                       ))}
                     </div>
                   </>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-gray-400 italic">No status data.</div>
+                  <div className="h-full flex items-center justify-center text-gray-400 dark:text-slate-500 italic">No status data.</div>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-2 border-none shadow-md">
+            <Card className="lg:col-span-2 border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-upsa-navy">Production by Category</CardTitle>
+                <CardTitle className="text-lg font-bold text-upsa-navy dark:text-white">Production by Category</CardTitle>
               </CardHeader>
               <CardContent className="h-72">
                 {categoryData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={categoryData} layout="vertical" margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                      <XAxis type="number" stroke="#9ca3af" tick={{ fontSize: 11 }} />
-                      <YAxis dataKey="name" type="category" stroke="#9ca3af" width={100} tick={{ fontSize: 11, fontWeight: "bold" }} />
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#94a3b8" strokeOpacity={0.2} />
+                      <XAxis type="number" stroke="#94a3b8" tick={{ fontSize: 11 }} />
+                      <YAxis dataKey="name" type="category" stroke="#94a3b8" width={100} tick={{ fontSize: 11, fontWeight: "bold" }} />
                       <Tooltip />
                       <Bar dataKey="count" fill="#cfa12f" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-gray-400 italic">No production data.</div>
+                  <div className="h-full flex items-center justify-center text-gray-400 dark:text-slate-500 italic">No production data.</div>
                 )}
               </CardContent>
             </Card>
           </div>
 
           {/* Social & Engagement Leaderboard */}
-          <Card className="border-none shadow-md mt-8">
+          <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10 mt-8">
             <CardHeader>
-              <CardTitle className="text-lg font-bold text-upsa-navy">Social & Engagement Leaderboard</CardTitle>
-              <p className="text-sm text-gray-500">Top performing content tracked across views and social shares.</p>
+              <CardTitle className="text-lg font-bold text-upsa-navy dark:text-white">Social & Engagement Leaderboard</CardTitle>
+              <p className="text-sm text-gray-500 dark:text-slate-400">Top performing content tracked across views and social shares.</p>
             </CardHeader>
             <CardContent>
               {siteMetrics.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg">
+                <div className="text-center py-12 text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-white/5 rounded-lg">
                   No social analytics data tracked yet. Data will appear once users view or share content.
                 </div>
               ) : (
-                <div className="rounded-md border overflow-hidden">
+                <div className="rounded-md border border-gray-100 dark:border-white/10 overflow-hidden">
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Content / Slug</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Total Views</TableHead>
-                        <TableHead className="text-right">Social Shares</TableHead>
-                        <TableHead className="text-right">Last Engaged</TableHead>
+                    <TableHeader className="bg-gray-50 dark:bg-white/5">
+                      <TableRow className="dark:border-white/10">
+                        <TableHead className="dark:text-slate-300">Content / Slug</TableHead>
+                        <TableHead className="dark:text-slate-300">Type</TableHead>
+                        <TableHead className="text-right dark:text-slate-300">Total Views</TableHead>
+                        <TableHead className="text-right dark:text-slate-300">Social Shares</TableHead>
+                        <TableHead className="text-right dark:text-slate-300">Last Engaged</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {siteMetrics.slice(0, 10).map((metric) => (
-                        <TableRow key={metric.id}>
-                          <TableCell className="font-medium max-w-[200px] truncate" title={metric.entity_slug}>
+                        <TableRow key={metric.id} className="dark:border-white/10 hover:bg-gray-50/50 dark:hover:bg-white/5">
+                          <TableCell className="font-medium max-w-[200px] truncate dark:text-white" title={metric.entity_slug}>
                             {metric.entity_slug}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="capitalize text-xs">
+                            <Badge variant="outline" className="capitalize text-xs dark:border-white/10 dark:text-slate-300">
                               {metric.entity_type}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right font-semibold text-gray-900">
+                          <TableCell className="text-right font-semibold text-gray-900 dark:text-white">
                             {metric.views.toLocaleString()}
                           </TableCell>
-                          <TableCell className="text-right font-semibold text-green-600">
+                          <TableCell className="text-right font-semibold text-green-600 dark:text-green-400">
                             {metric.shares.toLocaleString()}
                           </TableCell>
-                          <TableCell className="text-right text-gray-500 text-sm">
+                          <TableCell className="text-right text-gray-500 dark:text-slate-400 text-sm">
                             {new Date(metric.last_engaged_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                           </TableCell>
                         </TableRow>

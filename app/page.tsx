@@ -8,13 +8,36 @@ import { TrendingSidebar } from "@/components/articles/TrendingSidebar";
 import { AdZone } from "@/components/layout/AdZone";
 import { ReviewMarquee } from "@/components/reviews/ReviewMarquee";
 import { SubmitReviewModal } from "@/components/reviews/SubmitReviewModal";
+import { getSiteUrl } from "@/lib/auth/urls";
 
 export default function Home() {
+  const siteUrl = getSiteUrl();
+  const homepageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Voice of UPSA",
+    headline: "Voice of UPSA | Official Communications Hub and Campus News",
+    description: "The official digital news, student journalism, and campus communications platform for the University of Professional Studies, Accra (UPSA).",
+    url: siteUrl,
+    inLanguage: "en-GH",
+    isPartOf: {
+      "@type": "WebSite",
+      name: "Voice of UPSA",
+      url: siteUrl,
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homepageJsonLd) }}
+      />
       <Navbar />
       <BreakingNews />
       <main className="flex-1">
+        {/* Semantic Level 1 Heading for SEO & Accessibility */}
+        <h1 className="sr-only">Voice of UPSA | Official Communications Hub and Campus News</h1>
 
         {/* Top Leaderboard Ad */}
         <div className="container mx-auto px-4 py-6">
@@ -50,11 +73,11 @@ export default function Home() {
           </div>
         </div>
         {/* Reviews Section */}
-        <section className="border-t border-gray-100 bg-white pt-16 pb-8 mt-12">
+        <section className="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#060D1A] pt-16 pb-8 mt-12 transition-colors duration-200">
           <div className="container mx-auto px-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-bold font-playfair text-upsa-navy mb-2">What Our Readers Say</h2>
-              <p className="text-gray-500">Join the conversation and share your experience with Voice of UPSA.</p>
+              <h2 className="text-3xl font-bold font-playfair text-upsa-navy dark:text-white mb-2">What Our Readers Say</h2>
+              <p className="text-gray-500 dark:text-gray-400">Join the conversation and share your experience with Voice of UPSA.</p>
             </div>
             <SubmitReviewModal />
           </div>

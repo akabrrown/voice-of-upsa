@@ -6,14 +6,14 @@ export default function ArticleLoading() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white pt-10 pb-20">
+      <main className="min-h-screen bg-white dark:bg-[#060D1A] pt-10 pb-20">
         <div className="container mx-auto px-4 max-w-7xl animate-in fade-in duration-200">
           <div className="max-w-4xl mx-auto mb-10 space-y-4">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-5 w-20 rounded-full" />
             <Skeleton className="h-12 w-full max-w-3xl" />
             <Skeleton className="h-10 w-2/3" />
-            <div className="flex items-center space-x-4 pt-2 border-b border-gray-100 pb-6">
+            <div className="flex items-center space-x-4 pt-2 border-b border-gray-100 dark:border-white/10 pb-6">
               <Skeleton className="h-10 w-10 rounded-full" />
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-4 w-24" />
@@ -32,7 +32,7 @@ export default function ArticleLoading() {
               </div>
             </div>
             <div className="lg:col-span-4 space-y-6">
-              <div className="rounded-xl border border-gray-100 p-6 space-y-4">
+              <div className="rounded-xl border border-gray-100 dark:border-white/10 dark:bg-[#0C1729] p-6 space-y-4">
                 <Skeleton className="h-5 w-36" />
                 <Skeleton className="h-16 w-full rounded-lg" />
                 <Skeleton className="h-16 w-full rounded-lg" />

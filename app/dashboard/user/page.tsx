@@ -56,46 +56,46 @@ export default async function UserOverviewPage() {
 
   return (
     <div className="space-y-8 max-w-4xl">
-      <div className="flex items-center gap-3 border-b pb-6">
-        <div className="p-3 bg-upsa-navy/10 text-upsa-navy rounded-xl">
+      <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-6">
+        <div className="p-3 bg-upsa-navy/10 dark:bg-upsa-gold/10 text-upsa-navy dark:text-upsa-gold rounded-xl">
           <User className="h-8 w-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-black text-upsa-navy tracking-tight">My Profile</h1>
-          <p className="text-gray-500 mt-1">Manage your account and preferences.</p>
+          <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">My Profile</h1>
+          <p className="text-gray-500 dark:text-slate-400 mt-1">Manage your account and preferences.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Profile Card */}
-        <div className="md:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        <div className="md:col-span-2 bg-white dark:bg-[#0C1729] rounded-3xl border border-gray-100 dark:border-white/10 shadow-sm p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8">
             <UserAvatar 
               name={profile?.full_name || user.email?.split("@")[0] || "User"}
               src={profile?.avatar_url}
-              className="h-24 w-24 text-3xl shadow-sm border-2 border-white"
+              className="h-24 w-24 text-3xl shadow-sm border-2 border-white dark:border-[#0C1729]"
             />
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{profile?.full_name}</h2>
-              <p className="text-gray-500 mb-2">{user.email}</p>
-              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{profile?.full_name}</h2>
+              <p className="text-gray-500 dark:text-slate-400 mb-2">{user.email}</p>
+              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300">
                 {profile?.role === "public" ? "Student Reader" : profile?.role}
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-gray-100 dark:border-white/10">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Department</p>
-              <p className="font-semibold text-gray-900">{profile?.department || "Not specified"}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">Department</p>
+              <p className="font-semibold text-gray-900 dark:text-white">{profile?.department || "Not specified"}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Year Group</p>
-              <p className="font-semibold text-gray-900">{profile?.year_group || "Not specified"}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">Year Group</p>
+              <p className="font-semibold text-gray-900 dark:text-white">{profile?.year_group || "Not specified"}</p>
             </div>
             <div className="sm:col-span-2">
-              <p className="text-sm font-medium text-gray-500 mb-1">Bio</p>
-              <p className="text-gray-700">{profile?.bio || "No bio added yet."}</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mb-1">Bio</p>
+              <p className="text-gray-700 dark:text-slate-300">{profile?.bio || "No bio added yet."}</p>
             </div>
           </div>
         </div>
@@ -135,10 +135,10 @@ export default async function UserOverviewPage() {
             </div>
           </div>
           
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Account</h3>
+          <div className="bg-white dark:bg-[#0C1729] rounded-3xl border border-gray-100 dark:border-white/10 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Account</h3>
             <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start rounded-xl" asChild>
+              <Button variant="outline" className="w-full justify-start rounded-xl dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5" asChild>
                 <Link href="/auth/update-password">Change Password</Link>
               </Button>
             </div>

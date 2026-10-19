@@ -56,12 +56,13 @@ export function CategoryForm() {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Category Name *</Label>
+        <Label htmlFor="name" className="text-gray-700 dark:text-slate-300">Category Name *</Label>
         <Input
           id="name"
           placeholder="e.g. Dining"
           {...form.register("name")}
           onBlur={handleNameBlur}
+          className="dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder:text-slate-500"
         />
         {form.formState.errors.name && (
           <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
@@ -69,11 +70,12 @@ export function CategoryForm() {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="slug">Slug *</Label>
+        <Label htmlFor="slug" className="text-gray-700 dark:text-slate-300">Slug *</Label>
         <Input
           id="slug"
           placeholder="dining"
           {...form.register("slug")}
+          className="dark:bg-[#060D1A] dark:border-white/10 dark:text-white dark:placeholder:text-slate-500"
         />
         {form.formState.errors.slug && (
           <p className="text-sm text-red-500">{form.formState.errors.slug.message}</p>
@@ -81,11 +83,12 @@ export function CategoryForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="sort_order">Sort Order</Label>
+        <Label htmlFor="sort_order" className="text-gray-700 dark:text-slate-300">Sort Order</Label>
         <Input
           id="sort_order"
           type="number"
           {...form.register("sort_order", { valueAsNumber: true })}
+          className="dark:bg-[#060D1A] dark:border-white/10 dark:text-white"
         />
       </div>
 
@@ -93,13 +96,13 @@ export function CategoryForm() {
         <input 
           type="checkbox" 
           id="is_active" 
-          className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy"
+          className="h-4 w-4 rounded border-gray-300 dark:border-white/20 dark:bg-[#060D1A] text-upsa-navy dark:text-upsa-gold focus:ring-upsa-navy dark:focus:ring-upsa-gold"
           {...form.register("is_active")}
         />
-        <Label htmlFor="is_active" className="cursor-pointer">Active (Visible)</Label>
+        <Label htmlFor="is_active" className="cursor-pointer text-gray-700 dark:text-slate-300">Active (Visible)</Label>
       </div>
 
-      <Button type="submit" className="w-full bg-upsa-navy text-white hover:bg-[#001f40] mt-4" disabled={isSubmitting}>
+      <Button type="submit" className="w-full bg-upsa-navy text-white hover:bg-[#001f40] dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 mt-4" disabled={isSubmitting}>
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

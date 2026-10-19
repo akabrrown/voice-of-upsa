@@ -22,7 +22,7 @@ export function AboutSlideshow() {
   }, []);
 
   return (
-    <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl bg-gray-100">
+    <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl bg-gray-100 dark:bg-white/5">
       {slideImages.map((image, index) => (
         <div
           key={image.src}

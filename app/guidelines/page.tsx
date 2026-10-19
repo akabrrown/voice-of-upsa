@@ -2,23 +2,26 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Community Guidelines | Voice of UPSA",
-  description: "Acceptable use and community guidelines for the Voice of UPSA platform.",
+  description: "Review Voice of UPSA community guidelines, code of conduct for article comments, student discussions, and anonymous campus submissions.",
+  alternates: {
+    canonical: "/guidelines",
+  },
 };
 
 export default function CommunityGuidelinesPage() {
   return (
-    <div className="min-h-screen bg-gray-50/50 py-16 md:py-24">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A] py-16 md:py-24">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12">
+        <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 p-8 md:p-12">
           
-          <div className="mb-12 border-b border-gray-100 pb-8">
-            <h1 className="text-3xl md:text-5xl font-black text-upsa-navy tracking-tight mb-4">
+          <div className="mb-12 border-b border-gray-100 dark:border-white/10 pb-8">
+            <h1 className="text-3xl md:text-5xl font-black text-upsa-navy dark:text-white tracking-tight mb-4">
               Community Guidelines
             </h1>
-            <p className="text-gray-500 font-medium">Fostering a respectful digital campus environment.</p>
+            <p className="text-gray-500 dark:text-slate-400 font-medium">Fostering a respectful digital campus environment.</p>
           </div>
 
-          <div className="prose prose-lg prose-headings:text-upsa-navy prose-a:text-upsa-gold max-w-none text-gray-700">
+          <div className="prose prose-lg prose-headings:text-upsa-navy dark:prose-headings:text-white prose-a:text-upsa-gold max-w-none text-gray-700 dark:text-slate-300 dark:prose-invert">
             
             <p>
               The Voice of UPSA is a digital platform designed to amplify student voices, share campus news, and foster intellectual discussion. To maintain a safe, respectful, and constructive environment, all users must adhere to the following Community Guidelines when interacting, commenting, or submitting content.

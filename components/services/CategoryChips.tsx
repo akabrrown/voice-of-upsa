@@ -21,8 +21,8 @@ export function CategoryChips({ categories }: CategoryChipsProps) {
             className={cn(
               "px-4 py-2 rounded-full text-sm font-medium transition-colors border",
               pathname === "/services" 
-                ? "bg-upsa-navy text-white border-upsa-navy" 
-                : "bg-white text-gray-700 border-gray-200 hover:border-upsa-navy hover:text-upsa-navy"
+                ? "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy border-upsa-navy dark:border-upsa-gold font-bold" 
+                : "bg-white dark:bg-[#0C1729] text-gray-700 dark:text-gray-200 border-gray-200 dark:border-white/10 hover:border-upsa-navy dark:hover:border-upsa-gold hover:text-upsa-navy dark:hover:text-upsa-gold"
             )}
           >
             All Services
@@ -37,8 +37,8 @@ export function CategoryChips({ categories }: CategoryChipsProps) {
                 className={cn(
                   "px-4 py-2 rounded-full text-sm font-medium transition-colors border",
                   isActive 
-                    ? "bg-upsa-navy text-white border-upsa-navy" 
-                    : "bg-white text-gray-700 border-gray-200 hover:border-upsa-navy hover:text-upsa-navy"
+                    ? "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy border-upsa-navy dark:border-upsa-gold font-bold" 
+                    : "bg-white dark:bg-[#0C1729] text-gray-700 dark:text-gray-200 border-gray-200 dark:border-white/10 hover:border-upsa-navy dark:hover:border-upsa-gold hover:text-upsa-navy dark:hover:text-upsa-gold"
                 )}
               >
                 {category.name}

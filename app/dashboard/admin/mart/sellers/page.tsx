@@ -59,12 +59,12 @@ export default function AdminSellerModerationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Seller Applications</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Seller Applications</h1>
         <p className="text-muted-foreground mt-1">Review and approve new sellers for Campus Mart.</p>
       </div>
 
       {sellers.length === 0 ? (
-        <Card className="flex min-h-[300px] flex-col items-center justify-center border-dashed bg-muted/20 text-center">
+        <Card className="flex min-h-[300px] flex-col items-center justify-center border-dashed bg-muted/20 dark:border-white/10 dark:bg-[#0C1729] text-center">
           <ShieldAlert className="h-10 w-10 text-muted-foreground opacity-50 mb-4" />
           <CardTitle>No pending applications</CardTitle>
           <CardDescription className="mt-2">All caught up! No new sellers are waiting for approval.</CardDescription>
@@ -72,7 +72,7 @@ export default function AdminSellerModerationPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {sellers.map((seller) => (
-            <Card key={seller.id} className="border-border/50">
+            <Card key={seller.id} className="border-border/50 dark:border-white/10 dark:bg-[#0C1729]">
               <CardHeader className="pb-3 flex flex-row items-start justify-between space-y-0">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -85,19 +85,19 @@ export default function AdminSellerModerationPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 text-sm mb-6">
-                  <div className="flex justify-between items-center border-b border-border/40 pb-2">
-                    <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Phone</span>
-                    <span className="font-extrabold text-upsa-navy">{seller.phone}</span>
+                  <div className="flex justify-between items-center border-b border-border/40 dark:border-white/10 pb-2">
+                    <span className="text-gray-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs">Phone</span>
+                    <span className="font-extrabold text-upsa-navy dark:text-white">{seller.phone}</span>
                   </div>
-                  <div className="flex justify-between items-center border-b border-border/40 pb-2">
-                    <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Student ID No.</span>
-                    <span className="font-extrabold text-upsa-navy">{seller.index_number || 'N/A'}</span>
+                  <div className="flex justify-between items-center border-b border-border/40 dark:border-white/10 pb-2">
+                    <span className="text-gray-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs">Student ID No.</span>
+                    <span className="font-extrabold text-upsa-navy dark:text-white">{seller.index_number || 'N/A'}</span>
                   </div>
                   
                   {seller.student_id_url && (
                     <div className="pt-2">
-                      <span className="text-gray-500 font-bold uppercase tracking-widest text-xs block mb-2">Uploaded ID Card</span>
-                      <div className="relative h-40 w-full rounded-none border-2 border-border/60 overflow-hidden group">
+                      <span className="text-gray-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs block mb-2">Uploaded ID Card</span>
+                      <div className="relative h-40 w-full rounded-none border-2 border-border/60 dark:border-white/10 overflow-hidden group">
                         {/* Use img tag for external cloudinary unoptimized URLs to prevent Next.js config errors */}
                         <img 
                           src={seller.student_id_url} 
@@ -114,10 +114,10 @@ export default function AdminSellerModerationPage() {
                 </div>
 
                 <div className="flex gap-3">
-                  <Button className="flex-1 rounded-none gap-2 bg-upsa-navy hover:bg-upsa-navy/90 text-white font-bold uppercase tracking-widest text-xs h-10" onClick={() => handleAction(seller.profile_id, 'approve')}>
+                  <Button className="flex-1 rounded-none gap-2 bg-upsa-navy hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 text-white font-bold uppercase tracking-widest text-xs h-10" onClick={() => handleAction(seller.profile_id, 'approve')}>
                     <Check className="h-4 w-4" /> Approve
                   </Button>
-                  <Button variant="outline" className="flex-1 rounded-none gap-2 text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200 font-bold uppercase tracking-widest text-xs h-10" onClick={() => handleAction(seller.profile_id, 'reject')}>
+                  <Button variant="outline" className="flex-1 rounded-none gap-2 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40 border-red-200 dark:border-red-800/40 font-bold uppercase tracking-widest text-xs h-10" onClick={() => handleAction(seller.profile_id, 'reject')}>
                     <X className="h-4 w-4" /> Reject
                   </Button>
                 </div>

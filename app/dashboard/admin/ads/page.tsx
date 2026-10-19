@@ -36,8 +36,8 @@ export default async function AdminAdsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Advertisements Management</h1>
-        <p className="text-gray-500 mt-2 font-medium">Review and manage submitted ad campaigns.</p>
+        <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Advertisements Management</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-2 font-medium">Review and manage submitted ad campaigns.</p>
       </div>
 
       <AdsManagerClient initialAds={ads || []} />

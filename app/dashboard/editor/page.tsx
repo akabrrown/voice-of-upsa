@@ -104,14 +104,14 @@ export default function EditorDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Welcome, {userName}!</h1>
-        <p className="text-gray-500">Workspace overview, submission updates, and content performance metrics</p>
+        <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Welcome, {userName}!</h1>
+        <p className="text-gray-500 dark:text-slate-400">Workspace overview, submission updates, and content performance metrics</p>
       </div>
 
       {isLoading ? (
         <div className="space-y-8 animate-in fade-in duration-300">
           <StatsShadowLoader count={4} />
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white dark:bg-[#0C1729] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-white/10">
             <TableShadowLoader rows={4} hasSearch={false} />
           </div>
         </div>
@@ -119,57 +119,57 @@ export default function EditorDashboard() {
         <>
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">My Total Articles</CardTitle>
-                <FileText className="h-4 w-4 text-upsa-navy" />
+                <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">My Total Articles</CardTitle>
+                <FileText className="h-4 w-4 text-upsa-navy dark:text-upsa-gold" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-upsa-navy">{stats.totalArticles}</div>
-                <p className="text-xs text-gray-400 mt-1">All drafts and posts</p>
+                <div className="text-3xl font-black text-upsa-navy dark:text-white">{stats.totalArticles}</div>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">All drafts and posts</p>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total Views</CardTitle>
-                <Eye className="h-4 w-4 text-upsa-navy" />
+                <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Total Views</CardTitle>
+                <Eye className="h-4 w-4 text-upsa-navy dark:text-upsa-gold" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-upsa-navy">{stats.totalViews.toLocaleString()}</div>
-                <p className="text-xs text-gray-400 mt-1">Reader impressions</p>
+                <div className="text-3xl font-black text-upsa-navy dark:text-white">{stats.totalViews.toLocaleString()}</div>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Reader impressions</p>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">Published</CardTitle>
+                <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Published</CardTitle>
                 <CheckCircle className="h-4 w-4 text-emerald-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-upsa-navy">{stats.publishedCount}</div>
-                <p className="text-xs text-gray-400 mt-1">Live on site</p>
+                <div className="text-3xl font-black text-upsa-navy dark:text-white">{stats.publishedCount}</div>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Live on site</p>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">Pending Review</CardTitle>
+                <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Pending Review</CardTitle>
                 <AlertCircle className="h-4 w-4 text-amber-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-black text-upsa-navy">{stats.pendingCount}</div>
-                <p className="text-xs text-gray-400 mt-1">Awaiting admin action</p>
+                <div className="text-3xl font-black text-upsa-navy dark:text-white">{stats.pendingCount}</div>
+                <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">Awaiting admin action</p>
               </CardContent>
             </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Recent Articles */}
-            <Card className="lg:col-span-2 border-none shadow-md">
+            <Card className="lg:col-span-2 border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-xl font-bold text-upsa-navy">My Recent Drafts & Posts</CardTitle>
-                <Button asChild size="sm" variant="outline" className="text-xs border-upsa-navy/10 text-upsa-navy hover:bg-upsa-navy hover:text-white">
+                <CardTitle className="text-xl font-bold text-upsa-navy dark:text-white">My Recent Drafts & Posts</CardTitle>
+                <Button asChild size="sm" variant="outline" className="text-xs border-upsa-navy/10 dark:border-white/10 text-upsa-navy dark:text-slate-200 hover:bg-upsa-navy hover:text-white dark:hover:bg-white/5">
                   <Link href="/dashboard/editor/articles">View All My Articles</Link>
                 </Button>
               </CardHeader>
@@ -177,12 +177,12 @@ export default function EditorDashboard() {
                 <div className="space-y-6">
                   {recentArticles.length > 0 ? (
                     recentArticles.map((art) => (
-                      <div key={art.id} className="flex items-center justify-between pb-6 border-b border-gray-50 last:border-none last:pb-0">
+                      <div key={art.id} className="flex items-center justify-between pb-6 border-b border-gray-50 dark:border-white/5 last:border-none last:pb-0">
                         <div className="space-y-1 pr-4">
-                          <Link href={`/articles/${art.slug}`} className="font-bold text-upsa-navy hover:text-upsa-gold transition-colors line-clamp-1">
+                          <Link href={`/articles/${art.slug}`} className="font-bold text-upsa-navy dark:text-white hover:text-upsa-gold dark:hover:text-upsa-gold transition-colors line-clamp-1">
                             {art.title}
                           </Link>
-                          <div className="flex items-center space-x-2 text-xs text-gray-400">
+                          <div className="flex items-center space-x-2 text-xs text-gray-400 dark:text-slate-500">
                             <span>{art.categories?.name || "Uncategorized"}</span>
                             <span>•</span>
                             <span className="flex items-center"><Clock className="h-3 w-3 mr-1" /> {art.created_at ? new Date(art.created_at).toLocaleDateString() : "Recent"}</span>
@@ -190,36 +190,36 @@ export default function EditorDashboard() {
                         </div>
                         <div className="flex items-center space-x-4">
                           <div className="text-right">
-                            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">{art.view_count.toLocaleString()} Views</div>
-                            <div className="capitalize text-[10px] font-bold text-gray-400 mt-0.5">{art.status === "review" ? "pending review" : art.status}</div>
+                            <div className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{art.view_count.toLocaleString()} Views</div>
+                            <div className="capitalize text-[10px] font-bold text-gray-400 dark:text-slate-500 mt-0.5">{art.status === "review" ? "pending review" : art.status}</div>
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="py-8 text-center text-gray-400 italic text-sm">You haven't written any articles yet.</div>
+                    <div className="py-8 text-center text-gray-400 dark:text-slate-500 italic text-sm">You haven't written any articles yet.</div>
                   )}
                 </div>
               </CardContent>
             </Card>
 
             {/* Quick Actions */}
-            <Card className="border-none shadow-md">
+            <Card className="border-none shadow-md bg-white dark:bg-[#0C1729] dark:border dark:border-white/10">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-upsa-navy">Quick Actions</CardTitle>
+                <CardTitle className="text-xl font-bold text-upsa-navy dark:text-white">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button asChild className="w-full bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold py-6 rounded-xl transition-all shadow-md">
+                <Button asChild className="w-full bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-amber-400 font-bold py-6 rounded-xl transition-all shadow-md">
                   <Link href="/dashboard/editor/articles/new">
                     <PlusCircle className="mr-2 h-5 w-5" /> Write New Article
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full border-upsa-navy/10 text-upsa-navy hover:bg-upsa-navy/5 font-bold py-6 rounded-xl transition-all shadow-md">
+                <Button asChild variant="outline" className="w-full border-upsa-navy/10 dark:border-white/10 text-upsa-navy dark:text-slate-200 hover:bg-upsa-navy/5 dark:hover:bg-white/5 font-bold py-6 rounded-xl transition-all shadow-md">
                   <Link href="/dashboard/editor/polls/new">
                     <PlusCircle className="mr-2 h-5 w-5" /> Create New Poll
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full border-upsa-navy/10 text-upsa-navy hover:bg-upsa-navy/5 font-bold py-6 rounded-xl transition-all">
+                <Button asChild variant="outline" className="w-full border-upsa-navy/10 dark:border-white/10 text-upsa-navy dark:text-slate-200 hover:bg-upsa-navy/5 dark:hover:bg-white/5 font-bold py-6 rounded-xl transition-all">
                   <Link href="/profile">
                     Edit Profile Details
                   </Link>

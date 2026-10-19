@@ -73,10 +73,10 @@ export default async function AdminJobsPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#1B2A4A]">Job Board</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage job postings, approve or reject pending reviews.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[#1B2A4A] dark:text-white">Job Board</h1>
+          <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">Manage job postings, approve or reject pending reviews.</p>
         </div>
-        <Button asChild className="bg-[#1B2A4A] hover:bg-gray-900 text-white font-semibold transition-colors">
+        <Button asChild className="bg-[#1B2A4A] hover:bg-gray-900 dark:bg-upsa-gold dark:text-gray-950 dark:hover:bg-upsa-gold/90 text-white font-semibold transition-colors">
           <Link href="/dashboard/admin/jobs/new">
             <Plus className="w-4 h-4 mr-2" /> New Job
           </Link>
@@ -85,13 +85,13 @@ export default async function AdminJobsPage() {
 
       {pendingRevisions && pendingRevisions.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-bold text-[#1B2A4A] flex items-center gap-2">
+          <h2 className="text-lg font-bold text-[#1B2A4A] dark:text-white flex items-center gap-2">
             <FileEdit className="w-5 h-5 text-amber-500" /> Pending Revisions ({pendingRevisions.length})
           </h2>
-          <div className="bg-white border border-amber-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-[#0C1729] border border-amber-200 dark:border-amber-800/40 rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-amber-800 uppercase bg-amber-50 border-b border-amber-100">
+                <thead className="text-xs text-amber-800 dark:text-amber-300 uppercase bg-amber-50 dark:bg-amber-950/30 border-b border-amber-100 dark:border-amber-900/30">
                   <tr>
                     <th className="px-6 py-4 font-semibold">Original Post</th>
                     <th className="px-6 py-4 font-semibold">Poster</th>
@@ -99,23 +99,23 @@ export default async function AdminJobsPage() {
                     <th className="px-6 py-4 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                   {pendingRevisions.map((rev) => {
                     const originalPost = postingMap[rev.posting_id];
                     return (
-                      <tr key={rev.id} className="hover:bg-amber-50/30 transition-colors">
+                      <tr key={rev.id} className="hover:bg-amber-50/30 dark:hover:bg-white/5 transition-colors">
                         <td className="px-6 py-4">
-                          <div className="font-medium text-gray-900 max-w-md line-clamp-1">
+                          <div className="font-medium text-gray-900 dark:text-white max-w-md line-clamp-1">
                             {originalPost?.title || "Unknown Post"}
                           </div>
-                          <div className="text-xs text-gray-500 line-clamp-1 mt-1">
+                          <div className="text-xs text-gray-500 dark:text-slate-400 line-clamp-1 mt-1">
                             {Object.keys(rev.proposed_changes).length} field(s) edited
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-600">
+                        <td className="px-6 py-4 text-gray-600 dark:text-slate-300">
                           {profileMap[rev.poster_id] ? `${profileMap[rev.poster_id].first_name} ${profileMap[rev.poster_id].last_name}` : "Unknown"}
                         </td>
-                        <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                        <td className="px-6 py-4 text-gray-500 dark:text-slate-400 whitespace-nowrap">
                           {format(new Date(rev.created_at), "MMM d, yyyy")}
                         </td>
                         <td className="px-6 py-4 text-right space-x-1">
@@ -131,10 +131,10 @@ export default async function AdminJobsPage() {
         </div>
       )}
 
-      <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b">
+            <thead className="text-xs text-gray-500 dark:text-slate-400 uppercase bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
               <tr>
                 <th className="px-6 py-4 font-semibold">Title & Org</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
@@ -144,31 +144,31 @@ export default async function AdminJobsPage() {
                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
               {postings && postings.length > 0 ? (
                 postings.map((job) => (
-                  <tr key={job.id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={job.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900 max-w-md line-clamp-1">{job.title}</div>
-                      <div className="text-xs text-gray-500">{job.organization_name}</div>
+                      <div className="font-medium text-gray-900 dark:text-white max-w-md line-clamp-1">{job.title}</div>
+                      <div className="text-xs text-gray-500 dark:text-slate-400">{job.organization_name}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        job.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        job.status === 'pending_review' ? 'bg-amber-100 text-amber-800' :
-                        job.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
+                        job.status === 'approved' ? 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800/40' :
+                        job.status === 'pending_review' ? 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/40' :
+                        job.status === 'rejected' ? 'bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800/40' :
+                        'bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-slate-300 border-gray-200 dark:border-white/10'
                       }`}>
                         {job.status.replace("_", " ")}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="px-6 py-4 text-gray-600 dark:text-slate-300">
                       {job.category?.name || "Unknown"}
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="px-6 py-4 text-gray-600 dark:text-slate-300">
                       {profileMap[job.poster_id] ? `${profileMap[job.poster_id].first_name} ${profileMap[job.poster_id].last_name}` : "Unknown"}
                     </td>
-                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
+                    <td className="px-6 py-4 text-gray-500 dark:text-slate-400 whitespace-nowrap">
                       {format(new Date(job.created_at), "MMM d, yyyy")}
                     </td>
                     <td className="px-6 py-4 text-right space-x-1">
@@ -180,11 +180,11 @@ export default async function AdminJobsPage() {
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="p-4 bg-gray-50 rounded-full">
-                        <Briefcase className="w-8 h-8 text-gray-300" />
+                      <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-full">
+                        <Briefcase className="w-8 h-8 text-gray-300 dark:text-slate-600" />
                       </div>
-                      <p className="font-semibold text-gray-600">No job postings</p>
-                      <p className="text-gray-400 text-sm">There are no job postings in the database yet.</p>
+                      <p className="font-semibold text-gray-600 dark:text-slate-300">No job postings</p>
+                      <p className="text-gray-400 dark:text-slate-500 text-sm">There are no job postings in the database yet.</p>
                     </div>
                   </td>
                 </tr>

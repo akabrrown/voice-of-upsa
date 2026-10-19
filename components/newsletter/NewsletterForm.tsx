@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Mail, Send } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");

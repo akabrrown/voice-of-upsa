@@ -47,24 +47,24 @@ function VerifyResetContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 border border-blue-100 mb-6">
-          <ShieldCheck className="h-10 w-10 text-upsa-navy" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#060D1A] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-[#0C1729] p-10 rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 mb-6">
+          <ShieldCheck className="h-10 w-10 text-upsa-navy dark:text-upsa-gold" />
         </div>
         
-        <h2 className="text-3xl font-black text-upsa-navy tracking-tight">
+        <h2 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">
           Secure Reset
         </h2>
         
-        <p className="text-gray-500 text-sm leading-relaxed mb-8">
+        <p className="text-gray-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
           To protect your account from automated email scanners, please click the button below to securely verify your password reset request.
         </p>
 
         <Button
           onClick={handleVerify}
           disabled={isVerifying || !tokenHash}
-          className="w-full bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy py-6 text-lg font-bold transition-all shadow-md hover:shadow-lg"
+          className="w-full bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 py-6 text-lg font-bold transition-all shadow-md hover:shadow-lg"
         >
           {isVerifying ? (
             <>
@@ -82,7 +82,7 @@ function VerifyResetContent() {
 
 export default function VerifyResetPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="h-8 w-8 animate-spin text-upsa-navy" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#060D1A]"><Loader2 className="h-8 w-8 animate-spin text-upsa-navy dark:text-upsa-gold" /></div>}>
       <VerifyResetContent />
     </Suspense>
   );

@@ -32,12 +32,12 @@ export default async function EditServicePage({ params }: EditServicePageProps) 
   return (
     <div className="p-6">
       <div className="mb-8">
-        <Link href="/dashboard/admin/services" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-upsa-navy mb-4">
+        <Link href="/dashboard/admin/services" className="inline-flex items-center text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-upsa-navy dark:hover:text-upsa-gold mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Services
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Service: {service.name}</h1>
-        <p className="text-sm text-gray-500 mt-1">Update the details of this service in the directory.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Service: {service.name}</h1>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Update the details of this service in the directory.</p>
       </div>
 
       <ServiceForm categories={categories} initialData={service} />

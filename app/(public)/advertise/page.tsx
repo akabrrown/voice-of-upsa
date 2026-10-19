@@ -1,8 +1,23 @@
 
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Check, Star, Target, Rocket } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Advertise with Us | Voice of UPSA",
+  description: "Reach thousands of students, lecturers, alumni, and campus professionals through targeted banner placements and native ads on Voice of UPSA.",
+  alternates: {
+    canonical: "/advertise",
+  },
+  openGraph: {
+    title: "Advertise with Us | Voice of UPSA",
+    description: "Reach thousands of students, lecturers, alumni, and campus professionals through targeted banner placements and native ads on Voice of UPSA.",
+    url: "/advertise",
+    type: "website",
+  },
+};
 
 const defaultTiers = [
   {
@@ -118,11 +133,11 @@ export default async function AdvertisePage() {
 
   return (
     <>
-      <main className="flex-1 bg-white pb-20">
-        <section className="py-20 bg-gray-50 border-b border-gray-100">
+      <main className="flex-1 bg-white dark:bg-[#060D1A] pb-20 transition-colors">
+        <section className="py-20 bg-gray-50 dark:bg-[#0C1729] border-b border-gray-100 dark:border-white/10">
           <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-black text-upsa-navy mb-6 tracking-tight">Advertise with Us</h1>
-            <p className="text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
+            <h1 className="text-4xl md:text-5xl font-black text-upsa-navy dark:text-white mb-6 tracking-tight">Advertise with Us</h1>
+            <p className="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
               Reach thousands of students, faculty, and professionals within the UPSA community. Choose a package that fits your goals.
             </p>
           </div>
@@ -136,16 +151,16 @@ export default async function AdvertisePage() {
                   key={tier.name}
                   className={`relative flex flex-col p-8 rounded-2xl border transition-all duration-200 ${
                     tier.highlight 
-                      ? "bg-upsa-navy text-white border-upsa-gold/40 shadow-xl" 
-                      : "bg-white text-upsa-navy border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300"
+                      ? "bg-upsa-navy dark:bg-[#0C1729] text-white border-upsa-gold/40 shadow-xl" 
+                      : "bg-white dark:bg-[#0C1729] text-upsa-navy dark:text-white border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md hover:border-gray-300 dark:hover:border-white/20"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <div className={`p-2.5 rounded-xl ${tier.highlight ? "bg-white/10" : "bg-upsa-navy/5"}`}>
-                      <tier.icon className={`h-6 w-6 ${tier.highlight ? "text-upsa-gold" : "text-upsa-navy"}`} />
+                    <div className={`p-2.5 rounded-xl ${tier.highlight ? "bg-white/10" : "bg-upsa-navy/5 dark:bg-white/10"}`}>
+                      <tier.icon className={`h-6 w-6 ${tier.highlight ? "text-upsa-gold" : "text-upsa-navy dark:text-upsa-gold"}`} />
                     </div>
                     {tier.highlight && (
-                      <span className="bg-upsa-gold text-upsa-navy font-extrabold text-[11px] uppercase tracking-wider px-3 py-1 rounded-full">
+                      <span className="bg-upsa-gold text-upsa-navy dark:text-upsa-navy font-extrabold text-[11px] uppercase tracking-wider px-3 py-1 rounded-full">
                         Recommended
                       </span>
                     )}
@@ -155,24 +170,24 @@ export default async function AdvertisePage() {
                     <h2 className="text-xl font-bold">{tier.name}</h2>
                     <div className="mt-3 flex items-baseline">
                       <span className="text-3xl font-black">{tier.price}</span>
-                      <span className={`ml-2 text-xs font-medium ${tier.highlight ? "text-gray-300" : "text-gray-500"}`}>{tier.period}</span>
+                      <span className={`ml-2 text-xs font-medium ${tier.highlight ? "text-gray-300" : "text-gray-500 dark:text-gray-400"}`}>{tier.period}</span>
                     </div>
-                    <p className={`mt-3 text-xs leading-relaxed ${tier.highlight ? "text-gray-300" : "text-gray-600"}`}>
+                    <p className={`mt-3 text-xs leading-relaxed ${tier.highlight ? "text-gray-300" : "text-gray-600 dark:text-gray-300"}`}>
                       {tier.description}
                     </p>
                   </div>
 
                   <div className="border-t border-gray-100 dark:border-white/10 pt-6 mb-8 flex-1">
-                    <span className={`text-[11px] font-bold uppercase tracking-wider block mb-4 ${tier.highlight ? "text-upsa-gold" : "text-gray-400"}`}>
+                    <span className={`text-[11px] font-bold uppercase tracking-wider block mb-4 ${tier.highlight ? "text-upsa-gold" : "text-gray-400 dark:text-gray-400"}`}>
                       Included Features
                     </span>
                     <ul className="space-y-3">
                       {tier.features.map((feature: string) => (
                         <li key={feature} className="flex items-start space-x-2.5 text-xs">
-                          <div className={`mt-0.5 p-0.5 rounded-full ${tier.highlight ? "bg-upsa-gold text-upsa-navy" : "bg-upsa-navy text-white"}`}>
+                          <div className={`mt-0.5 p-0.5 rounded-full ${tier.highlight ? "bg-upsa-gold text-upsa-navy" : "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy"}`}>
                             <Check className="h-3 w-3" />
                           </div>
-                          <span className={tier.highlight ? "text-gray-200" : "text-gray-600"}>{feature}</span>
+                          <span className={tier.highlight ? "text-gray-200" : "text-gray-600 dark:text-gray-300"}>{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -182,8 +197,8 @@ export default async function AdvertisePage() {
                     asChild 
                     className={`w-full py-5 text-sm font-bold rounded-xl cursor-pointer transition-colors ${
                       tier.highlight 
-                        ? "bg-upsa-gold text-upsa-navy hover:bg-white" 
-                        : "bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy"
+                        ? "bg-upsa-gold text-upsa-navy hover:bg-white dark:hover:bg-white/90" 
+                        : "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-gold dark:hover:bg-white hover:text-upsa-navy"
                     }`}
                   >
                     <Link href={`/advertise/submit?tier=${tier.id}`}>{tier.buttonText}</Link>
@@ -195,7 +210,7 @@ export default async function AdvertisePage() {
         </section>
 
         {/* Ad Specs */}
-        <section className="py-16 bg-upsa-navy text-white rounded-2xl mx-4 lg:mx-auto lg:max-w-6xl overflow-hidden border border-white/10">
+        <section className="py-16 bg-upsa-navy dark:bg-[#0C1729] text-white rounded-2xl mx-4 lg:mx-auto lg:max-w-6xl overflow-hidden border border-white/10">
           <div className="container mx-auto px-6 text-center">
             <h2 className="text-2xl font-bold mb-8">Technical Specifications</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">

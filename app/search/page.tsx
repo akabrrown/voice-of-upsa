@@ -118,21 +118,21 @@ export default function SearchPage() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 bg-white">
-        <section className="bg-gray-50 border-b">
+      <main className="flex-1 bg-white dark:bg-[#060D1A] transition-colors">
+        <section className="bg-gray-50 dark:bg-[#0C1729] border-b border-gray-100 dark:border-white/10">
           <div className="container mx-auto px-4 py-16 text-center">
-            <h1 className="text-3xl font-black text-upsa-navy mb-8 tracking-tight uppercase">Search Voice of UPSA</h1>
+            <h1 className="text-3xl font-black text-upsa-navy dark:text-white mb-8 tracking-tight uppercase">Search Voice of UPSA</h1>
             <div className="max-w-2xl mx-auto relative">
               <Input 
-                className="h-16 pl-14 pr-32 text-lg rounded-2xl border-none shadow-xl focus-visible:ring-upsa-navy/20"
+                className="h-16 pl-14 pr-32 text-lg rounded-2xl border-none shadow-xl bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-upsa-navy/20 dark:focus-visible:ring-upsa-gold/30"
                 placeholder="Search for articles, events, news..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
-              <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-300" />
+              <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400 dark:text-gray-500" />
               {isLoading && (
                 <div className="absolute right-36 top-1/2 -translate-y-1/2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-upsa-navy"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-upsa-navy dark:border-upsa-gold"></div>
                 </div>
               )}
             </div>
@@ -144,38 +144,38 @@ export default function SearchPage() {
             {/* Filters Sidebar */}
             <div className="w-full lg:w-64 space-y-8">
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 text-upsa-navy mb-4">
+                <div className="flex items-center space-x-2 text-upsa-navy dark:text-upsa-gold mb-4">
                   <Filter className="h-4 w-4" />
                   <h3 className="font-bold uppercase tracking-widest text-xs">Filter By</h3>
                 </div>
                 
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Date Range</p>
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Date Range</p>
                   <select 
                     value={dateRange}
                     onChange={(e) => setDateRange(e.target.value)}
-                    className="w-full bg-gray-50 border-none rounded-lg p-2 text-sm font-medium"
+                    className="w-full bg-gray-50 dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 rounded-lg p-2 text-sm font-medium text-gray-900 dark:text-gray-100 outline-none focus:ring-2 focus:ring-upsa-gold/40"
                   >
-                    <option>Anytime</option>
-                    <option>Last 24 hours</option>
-                    <option>Last week</option>
-                    <option>Last month</option>
-                    <option>Last year</option>
+                    <option value="Anytime">Anytime</option>
+                    <option value="Last 24 hours">Last 24 hours</option>
+                    <option value="Last week">Last week</option>
+                    <option value="Last month">Last month</option>
+                    <option value="Last year">Last year</option>
                   </select>
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Category</p>
+                  <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Category</p>
                   <div className="space-y-1">
                     {["Academics", "Events", "News", "Opinions", "Sports"].map((cat) => (
                       <label key={cat} className="flex items-center space-x-2 cursor-pointer group">
                         <input 
                           type="checkbox" 
-                          className="rounded border-gray-300 text-upsa-navy focus:ring-upsa-navy" 
+                          className="rounded border-gray-300 dark:border-white/20 text-upsa-navy dark:text-upsa-gold focus:ring-upsa-navy dark:focus:ring-upsa-gold dark:bg-[#0C1729]" 
                           checked={selectedCategories.includes(cat)}
                           onChange={() => handleCategoryChange(cat)}
                         />
-                        <span className="text-sm text-gray-600 group-hover:text-upsa-navy transition-colors">{cat}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-upsa-navy dark:group-hover:text-upsa-gold transition-colors">{cat}</span>
                       </label>
                     ))}
                   </div>
@@ -185,11 +185,11 @@ export default function SearchPage() {
 
             {/* Results Grid */}
             <div className="flex-1 space-y-8">
-              <div className="flex items-center justify-between border-b pb-4">
-                <h2 className="text-lg font-bold text-upsa-navy">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-4">
+                <h2 className="text-lg font-bold text-upsa-navy dark:text-white">
                   {query ? `Results for "${query}"` : "Search Results"}
                 </h2>
-                <div className="flex items-center space-x-2 text-xs text-gray-400 font-bold">
+                <div className="flex items-center space-x-2 text-xs text-gray-400 dark:text-gray-500 font-bold">
                   <SlidersHorizontal className="h-3 w-3" />
                   <span>{totalCount} results found</span>
                 </div>
@@ -212,7 +212,7 @@ export default function SearchPage() {
                 </>
               ) : (
                 <div className="py-20 text-center">
-                  <p className="text-gray-400 italic">
+                  <p className="text-gray-400 dark:text-gray-500 italic">
                     {query ? "No results found for your search." : "Type above to search articles..."}
                   </p>
                 </div>

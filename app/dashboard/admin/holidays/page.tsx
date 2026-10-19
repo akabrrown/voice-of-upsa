@@ -131,8 +131,8 @@ export default function AdminHolidaysPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-upsa-navy">Holiday & Events Manager</h1>
-          <p className="text-sm text-gray-500 mt-1">Configure pop-ups, greetings, and push notifications for statutory public holidays.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-upsa-navy dark:text-white">Holiday & Events Manager</h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Configure pop-ups, greetings, and push notifications for statutory public holidays.</p>
         </div>
       </div>
 
@@ -144,17 +144,17 @@ export default function AdminHolidaysPage() {
             return (
               <Card 
                 key={holiday.key}
-                className={`cursor-pointer transition-all hover:shadow-md ${isSelected ? 'border-upsa-navy ring-1 ring-upsa-navy bg-upsa-navy/5' : 'hover:border-upsa-gold/50'}`}
+                className={`cursor-pointer transition-all hover:shadow-md bg-white dark:bg-[#0C1729] border ${isSelected ? 'border-upsa-navy dark:border-upsa-gold ring-1 ring-upsa-navy dark:ring-upsa-gold bg-upsa-navy/5 dark:bg-upsa-gold/10' : 'border-gray-200 dark:border-white/10 hover:border-upsa-gold/50'}`}
                 onClick={() => handleSelectHoliday(holiday, dbRecords)}
               >
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-upsa-navy mb-1">{holiday.title}</h4>
-                      <p className="text-xs text-gray-500 font-medium">Observed: {new Date(holiday.observedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                      <h4 className="font-bold text-upsa-navy dark:text-white mb-1">{holiday.title}</h4>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 font-medium">Observed: {new Date(holiday.observedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                     </div>
                     {holiday.isRollover && (
-                      <span className="bg-amber-100 text-amber-700 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Rollover</span>
+                      <span className="bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-transparent dark:border-amber-800/40 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Rollover</span>
                     )}
                   </div>
                 </CardContent>
@@ -166,24 +166,24 @@ export default function AdminHolidaysPage() {
         {/* Right Column: Editor */}
         <div className="md:col-span-8">
           {!selectedKey ? (
-            <Card className="h-full flex flex-col items-center justify-center p-12 border-dashed bg-gray-50/50">
-              <CalendarHeart className="h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-xl font-bold text-gray-400 mb-2">Select a Holiday</h3>
-              <p className="text-sm text-gray-400 text-center max-w-md">
+            <Card className="h-full flex flex-col items-center justify-center p-12 border-dashed bg-gray-50/50 dark:bg-[#0C1729] border-gray-200 dark:border-white/10">
+              <CalendarHeart className="h-16 w-16 text-gray-300 dark:text-slate-600 mb-4" />
+              <h3 className="text-xl font-bold text-gray-400 dark:text-slate-500 mb-2">Select a Holiday</h3>
+              <p className="text-sm text-gray-400 dark:text-slate-500 text-center max-w-md">
                 Choose a statutory holiday from the list to customize the greeting message, academic status, and activate the modal pop-up for visitors.
               </p>
             </Card>
           ) : (
-            <Card className="shadow-lg border-upsa-gold/20">
-              <CardHeader className="bg-gray-50/50 border-b border-gray-100">
+            <Card className="shadow-lg border-gray-200 dark:border-white/10 bg-white dark:bg-[#0C1729]">
+              <CardHeader className="bg-gray-50/50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10">
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-xl text-upsa-navy">{editingHoliday.title}</CardTitle>
-                    <CardDescription className="mt-1">
+                    <CardTitle className="text-xl text-upsa-navy dark:text-white">{editingHoliday.title}</CardTitle>
+                    <CardDescription className="text-gray-500 dark:text-slate-400 mt-1">
                       Customize the appearance and messaging for this holiday.
                     </CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={handlePreview} className="text-upsa-navy font-bold">
+                  <Button variant="outline" size="sm" onClick={handlePreview} className="border-gray-200 dark:border-white/10 text-upsa-navy dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-white/5 font-bold">
                     <PlayCircle className="h-4 w-4 mr-2 text-upsa-gold" /> Preview Modal
                   </Button>
                 </div>
@@ -192,10 +192,10 @@ export default function AdminHolidaysPage() {
                 <form id="holiday-form" onSubmit={handleSave} className="space-y-6">
                   
                   {/* Status Toggle */}
-                  <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                  <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 flex items-center justify-between">
                     <div>
-                      <h4 className="font-bold text-sm text-gray-900">Activate Pop-up Modal</h4>
-                      <p className="text-xs text-gray-500 mt-1">When active, this greeting will display to all visitors on the site.</p>
+                      <h4 className="font-bold text-sm text-gray-900 dark:text-white">Activate Pop-up Modal</h4>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">When active, this greeting will display to all visitors on the site.</p>
                     </div>
                     <Switch 
                       checked={editingHoliday.isActive || false}
@@ -205,25 +205,26 @@ export default function AdminHolidaysPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label>Headline / Main Greeting</Label>
+                      <Label className="text-gray-900 dark:text-white">Headline / Main Greeting</Label>
                       <Input 
                         value={editingHoliday.headline || ""}
                         onChange={(e) => setEditingHoliday({...editingHoliday, headline: e.target.value})}
                         placeholder="e.g. Merry Christmas from Voice of UPSA!"
+                        className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
                         required
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label>Theme Accent</Label>
+                      <Label className="text-gray-900 dark:text-white">Theme Accent</Label>
                       <Select 
                         value={editingHoliday.themeAccent}
                         onValueChange={(val: HolidayThemeAccent) => setEditingHoliday({...editingHoliday, themeAccent: val})}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white dark:bg-[#0C1729] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white">
                           <SelectItem value="gold">Classic Gold</SelectItem>
                           <SelectItem value="ghana_flag">Ghana Flag (National)</SelectItem>
                           <SelectItem value="crescent">Crescent Moon (Islamic)</SelectItem>
@@ -235,51 +236,53 @@ export default function AdminHolidaysPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Greeting Body Message</Label>
+                    <Label className="text-gray-900 dark:text-white">Greeting Body Message</Label>
                     <Textarea 
                       value={editingHoliday.bodyMessage || ""}
                       onChange={(e) => setEditingHoliday({...editingHoliday, bodyMessage: e.target.value})}
                       placeholder="Write your well wishes here..."
-                      className="min-h-[100px]"
+                      className="min-h-[100px] bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Official Campus Notice (Academic Status)</Label>
+                    <Label className="text-gray-900 dark:text-white">Official Campus Notice (Academic Status)</Label>
                     <Input 
                       value={editingHoliday.academicStatus || ""}
                       onChange={(e) => setEditingHoliday({...editingHoliday, academicStatus: e.target.value})}
                       placeholder="e.g. Statutory public holiday — Lectures suspended."
+                      className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
                       required
                     />
                   </div>
 
-                  <div className="space-y-2 pt-4 border-t border-gray-100">
-                    <Label className="flex items-center text-amber-600">
+                  <div className="space-y-2 pt-4 border-t border-gray-100 dark:border-white/10">
+                    <Label className="flex items-center text-amber-600 dark:text-amber-400">
                       <AlertTriangle className="h-4 w-4 mr-1" /> Custom Date Override (Optional)
                     </Label>
-                    <p className="text-xs text-gray-500 mb-2">Only use this if the government gazettes a different observation date. Format: YYYY-MM-DD</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mb-2">Only use this if the government gazettes a different observation date. Format: YYYY-MM-DD</p>
                     <Input 
                       type="date"
                       value={editingHoliday.customDateOverride || ""}
                       onChange={(e) => setEditingHoliday({...editingHoliday, customDateOverride: e.target.value})}
+                      className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
                     />
                   </div>
 
                   {/* Auto-broadcast notice */}
-                  <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 flex items-start gap-3">
-                    <Send className="w-5 h-5 text-blue-500 mt-0.5" />
+                  <div className="p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-100 dark:border-blue-900/30 flex items-start gap-3">
+                    <Send className="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5" />
                     <div>
-                      <h4 className="font-bold text-sm text-blue-900">Automatic Push Notification</h4>
-                      <p className="text-xs text-blue-700/80 mt-1">When you save this holiday configuration while the modal is Active, a push notification will automatically be sent to all subscribers right now.</p>
+                      <h4 className="font-bold text-sm text-blue-900 dark:text-blue-300">Automatic Push Notification</h4>
+                      <p className="text-xs text-blue-700/80 dark:text-blue-300/80 mt-1">When you save this holiday configuration while the modal is Active, a push notification will automatically be sent to all subscribers right now.</p>
                     </div>
                   </div>
                   
-                  <div className="pt-6 flex justify-end border-t border-gray-100">
+                  <div className="pt-6 flex justify-end border-t border-gray-100 dark:border-white/10">
                     <Button 
                       type="submit" 
-                      className="bg-upsa-navy hover:bg-upsa-navy/90"
+                      className="bg-upsa-navy hover:bg-upsa-navy/90 text-white dark:bg-upsa-gold dark:text-gray-950 dark:hover:bg-upsa-gold/90 font-bold"
                       disabled={isSaving}
                     >
                       {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}

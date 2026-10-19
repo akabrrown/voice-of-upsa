@@ -86,32 +86,32 @@ export async function AdZone({ type, className }: AdZoneProps) {
       <Link
         href="/advertise"
         className={cn(
-          "group block w-full max-w-[820px] mx-auto overflow-hidden bg-gray-50 border border-gray-200 hover:border-upsa-gold transition-colors duration-200",
+          "group block w-full max-w-[820px] mx-auto overflow-hidden bg-gray-50 dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 hover:border-upsa-gold transition-colors duration-200",
           className
         )}
       >
         <div className="flex flex-col sm:flex-row items-center justify-between p-4 md:px-6 md:py-4 h-full min-h-[90px]">
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex h-12 w-12 shrink-0 bg-upsa-navy items-center justify-center text-white">
+            <div className="hidden sm:flex h-12 w-12 shrink-0 bg-upsa-navy dark:bg-upsa-gold/20 items-center justify-center text-white dark:text-upsa-gold">
               <Megaphone className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-upsa-navy flex items-center gap-1">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-upsa-navy dark:text-upsa-gold flex items-center gap-1">
                   <BadgeCheck className="h-3 w-3" /> Voice of UPSA Media
                 </span>
-                <span className="text-[9px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-sm font-semibold">
+                <span className="text-[9px] bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded-sm font-semibold">
                   25k+ Reach
                 </span>
               </div>
-              <h4 className="text-slate-900 text-sm md:text-base font-bold tracking-tight group-hover:text-upsa-gold transition-colors">
+              <h4 className="text-slate-900 dark:text-white text-sm md:text-base font-bold tracking-tight group-hover:text-upsa-gold transition-colors">
                 Amplify Your Brand Across UPSA Campus
               </h4>
             </div>
           </div>
           
           <div className="shrink-0 mt-3 sm:mt-0">
-            <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-upsa-navy text-white text-xs font-bold hover:bg-upsa-gold hover:text-upsa-navy transition-colors">
+            <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy text-xs font-bold hover:bg-upsa-gold hover:text-upsa-navy dark:hover:bg-upsa-gold/90 transition-colors">
               <span>Advertise Here</span>
               <ArrowUpRight className="h-3.5 w-3.5" />
             </div>
@@ -126,31 +126,31 @@ export async function AdZone({ type, className }: AdZoneProps) {
       <Link
         href="/advertise"
         className={cn(
-          "group block w-full max-w-[300px] mx-auto overflow-hidden bg-white border border-gray-200 hover:border-upsa-navy transition-colors duration-200",
+          "group block w-full max-w-[300px] mx-auto overflow-hidden bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 hover:border-upsa-navy dark:hover:border-upsa-gold transition-colors duration-200",
           className
         )}
       >
-        <div className="relative h-[250px] w-full flex flex-col justify-between p-5 bg-gray-50">
+        <div className="relative h-[250px] w-full flex flex-col justify-between p-5 bg-gray-50 dark:bg-[#0C1729]">
           <div className="flex justify-between items-start">
-            <span className="inline-flex items-center gap-1 bg-upsa-navy text-[9px] uppercase font-bold text-white px-2 py-1">
-              <Star className="h-2.5 w-2.5 text-upsa-gold" /> Featured Spot
+            <span className="inline-flex items-center gap-1 bg-upsa-navy dark:bg-upsa-gold text-[9px] uppercase font-bold text-white dark:text-upsa-navy px-2 py-1">
+              <Star className="h-2.5 w-2.5 text-upsa-gold dark:text-upsa-navy" /> Featured Spot
             </span>
           </div>
 
           <div className="mt-auto">
-            <h4 className="text-slate-900 font-black text-lg tracking-tight leading-tight group-hover:text-upsa-gold transition-colors">
+            <h4 className="text-slate-900 dark:text-white font-black text-lg tracking-tight leading-tight group-hover:text-upsa-gold transition-colors">
               Connect With 25,000+ Students & Faculty
             </h4>
-            <p className="text-gray-600 text-xs mt-2 leading-relaxed font-medium">
+            <p className="text-gray-600 dark:text-slate-400 text-xs mt-2 leading-relaxed font-medium">
               High-visibility placements & editorial spotlights.
             </p>
 
-            <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">
               <div>
-                <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold block">Tiers From</span>
-                <span className="text-sm font-black text-slate-900">GH₵ 250 / wk</span>
+                <span className="text-[9px] uppercase tracking-wider text-gray-500 dark:text-slate-400 font-bold block">Tiers From</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white">GH₵ 250 / wk</span>
               </div>
-              <div className="inline-flex items-center gap-1 text-upsa-navy text-xs font-bold group-hover:text-upsa-gold transition-colors">
+              <div className="inline-flex items-center gap-1 text-upsa-navy dark:text-upsa-gold text-xs font-bold group-hover:text-upsa-gold transition-colors">
                 <span>Book</span>
                 <ArrowUpRight className="h-4 w-4" />
               </div>
@@ -165,7 +165,7 @@ export async function AdZone({ type, className }: AdZoneProps) {
     <Link
       href="/advertise"
       className={cn(
-        "group block w-full overflow-hidden bg-upsa-navy border border-upsa-navy hover:bg-[#001f40] transition-colors duration-200",
+        "group block w-full overflow-hidden bg-upsa-navy dark:bg-[#0C1729] border border-upsa-navy dark:border-white/10 hover:bg-[#001f40] dark:hover:bg-[#111f38] transition-colors duration-200",
         className
       )}
     >
@@ -183,7 +183,7 @@ export async function AdZone({ type, className }: AdZoneProps) {
             <h4 className="text-white text-base md:text-lg font-bold tracking-tight">
               Put Your Business Front & Center
             </h4>
-            <p className="text-gray-300 text-xs md:text-sm mt-1 max-w-xl">
+            <p className="text-gray-300 dark:text-slate-300 text-xs md:text-sm mt-1 max-w-xl">
               Target campus customers with native feed placements and customized editorial features.
             </p>
           </div>

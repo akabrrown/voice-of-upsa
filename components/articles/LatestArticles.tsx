@@ -29,7 +29,7 @@ export async function LatestArticles() {
   return (
     <section className="py-12">
       <div className="flex items-center justify-between mb-8 border-l-4 border-upsa-gold pl-4">
-        <h2 className="text-2xl font-bold text-upsa-navy uppercase tracking-tight">Latest Articles</h2>
+        <h2 className="text-2xl font-bold text-upsa-navy dark:text-white uppercase tracking-tight">Latest Articles</h2>
       </div>
       
       {mappedArticles.length > 0 ? (
@@ -39,7 +39,7 @@ export async function LatestArticles() {
           ))}
         </div>
       ) : (
-        <p className="text-gray-400 italic text-center py-8">No articles published yet.</p>
+        <p className="text-gray-400 dark:text-gray-500 italic text-center py-8">No articles published yet.</p>
       )}
     </section>
   );

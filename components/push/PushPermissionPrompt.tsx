@@ -180,26 +180,26 @@ export function PushPermissionPrompt({ topics = ["new_articles"], onStateChange 
   if (state === "checking" || state === "subscribed") return null;
 
   return (
-    <div className="p-4 bg-card rounded-xl border shadow-sm max-w-sm w-full space-y-3">
+    <div className="p-4 bg-card dark:bg-[#0C1729] rounded-xl border border-gray-100 dark:border-white/10 shadow-sm max-w-sm w-full space-y-3">
       <div className="flex items-center gap-2 font-medium">
-        <Bell className="w-5 h-5 text-[#1F7A6C]" />
-        <span>Push Notifications</span>
+        <Bell className="w-5 h-5 text-[#1F7A6C] dark:text-upsa-gold" />
+        <span className="text-gray-900 dark:text-white">Push Notifications</span>
       </div>
 
       {state === "unsupported" && (
-        <div className="text-sm text-muted-foreground flex gap-2 items-start">
+        <div className="text-sm text-muted-foreground dark:text-slate-400 flex gap-2 items-start">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <p>Your browser does not support web push notifications.</p>
         </div>
       )}
 
       {state === "ios-needs-install" && (
-        <div className="text-sm text-muted-foreground space-y-2">
-          <p className="flex gap-2 items-start text-gray-900 font-medium">
+        <div className="text-sm text-muted-foreground dark:text-slate-400 space-y-2">
+          <p className="flex gap-2 items-start text-gray-900 dark:text-white font-medium">
             <Info className="w-4 h-4 mt-0.5 shrink-0 text-blue-500" />
             Install to enable notifications
           </p>
-          <ol className="list-decimal pl-6 space-y-2 text-gray-600">
+          <ol className="list-decimal pl-6 space-y-2 text-gray-600 dark:text-slate-300">
             <li>Tap the <Share className="w-4 h-4 inline mx-1" /> <strong>Share</strong> button at the bottom of Safari.</li>
             <li>Select <strong>Add to Home Screen</strong>.</li>
             <li>Open the app from your Home Screen to turn on notifications.</li>
@@ -208,7 +208,7 @@ export function PushPermissionPrompt({ topics = ["new_articles"], onStateChange 
       )}
 
       {state === "denied" && (
-        <div className="text-sm text-muted-foreground flex gap-2 items-start">
+        <div className="text-sm text-muted-foreground dark:text-slate-400 flex gap-2 items-start">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <p>Notifications are blocked. You need to enable them in your browser settings.</p>
         </div>
@@ -223,18 +223,18 @@ export function PushPermissionPrompt({ topics = ["new_articles"], onStateChange 
 
 
       {state === "error" && (
-        <div className="text-sm text-muted-foreground flex gap-2 items-start">
+        <div className="text-sm text-muted-foreground dark:text-slate-400 flex gap-2 items-start">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
           <p>We couldn&apos;t enable notifications at this time.</p>
         </div>
       )}
 
       {deferredPrompt && state !== "ios-needs-install" && (
-        <div className="pt-2 border-t mt-3">
+        <div className="pt-2 border-t border-gray-100 dark:border-white/10 mt-3">
           <Button 
             variant="outline" 
             onClick={handleInstallClick} 
-            className="w-full text-xs flex items-center justify-center gap-2"
+            className="w-full text-xs flex items-center justify-center gap-2 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
           >
             <Download className="w-3.5 h-3.5" />
             Install Voice of UPSA App

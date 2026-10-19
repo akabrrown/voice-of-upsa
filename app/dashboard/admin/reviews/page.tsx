@@ -73,11 +73,11 @@ export default function AdminReviewsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-upsa-navy flex items-center gap-2">
+        <h1 className="text-2xl font-bold tracking-tight text-upsa-navy dark:text-white flex items-center gap-2">
           <ShieldCheck className="w-7 h-7 text-upsa-gold" />
           Review Moderation
         </h1>
-        <p className="text-sm text-gray-500 mt-1">Approve or reject user testimonials before they appear publicly.</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Approve or reject user testimonials before they appear publicly.</p>
       </div>
 
       <div className="flex gap-2">
@@ -85,12 +85,12 @@ export default function AdminReviewsPage() {
           <Button 
             key={f}
             variant={filter === f ? "default" : "outline"}
-            className={filter === f ? "bg-upsa-navy text-white hover:bg-upsa-navy/90" : ""}
+            className={filter === f ? "bg-upsa-navy text-white hover:bg-upsa-navy/90 dark:bg-upsa-gold dark:text-gray-950 dark:hover:bg-upsa-gold/90" : "border-gray-200 dark:border-white/10 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/5"}
             onClick={() => setFilter(f as any)}
             size="sm"
           >
             <span className="capitalize">{f}</span>
-            <span className="ml-2 text-xs bg-black/10 px-1.5 rounded-full">
+            <span className="ml-2 text-xs bg-black/10 dark:bg-white/10 px-1.5 rounded-full">
               {reviews.filter(r => f === "all" || r.status === f).length}
             </span>
           </Button>
@@ -99,39 +99,39 @@ export default function AdminReviewsPage() {
 
       {isLoading ? (
         <div className="flex h-[400px] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400 dark:text-slate-600" />
         </div>
       ) : filteredReviews.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center p-12 border-dashed bg-gray-50/50">
-          <Search className="h-12 w-12 text-gray-300 mb-4" />
-          <h3 className="text-lg font-bold text-gray-400 mb-1">No {filter !== "all" ? filter : ""} reviews found</h3>
-          <p className="text-sm text-gray-400 text-center max-w-sm">
+        <Card className="flex flex-col items-center justify-center p-12 border-dashed bg-gray-50/50 dark:bg-[#0C1729] border-gray-200 dark:border-white/10">
+          <Search className="h-12 w-12 text-gray-300 dark:text-slate-600 mb-4" />
+          <h3 className="text-lg font-bold text-gray-400 dark:text-slate-500 mb-1">No {filter !== "all" ? filter : ""} reviews found</h3>
+          <p className="text-sm text-gray-400 dark:text-slate-500 text-center max-w-sm">
             When users submit new reviews, they will appear here for moderation.
           </p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredReviews.map(review => (
-            <Card key={review.id} className={`flex flex-col ${review.status === 'pending' ? 'ring-2 ring-amber-400/20' : ''}`}>
+            <Card key={review.id} className={`flex flex-col bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 ${review.status === 'pending' ? 'ring-2 ring-amber-400/20 dark:ring-amber-400/10' : ''}`}>
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border border-gray-100">
+                    <Avatar className="h-10 w-10 border border-gray-100 dark:border-white/10">
                       <AvatarImage src={review.profiles.avatar_url || ""} />
-                      <AvatarFallback className="bg-gray-100 text-xs font-bold text-gray-600">
+                      <AvatarFallback className="bg-gray-100 dark:bg-white/10 text-xs font-bold text-gray-600 dark:text-slate-300">
                         {review.profiles.full_name?.substring(0, 2).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-sm font-bold text-gray-900">{review.profiles.full_name || "Anonymous"}</CardTitle>
-                      <CardDescription className="text-xs">{review.profiles.department || "No department listed"}</CardDescription>
+                      <CardTitle className="text-sm font-bold text-gray-900 dark:text-white">{review.profiles.full_name || "Anonymous"}</CardTitle>
+                      <CardDescription className="text-xs text-gray-500 dark:text-slate-400">{review.profiles.department || "No department listed"}</CardDescription>
                     </div>
                   </div>
-                  <div className="flex bg-gray-50 px-2 py-1 rounded-full">
+                  <div className="flex bg-gray-50 dark:bg-white/5 px-2 py-1 rounded-full border border-transparent dark:border-white/10">
                     {[...Array(5)].map((_, i) => (
                       <Star 
                         key={i} 
-                        className={`w-3 h-3 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} 
+                        className={`w-3 h-3 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200 dark:fill-gray-700 dark:text-gray-700'}`} 
                       />
                     ))}
                   </div>
@@ -139,15 +139,15 @@ export default function AdminReviewsPage() {
               </CardHeader>
               
               <CardContent className="flex-1 flex flex-col">
-                <p className="text-sm text-gray-700 italic mb-6 leading-relaxed flex-1">"{review.content}"</p>
+                <p className="text-sm text-gray-700 dark:text-slate-200 italic mb-6 leading-relaxed flex-1">"{review.content}"</p>
                 
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100 dark:border-white/10">
                   <div className="flex gap-2">
                     {review.status !== "approved" && (
                       <Button 
                         size="sm" 
                         variant="outline"
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+                        className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30 border-green-200 dark:border-green-900/40"
                         onClick={() => updateReview(review.id, { status: "approved" })}
                       >
                         <CheckCircle2 className="w-4 h-4 mr-1.5" /> Approve
@@ -157,7 +157,7 @@ export default function AdminReviewsPage() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 border-red-200 dark:border-red-900/40"
                         onClick={() => updateReview(review.id, { status: "rejected" })}
                       >
                         <XCircle className="w-4 h-4 mr-1.5" /> Reject
@@ -170,7 +170,7 @@ export default function AdminReviewsPage() {
                       size="icon"
                       variant="ghost"
                       onClick={() => updateReview(review.id, { is_featured: !review.is_featured })}
-                      className={review.is_featured ? "text-upsa-gold bg-upsa-gold/10 hover:bg-upsa-gold/20" : "text-gray-400 hover:text-upsa-gold"}
+                      className={review.is_featured ? "text-upsa-gold bg-upsa-gold/10 hover:bg-upsa-gold/20" : "text-gray-400 dark:text-slate-500 hover:text-upsa-gold dark:hover:text-upsa-gold"}
                       title={review.is_featured ? "Remove from featured" : "Feature on homepage"}
                     >
                       <Pin className={`w-4 h-4 ${review.is_featured ? 'fill-upsa-gold' : ''}`} />

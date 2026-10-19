@@ -156,7 +156,7 @@ export default function AdminShowManagementPage() {
   if (!show) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-gray-800">Show not found</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Show not found</h2>
         <Button className="mt-4" onClick={() => router.push('/dashboard/admin/podcasts')}>
           Back to Podcasts
         </Button>
@@ -168,38 +168,38 @@ export default function AdminShowManagementPage() {
     <div className="space-y-8 max-w-5xl">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => router.push('/dashboard/admin/podcasts')} className="rounded-full">
+        <Button variant="outline" size="icon" onClick={() => router.push('/dashboard/admin/podcasts')} className="rounded-full border-gray-200 dark:border-white/10 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-white/10">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-black text-upsa-navy tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight flex items-center gap-3">
             {show.title}
           </h1>
-          <p className="text-gray-500">Manage show details and episodes</p>
+          <p className="text-gray-500 dark:text-slate-400">Manage show details and episodes</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Column: Show Details */}
         <div className="md:col-span-1 space-y-6">
-          <Card className="border-none shadow-md overflow-hidden">
-            <div className="aspect-square relative bg-gray-100">
+          <Card className="border border-gray-100 dark:border-white/10 shadow-md overflow-hidden bg-white dark:bg-[#0C1729]">
+            <div className="aspect-square relative bg-gray-100 dark:bg-white/5">
               {show.cover_image_url ? (
                 <Image src={show.cover_image_url} alt={show.title} fill className="object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center">No Cover</div>
+                <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-slate-500">No Cover</div>
               )}
             </div>
             <CardContent className="p-6 space-y-4">
               <div>
-                <Label className="text-xs text-gray-500 uppercase font-bold">Category</Label>
-                <div className="mt-1"><Badge variant="outline" className="capitalize">{show.category.replace('_', ' ')}</Badge></div>
+                <Label className="text-xs text-gray-500 dark:text-slate-400 uppercase font-bold">Category</Label>
+                <div className="mt-1"><Badge variant="outline" className="capitalize border-gray-200 dark:border-white/10 text-gray-700 dark:text-slate-300">{show.category.replace('_', ' ')}</Badge></div>
               </div>
               
               <div>
-                <Label className="text-xs text-gray-500 uppercase font-bold">Visibility Status</Label>
-                <div className="flex items-center justify-between mt-1 p-3 bg-gray-50 rounded-lg border">
-                  <span className="font-medium text-sm text-gray-800">
+                <Label className="text-xs text-gray-500 dark:text-slate-400 uppercase font-bold">Visibility Status</Label>
+                <div className="flex items-center justify-between mt-1 p-3 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10">
+                  <span className="font-medium text-sm text-gray-800 dark:text-slate-200">
                     {show.status === 'active' ? 'Publicly Visible' : 'Hidden'}
                   </span>
                   <Switch 
@@ -210,8 +210,8 @@ export default function AdminShowManagementPage() {
               </div>
 
               <div>
-                <Label className="text-xs text-gray-500 uppercase font-bold">RSS Feed URL</Label>
-                <div className="mt-1 text-xs text-gray-500 bg-gray-100 p-2 rounded truncate select-all">
+                <Label className="text-xs text-gray-500 dark:text-slate-400 uppercase font-bold">RSS Feed URL</Label>
+                <div className="mt-1 text-xs text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-white/5 p-2 rounded truncate select-all border border-transparent dark:border-white/10">
                   {`/podcasts/${show.slug}/feed.xml`}
                 </div>
               </div>
@@ -222,58 +222,90 @@ export default function AdminShowManagementPage() {
         {/* Right Column: Episodes */}
         <div className="md:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-upsa-navy flex items-center gap-2">
-              Episodes <Badge variant="secondary">{show.episodes.length}</Badge>
+            <h2 className="text-xl font-bold text-upsa-navy dark:text-white flex items-center gap-2">
+              Episodes <Badge variant="secondary" className="bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-slate-200">{show.episodes.length}</Badge>
             </h2>
             <Button 
               onClick={() => setShowNewEpisodeForm(!showNewEpisodeForm)}
-              className="bg-upsa-gold text-upsa-navy hover:bg-yellow-500 font-bold"
+              className="bg-upsa-gold text-upsa-navy dark:text-upsa-navy hover:bg-yellow-500 font-bold"
             >
               {showNewEpisodeForm ? 'Cancel' : <><Plus className="h-4 w-4 mr-2" /> Add Episode</>}
             </Button>
           </div>
 
           {showNewEpisodeForm && (
-            <Card className="border-none shadow-md border-t-4 border-t-upsa-gold animate-in slide-in-from-top-4 fade-in duration-300">
+            <Card className="border border-gray-100 dark:border-white/10 shadow-md border-t-4 border-t-upsa-gold bg-white dark:bg-[#0C1729] animate-in slide-in-from-top-4 fade-in duration-300">
               <CardHeader>
-                <CardTitle className="text-lg">New Episode</CardTitle>
+                <CardTitle className="text-lg text-gray-900 dark:text-white">New Episode</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateEpisode} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2 md:col-span-2">
-                      <Label>Episode Title</Label>
-                      <Input required value={newEp.title} onChange={e => setNewEp({...newEp, title: e.target.value})} placeholder="e.g. Navigating Finals Week" />
+                      <Label className="text-gray-900 dark:text-white">Episode Title</Label>
+                      <Input 
+                        required 
+                        value={newEp.title} 
+                        onChange={e => setNewEp({...newEp, title: e.target.value})} 
+                        placeholder="e.g. Navigating Finals Week" 
+                        className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
+                      />
                     </div>
                     
                     <div className="space-y-2 md:col-span-2">
-                      <Label>Show Notes (Description)</Label>
-                      <Textarea required value={newEp.description} onChange={e => setNewEp({...newEp, description: e.target.value})} className="h-24" placeholder="Episode summary and links..." />
+                      <Label className="text-gray-900 dark:text-white">Show Notes (Description)</Label>
+                      <Textarea 
+                        required 
+                        value={newEp.description} 
+                        onChange={e => setNewEp({...newEp, description: e.target.value})} 
+                        className="h-24 bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500" 
+                        placeholder="Episode summary and links..." 
+                      />
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Season Number (Optional)</Label>
-                      <Input type="number" min="1" value={newEp.season_number} onChange={e => setNewEp({...newEp, season_number: e.target.value})} placeholder="e.g. 1" />
+                      <Label className="text-gray-900 dark:text-white">Season Number (Optional)</Label>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        value={newEp.season_number} 
+                        onChange={e => setNewEp({...newEp, season_number: e.target.value})} 
+                        placeholder="e.g. 1" 
+                        className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
+                      />
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Episode Number (Optional)</Label>
-                      <Input type="number" min="1" value={newEp.episode_number} onChange={e => setNewEp({...newEp, episode_number: e.target.value})} placeholder="e.g. 5" />
+                      <Label className="text-gray-900 dark:text-white">Episode Number (Optional)</Label>
+                      <Input 
+                        type="number" 
+                        min="1" 
+                        value={newEp.episode_number} 
+                        onChange={e => setNewEp({...newEp, episode_number: e.target.value})} 
+                        placeholder="e.g. 5" 
+                        className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white"
+                      />
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                      <Label>Audio Upload (Cloudinary URL)</Label>
+                      <Label className="text-gray-900 dark:text-white">Audio Upload (Cloudinary URL)</Label>
                       <div className="flex gap-2">
-                        <Input required value={newEp.audio_url} onChange={e => setNewEp({...newEp, audio_url: e.target.value})} placeholder="https://..." />
-                        <Button type="button" variant="outline" onClick={() => toast.info("Cloudinary widget would open here")}><Upload className="h-4 w-4" /></Button>
+                        <Input 
+                          required 
+                          value={newEp.audio_url} 
+                          onChange={e => setNewEp({...newEp, audio_url: e.target.value})} 
+                          placeholder="https://..." 
+                          className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500"
+                        />
+                        <Button type="button" variant="outline" className="border-gray-200 dark:border-white/10 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-white/5" onClick={() => toast.info("Cloudinary widget would open here")}><Upload className="h-4 w-4" /></Button>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">For Phase 1, insert the raw Cloudinary audio URL.</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">For Phase 1, insert the raw Cloudinary audio URL.</p>
                     </div>
                   </div>
 
                   <div className="pt-4 flex justify-end gap-2">
-                    <Button type="button" variant="ghost" onClick={() => setShowNewEpisodeForm(false)}>Cancel</Button>
-                    <Button type="submit" disabled={isSubmitting} className="bg-upsa-navy text-white">
+                    <Button type="button" variant="ghost" className="text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-white/10" onClick={() => setShowNewEpisodeForm(false)}>Cancel</Button>
+                    <Button type="submit" disabled={isSubmitting} className="bg-upsa-navy text-white dark:bg-upsa-gold dark:text-gray-950 dark:hover:bg-upsa-gold/90">
                       {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                       Publish Episode
                     </Button>
@@ -285,32 +317,32 @@ export default function AdminShowManagementPage() {
 
           <div className="space-y-4">
             {show.episodes.length === 0 && !showNewEpisodeForm ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                <p className="text-gray-500 font-medium">No episodes yet.</p>
-                <Button variant="link" onClick={() => setShowNewEpisodeForm(true)} className="text-upsa-navy">Add the first episode</Button>
+              <div className="text-center py-12 bg-gray-50 dark:bg-[#0C1729]/60 rounded-xl border border-dashed border-gray-200 dark:border-white/10">
+                <p className="text-gray-500 dark:text-slate-400 font-medium">No episodes yet.</p>
+                <Button variant="link" onClick={() => setShowNewEpisodeForm(true)} className="text-upsa-navy dark:text-upsa-gold">Add the first episode</Button>
               </div>
             ) : (
               show.episodes.map((ep) => (
-                <Card key={ep.id} className="border-gray-100 shadow-sm">
+                <Card key={ep.id} className="border border-gray-100 dark:border-white/10 shadow-sm bg-white dark:bg-[#0C1729]">
                   <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                    <div className="h-12 w-12 bg-upsa-navy/10 rounded-full flex items-center justify-center shrink-0">
-                      <Play className="h-5 w-5 text-upsa-navy ml-1" />
+                    <div className="h-12 w-12 bg-upsa-navy/10 dark:bg-upsa-gold/10 rounded-full flex items-center justify-center shrink-0">
+                      <Play className="h-5 w-5 text-upsa-navy dark:text-upsa-gold ml-1" />
                     </div>
                     
                     <div className="grow space-y-1">
-                      <h4 className="font-bold text-gray-900">{ep.title}</h4>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 font-medium">
+                      <h4 className="font-bold text-gray-900 dark:text-white">{ep.title}</h4>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-slate-400 font-medium">
                         <span className="flex items-center"><Clock className="h-3 w-3 mr-1" /> {formatDuration(ep.duration_seconds)}</span>
                         <span>{new Date(ep.published_at).toLocaleDateString()}</span>
                         {ep.season_number && ep.episode_number && <span>S{ep.season_number} E{ep.episode_number}</span>}
-                        <Badge variant="outline" className={ep.status === 'published' ? 'text-green-600 border-green-200 bg-green-50' : 'text-gray-600'}>
+                        <Badge variant="outline" className={ep.status === 'published' ? 'text-green-600 dark:text-green-400 border-green-200 dark:border-green-800/40 bg-green-50 dark:bg-green-950/30' : 'text-gray-600 dark:text-slate-300 border-gray-200 dark:border-white/10'}>
                           {ep.status}
                         </Badge>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => toast.info("Soft delete functionality to be implemented")}>
+                      <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => toast.info("Soft delete functionality to be implemented")}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>

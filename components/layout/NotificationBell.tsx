@@ -146,18 +146,18 @@ export function NotificationBell({ user, className }: { user: any; className?: s
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className={cn("text-upsa-navy hover:bg-gray-100 hover:text-upsa-gold relative px-3 transition-colors", className)}>
+        <Button variant="ghost" className={cn("text-upsa-navy dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-upsa-gold dark:hover:text-upsa-gold relative px-3 transition-colors", className)}>
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-sm ring-2 ring-white">
+            <span className="absolute top-1.5 right-1.5 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#0C1729]">
               {displayCount}
             </span>
           )}
         </Button>
       </DropdownMenuTrigger>
       
-      <DropdownMenuContent align="end" className="w-80 p-0 overflow-hidden shadow-lg border-gray-100">
-        <div className="bg-[#1B2A4A] px-4 py-3 flex items-center justify-between text-white">
+      <DropdownMenuContent align="end" className="w-80 p-0 overflow-hidden shadow-lg border-gray-100 dark:border-white/10 dark:bg-[#0C1729]">
+        <div className="bg-[#1B2A4A] dark:bg-[#060D1A] px-4 py-3 flex items-center justify-between text-white border-b dark:border-white/10">
           <h3 className="font-semibold text-sm">Notifications</h3>
           {unreadCount > 0 && (
             <button 
@@ -173,11 +173,11 @@ export function NotificationBell({ user, className }: { user: any; className?: s
         <div className="max-h-[350px] overflow-y-auto">
           {notifications.length === 0 ? (
             <div className="px-4 py-8 text-center flex flex-col items-center">
-              <div className="bg-gray-50 p-3 rounded-full mb-3">
-                <Bell className="h-6 w-6 text-gray-300" />
+              <div className="bg-gray-50 dark:bg-slate-800 p-3 rounded-full mb-3">
+                <Bell className="h-6 w-6 text-gray-300 dark:text-slate-600" />
               </div>
-              <p className="text-sm font-medium text-gray-700">You're all caught up!</p>
-              <p className="text-xs text-gray-500 mt-1">No new notifications right now.</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">You're all caught up!</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">No new notifications right now.</p>
             </div>
           ) : (
             <div className="flex flex-col">
@@ -189,8 +189,8 @@ export function NotificationBell({ user, className }: { user: any; className?: s
                   <div key={notification.id} className="relative group">
                     <DropdownMenuItem 
                       asChild
-                      className={`flex flex-col items-start p-4 cursor-pointer focus:bg-gray-50 rounded-none border-b border-gray-50 last:border-0 ${
-                        isUnread ? "bg-teal-50/30" : ""
+                      className={`flex flex-col items-start p-4 cursor-pointer focus:bg-gray-50 dark:focus:bg-slate-800/60 rounded-none border-b border-gray-50 dark:border-white/5 last:border-0 ${
+                        isUnread ? "bg-teal-50/30 dark:bg-teal-950/20" : ""
                       }`}
                     >
                       <Link 
@@ -205,7 +205,7 @@ export function NotificationBell({ user, className }: { user: any; className?: s
                           <div className="mt-0.5 flex-shrink-0">
                             {/* Fallback Icon */}
                             <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                              isUnread ? "bg-[#1F7A6C]/10 text-[#1F7A6C]" : "bg-gray-100 text-gray-500"
+                              isUnread ? "bg-[#1F7A6C]/10 text-[#1F7A6C] dark:bg-[#1F7A6C]/20 dark:text-emerald-400" : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400"
                             }`}>
                               <Info className="h-4 w-4" />
                             </div>
@@ -213,19 +213,19 @@ export function NotificationBell({ user, className }: { user: any; className?: s
                           
                           <div className="flex-1 space-y-1">
                             <div className="flex items-start justify-between gap-2">
-                              <p className={`text-sm line-clamp-1 ${isUnread ? 'font-semibold text-[#1B2A4A]' : 'font-medium text-gray-700'}`}>
+                              <p className={`text-sm line-clamp-1 ${isUnread ? 'font-semibold text-[#1B2A4A] dark:text-white' : 'font-medium text-gray-700 dark:text-gray-200'}`}>
                                 {details.title}
                               </p>
                               {isUnread && (
-                                <span className="h-2 w-2 rounded-full bg-[#1F7A6C] flex-shrink-0 mt-1.5" />
+                                <span className="h-2 w-2 rounded-full bg-[#1F7A6C] dark:bg-emerald-400 flex-shrink-0 mt-1.5" />
                               )}
                             </div>
                             
-                            <p className={`text-xs line-clamp-2 ${isUnread ? 'text-gray-700' : 'text-gray-500'}`}>
+                            <p className={`text-xs line-clamp-2 ${isUnread ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
                               {details.message}
                             </p>
                             
-                            <p className="text-[10px] text-gray-400 font-medium">
+                            <p className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
                               {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                             </p>
                           </div>
@@ -239,9 +239,9 @@ export function NotificationBell({ user, className }: { user: any; className?: s
           )}
         </div>
         
-        <div className="p-2 border-t border-gray-100 bg-gray-50">
+        <div className="p-2 border-t border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-[#060D1A]">
           <Link href="/dashboard/user/notifications">
-            <Button variant="ghost" className="w-full text-xs h-8 text-gray-600 hover:text-[#1B2A4A]">
+            <Button variant="ghost" className="w-full text-xs h-8 text-gray-600 dark:text-gray-300 hover:text-[#1B2A4A] dark:hover:text-white">
               Notification Preferences
             </Button>
           </Link>

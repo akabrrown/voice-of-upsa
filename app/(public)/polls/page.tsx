@@ -32,8 +32,8 @@ export default async function PollsPage(
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-black text-upsa-navy mb-4 tracking-tight">Campus Polls</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <h1 className="text-4xl font-black text-upsa-navy dark:text-white mb-4 tracking-tight">Campus Polls</h1>
+        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
           Have your say on matters concerning the UPSA student body. Your voice matters.
         </p>
       </div>
@@ -45,8 +45,8 @@ export default async function PollsPage(
             variant={category === c.value || (!category && c.value === "") ? "default" : "outline"}
             className={
               category === c.value || (!category && c.value === "")
-                ? "bg-upsa-navy text-white hover:bg-upsa-navy/90 rounded-full"
-                : "rounded-full"
+                ? "bg-upsa-navy dark:bg-upsa-gold text-white dark:text-upsa-navy hover:bg-upsa-navy/90 dark:hover:bg-upsa-gold/90 rounded-full font-bold"
+                : "rounded-full border-gray-200 dark:border-white/10 dark:text-gray-300 dark:hover:bg-slate-800"
             }
             asChild
           >
@@ -63,9 +63,9 @@ export default async function PollsPage(
             <PollCard key={poll.id} poll={poll} />
           ))
         ) : (
-          <div className="col-span-full text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-            <h3 className="text-lg font-bold text-gray-700 mb-2">No active polls found</h3>
-            <p className="text-gray-500">
+          <div className="col-span-full text-center py-20 bg-gray-50 dark:bg-[#0C1729] rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+            <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">No active polls found</h3>
+            <p className="text-gray-500 dark:text-gray-400">
               There are currently no polls {category ? `in the ${category.replace("_", " ")} category` : 'available'}.
             </p>
           </div>

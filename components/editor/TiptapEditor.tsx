@@ -110,7 +110,7 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-[450px] max-w-none p-4",
+        class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl dark:prose-invert focus:outline-none min-h-[450px] max-w-none p-4 text-gray-900 dark:text-slate-100",
       },
     },
   });
@@ -125,12 +125,13 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
   if (!editor) return null;
 
   return (
-    <div className="border rounded-xl bg-white overflow-hidden focus-within:ring-2 focus-within:ring-upsa-navy/20 transition-all">
-      <div className="bg-gray-50 border-b p-2 flex flex-wrap gap-1">
+    <div className="border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-[#060D1A] overflow-hidden focus-within:ring-2 focus-within:ring-upsa-navy/20 dark:focus-within:ring-upsa-gold/20 transition-all">
+      <div className="bg-gray-50 dark:bg-[#0C1729] border-b border-gray-200 dark:border-white/10 p-2 flex flex-wrap gap-1 text-gray-700 dark:text-slate-300">
         <Toggle
           size="sm"
           pressed={editor.isActive("bold")}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
+          className="dark:text-slate-300 dark:hover:bg-white/10 data-[state=on]:dark:bg-white/20 data-[state=on]:dark:text-white"
         >
           <Bold className="h-4 w-4" />
         </Toggle>
@@ -138,6 +139,7 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
           size="sm"
           pressed={editor.isActive("italic")}
           onPressedChange={() => editor.chain().focus().toggleItalic().run()}
+          className="dark:text-slate-300 dark:hover:bg-white/10 data-[state=on]:dark:bg-white/20 data-[state=on]:dark:text-white"
         >
           <Italic className="h-4 w-4" />
         </Toggle>
@@ -145,6 +147,7 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
           size="sm"
           pressed={editor.isActive("underline")}
           onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
+          className="dark:text-slate-300 dark:hover:bg-white/10 data-[state=on]:dark:bg-white/20 data-[state=on]:dark:text-white"
         >
           <UnderlineIcon className="h-4 w-4" />
         </Toggle>
@@ -152,6 +155,7 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
           size="sm"
           pressed={editor.isActive("heading", { level: 1 })}
           onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          className="dark:text-slate-300 dark:hover:bg-white/10 data-[state=on]:dark:bg-white/20 data-[state=on]:dark:text-white"
         >
           <Heading1 className="h-4 w-4" />
         </Toggle>
@@ -159,14 +163,16 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
           size="sm"
           pressed={editor.isActive("heading", { level: 2 })}
           onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className="dark:text-slate-300 dark:hover:bg-white/10 data-[state=on]:dark:bg-white/20 data-[state=on]:dark:text-white"
         >
           <Heading2 className="h-4 w-4" />
         </Toggle>
-        <div className="w-px h-6 bg-gray-200 mx-1 self-center" />
+        <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1 self-center" />
         <Toggle
           size="sm"
           pressed={editor.isActive("bulletList")}
           onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
+          className="dark:text-slate-300 dark:hover:bg-white/10 data-[state=on]:dark:bg-white/20 data-[state=on]:dark:text-white"
         >
           <List className="h-4 w-4" />
         </Toggle>
@@ -174,6 +180,7 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
           size="sm"
           pressed={editor.isActive("orderedList")}
           onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
+          className="dark:text-slate-300 dark:hover:bg-white/10 data-[state=on]:dark:bg-white/20 data-[state=on]:dark:text-white"
         >
           <ListOrdered className="h-4 w-4" />
         </Toggle>
@@ -181,18 +188,19 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
           size="sm"
           pressed={editor.isActive("blockquote")}
           onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
+          className="dark:text-slate-300 dark:hover:bg-white/10 data-[state=on]:dark:bg-white/20 data-[state=on]:dark:text-white"
         >
           <Quote className="h-4 w-4" />
         </Toggle>
-        <div className="w-px h-6 bg-gray-200 mx-1 self-center" />
+        <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1 self-center" />
         <button
           onClick={() => {
             const url = window.prompt("Enter URL");
             if (url) editor.chain().focus().setLink({ href: url }).run();
           }}
           className={cn(
-            "p-2 rounded-md hover:bg-gray-200 transition-colors",
-            editor.isActive("link") ? "bg-gray-200" : ""
+            "p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-slate-300",
+            editor.isActive("link") ? "bg-gray-200 dark:bg-white/20" : ""
           )}
         >
           <LinkIcon className="h-4 w-4" />
@@ -201,22 +209,22 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="p-2 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
+          className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors flex items-center justify-center text-gray-700 dark:text-slate-300"
           title="Upload Image from Device"
         >
           {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin text-upsa-navy" />
+            <Loader2 className="h-4 w-4 animate-spin text-upsa-navy dark:text-upsa-gold" />
           ) : (
             <Upload className="h-4 w-4" />
           )}
         </button>
 
-        <div className="w-px h-6 bg-gray-200 mx-1 self-center" />
+        <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1 self-center" />
         <button
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
           className={cn(
-            "p-2 rounded-md hover:bg-gray-200 transition-colors",
-            editor.isActive({ textAlign: "left" }) ? "bg-gray-200" : ""
+            "p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-slate-300",
+            editor.isActive({ textAlign: "left" }) ? "bg-gray-200 dark:bg-white/20" : ""
           )}
           title="Align Left"
         >
@@ -225,8 +233,8 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
         <button
           onClick={() => editor.chain().focus().setTextAlign("center").run()}
           className={cn(
-            "p-2 rounded-md hover:bg-gray-200 transition-colors",
-            editor.isActive({ textAlign: "center" }) ? "bg-gray-200" : ""
+            "p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-slate-300",
+            editor.isActive({ textAlign: "center" }) ? "bg-gray-200 dark:bg-white/20" : ""
           )}
           title="Align Center"
         >
@@ -235,8 +243,8 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
         <button
           onClick={() => editor.chain().focus().setTextAlign("right").run()}
           className={cn(
-            "p-2 rounded-md hover:bg-gray-200 transition-colors",
-            editor.isActive({ textAlign: "right" }) ? "bg-gray-200" : ""
+            "p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-slate-300",
+            editor.isActive({ textAlign: "right" }) ? "bg-gray-200 dark:bg-white/20" : ""
           )}
           title="Align Right"
         >
@@ -245,18 +253,18 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
         <button
           onClick={() => editor.chain().focus().setTextAlign("justify").run()}
           className={cn(
-            "p-2 rounded-md hover:bg-gray-200 transition-colors",
-            editor.isActive({ textAlign: "justify" }) ? "bg-gray-200" : ""
+            "p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-slate-300",
+            editor.isActive({ textAlign: "justify" }) ? "bg-gray-200 dark:bg-white/20" : ""
           )}
           title="Align Justify"
         >
           <AlignJustify className="h-4 w-4" />
         </button>
 
-        <div className="w-px h-6 bg-gray-200 mx-1 self-center" />
+        <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1 self-center" />
         <button
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-          className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-slate-300"
           title="Insert 3x3 Table"
         >
           <TableIcon className="h-4 w-4" />
@@ -264,13 +272,13 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
         <div className="flex-1" />
         <button
           onClick={() => editor.chain().focus().undo().run()}
-          className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-slate-300"
         >
           <Undo className="h-4 w-4" />
         </button>
         <button
           onClick={() => editor.chain().focus().redo().run()}
-          className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+          className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/10 transition-colors text-gray-700 dark:text-slate-300"
         >
           <Redo className="h-4 w-4" />
         </button>

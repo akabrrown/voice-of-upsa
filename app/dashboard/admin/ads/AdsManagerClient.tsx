@@ -87,12 +87,12 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
 
   const StatusBadge = ({ status }: { status: string }) => {
     switch (status) {
-      case "pending": return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Pending</Badge>;
-      case "approved": return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Approved</Badge>;
-      case "active": return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Active</Badge>;
-      case "completed": return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Completed</Badge>;
-      case "rejected": return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rejected</Badge>;
-      default: return <Badge>{status}</Badge>;
+      case "pending": return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 hover:bg-amber-100">Pending</Badge>;
+      case "approved": return <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300 hover:bg-blue-100">Approved</Badge>;
+      case "active": return <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 hover:bg-emerald-100">Active</Badge>;
+      case "completed": return <Badge className="bg-gray-100 text-gray-800 dark:bg-white/10 dark:text-slate-300 hover:bg-gray-100">Completed</Badge>;
+      case "rejected": return <Badge className="bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 hover:bg-red-100">Rejected</Badge>;
+      default: return <Badge className="dark:bg-white/10 dark:text-slate-200">{status}</Badge>;
     }
   };
 
@@ -104,10 +104,10 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
             key={tab}
             variant={filter === tab ? "default" : "outline"}
             onClick={() => setFilter(tab as any)}
-            className={`capitalize ${filter === tab ? "bg-upsa-navy text-white hover:bg-upsa-navy/90" : "text-gray-600"}`}
+            className={`capitalize ${filter === tab ? "bg-upsa-navy text-white hover:bg-upsa-navy/90 dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-amber-400 font-bold" : "text-gray-600 dark:text-slate-300 dark:border-white/10 dark:hover:bg-white/5"}`}
           >
             {tab}
-            <span className="ml-2 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+            <span className="ml-2 bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-slate-300 px-2 py-0.5 rounded-full text-xs">
               {tab === "all" ? ads.length : ads.filter(a => a.status === tab).length}
             </span>
           </Button>
@@ -116,16 +116,16 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
 
       <div className="space-y-4">
         {filteredAds.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-200">
-            <p className="text-gray-500 font-medium">No advertisements found for this filter.</p>
+          <div className="text-center py-12 bg-white dark:bg-[#0C1729] rounded-xl border border-dashed border-gray-200 dark:border-white/10">
+            <p className="text-gray-500 dark:text-slate-400 font-medium">No advertisements found for this filter.</p>
           </div>
         ) : (
           filteredAds.map((ad) => (
-            <Card key={ad.id} className="overflow-hidden">
+            <Card key={ad.id} className="overflow-hidden bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10">
               <CardContent className="p-0">
-                <div className="flex flex-col md:flex-row border-b border-gray-100">
+                <div className="flex flex-col md:flex-row border-b border-gray-100 dark:border-white/10">
                   {/* Image Section */}
-                  <div className="w-full md:w-64 h-40 md:h-auto bg-gray-50 relative border-r border-gray-100 flex items-center justify-center p-4">
+                  <div className="w-full md:w-64 h-40 md:h-auto bg-gray-50 dark:bg-white/[0.02] relative border-r border-gray-100 dark:border-white/10 flex items-center justify-center p-4">
                     {ad.banner_image_url || (ad as any).creative_url ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img 
@@ -134,7 +134,7 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                         className="max-h-full max-w-full object-contain rounded-md"
                       />
                     ) : (
-                      <span className="text-sm text-gray-400">No Image</span>
+                      <span className="text-sm text-gray-400 dark:text-slate-500">No Image</span>
                     )}
                   </div>
 
@@ -143,31 +143,31 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="text-xl font-bold text-upsa-navy">{ad.company_name}</h3>
-                          <p className="text-sm text-gray-500 mb-2">
+                          <h3 className="text-xl font-bold text-upsa-navy dark:text-white">{ad.company_name}</h3>
+                          <p className="text-sm text-gray-500 dark:text-slate-400 mb-2">
                             {ad.contact_email} {ad.contact_phone && `• ${ad.contact_phone}`}
                           </p>
                         </div>
                         <StatusBadge status={ad.status} />
                       </div>
                       
-                      <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 mb-4">
+                      <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-slate-300 mb-4">
                         <div>
-                          <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider mb-1">Tier</span>
+                          <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Tier</span>
                           <span className="capitalize">{ad.ad_tier || (ad as any).package_tier || "Standard"}</span>
                         </div>
                         <div>
-                          <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider mb-1">Placement</span>
+                          <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Placement</span>
                           <span className="capitalize">{ad.ad_placement}</span>
                         </div>
                         <div>
-                          <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider mb-1">Submitted</span>
+                          <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Submitted</span>
                           <span>{format(new Date(ad.created_at), "MMM d, yyyy")}</span>
                         </div>
                         {ad.target_url && (
                           <div>
-                            <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider mb-1">Target URL</span>
-                            <a href={ad.target_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline inline-flex items-center">
+                            <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Target URL</span>
+                            <a href={ad.target_url} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center">
                               Link <ExternalLink className="w-3 h-3 ml-1" />
                             </a>
                           </div>
@@ -175,24 +175,24 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                       </div>
 
                       {ad.admin_notes && (
-                        <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-100 flex items-start gap-2">
+                        <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/10 flex items-start gap-2">
                           <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                           <div className="text-xs">
-                            <span className="font-bold text-gray-700">Moderator Note: </span>
-                            <span className="text-gray-600">{ad.admin_notes}</span>
+                            <span className="font-bold text-gray-700 dark:text-slate-200">Moderator Note: </span>
+                            <span className="text-gray-600 dark:text-slate-400">{ad.admin_notes}</span>
                           </div>
                         </div>
                       )}
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-gray-50">
+                    <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-gray-50 dark:border-white/10">
                       {ad.status === "pending" && (
                         <>
                           <Button 
                             onClick={() => handleStatusChange(ad.id, "approved")}
                             disabled={loadingId === ad.id}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                           >
                             {loadingId === ad.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                             Approve
@@ -215,7 +215,7 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                         <Button 
                           onClick={() => handleStatusChange(ad.id, "active")}
                           disabled={loadingId === ad.id}
-                          className="bg-upsa-gold text-upsa-navy hover:bg-yellow-400 font-bold"
+                          className="bg-upsa-gold text-upsa-navy dark:text-upsa-navy hover:bg-yellow-400 font-bold"
                         >
                           {loadingId === ad.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <PlayCircle className="w-4 h-4 mr-2" />}
                           Set as Active
@@ -227,6 +227,7 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                           onClick={() => handleStatusChange(ad.id, "completed")}
                           disabled={loadingId === ad.id}
                           variant="outline"
+                          className="dark:bg-transparent dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
                         >
                           {loadingId === ad.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
                           Mark Completed
@@ -244,23 +245,23 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
       {/* Structured Ad Rejection Modal */}
       {rejectingAd && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-lg w-full p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 text-red-600 mb-4">
-              <div className="p-2 rounded-xl bg-red-50">
+          <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 max-w-lg w-full p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400 mb-4">
+              <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/40">
                 <AlertTriangle className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">Reject Advertisement</h3>
-                <p className="text-xs text-gray-500">Provide rejection reason for {rejectingAd.companyName}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Reject Advertisement</h3>
+                <p className="text-xs text-gray-500 dark:text-slate-400">Provide rejection reason for {rejectingAd.companyName}</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 dark:text-slate-300 mb-4">
               Select a standard preset or type customized feedback explaining why this advertising request cannot be accepted.
             </p>
 
             <div className="space-y-3 mb-4">
-              <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Quick Presets</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Quick Presets</label>
               <div className="flex flex-col gap-2">
                 {REJECTION_PRESETS.map((preset, idx) => (
                   <button
@@ -269,8 +270,8 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                     onClick={() => setRejectionReason(preset)}
                     className={`text-left text-xs p-2.5 rounded-lg border transition-all ${
                       rejectionReason === preset
-                        ? "border-red-500 bg-red-50/50 text-red-800 font-semibold"
-                        : "border-gray-200 hover:border-gray-300 bg-white text-gray-700"
+                        ? "border-red-500 bg-red-50/50 dark:bg-red-950/30 text-red-800 dark:text-red-300 font-semibold"
+                        : "border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 bg-white dark:bg-[#060D1A] text-gray-700 dark:text-slate-300"
                     }`}
                   >
                     {preset}
@@ -280,21 +281,22 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
             </div>
 
             <div className="space-y-1.5 mb-6">
-              <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Custom Moderator Feedback</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">Custom Moderator Feedback</label>
               <Textarea
                 placeholder="Detailed reason for ad rejection..."
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={3}
-                className="text-sm border-gray-200 focus:border-red-500"
+                className="text-sm bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-red-500"
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
               <Button
                 variant="outline"
                 onClick={() => setRejectingAd(null)}
                 disabled={isSubmittingRejection}
+                className="dark:bg-transparent dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
               >
                 Cancel
               </Button>

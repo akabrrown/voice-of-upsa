@@ -88,23 +88,23 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Admin Overview</h1>
-        <p className="text-gray-500">Global performance and management dashboard</p>
+        <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Admin Overview</h1>
+        <p className="text-gray-500 dark:text-slate-400">Global performance and management dashboard</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <Card key={stat.name} className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow">
+          <Card key={stat.name} className="overflow-hidden border border-gray-100 dark:border-white/10 shadow-md hover:shadow-lg transition-shadow bg-white dark:bg-[#0C1729]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-gray-500 uppercase tracking-wider">{stat.name}</CardTitle>
-              <div className="p-2 bg-upsa-navy/5 rounded-lg">
-                <stat.icon className="h-4 w-4 text-upsa-navy" />
+              <CardTitle className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">{stat.name}</CardTitle>
+              <div className="p-2 bg-upsa-navy/5 dark:bg-upsa-gold/10 rounded-lg">
+                <stat.icon className="h-4 w-4 text-upsa-navy dark:text-upsa-gold" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-black text-upsa-navy">{stat.value}</div>
-              <p className="text-xs text-gray-400 mt-2 flex items-center">
-                <span className="text-emerald-500 font-bold">
+              <div className="text-3xl font-black text-upsa-navy dark:text-white">{stat.value}</div>
+              <p className="text-xs text-gray-400 dark:text-slate-500 mt-2 flex items-center">
+                <span className="text-emerald-500 dark:text-emerald-400 font-bold">
                   {stat.change}
                 </span>
               </p>
@@ -115,29 +115,29 @@ export default async function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Activity */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 border border-gray-100 dark:border-white/10 bg-white dark:bg-[#0C1729]">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-upsa-navy">Recent Content Activity</CardTitle>
+            <CardTitle className="text-xl font-bold text-upsa-navy dark:text-white">Recent Content Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {activities.length > 0 ? (
                 activities.map((activity, i) => (
-                  <div key={i} className="flex items-start space-x-4 pb-6 border-b border-gray-50 last:border-0 last:pb-0">
-                    <div className="h-10 w-10 rounded-full bg-upsa-gold/10 flex items-center justify-center text-upsa-navy font-bold">
+                  <div key={i} className="flex items-start space-x-4 pb-6 border-b border-gray-100 dark:border-white/10 last:border-0 last:pb-0">
+                    <div className="h-10 w-10 rounded-full bg-upsa-gold/10 flex items-center justify-center text-upsa-navy dark:text-upsa-gold font-bold">
                       {activity.user[0]}
                     </div>
                     <div className="flex-1">
                       <p className="text-sm">
-                        <span className="font-bold text-upsa-navy">{activity.user}</span>{" "}
-                        <span className="text-gray-500">{activity.action}</span>{" "}
+                        <span className="font-bold text-upsa-navy dark:text-white">{activity.user}</span>{" "}
+                        <span className="text-gray-500 dark:text-slate-400">{activity.action}</span>{" "}
                         <span className="font-semibold text-upsa-gold">"{activity.item}"</span>
                       </p>
-                      <p className="text-xs text-gray-400 mt-1 flex items-center">
+                      <p className="text-xs text-gray-400 dark:text-slate-500 mt-1 flex items-center">
                         <Clock className="h-3 w-3 mr-1" /> {activity.time}
                       </p>
                     </div>
-                    <Button asChild size="icon" variant="ghost" className="text-gray-300 hover:text-upsa-navy">
+                    <Button asChild size="icon" variant="ghost" className="text-gray-300 dark:text-slate-600 hover:text-upsa-navy dark:hover:text-white">
                       <Link href={`/articles/${activity.slug}`}>
                         <ArrowUpRight className="h-4 w-4" />
                       </Link>
@@ -145,16 +145,16 @@ export default async function AdminDashboardPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-400 italic text-sm">No recent activity found.</p>
+                <p className="text-gray-400 dark:text-slate-500 italic text-sm">No recent activity found.</p>
               )}
             </div>
           </CardContent>
         </Card>
 
         {/* Ad Performance Summary */}
-        <Card>
+        <Card className="border border-gray-100 dark:border-white/10 bg-white dark:bg-[#0C1729]">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-upsa-navy">Active Ads</CardTitle>
+            <CardTitle className="text-xl font-bold text-upsa-navy dark:text-white">Active Ads</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -162,10 +162,10 @@ export default async function AdminDashboardPage() {
                 activeAds.map((ad) => (
                   <div key={ad.company} className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold text-upsa-navy">{ad.company}</span>
-                      <span className="text-xs text-gray-400 uppercase font-semibold">{ad.tier}</span>
+                      <span className="text-sm font-bold text-upsa-navy dark:text-white">{ad.company}</span>
+                      <span className="text-xs text-gray-400 dark:text-slate-400 uppercase font-semibold">{ad.tier}</span>
                     </div>
-                    <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-upsa-gold rounded-full" 
                         style={{ width: `${ad.progress}%` }}
@@ -174,10 +174,10 @@ export default async function AdminDashboardPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-400 italic text-sm">No active advertisements.</p>
+                <p className="text-gray-400 dark:text-slate-500 italic text-sm">No active advertisements.</p>
               )}
               <div className="pt-4">
-                <Button asChild variant="outline" className="w-full text-xs font-bold border-upsa-navy/10 text-upsa-navy hover:bg-upsa-navy hover:text-white">
+                <Button asChild variant="outline" className="w-full text-xs font-bold border-gray-200 dark:border-white/10 text-upsa-navy dark:text-slate-200 hover:bg-upsa-navy hover:text-white dark:hover:bg-upsa-gold dark:hover:text-gray-950">
                   <Link href="/dashboard/admin/ads">
                     View All Campaigns
                   </Link>

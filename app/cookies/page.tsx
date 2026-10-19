@@ -2,23 +2,26 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Cookie Policy | Voice of UPSA",
-  description: "Cookie Policy for the Voice of UPSA digital platform.",
+  description: "Learn how Voice of UPSA utilizes cookies and similar local storage technologies to enhance user experience and maintain your platform session.",
+  alternates: {
+    canonical: "/cookies",
+  },
 };
 
 export default function CookiePolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50/50 py-16 md:py-24">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A] py-16 md:py-24">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12">
+        <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 p-8 md:p-12">
           
-          <div className="mb-12 border-b border-gray-100 pb-8">
-            <h1 className="text-3xl md:text-5xl font-black text-upsa-navy tracking-tight mb-4">
+          <div className="mb-12 border-b border-gray-100 dark:border-white/10 pb-8">
+            <h1 className="text-3xl md:text-5xl font-black text-upsa-navy dark:text-white tracking-tight mb-4">
               Cookie Policy
             </h1>
-            <p className="text-gray-500 font-medium">How we use cookies to improve your experience.</p>
+            <p className="text-gray-500 dark:text-slate-400 font-medium">How we use cookies to improve your experience.</p>
           </div>
 
-          <div className="prose prose-lg prose-headings:text-upsa-navy prose-a:text-upsa-gold max-w-none text-gray-700">
+          <div className="prose prose-lg prose-headings:text-upsa-navy dark:prose-headings:text-white prose-a:text-upsa-gold max-w-none text-gray-700 dark:text-slate-300 dark:prose-invert">
             
             <p>
               This Cookie Policy explains how Voice of UPSA uses cookies and similar technologies to recognize you when you visit our digital platform. It explains what these technologies are and why we use them, as well as your rights to control our use of them.

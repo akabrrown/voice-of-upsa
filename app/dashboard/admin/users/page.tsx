@@ -139,31 +139,31 @@ export default function UserManagementPage() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-upsa-navy tracking-tight flex items-center gap-2">
+          <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight flex items-center gap-2">
             <Users className="w-8 h-8 text-upsa-gold" />
             User Management
           </h1>
-          <p className="text-gray-500">Manage platform users, roles, and access permissions</p>
+          <p className="text-gray-500 dark:text-slate-400">Manage platform users, roles, and access permissions</p>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="relative w-full sm:max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-slate-400" />
           <Input
             placeholder="Search by name or handle..."
-            className="pl-10 bg-white border border-gray-200"
+            className="pl-10 bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 dark:text-white dark:placeholder:text-slate-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="flex items-center space-x-2 self-start sm:self-center">
-          <span className="text-sm font-bold text-gray-500 uppercase tracking-widest text-[10px]">Filter Role:</span>
+          <span className="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest text-[10px]">Filter Role:</span>
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="bg-white border border-gray-200 rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-upsa-navy/20 outline-none"
+            className="bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-upsa-navy/20 outline-none"
           >
             <option value="all">All Roles</option>
             <option value="admin">Admin</option>
@@ -173,7 +173,7 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
         {isLoading ? (
           <div className="p-6">
             <TableShadowLoader rows={5} hasSearch={false} />
@@ -181,26 +181,26 @@ export default function UserManagementPage() {
         ) : filteredUsers.length > 0 ? (
           <>
             <Table>
-              <TableHeader className="bg-gray-50">
-                <TableRow>
-                  <TableHead className="font-bold text-upsa-navy">User</TableHead>
-                  <TableHead className="font-bold text-upsa-navy">Role</TableHead>
-                  <TableHead className="font-bold text-upsa-navy">Status</TableHead>
-                  <TableHead className="font-bold text-upsa-navy">Joined Date</TableHead>
-                  <TableHead className="text-right font-bold text-upsa-navy">Actions</TableHead>
+              <TableHeader className="bg-gray-50 dark:bg-white/5">
+                <TableRow className="dark:border-white/10">
+                  <TableHead className="font-bold text-upsa-navy dark:text-white">User</TableHead>
+                  <TableHead className="font-bold text-upsa-navy dark:text-white">Role</TableHead>
+                  <TableHead className="font-bold text-upsa-navy dark:text-white">Status</TableHead>
+                  <TableHead className="font-bold text-upsa-navy dark:text-white">Joined Date</TableHead>
+                  <TableHead className="text-right font-bold text-upsa-navy dark:text-white">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                  <TableRow key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 dark:border-white/10 transition-colors">
                     <TableCell>
                       <div className="flex items-center space-x-3">
-                        <div className="h-9 w-9 rounded-full bg-upsa-navy/5 flex items-center justify-center text-upsa-navy font-black text-xs">
+                        <div className="h-9 w-9 rounded-full bg-upsa-navy/5 dark:bg-upsa-gold/10 flex items-center justify-center text-upsa-navy dark:text-upsa-gold font-black text-xs">
                           {user.name[0]}
                         </div>
                         <div>
-                          <div className="font-bold text-upsa-navy">{user.name}</div>
-                          <div className="text-xs text-gray-400">@{user.email}</div>
+                          <div className="font-bold text-upsa-navy dark:text-white">{user.name}</div>
+                          <div className="text-xs text-gray-400 dark:text-slate-400">@{user.email}</div>
                         </div>
                       </div>
                     </TableCell>
@@ -209,9 +209,9 @@ export default function UserManagementPage() {
                         variant="outline" 
                         className={cn(
                           "capitalize font-bold text-[10px] tracking-widest",
-                          user.role === "admin" ? "border-red-200 text-red-600 bg-red-50" : 
-                          user.role === "editor" ? "border-blue-200 text-blue-600 bg-blue-50" : 
-                          "border-gray-200 text-gray-600 bg-gray-50"
+                          user.role === "admin" ? "border-red-200 text-red-600 bg-red-50 dark:bg-red-950/40 dark:border-red-800/40 dark:text-red-400" : 
+                          user.role === "editor" ? "border-blue-200 text-blue-600 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-800/40 dark:text-blue-400" : 
+                          "border-gray-200 dark:border-white/10 text-gray-600 dark:text-slate-300 bg-gray-50 dark:bg-white/5"
                         )}
                       >
                         {user.role}
@@ -227,17 +227,17 @@ export default function UserManagementPage() {
                         {user.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">{user.joined}</TableCell>
+                    <TableCell className="text-sm text-gray-500 dark:text-slate-400">{user.joined}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          <Button variant="ghost" className="h-8 w-8 p-0 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-[#0C1729] dark:border-white/10 text-gray-700 dark:text-slate-200">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
+                          <DropdownMenuSeparator className="dark:bg-white/10" />
                           <DropdownMenuItem 
                             className="cursor-pointer"
                             onClick={() => handleUpdateRole(user.id, "admin")}
@@ -254,11 +254,11 @@ export default function UserManagementPage() {
                             className="cursor-pointer"
                             onClick={() => handleUpdateRole(user.id, "public")}
                           >
-                            <UserCog className="mr-2 h-4 w-4 text-gray-500" /> Make Reader (Public)
+                            <UserCog className="mr-2 h-4 w-4 text-gray-500 dark:text-slate-400" /> Make Reader (Public)
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
+                          <DropdownMenuSeparator className="dark:bg-white/10" />
                           <DropdownMenuItem 
-                            className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                            className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/40"
                             onClick={() => handleToggleStatus(user.id, user.status)}
                           >
                             <UserMinus className="mr-2 h-4 w-4" /> 
@@ -273,8 +273,8 @@ export default function UserManagementPage() {
             </Table>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between p-4 border-t border-gray-100 bg-gray-50">
-              <div className="text-sm text-gray-500 font-medium">
+            <div className="flex items-center justify-between p-4 border-t border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+              <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">
                 Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)} of {filteredUsers.length} users
               </div>
               <div className="flex gap-2">
@@ -283,11 +283,11 @@ export default function UserManagementPage() {
                   size="sm" 
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="bg-white"
+                  className="bg-white dark:bg-[#0C1729] dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
                 >
                   Previous
                 </Button>
-                <div className="flex items-center px-4 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md">
+                <div className="flex items-center px-4 text-sm font-medium text-gray-600 dark:text-slate-300 bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 rounded-md">
                   Page {currentPage} of {totalPages}
                 </div>
                 <Button 
@@ -295,7 +295,7 @@ export default function UserManagementPage() {
                   size="sm" 
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages || totalPages === 0}
-                  className="bg-white"
+                  className="bg-white dark:bg-[#0C1729] dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
                 >
                   Next
                 </Button>
@@ -303,7 +303,7 @@ export default function UserManagementPage() {
             </div>
           </>
         ) : (
-          <div className="py-20 text-center text-gray-500 italic">No users found matching filters.</div>
+          <div className="py-20 text-center text-gray-500 dark:text-slate-400 italic">No users found matching filters.</div>
         )}
       </div>
     </div>

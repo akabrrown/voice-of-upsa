@@ -58,14 +58,14 @@ export function PreferencesClient({ initialPreferences }: { initialPreferences: 
   };
 
   return (
-    <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-      <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-        <div className="p-2 bg-[#1B2A4A]/5 rounded-lg text-[#1B2A4A]">
+    <div className="space-y-6 bg-white dark:bg-[#0C1729] p-6 rounded-lg shadow-sm border border-gray-100 dark:border-white/10">
+      <div className="flex items-center gap-3 border-b border-gray-100 dark:border-white/10 pb-4">
+        <div className="p-2 bg-[#1B2A4A]/5 dark:bg-white/5 rounded-lg text-[#1B2A4A] dark:text-upsa-gold">
           <Bell className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-[#1B2A4A]">Notification Preferences</h2>
-          <p className="text-sm text-gray-500">Choose which categories you want to receive alerts for.</p>
+          <h2 className="text-lg font-semibold text-[#1B2A4A] dark:text-white">Notification Preferences</h2>
+          <p className="text-sm text-gray-500 dark:text-slate-400">Choose which categories you want to receive alerts for.</p>
         </div>
       </div>
 
@@ -78,14 +78,14 @@ export function PreferencesClient({ initialPreferences }: { initialPreferences: 
           return (
             <div key={category.id} className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-gray-50 rounded-lg text-gray-500 shrink-0 mt-0.5">
+                <div className="p-2 bg-gray-50 dark:bg-white/5 rounded-lg text-gray-500 dark:text-slate-400 shrink-0 mt-0.5">
                   <Icon className="h-4 w-4" />
                 </div>
                 <div>
-                  <Label htmlFor={`toggle-${category.id}`} className="text-sm font-medium text-gray-900 cursor-pointer">
+                  <Label htmlFor={`toggle-${category.id}`} className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
                     {category.title}
                   </Label>
-                  <p className="text-xs text-gray-500 mt-0.5 max-w-sm">
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 max-w-sm">
                     {category.description}
                   </p>
                 </div>

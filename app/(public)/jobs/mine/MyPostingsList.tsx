@@ -19,10 +19,10 @@ export type MyPosting = {
 };
 
 const STATUS_STYLES: Record<MyPosting["status"], { label: string; className: string }> = {
-  pending_review: { label: "Pending review", className: "bg-amber-100 text-amber-800" },
-  approved: { label: "Live", className: "bg-green-100 text-green-800" },
-  rejected: { label: "Rejected", className: "bg-red-100 text-red-800" },
-  closed: { label: "Closed", className: "bg-gray-200 text-gray-700" },
+  pending_review: { label: "Pending review", className: "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300" },
+  approved: { label: "Live", className: "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300" },
+  rejected: { label: "Rejected", className: "bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300" },
+  closed: { label: "Closed", className: "bg-gray-200 text-gray-700 dark:bg-slate-800 dark:text-slate-300" },
 };
 
 export default function MyPostingsList({ postings }: { postings: MyPosting[] }) {
@@ -44,10 +44,10 @@ export default function MyPostingsList({ postings }: { postings: MyPosting[] }) 
 
   if (postings.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center">
-        <Briefcase className="mx-auto h-10 w-10 text-gray-300 mb-4" />
-        <h2 className="text-lg font-bold text-[#1B2A4A]">No postings yet</h2>
-        <p className="text-gray-500 mt-1">Opportunities you submit will show up here with their review status.</p>
+      <div className="rounded-3xl border border-dashed border-gray-300 dark:border-white/10 bg-white dark:bg-[#0C1729] p-12 text-center">
+        <Briefcase className="mx-auto h-10 w-10 text-gray-300 dark:text-slate-600 mb-4" />
+        <h2 className="text-lg font-bold text-[#1B2A4A] dark:text-white">No postings yet</h2>
+        <p className="text-gray-500 dark:text-slate-400 mt-1">Opportunities you submit will show up here with their review status.</p>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function MyPostingsList({ postings }: { postings: MyPosting[] }) 
   return (
     <div className="space-y-3">
       {error && (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div role="alert" className="rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 p-3 text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -63,7 +63,7 @@ export default function MyPostingsList({ postings }: { postings: MyPosting[] }) 
         const status = STATUS_STYLES[posting.status];
         const canClose = posting.status === "approved" || posting.status === "pending_review";
         return (
-          <div key={posting.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm relative overflow-hidden">
+          <div key={posting.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#0C1729] p-5 shadow-sm relative overflow-hidden">
             {posting.has_pending_revision && (
               <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg">
                 Pending Edits
@@ -72,20 +72,20 @@ export default function MyPostingsList({ postings }: { postings: MyPosting[] }) 
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${status.className}`}>{status.label}</span>
-                <span className="text-xs uppercase tracking-wide text-gray-400">{posting.type.replace("_", " ")}</span>
+                <span className="text-xs uppercase tracking-wide text-gray-400 dark:text-slate-500">{posting.type.replace("_", " ")}</span>
               </div>
-              <h3 className="font-bold text-[#1B2A4A] truncate">{posting.title}</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="font-bold text-[#1B2A4A] dark:text-white truncate">{posting.title}</h3>
+              <p className="text-sm text-gray-500 dark:text-slate-400">
                 {posting.organization_name} · Posted {new Date(posting.created_at).toLocaleDateString("en-GB")}
               </p>
             </div>
             <div className="flex items-center gap-2 z-10">
               {posting.status === "approved" && (
-                <Link href={`/jobs/${posting.slug}`} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <Link href={`/jobs/${posting.slug}`} className="rounded-lg border border-gray-200 dark:border-white/10 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
                   View
                 </Link>
               )}
-              <Link href={`/jobs/mine/${posting.id}/edit`} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-amber-700 hover:bg-amber-50">
+              <Link href={`/jobs/mine/${posting.id}/edit`} className="rounded-lg border border-gray-200 dark:border-white/10 px-4 py-2 text-sm font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors">
                 Edit
               </Link>
               {canClose && (
@@ -93,7 +93,7 @@ export default function MyPostingsList({ postings }: { postings: MyPosting[] }) 
                   type="button"
                   disabled={isPending && busyId === posting.id}
                   onClick={() => handleClose(posting.id)}
-                  className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  className="rounded-lg border border-red-200 dark:border-red-900/40 px-4 py-2 text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50 transition-colors"
                 >
                   {busyId === posting.id ? "Closing…" : "Close"}
                 </button>

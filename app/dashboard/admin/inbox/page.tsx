@@ -36,8 +36,8 @@ export default async function AdminInboxPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Inbox</h1>
-        <p className="text-gray-500 mt-2 font-medium">Manage and reply to contact form submissions.</p>
+        <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Inbox</h1>
+        <p className="text-gray-500 dark:text-slate-400 mt-2 font-medium">Manage and reply to contact form submissions.</p>
       </div>
 
       <InboxClient initialMessages={messages || []} />

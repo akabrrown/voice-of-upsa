@@ -2,23 +2,26 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions | Voice of UPSA",
-  description: "Terms and Conditions for the Voice of UPSA digital platform.",
+  description: "Review the terms and conditions governing the use of Voice of UPSA services, articles, user submissions, and community digital features.",
+  alternates: {
+    canonical: "/terms",
+  },
 };
 
 export default function TermsAndConditionsPage() {
   return (
-    <div className="min-h-screen bg-gray-50/50 py-16 md:py-24">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A] py-16 md:py-24">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12">
+        <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 p-8 md:p-12">
           
-          <div className="mb-12 border-b border-gray-100 pb-8">
-            <h1 className="text-3xl md:text-5xl font-black text-upsa-navy tracking-tight mb-4">
+          <div className="mb-12 border-b border-gray-100 dark:border-white/10 pb-8">
+            <h1 className="text-3xl md:text-5xl font-black text-upsa-navy dark:text-white tracking-tight mb-4">
               Terms & Conditions
             </h1>
-            <p className="text-gray-500 font-medium">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+            <p className="text-gray-500 dark:text-slate-400 font-medium">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
           </div>
 
-          <div className="prose prose-lg prose-headings:text-upsa-navy prose-a:text-upsa-gold max-w-none text-gray-700">
+          <div className="prose prose-lg prose-headings:text-upsa-navy dark:prose-headings:text-white prose-a:text-upsa-gold max-w-none text-gray-700 dark:text-slate-300 dark:prose-invert">
             
             <p>
               Welcome to Voice of UPSA. By accessing or using our digital platform, you agree to be bound by these Terms and Conditions. Please read them carefully.

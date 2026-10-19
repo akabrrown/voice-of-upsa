@@ -96,7 +96,7 @@ export function HolidayGreetingModal({ forcePreviewHoliday, onClosePreview }: Ho
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="relative w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-300"
+        className="relative w-full max-w-lg bg-white dark:bg-[#0C1729] rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-white/10 animate-in zoom-in-95 duration-300"
         role="dialog"
         aria-modal="true"
         aria-labelledby="holiday-modal-title"
@@ -117,7 +117,7 @@ export function HolidayGreetingModal({ forcePreviewHoliday, onClosePreview }: Ho
 
           {/* University Seal & Theme Icon */}
           <div className="relative inline-flex items-center justify-center mb-4">
-            <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-upsa-gold shadow-lg bg-white">
+            <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-upsa-gold shadow-lg bg-white dark:bg-[#0C1729]">
               <Image src="/logo.png" alt="Voice of UPSA" fill sizes="80px" className="object-cover" />
             </div>
             <div className="absolute -bottom-1 -right-1 p-1 bg-upsa-dark-navy rounded-full border border-upsa-gold/50 shadow">
@@ -136,18 +136,18 @@ export function HolidayGreetingModal({ forcePreviewHoliday, onClosePreview }: Ho
 
         {/* Modal Body */}
         <div className="p-6 sm:p-8 space-y-6">
-          <p className="text-gray-700 text-sm sm:text-base leading-relaxed text-center italic">
+          <p className="text-gray-700 dark:text-gray-200 text-sm sm:text-base leading-relaxed text-center italic">
             &ldquo;{holiday.bodyMessage}&rdquo;
           </p>
 
           {/* Campus Academic Status Banner */}
-          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start space-x-3">
-            <div className="p-1 bg-amber-100 rounded-md shrink-0 text-amber-800">
+          <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 flex items-start space-x-3">
+            <div className="p-1 bg-amber-100 dark:bg-amber-900/50 rounded-md shrink-0 text-amber-800 dark:text-amber-300">
               <CalendarHeart className="h-4 w-4" />
             </div>
             <div className="text-xs">
-              <span className="font-bold text-amber-900 block">Official Campus Notice:</span>
-              <span className="text-amber-800 leading-snug">{holiday.academicStatus}</span>
+              <span className="font-bold text-amber-900 dark:text-amber-200 block">Official Campus Notice:</span>
+              <span className="text-amber-800 dark:text-amber-300 leading-snug">{holiday.academicStatus}</span>
             </div>
           </div>
 
@@ -163,7 +163,7 @@ export function HolidayGreetingModal({ forcePreviewHoliday, onClosePreview }: Ho
 
             <button
               onClick={handleCopyWishes}
-              className="py-3 px-4 bg-gray-100 hover:bg-gray-200 text-upsa-navy rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-colors active:scale-95"
+              className="py-3 px-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-upsa-navy dark:text-gray-100 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition-colors active:scale-95"
             >
               {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Share2 className="h-4 w-4" />}
               <span>{copied ? "Copied!" : "Copy Wishes"}</span>
@@ -173,7 +173,7 @@ export function HolidayGreetingModal({ forcePreviewHoliday, onClosePreview }: Ho
           <div className="text-center pt-1">
             <button
               onClick={handleClose}
-              className="text-xs text-gray-400 hover:text-upsa-navy transition-colors font-medium underline underline-offset-4"
+              className="text-xs text-gray-400 dark:text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors font-medium underline underline-offset-4"
             >
               Continue to Voice of UPSA
             </button>

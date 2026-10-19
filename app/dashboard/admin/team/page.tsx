@@ -282,12 +282,12 @@ export default function AdminEditorialTeamPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-black text-upsa-navy tracking-tight">Editorial Team CMS</h1>
-            <span className="bg-upsa-gold/15 text-upsa-navy text-xs font-black uppercase px-2.5 py-0.5 rounded-full">
+            <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Editorial Team CMS</h1>
+            <span className="bg-upsa-gold/15 text-upsa-navy dark:text-upsa-gold text-xs font-black uppercase px-2.5 py-0.5 rounded-full">
               Live Directory
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
             Manage public staff profiles, editors-in-chief, investigative reporters, and authors shown on the About page.
           </p>
         </div>
@@ -298,7 +298,7 @@ export default function AdminEditorialTeamPage() {
             size="sm"
             onClick={() => fetchTeamMembers(true)}
             disabled={isRefreshing}
-            className="rounded-xl border-gray-200 text-xs font-bold text-gray-600 gap-1.5"
+            className="rounded-xl border-gray-200 dark:border-white/10 text-xs font-bold text-gray-600 dark:text-slate-300 dark:hover:bg-white/5 gap-1.5"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
             Refresh
@@ -306,7 +306,7 @@ export default function AdminEditorialTeamPage() {
 
           <Button
             onClick={handleOpenAddDialog}
-            className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold rounded-xl text-xs gap-2 py-5 shadow-sm transition-all"
+            className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 font-bold rounded-xl text-xs gap-2 py-5 shadow-sm transition-all"
           >
             <Plus className="h-4 w-4" /> Add Team Member
           </Button>
@@ -315,73 +315,73 @@ export default function AdminEditorialTeamPage() {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Members</span>
-            <div className="p-2 bg-upsa-navy/5 rounded-xl text-upsa-navy">
+            <span className="text-xs font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Total Members</span>
+            <div className="p-2 bg-upsa-navy/5 dark:bg-upsa-gold/10 rounded-xl text-upsa-navy dark:text-upsa-gold">
               <Users className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-upsa-navy mt-2">{members.length}</div>
-          <span className="text-[11px] text-gray-400 font-medium">In CMS directory</span>
+          <div className="text-2xl font-black text-upsa-navy dark:text-white mt-2">{members.length}</div>
+          <span className="text-[11px] text-gray-400 dark:text-slate-500 font-medium">In CMS directory</span>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Publicly Active</span>
-            <div className="p-2 bg-emerald-50 rounded-xl text-emerald-600">
+            <span className="text-xs font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Publicly Active</span>
+            <div className="p-2 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600 mt-2">
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">
             {members.filter((m) => m.is_active).length}
           </div>
-          <span className="text-[11px] text-gray-400 font-medium">Visible on About page</span>
+          <span className="text-[11px] text-gray-400 dark:text-slate-500 font-medium">Visible on About page</span>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Hidden / Draft</span>
-            <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
+            <span className="text-xs font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Hidden / Draft</span>
+            <div className="p-2 bg-amber-50 dark:bg-amber-950/40 rounded-xl text-amber-600 dark:text-amber-400">
               <XCircle className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-amber-600 mt-2">
+          <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-2">
             {members.filter((m) => !m.is_active).length}
           </div>
-          <span className="text-[11px] text-gray-400 font-medium">Not visible publicly</span>
+          <span className="text-[11px] text-gray-400 dark:text-slate-500 font-medium">Not visible publicly</span>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Editorial Desks</span>
-            <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+            <span className="text-xs font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Editorial Desks</span>
+            <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-blue-600 dark:text-blue-400">
               <ShieldCheck className="h-4 w-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-upsa-navy mt-2">
+          <div className="text-2xl font-black text-upsa-navy dark:text-white mt-2">
             {new Set(members.map((m) => m.role.trim().toLowerCase())).size}
           </div>
-          <span className="text-[11px] text-gray-400 font-medium">Distinct newsroom roles</span>
+          <span className="text-[11px] text-gray-400 dark:text-slate-500 font-medium">Distinct newsroom roles</span>
         </div>
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex items-center gap-3">
-        <Search className="h-4 w-4 text-gray-400 shrink-0 ml-2" />
+      <div className="bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 rounded-2xl p-4 shadow-sm flex items-center gap-3">
+        <Search className="h-4 w-4 text-gray-400 dark:text-slate-400 shrink-0 ml-2" />
         <Input
           type="text"
           placeholder="Search team by name, role (e.g. Editor-in-Chief), or email..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="border-none shadow-none focus-visible:ring-0 text-xs bg-transparent h-8"
+          className="border-none shadow-none focus-visible:ring-0 text-xs bg-transparent dark:text-white dark:placeholder:text-slate-500 h-8"
         />
         {searchQuery && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setSearchQuery("")}
-            className="text-xs text-gray-400 hover:text-gray-600 h-7 px-2"
+            className="text-xs text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-white h-7 px-2"
           >
             Clear
           </Button>
@@ -392,29 +392,29 @@ export default function AdminEditorialTeamPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((idx) => (
-            <div key={idx} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm space-y-4 animate-pulse">
+            <div key={idx} className="bg-white dark:bg-[#0C1729] rounded-3xl p-6 border border-gray-100 dark:border-white/10 shadow-sm space-y-4 animate-pulse">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 rounded-full bg-gray-200" />
+                <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-slate-700" />
                 <div className="space-y-2 flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-1/2" />
                 </div>
               </div>
-              <div className="h-12 bg-gray-50 rounded-xl" />
-              <div className="h-8 bg-gray-100 rounded-xl" />
+              <div className="h-12 bg-gray-50 dark:bg-slate-800/50 rounded-xl" />
+              <div className="h-8 bg-gray-100 dark:bg-slate-800 rounded-xl" />
             </div>
           ))}
         </div>
       ) : filteredMembers.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200 p-8 space-y-4">
-          <Users className="h-12 w-12 text-gray-300 mx-auto" />
-          <h3 className="text-lg font-bold text-upsa-navy">No Editorial Team Members Found</h3>
-          <p className="text-sm text-gray-500 max-w-md mx-auto">
+        <div className="text-center py-16 bg-white dark:bg-[#0C1729] rounded-3xl border border-dashed border-gray-200 dark:border-white/10 p-8 space-y-4">
+          <Users className="h-12 w-12 text-gray-300 dark:text-slate-600 mx-auto" />
+          <h3 className="text-lg font-bold text-upsa-navy dark:text-white">No Editorial Team Members Found</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400 max-w-md mx-auto">
             {searchQuery 
               ? `No members matching "${searchQuery}". Try clearing your search.` 
               : "There are currently no team members in the system. Click 'Add Team Member' to create the first profile."}
           </p>
-          <Button onClick={handleOpenAddDialog} className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold rounded-xl text-xs gap-2">
+          <Button onClick={handleOpenAddDialog} className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 font-bold rounded-xl text-xs gap-2">
             <Plus className="h-4 w-4" /> Add Team Member
           </Button>
         </div>
@@ -423,14 +423,16 @@ export default function AdminEditorialTeamPage() {
           {filteredMembers.map((member) => (
             <div
               key={member.id}
-              className={`bg-white rounded-3xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between ${
-                member.is_active ? "border-gray-100" : "border-gray-200 opacity-75 bg-gray-50/50"
+              className={`rounded-3xl p-6 border transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between ${
+                member.is_active 
+                  ? "bg-white dark:bg-[#0C1729] border-gray-100 dark:border-white/10" 
+                  : "bg-gray-50/50 dark:bg-[#060D1A]/50 border-gray-200 dark:border-white/5 opacity-75"
               }`}
             >
               <div>
                 {/* Header: Photo, Status, Order */}
                 <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-upsa-gold shadow-sm shrink-0 bg-gray-100">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-upsa-gold shadow-sm shrink-0 bg-gray-100 dark:bg-slate-800">
                     <Image
                       src={member.image_url || DEFAULT_IMAGE}
                       alt={member.name}
@@ -446,33 +448,33 @@ export default function AdminEditorialTeamPage() {
                       title="Click to toggle visibility on public website"
                       className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors ${
                         member.is_active
-                          ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                          : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                          : "bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-300 dark:hover:bg-slate-700"
                       }`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${member.is_active ? "bg-emerald-500" : "bg-gray-400"}`} />
                       {member.is_active ? "Active" : "Hidden"}
                     </button>
-                    <span className="text-[10px] font-bold text-gray-400">
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500">
                       Order: #{member.display_order}
                     </span>
                   </div>
                 </div>
 
                 {/* Member Info */}
-                <h3 className="text-lg font-bold text-upsa-navy line-clamp-1">{member.name}</h3>
+                <h3 className="text-lg font-bold text-upsa-navy dark:text-white line-clamp-1">{member.name}</h3>
                 <p className="text-xs font-bold text-upsa-gold uppercase tracking-wider mt-0.5 line-clamp-1">
                   {member.role}
                 </p>
 
                 {member.bio && (
-                  <p className="text-xs text-gray-500 mt-3 line-clamp-3 leading-relaxed">
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-3 line-clamp-3 leading-relaxed">
                     {member.bio}
                   </p>
                 )}
 
                 {member.email && (
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-3">
+                  <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-slate-400 mt-3">
                     <Mail className="h-3 w-3" />
                     <span className="truncate">{member.email}</span>
                   </div>
@@ -480,12 +482,12 @@ export default function AdminEditorialTeamPage() {
               </div>
 
               {/* Actions Footer */}
-              <div className="pt-4 mt-5 border-t border-gray-100 flex items-center justify-between">
-                <span className="text-[10px] text-gray-400">
+              <div className="pt-4 mt-5 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+                <span className="text-[10px] text-gray-400 dark:text-slate-500">
                   {member.image_url === DEFAULT_IMAGE ? (
-                    <span className="text-amber-600 font-medium">Using default logo</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">Using default logo</span>
                   ) : (
-                    <span className="text-emerald-600 font-medium">Custom photo</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">Custom photo</span>
                   )}
                 </span>
 
@@ -495,7 +497,7 @@ export default function AdminEditorialTeamPage() {
                     size="sm"
                     aria-label={`Edit ${member.name}`}
                     onClick={() => handleOpenEditDialog(member)}
-                    className="h-8 w-8 p-0 rounded-xl hover:bg-upsa-navy/10 text-upsa-navy cursor-pointer"
+                    className="h-8 w-8 p-0 rounded-xl hover:bg-upsa-navy/10 dark:hover:bg-white/10 text-upsa-navy dark:text-upsa-gold cursor-pointer"
                   >
                     <Edit3 className="h-3.5 w-3.5" />
                   </Button>
@@ -504,7 +506,7 @@ export default function AdminEditorialTeamPage() {
                     size="sm"
                     aria-label={`Delete ${member.name}`}
                     onClick={() => setMemberToDelete(member)}
-                    className="h-8 w-8 p-0 rounded-xl hover:bg-red-50 text-red-600 cursor-pointer"
+                    className="h-8 w-8 p-0 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 dark:text-red-400 cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
@@ -517,12 +519,12 @@ export default function AdminEditorialTeamPage() {
 
       {/* Add / Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl rounded-2xl p-6 bg-white">
+        <DialogContent className="max-w-xl rounded-2xl p-6 bg-white dark:bg-[#0C1729] dark:border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-upsa-navy">
+            <DialogTitle className="text-xl font-bold text-upsa-navy dark:text-white">
               {editingMember ? "Edit Team Member" : "Add New Team Member"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-500">
+            <DialogDescription className="text-xs text-gray-500 dark:text-slate-400">
               Provide member information and upload a profile photo. The photo is automatically saved and optimized via Cloudinary.
             </DialogDescription>
           </DialogHeader>
@@ -530,13 +532,13 @@ export default function AdminEditorialTeamPage() {
           <form onSubmit={handleSaveMember} className="space-y-4 pt-2">
             {/* Direct Image Upload Feature */}
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-upsa-navy">
+              <Label className="text-xs font-bold text-upsa-navy dark:text-slate-200">
                 Profile Photo (Image File Upload)
               </Label>
               
-              <div className="flex items-center gap-4 p-4 border border-gray-100 rounded-2xl bg-gray-50/50">
+              <div className="flex items-center gap-4 p-4 border border-gray-100 dark:border-white/10 rounded-2xl bg-gray-50/50 dark:bg-[#060D1A]/50">
                 {/* Photo Thumbnail */}
-                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-upsa-gold shadow-md shrink-0 bg-white">
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-upsa-gold shadow-md shrink-0 bg-white dark:bg-slate-800">
                   <Image
                     src={imageUrl || DEFAULT_IMAGE}
                     alt="Preview"
@@ -568,7 +570,7 @@ export default function AdminEditorialTeamPage() {
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploadingImage}
-                      className="rounded-xl text-xs font-bold border-gray-200 gap-1.5 h-8 bg-white hover:bg-upsa-gold hover:text-upsa-navy"
+                      className="rounded-xl text-xs font-bold border-gray-200 dark:border-white/10 gap-1.5 h-8 bg-white dark:bg-[#0C1729] text-gray-700 dark:text-slate-200 hover:bg-upsa-gold hover:text-upsa-navy"
                     >
                       <UploadCloud className="h-3.5 w-3.5" />
                       {imageUrl && imageUrl !== DEFAULT_IMAGE ? "Change Photo" : "Upload Photo"}
@@ -580,13 +582,13 @@ export default function AdminEditorialTeamPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setImageUrl(DEFAULT_IMAGE)}
-                        className="rounded-xl text-xs font-bold text-gray-400 hover:text-red-600 h-8"
+                        className="rounded-xl text-xs font-bold text-gray-400 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 h-8"
                       >
                         Reset to Default
                       </Button>
                     )}
                   </div>
-                  <p className="text-[10px] text-gray-400 leading-normal">
+                  <p className="text-[10px] text-gray-400 dark:text-slate-400 leading-normal">
                     {imageUrl === DEFAULT_IMAGE 
                       ? "Currently using default placeholder: /logo.png. Upload a PNG, JPG, or WebP photo to replace." 
                       : "Photo uploaded and ready to save."}
@@ -598,7 +600,7 @@ export default function AdminEditorialTeamPage() {
             {/* Name & Role */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="member_name" className="text-xs font-bold text-upsa-navy">
+                <Label htmlFor="member_name" className="text-xs font-bold text-upsa-navy dark:text-slate-200">
                   Full Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -607,12 +609,12 @@ export default function AdminEditorialTeamPage() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Dr. Kwesi Amponsah"
                   required
-                  className="rounded-xl text-xs border-gray-200"
+                  className="rounded-xl text-xs border-gray-200 dark:border-white/10 dark:bg-[#060D1A] dark:text-white dark:placeholder:text-slate-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="member_role" className="text-xs font-bold text-upsa-navy">
+                <Label htmlFor="member_role" className="text-xs font-bold text-upsa-navy dark:text-slate-200">
                   Role / Position <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -621,14 +623,14 @@ export default function AdminEditorialTeamPage() {
                   onChange={(e) => setRole(e.target.value)}
                   placeholder="e.g. Editor-in-Chief"
                   required
-                  className="rounded-xl text-xs border-gray-200"
+                  className="rounded-xl text-xs border-gray-200 dark:border-white/10 dark:bg-[#060D1A] dark:text-white dark:placeholder:text-slate-500"
                 />
               </div>
             </div>
 
             {/* Bio */}
             <div className="space-y-1.5">
-              <Label htmlFor="member_bio" className="text-xs font-bold text-upsa-navy">
+              <Label htmlFor="member_bio" className="text-xs font-bold text-upsa-navy dark:text-slate-200">
                 Short Biography
               </Label>
               <Textarea
@@ -637,14 +639,14 @@ export default function AdminEditorialTeamPage() {
                 onChange={(e) => setBio(e.target.value)}
                 rows={3}
                 placeholder="Brief summary of duties, journalistic background, or editorial coverage..."
-                className="rounded-xl text-xs border-gray-200"
+                className="rounded-xl text-xs border-gray-200 dark:border-white/10 dark:bg-[#060D1A] dark:text-white dark:placeholder:text-slate-500"
               />
             </div>
 
             {/* Email & Display Order */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="member_email" className="text-xs font-bold text-upsa-navy">
+                <Label htmlFor="member_email" className="text-xs font-bold text-upsa-navy dark:text-slate-200">
                   Email Address
                 </Label>
                 <Input
@@ -653,12 +655,12 @@ export default function AdminEditorialTeamPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="editor@voiceofupsa.com"
-                  className="rounded-xl text-xs border-gray-200"
+                  className="rounded-xl text-xs border-gray-200 dark:border-white/10 dark:bg-[#060D1A] dark:text-white dark:placeholder:text-slate-500"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="member_order" className="text-xs font-bold text-upsa-navy">
+                <Label htmlFor="member_order" className="text-xs font-bold text-upsa-navy dark:text-slate-200">
                   Display Order Priority
                 </Label>
                 <Input
@@ -667,19 +669,19 @@ export default function AdminEditorialTeamPage() {
                   value={displayOrder}
                   onChange={(e) => setDisplayOrder(Number(e.target.value))}
                   placeholder="1"
-                  className="rounded-xl text-xs border-gray-200"
+                  className="rounded-xl text-xs border-gray-200 dark:border-white/10 dark:bg-[#060D1A] dark:text-white"
                 />
-                <span className="text-[10px] text-gray-400">Lower numbers appear first (e.g. 1 for Editor-in-Chief).</span>
+                <span className="text-[10px] text-gray-400 dark:text-slate-400">Lower numbers appear first (e.g. 1 for Editor-in-Chief).</span>
               </div>
             </div>
 
             {/* Active Toggle */}
-            <div className="flex items-center justify-between p-3 border border-gray-100 rounded-2xl bg-gray-50/50">
+            <div className="flex items-center justify-between p-3 border border-gray-100 dark:border-white/10 rounded-2xl bg-gray-50/50 dark:bg-[#060D1A]/50">
               <div className="space-y-0.5">
-                <Label htmlFor="member_active_toggle" className="text-xs font-bold text-upsa-navy cursor-pointer">
+                <Label htmlFor="member_active_toggle" className="text-xs font-bold text-upsa-navy dark:text-slate-200 cursor-pointer">
                   Show on Public About Page
                 </Label>
-                <p className="text-[10px] text-gray-400">
+                <p className="text-[10px] text-gray-400 dark:text-slate-400">
                   When enabled, this member is visible in &quot;The Editorial Team&quot; section.
                 </p>
               </div>
@@ -688,7 +690,7 @@ export default function AdminEditorialTeamPage() {
                 type="checkbox"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-upsa-navy focus:ring-upsa-gold"
+                className="h-4 w-4 rounded border-gray-300 dark:border-white/20 dark:bg-[#060D1A] text-upsa-navy dark:text-upsa-gold focus:ring-upsa-gold"
               />
             </div>
 
@@ -697,14 +699,14 @@ export default function AdminEditorialTeamPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
-                className="rounded-xl text-xs font-bold"
+                className="rounded-xl text-xs font-bold dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSaving || isUploadingImage}
-                className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold rounded-xl text-xs gap-2"
+                className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-upsa-gold/90 font-bold rounded-xl text-xs gap-2"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
                 {editingMember ? "Save Changes" : "Create Team Member"}
@@ -716,13 +718,13 @@ export default function AdminEditorialTeamPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={Boolean(memberToDelete)} onOpenChange={(open) => !open && setMemberToDelete(null)}>
-        <DialogContent className="max-w-md rounded-3xl p-6 bg-white">
+        <DialogContent className="max-w-md rounded-3xl p-6 bg-white dark:bg-[#0C1729] dark:border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-red-600 flex items-center gap-2">
+            <DialogTitle className="text-lg font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
               <AlertCircle className="h-5 w-5" /> Remove Team Member?
             </DialogTitle>
-            <DialogDescription className="text-xs text-gray-500">
-              Are you sure you want to remove <strong className="text-upsa-navy">{memberToDelete?.name}</strong> from the editorial team? This action will remove them from the public About page.
+            <DialogDescription className="text-xs text-gray-500 dark:text-slate-400">
+              Are you sure you want to remove <strong className="text-upsa-navy dark:text-white">{memberToDelete?.name}</strong> from the editorial team? This action will remove them from the public About page.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-4">
@@ -730,7 +732,7 @@ export default function AdminEditorialTeamPage() {
               variant="outline"
               size="sm"
               onClick={() => setMemberToDelete(null)}
-              className="rounded-xl text-xs font-bold"
+              className="rounded-xl text-xs font-bold dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
             >
               Cancel
             </Button>

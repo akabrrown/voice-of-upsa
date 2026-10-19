@@ -56,15 +56,15 @@ export default async function BuyerOrdersPage() {
 
   return (
     <div className="container py-16 min-h-[70vh]">
-      <h1 className="mb-10 text-3xl font-bold tracking-tight">Your Orders</h1>
+      <h1 className="mb-10 text-3xl font-bold tracking-tight text-upsa-navy dark:text-white">Your Orders</h1>
 
       {orders.length === 0 ? (
-        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-3xl border border-dashed border-border/50 bg-muted/20 py-20 text-center">
-          <div className="rounded-full bg-muted p-4 mb-4">
+        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-white dark:bg-[#0C1729] py-20 text-center">
+          <div className="rounded-full bg-muted dark:bg-[#1E293B] p-4 mb-4">
             <Package className="h-8 w-8 text-muted-foreground opacity-50" />
           </div>
-          <h3 className="text-xl font-semibold">No orders yet</h3>
-          <p className="mt-2 text-muted-foreground">When you place an order, it will appear here.</p>
+          <h3 className="text-xl font-semibold text-upsa-navy dark:text-white">No orders yet</h3>
+          <p className="mt-2 text-muted-foreground dark:text-gray-400">When you place an order, it will appear here.</p>
         </div>
       ) : (
         <div className="grid gap-6">
@@ -73,11 +73,11 @@ export default async function BuyerOrdersPage() {
             const StatusIcon = statusConfig.icon;
 
             return (
-              <Card key={order.id} className="border-white/10 bg-white/5 backdrop-blur-md overflow-hidden">
-                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-muted/30 pb-4">
+              <Card key={order.id} className="border border-gray-100 dark:border-white/10 bg-white dark:bg-[#0C1729] shadow-sm rounded-xl overflow-hidden">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-50/60 dark:bg-[#080F1E]/60 pb-4 border-b border-gray-100 dark:border-white/5">
                   <div>
-                    <CardTitle className="text-lg">Order {order.order_number}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <CardTitle className="text-lg font-bold text-upsa-navy dark:text-white">Order {order.order_number}</CardTitle>
+                    <p className="text-sm text-muted-foreground dark:text-gray-400 mt-1">
                       {new Date(order.created_at).toLocaleDateString()} • {order.store.name}
                     </p>
                   </div>
@@ -91,18 +91,18 @@ export default async function BuyerOrdersPage() {
                     {order.items.map((item: any) => (
                       <div key={item.id} className="flex justify-between items-center text-sm">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{item.quantity}x</span>
-                          <span className="text-muted-foreground">{item.product_name_snapshot}</span>
+                          <span className="font-medium text-upsa-navy dark:text-white">{item.quantity}x</span>
+                          <span className="text-muted-foreground dark:text-gray-300">{item.product_name_snapshot}</span>
                         </div>
-                        <span className="font-medium">GHS {item.unit_price_snapshot * item.quantity}</span>
+                        <span className="font-medium text-upsa-navy dark:text-upsa-gold">GHS {item.unit_price_snapshot * item.quantity}</span>
                       </div>
                     ))}
                     
-                    <div className="my-4 border-t border-border/50" />
+                    <div className="my-4 border-t border-border/50 dark:border-white/10" />
                     
-                    <div className="flex justify-between items-center font-bold">
+                    <div className="flex justify-between items-center font-bold text-upsa-navy dark:text-white">
                       <span>Total (Pay on Delivery)</span>
-                      <span>GHS {order.total}</span>
+                      <span className="text-upsa-navy dark:text-upsa-gold text-lg">GHS {order.total}</span>
                     </div>
                   </div>
                 </CardContent>

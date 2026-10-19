@@ -146,7 +146,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         
         {/* Left Column: Image Gallery (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm">
+          <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden bg-gray-50 dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 shadow-sm">
             <Image
               src={activeImage}
               alt={product.name}
@@ -163,7 +163,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             <div className="absolute top-4 right-4">
               <button
                 onClick={handleShare}
-                className="bg-white/80 hover:bg-white text-gray-700 p-2.5 rounded-full shadow-sm backdrop-blur-sm transition-all"
+                className="bg-white/80 hover:bg-white dark:bg-[#0C1729]/80 dark:hover:bg-[#0C1729] text-gray-700 dark:text-gray-200 p-2.5 rounded-full shadow-sm backdrop-blur-sm transition-all"
                 title="Share product"
               >
                 <Share2 className="w-4 h-4" />
@@ -180,8 +180,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   onClick={() => setSelectedImageIndex(idx)}
                   className={`relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all ${
                     selectedImageIndex === idx
-                      ? "border-upsa-navy ring-2 ring-upsa-navy/20 scale-95"
-                      : "border-gray-200 opacity-70 hover:opacity-100"
+                      ? "border-upsa-navy dark:border-upsa-gold ring-2 ring-upsa-navy/20 dark:ring-upsa-gold/20 scale-95"
+                      : "border-gray-200 dark:border-white/10 opacity-70 hover:opacity-100"
                   }`}
                 >
                   <Image
@@ -202,26 +202,26 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {/* Category & Status */}
           <div className="flex items-center gap-3">
             {product.category && (
-              <span className="text-xs font-bold text-upsa-navy uppercase tracking-widest bg-upsa-navy/5 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-upsa-navy dark:text-upsa-gold uppercase tracking-widest bg-upsa-navy/5 dark:bg-white/10 px-3 py-1 rounded-full">
                 {product.category.name}
               </span>
             )}
-            <Badge variant="outline" className="text-xs uppercase tracking-wider border-gray-300">
+            <Badge variant="outline" className="text-xs uppercase tracking-wider border-gray-300 dark:border-white/10 dark:text-gray-300">
               Condition: {product.condition ? product.condition.replace('_', ' ') : 'Standard'}
             </Badge>
           </div>
 
           {/* Title */}
           <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-upsa-navy tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-upsa-navy dark:text-white tracking-tight leading-tight">
               {product.name}
             </h1>
           </div>
 
           {/* Pricing */}
-          <div className="p-5 rounded-2xl bg-gray-50/80 border border-gray-100 space-y-1">
+          <div className="p-5 rounded-2xl bg-gray-50/80 dark:bg-[#0C1729] border border-gray-100 dark:border-white/10 space-y-1">
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl sm:text-4xl font-black text-upsa-navy">
+              <span className="text-3xl sm:text-4xl font-black text-upsa-navy dark:text-white">
                 GHS {currentPrice}
               </span>
               {isDiscounted && (
@@ -231,7 +231,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               )}
             </div>
             {isDiscounted && (
-              <p className="text-xs font-semibold text-green-700 flex items-center gap-1">
+              <p className="text-xs font-semibold text-green-700 dark:text-green-400 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" /> Special campus discount active
               </p>
             )}
@@ -241,13 +241,13 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <div className="flex items-center gap-2">
             {inStock ? (
               <span className={`inline-flex items-center text-xs font-bold px-3 py-1 rounded-full ${
-                isLowStock ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
+                isLowStock ? 'bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300' : 'bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300'
               }`}>
                 <Check className="w-3.5 h-3.5 mr-1" />
                 {isLowStock ? `Only ${product.stock_qty} left in stock!` : `In Stock (${product.stock_qty} available)`}
               </span>
             ) : (
-              <span className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-800">
+              <span className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-300">
                 Out of Stock
               </span>
             )}
@@ -257,24 +257,24 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           {inStock && (
             <div className="space-y-4 pt-2">
               <div className="flex items-center gap-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Quantity</span>
-                <div className="flex items-center border border-gray-200 rounded-xl bg-white p-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Quantity</span>
+                <div className="flex items-center border border-gray-200 dark:border-white/10 rounded-xl bg-white dark:bg-[#060D1A] p-1">
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
-                    className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 disabled:opacity-30 transition-colors"
+                    className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 transition-colors"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="w-10 text-center font-bold text-sm text-gray-900">
+                  <span className="w-10 text-center font-bold text-sm text-gray-900 dark:text-white">
                     {quantity}
                   </span>
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.min(product.stock_qty, quantity + 1))}
                     disabled={quantity >= product.stock_qty}
-                    className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 disabled:opacity-30 transition-colors"
+                    className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-30 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -286,7 +286,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   onClick={handleAddToCart}
                   disabled={isAddingToCart || isBuyingNow}
                   variant="outline"
-                  className="flex-1 h-14 rounded-xl text-upsa-navy border-2 border-upsa-navy font-bold hover:bg-upsa-navy hover:text-white transition-all text-base shadow-sm"
+                  className="flex-1 h-14 rounded-xl text-upsa-navy dark:text-white border-2 border-upsa-navy dark:border-white/20 font-bold hover:bg-upsa-navy hover:text-white dark:hover:bg-white/10 transition-all text-base shadow-sm"
                 >
                   {isAddingToCart ? (
                     <>
@@ -304,7 +304,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 <Button
                   onClick={handleBuyNow}
                   disabled={isAddingToCart || isBuyingNow}
-                  className="flex-1 h-14 rounded-xl bg-upsa-gold text-upsa-navy hover:bg-upsa-gold/90 font-bold transition-all text-base shadow-md"
+                  className="flex-1 h-14 rounded-xl bg-upsa-gold text-upsa-navy dark:text-upsa-navy hover:bg-upsa-gold/90 font-bold transition-all text-base shadow-md"
                 >
                   {isBuyingNow ? (
                     <>
@@ -324,23 +324,23 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
           {/* Store / Seller Card */}
           {product.store && (
-            <div className="p-4 rounded-2xl border border-gray-200/80 bg-white flex items-center justify-between gap-4 mt-4">
+            <div className="p-4 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#0C1729] flex items-center justify-between gap-4 mt-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-upsa-navy/10 flex items-center justify-center shrink-0">
-                  <StoreIcon className="w-5 h-5 text-upsa-navy" />
+                <div className="w-11 h-11 rounded-xl bg-upsa-navy/10 dark:bg-upsa-gold/15 flex items-center justify-center shrink-0">
+                  <StoreIcon className="w-5 h-5 text-upsa-navy dark:text-upsa-gold" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900 text-sm leading-tight">
+                  <h4 className="font-bold text-gray-900 dark:text-white text-sm leading-tight">
                     {product.store.name}
                   </h4>
-                  <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
                     <MapPin className="w-3 h-3 text-gray-400" />
                     {product.store.location || "UPSA Campus Seller"}
                   </p>
                 </div>
               </div>
 
-              <Button asChild variant="ghost" size="sm" className="text-xs text-upsa-navy font-bold">
+              <Button asChild variant="ghost" size="sm" className="text-xs text-upsa-navy dark:text-upsa-gold font-bold hover:bg-transparent dark:hover:bg-white/5">
                 <Link href={`/mart/seller/${product.store.slug || product.store.id}`}>
                   View Shop
                 </Link>
@@ -350,16 +350,16 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
           {/* Campus Delivery Guarantee */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <div className="p-3.5 rounded-xl bg-blue-50/50 border border-blue-100 flex items-start gap-2.5">
-              <Truck className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
-              <div className="text-xs text-blue-900">
+            <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 flex items-start gap-2.5">
+              <Truck className="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-blue-900 dark:text-blue-200">
                 <strong className="block font-bold">Campus Delivery Points</strong>
                 Available for pickup at Hostels, Library, and Student Centre.
               </div>
             </div>
-            <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-100 flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-              <div className="text-xs text-emerald-900">
+            <div className="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-emerald-900 dark:text-emerald-200">
                 <strong className="block font-bold">Pay on Delivery</strong>
                 Inspect your item in person on campus before paying.
               </div>
@@ -368,22 +368,22 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
           {/* Description */}
           {product.description && (
-            <div className="pt-6 border-t border-gray-100 space-y-3">
-              <h3 className="text-base font-bold text-upsa-navy">Product Description</h3>
-              <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+            <div className="pt-6 border-t border-gray-100 dark:border-white/10 space-y-3">
+              <h3 className="text-base font-bold text-upsa-navy dark:text-white">Product Description</h3>
+              <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                 {product.description}
               </div>
             </div>
           )}
 
           {/* Report Button */}
-          <div className="pt-4 border-t border-gray-100 flex justify-end">
+          <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex justify-end">
             <button
               type="button"
               onClick={() => setIsReportOpen(true)}
               disabled={isReported}
               className={`text-xs flex items-center gap-1.5 transition-colors ${
-                isReported ? 'text-gray-400 cursor-not-allowed' : 'text-gray-400 hover:text-red-600'
+                isReported ? 'text-gray-400 cursor-not-allowed' : 'text-gray-400 hover:text-red-600 dark:hover:text-red-400'
               }`}
             >
               <Flag className="w-3.5 h-3.5" />

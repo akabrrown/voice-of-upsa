@@ -101,15 +101,15 @@ export default function NewJobForm({
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50/50 flex flex-col items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 max-w-xl text-center">
-          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+      <div className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A] flex flex-col items-center justify-center p-4">
+        <div className="bg-white dark:bg-[#0C1729] rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100 dark:border-white/10 max-w-xl text-center">
+          <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-950/40 rounded-full flex items-center justify-center mb-6">
+            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-2xl font-black text-[#1B2A4A] mb-4">
+          <h2 className="text-2xl font-black text-[#1B2A4A] dark:text-white mb-4">
             {jobId ? "Posting Updated" : "Posting Submitted"}
           </h2>
-          <p className="text-gray-600 mb-8">
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
             {isAdminMode ? (
               <>{jobId ? "Your posting has been successfully updated." : "Your posting has been successfully created and is now live on the public board."}</>
             ) : (
@@ -119,7 +119,7 @@ export default function NewJobForm({
           </p>
           <div className="flex gap-4 justify-center">
             <Link href={isAdminMode ? "/dashboard/admin/jobs" : "/jobs"}>
-              <Button variant="outline" className="rounded-xl border-gray-200">
+              <Button variant="outline" className="rounded-xl border-gray-200 dark:border-white/10 dark:text-gray-200 dark:hover:bg-slate-800">
                 {isAdminMode ? "Back to Admin Jobs" : "Back to Board"}
               </Button>
             </Link>
@@ -135,59 +135,59 @@ export default function NewJobForm({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 pb-20">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A] pb-20">
       <div className="max-w-3xl mx-auto px-4 py-8">
         
-        <Link href={isAdminMode ? "/dashboard/admin/jobs" : "/jobs"} className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#1B2A4A] mb-8 transition-colors">
+        <Link href={isAdminMode ? "/dashboard/admin/jobs" : "/jobs"} className="inline-flex items-center text-sm font-medium text-gray-500 dark:text-slate-400 hover:text-[#1B2A4A] dark:hover:text-white mb-8 transition-colors">
           <ArrowLeft className="h-4 w-4 mr-1" />
           {isAdminMode ? "Back to Admin Jobs" : "Back to Jobs"}
         </Link>
 
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-black text-[#1B2A4A] tracking-tight mb-2">
+          <h1 className="text-3xl md:text-4xl font-black text-[#1B2A4A] dark:text-white tracking-tight mb-2">
             {jobId ? "Edit Job Posting" : isAdminMode ? "Create a Job Posting" : "Post an Opportunity"}
           </h1>
-          <p className="text-gray-500">
+          <p className="text-gray-500 dark:text-slate-400">
             {jobId ? "Update the details of this job posting." : isAdminMode 
               ? "Create a new job posting directly on the board." 
               : "Submit a job, internship, or gig. All postings are reviewed before going public."}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 space-y-8">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-[#0C1729] rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 dark:border-white/10 space-y-8">
           {errorMessage && (
-            <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div role="alert" className="flex items-start gap-3 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 p-4 text-sm text-red-700 dark:text-red-300">
               <AlertCircle className="h-5 w-5 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
           
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-[#1B2A4A] border-b border-gray-100 pb-2">Basic Info</h2>
+            <h2 className="text-xl font-bold text-[#1B2A4A] dark:text-white border-b border-gray-100 dark:border-white/10 pb-2">Basic Info</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Job Title *</label>
-                <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Graphic Design Intern" className="bg-gray-50 border-gray-200" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Job Title *</label>
+                <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Graphic Design Intern" className="bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-white/10 dark:text-gray-200" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Organization Name *</label>
-                <Input required value={formData.organization_name} onChange={e => setFormData({...formData, organization_name: e.target.value})} placeholder="e.g. UPSA SRC" className="bg-gray-50 border-gray-200" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Organization Name *</label>
+                <Input required value={formData.organization_name} onChange={e => setFormData({...formData, organization_name: e.target.value})} placeholder="e.g. UPSA SRC" className="bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-white/10 dark:text-gray-200" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Organization Website</label>
-                <Input value={formData.organization_website} onChange={e => setFormData({...formData, organization_website: e.target.value})} placeholder="e.g. https://example.com" className="bg-gray-50 border-gray-200" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Organization Website</label>
+                <Input value={formData.organization_website} onChange={e => setFormData({...formData, organization_website: e.target.value})} placeholder="e.g. https://example.com" className="bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-white/10 dark:text-gray-200" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Experience Level *</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Experience Level *</label>
                 <select 
                   required 
                   value={formData.experience_level} 
                   onChange={e => setFormData({...formData, experience_level: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                  className="flex h-10 w-full rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-3 py-2 text-sm dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
                 >
                   <option value="entry">Entry Level</option>
                   <option value="mid">Mid Level</option>
@@ -199,12 +199,12 @@ export default function NewJobForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Type *</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Type *</label>
                 <select 
                   required 
                   value={formData.type} 
                   onChange={e => setFormData({...formData, type: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                  className="flex h-10 w-full rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-3 py-2 text-sm dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
                 >
                   <option value="full_time">Full-time</option>
                   <option value="part_time">Part-time</option>
@@ -214,13 +214,13 @@ export default function NewJobForm({
                 </select>
               </div>
               <div className="space-y-2">
-                <label htmlFor="job-category" className="text-sm font-medium text-gray-700">Category *</label>
+                <label htmlFor="job-category" className="text-sm font-medium text-gray-700 dark:text-gray-300">Category *</label>
                 <select
                   id="job-category"
                   required
                   value={formData.category_id}
                   onChange={e => setFormData({...formData, category_id: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                  className="flex h-10 w-full rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-3 py-2 text-sm dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
                 >
                   <option value="" disabled>Select a category</option>
                   {categories.map(category => (
@@ -232,16 +232,16 @@ export default function NewJobForm({
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-[#1B2A4A] border-b border-gray-100 pb-2">Location & Compensation</h2>
+            <h2 className="text-xl font-bold text-[#1B2A4A] dark:text-white border-b border-gray-100 dark:border-white/10 pb-2">Location & Compensation</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Location Type *</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Location Type *</label>
                 <select 
                   required 
                   value={formData.location_type} 
                   onChange={e => setFormData({...formData, location_type: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                  className="flex h-10 w-full rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-3 py-2 text-sm dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
                 >
                   <option value="on_campus">On Campus</option>
                   <option value="accra">Accra</option>
@@ -250,19 +250,19 @@ export default function NewJobForm({
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Specific Location Label</label>
-                <Input value={formData.location_label} onChange={e => setFormData({...formData, location_label: e.target.value})} placeholder="e.g. East Legon" className="bg-gray-50 border-gray-200" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Specific Location Label</label>
+                <Input value={formData.location_label} onChange={e => setFormData({...formData, location_label: e.target.value})} placeholder="e.g. East Legon" className="bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-white/10 dark:text-gray-200" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Compensation Type *</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Compensation Type *</label>
                 <select 
                   required 
                   value={formData.compensation_type} 
                   onChange={e => setFormData({...formData, compensation_type: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                  className="flex h-10 w-full rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-3 py-2 text-sm dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
                 >
                   <option value="paid">Paid</option>
                   <option value="unpaid">Unpaid</option>
@@ -271,51 +271,51 @@ export default function NewJobForm({
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Compensation Details</label>
-                <Input value={formData.compensation_details} onChange={e => setFormData({...formData, compensation_details: e.target.value})} placeholder="e.g. GHS 1000 / month" className="bg-gray-50 border-gray-200" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Compensation Details</label>
+                <Input value={formData.compensation_details} onChange={e => setFormData({...formData, compensation_details: e.target.value})} placeholder="e.g. GHS 1000 / month" className="bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-white/10 dark:text-gray-200" />
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-[#1B2A4A] border-b border-gray-100 pb-2">Description</h2>
+            <h2 className="text-xl font-bold text-[#1B2A4A] dark:text-white border-b border-gray-100 dark:border-white/10 pb-2">Description</h2>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Job Description *</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Job Description *</label>
               <textarea 
                 required 
                 rows={5}
                 value={formData.description} 
                 onChange={e => setFormData({...formData, description: e.target.value})}
                 placeholder="Describe the role and responsibilities..."
-                className="flex w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                className="flex w-full rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-3 py-2 text-sm dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
               />
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Requirements *</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Requirements *</label>
               <textarea 
                 required 
                 rows={4}
                 value={formData.requirements} 
                 onChange={e => setFormData({...formData, requirements: e.target.value})}
                 placeholder="List skills, experience, or student status required..."
-                className="flex w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                className="flex w-full rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-3 py-2 text-sm dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
               />
             </div>
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-[#1B2A4A] border-b border-gray-100 pb-2">How to Apply</h2>
+            <h2 className="text-xl font-bold text-[#1B2A4A] dark:text-white border-b border-gray-100 dark:border-white/10 pb-2">How to Apply</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Application Method *</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Application Method *</label>
                 <select 
                   required 
                   value={formData.apply_method} 
                   onChange={e => setFormData({...formData, apply_method: e.target.value})}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
+                  className="flex h-10 w-full rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-slate-900 px-3 py-2 text-sm dark:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1F7A6C]"
                 >
                   <option value="link">External Link</option>
                   <option value="email">Email</option>
@@ -323,7 +323,7 @@ export default function NewJobForm({
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {formData.apply_method === 'link' ? 'URL Link *' : formData.apply_method === 'email' ? 'Email Address *' : 'Instructions *'}
                 </label>
                 <Input 
@@ -331,32 +331,32 @@ export default function NewJobForm({
                   value={formData.apply_value} 
                   onChange={e => setFormData({...formData, apply_value: e.target.value})} 
                   placeholder={formData.apply_method === 'link' ? 'https://...' : formData.apply_method === 'email' ? 'careers@example.com' : 'e.g. Call this number...'} 
-                  className="bg-gray-50 border-gray-200" 
+                  className="bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-white/10 dark:text-gray-200" 
                 />
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Application Deadline (Optional)</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Application Deadline (Optional)</label>
                 <Input 
                   type="date"
                   value={formData.expires_at} 
                   onChange={e => setFormData({...formData, expires_at: e.target.value})} 
-                  className="bg-gray-50 border-gray-200" 
+                  className="bg-gray-50 dark:bg-slate-900 border-gray-200 dark:border-white/10 dark:text-gray-200" 
                 />
-                <p className="text-xs text-gray-500 mt-1">If left blank, the posting will never expire.</p>
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">If left blank, the posting will never expire.</p>
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-[#1B2A4A] border-b border-gray-100 pb-2">Image (optional)</h2>
-            <p className="text-sm text-gray-500">Add a logo, flyer, or poster. JPG, PNG or WEBP, up to 5MB.</p>
+            <h2 className="text-xl font-bold text-[#1B2A4A] dark:text-white border-b border-gray-100 dark:border-white/10 pb-2">Image (optional)</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400">Add a logo, flyer, or poster. JPG, PNG or WEBP, up to 5MB.</p>
             {formData.image_url ? (
               <div className="relative inline-block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={formData.image_url} alt="Uploaded posting visual" className="max-h-64 rounded-2xl border border-gray-200 object-contain bg-gray-50" />
+                <img src={formData.image_url} alt="Uploaded posting visual" className="max-h-64 rounded-2xl border border-gray-200 dark:border-white/10 object-contain bg-gray-50 dark:bg-slate-800" />
                 <button
                   type="button"
                   aria-label="Remove image"
@@ -369,7 +369,7 @@ export default function NewJobForm({
             ) : (
               <label
                 htmlFor="job-image"
-                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500 transition-colors hover:border-[#1F7A6C] hover:text-[#1F7A6C]"
+                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 px-6 py-10 text-center text-sm text-gray-500 dark:text-slate-400 transition-colors hover:border-[#1F7A6C] dark:hover:border-[#1F7A6C] hover:text-[#1F7A6C]"
               >
                 {isUploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <ImagePlus className="h-6 w-6" />}
                 <span className="font-medium">{isUploading ? "Uploading…" : "Click to choose an image"}</span>
@@ -384,10 +384,10 @@ export default function NewJobForm({
               disabled={isUploading}
               onChange={handleImageSelect}
             />
-            {imageError && <p role="alert" className="text-sm text-red-600">{imageError}</p>}
+            {imageError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{imageError}</p>}
           </div>
 
-          <div className="pt-6 border-t border-gray-100">
+          <div className="pt-6 border-t border-gray-100 dark:border-white/10">
             <Button disabled={isSubmitting || isUploading} type="submit" className="w-full md:w-auto md:px-12 bg-[#1F7A6C] hover:bg-[#155A4F] text-white rounded-xl py-6 text-lg font-bold shadow-md transition-all">
               {isSubmitting ? (
                 <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> {jobId ? "Saving..." : isAdminMode ? "Publishing..." : "Submitting..."}</>

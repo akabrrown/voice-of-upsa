@@ -26,9 +26,9 @@ export default async function GallerySubmitPage({ params }: { params: { slug: st
   if (!album.submissions_open) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-24 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Submissions Closed</h1>
-        <p className="text-gray-600 mb-8">This album is no longer accepting student photo submissions.</p>
-        <a href={`/gallery/${album.slug}`} className="text-upsa-navy font-semibold hover:underline">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Submissions Closed</h1>
+        <p className="text-gray-600 dark:text-slate-400 mb-8">This album is no longer accepting student photo submissions.</p>
+        <a href={`/gallery/${album.slug}`} className="text-upsa-navy dark:text-upsa-gold font-semibold hover:underline">
           &larr; Back to Album
         </a>
       </div>
@@ -38,10 +38,10 @@ export default async function GallerySubmitPage({ params }: { params: { slug: st
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-10 text-center">
-        <h1 className="text-3xl md:text-4xl font-black text-[#1B2A4A] mb-4 tracking-tight">
+        <h1 className="text-3xl md:text-4xl font-black text-[#1B2A4A] dark:text-white mb-4 tracking-tight">
           Submit to {album.title}
         </h1>
-        <p className="text-gray-600 text-lg">
+        <p className="text-gray-600 dark:text-slate-400 text-lg">
           Share your best shots from this event with the campus community.
         </p>
       </div>

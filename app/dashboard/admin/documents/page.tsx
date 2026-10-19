@@ -128,17 +128,17 @@ export default function DocumentsAdminPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-upsa-navy flex items-center">
+          <h1 className="text-3xl font-black text-upsa-navy dark:text-white flex items-center">
             <FolderOpen className="mr-3 h-8 w-8 text-upsa-gold" />
             Documents & Reports
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 dark:text-slate-400 mt-1">
             Manage official documents, annual reports, and resources available to the public.
           </p>
         </div>
         <Button 
           onClick={() => setIsUploadModalOpen(true)}
-          className="bg-upsa-navy hover:bg-upsa-navy/90 text-white font-bold shadow-md hover:shadow-lg transition-all"
+          className="bg-upsa-navy hover:bg-upsa-navy/90 dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-amber-400 font-bold shadow-md hover:shadow-lg transition-all"
         >
           <Plus className="mr-2 h-4 w-4" />
           Upload Document
@@ -146,51 +146,51 @@ export default function DocumentsAdminPage() {
       </div>
 
       {loading ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 p-6">
           <TableShadowLoader rows={5} hasSearch={false} />
         </div>
       ) : documents.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
-          <FolderOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-upsa-navy mb-2">No documents found</h3>
-          <p className="text-gray-500 mb-6">Upload your first official document or report to display it on the website.</p>
-          <Button onClick={() => setIsUploadModalOpen(true)} variant="outline">
+        <div className="text-center py-20 bg-white dark:bg-[#0C1729] rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+          <FolderOpen className="h-12 w-12 text-gray-300 dark:text-slate-600 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-upsa-navy dark:text-white mb-2">No documents found</h3>
+          <p className="text-gray-500 dark:text-slate-400 mb-6">Upload your first official document or report to display it on the website.</p>
+          <Button onClick={() => setIsUploadModalOpen(true)} variant="outline" className="dark:bg-[#060D1A] dark:border-white/10 dark:text-slate-200">
             Upload Now
           </Button>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-gray-50 dark:bg-white/[0.02] border-b border-gray-100 dark:border-white/10">
               <tr>
-                <th className="px-6 py-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Document Name</th>
-                <th className="px-6 py-4 font-bold text-gray-500 text-xs uppercase tracking-wider hidden md:table-cell">Description</th>
-                <th className="px-6 py-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Type & Size</th>
-                <th className="px-6 py-4 font-bold text-gray-500 text-xs uppercase tracking-wider text-right">Actions</th>
+                <th className="px-6 py-4 font-bold text-gray-500 dark:text-slate-400 text-xs uppercase tracking-wider">Document Name</th>
+                <th className="px-6 py-4 font-bold text-gray-500 dark:text-slate-400 text-xs uppercase tracking-wider hidden md:table-cell">Description</th>
+                <th className="px-6 py-4 font-bold text-gray-500 dark:text-slate-400 text-xs uppercase tracking-wider">Type & Size</th>
+                <th className="px-6 py-4 font-bold text-gray-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-white/5">
               {documents.map((doc) => (
-                <tr key={doc.id} className="hover:bg-gray-50/50 transition-colors">
+                <tr key={doc.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      <div className="p-2 bg-gray-50 rounded-lg mr-4">
+                      <div className="p-2 bg-gray-50 dark:bg-white/5 rounded-lg mr-4">
                         <FileText className="h-5 w-5 text-upsa-gold" />
                       </div>
-                      <div className="font-bold text-upsa-navy max-w-xs truncate">
+                      <div className="font-bold text-upsa-navy dark:text-white max-w-xs truncate">
                         {doc.title}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 hidden md:table-cell max-w-xs truncate">
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-slate-400 hidden md:table-cell max-w-xs truncate">
                     {doc.description || "-"}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold">
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-slate-300 rounded text-xs font-bold">
                         {doc.file_type}
                       </span>
-                      <span className="text-xs text-gray-500 font-medium">
+                      <span className="text-xs text-gray-500 dark:text-slate-400 font-medium">
                         {(doc.file_size_bytes / 1024 / 1024).toFixed(2)} MB
                       </span>
                     </div>
@@ -201,14 +201,14 @@ export default function DocumentsAdminPage() {
                         href={doc.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 text-gray-400 hover:text-upsa-navy hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-upsa-navy dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
                         title="Download"
                       >
                         <Download className="h-4 w-4" />
                       </a>
                       <button
                         onClick={() => setDocumentToDelete(doc)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
                         title="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -225,21 +225,21 @@ export default function DocumentsAdminPage() {
       {/* Upload Document Modal */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-lg w-full p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 max-w-lg w-full p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-2xl font-black text-upsa-navy flex items-center gap-2">
+                <h2 className="text-2xl font-black text-upsa-navy dark:text-white flex items-center gap-2">
                   <UploadCloud className="h-6 w-6 text-upsa-gold" />
                   Upload Document
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
                   Upload an official publication, annual report, or resource (PDF, DOCX, XLSX up to 100MB).
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsUploadModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -247,7 +247,7 @@ export default function DocumentsAdminPage() {
 
             <form onSubmit={handleUpload} className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-upsa-navy">
+                <label className="text-sm font-bold text-upsa-navy dark:text-white">
                   Document Title <span className="text-red-500">*</span>
                 </label>
                 <Input 
@@ -255,23 +255,23 @@ export default function DocumentsAdminPage() {
                   placeholder="e.g., Annual Financial Report 2026"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="border-gray-200 focus:border-upsa-navy"
+                  className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-upsa-navy dark:focus:border-upsa-gold"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-upsa-navy">Description (Optional)</label>
+                <label className="text-sm font-bold text-upsa-navy dark:text-white">Description (Optional)</label>
                 <Textarea 
                   placeholder="Brief description of the document or publication..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="border-gray-200 focus:border-upsa-navy"
+                  className="bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:border-upsa-navy dark:focus:border-upsa-gold"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-upsa-navy">
+                <label className="text-sm font-bold text-upsa-navy dark:text-white">
                   Select File <span className="text-red-500">*</span>
                 </label>
                 <Input 
@@ -279,38 +279,39 @@ export default function DocumentsAdminPage() {
                   type="file"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.csv"
-                  className="cursor-pointer border-gray-200"
+                  className="cursor-pointer bg-white dark:bg-[#060D1A] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white file:dark:text-slate-200"
                 />
                 {file && (
                   <div className="space-y-1 mt-1">
-                    <p className="text-xs text-green-600 font-semibold">
+                    <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
                       Selected: {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
                     </p>
                     {file.size > 50 * 1024 * 1024 && (
-                      <p className="text-xs text-amber-600 font-medium">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                         ⚠️ File exceeds 50MB. If your Supabase storage is on the Free tier (50MB cap), please compress this document before uploading.
                       </p>
                     )}
                   </div>
                 )}
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-slate-500">
                   Supported formats: PDF, DOC, DOCX, XLS, XLSX, CSV (Max 100MB).
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-white/10">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsUploadModalOpen(false)}
                   disabled={isUploading}
+                  className="dark:bg-transparent dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isUploading}
-                  className="bg-upsa-navy hover:bg-upsa-navy/90 text-white font-bold"
+                  className="bg-upsa-navy hover:bg-upsa-navy/90 dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-amber-400 font-bold"
                 >
                   {isUploading ? (
                     <>
@@ -330,19 +331,19 @@ export default function DocumentsAdminPage() {
       {/* Delete Confirmation Modal */}
       {documentToDelete && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 text-red-600 mb-4">
-              <div className="p-2 rounded-xl bg-red-50">
+          <div className="bg-white dark:bg-[#0C1729] rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400 mb-4">
+              <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/40">
                 <AlertTriangle className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Delete Document</h3>
-                <p className="text-xs text-gray-500">This action cannot be undone.</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Delete Document</h3>
+                <p className="text-xs text-gray-500 dark:text-slate-400">This action cannot be undone.</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 mb-6">
-              Are you sure you want to permanently delete <strong className="text-upsa-navy">"{documentToDelete.title}"</strong>? It will no longer be available on the public website.
+            <p className="text-sm text-gray-600 dark:text-slate-300 mb-6">
+              Are you sure you want to permanently delete <strong className="text-upsa-navy dark:text-upsa-gold">"{documentToDelete.title}"</strong>? It will no longer be available on the public website.
             </p>
 
             <div className="flex justify-end gap-3">
@@ -350,6 +351,7 @@ export default function DocumentsAdminPage() {
                 variant="outline"
                 onClick={() => setDocumentToDelete(null)}
                 disabled={isDeleting}
+                className="dark:bg-transparent dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
               >
                 Cancel
               </Button>

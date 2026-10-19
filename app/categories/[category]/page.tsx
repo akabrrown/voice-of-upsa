@@ -228,12 +228,12 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   return (
     <>
       <Navbar />
-      <main className="flex-1 bg-white">
+      <main className="flex-1 bg-white dark:bg-[#060D1A] transition-colors duration-300">
         {/* Category Header */}
-        <section className="relative bg-upsa-navy text-white py-12 overflow-hidden">
+        <section className="relative bg-upsa-navy dark:bg-[#040810] text-white py-12 overflow-hidden border-b border-transparent dark:border-white/10">
           {/* Cover background layout */}
           <div className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-overlay" style={{ backgroundImage: `url(${category.image})` }} />
-          <div className="absolute inset-0 bg-gradient-to-r from-upsa-navy via-upsa-navy/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-upsa-navy via-upsa-navy/90 to-transparent dark:from-[#040810] dark:via-[#040810]/95 dark:to-transparent" />
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-upsa-gold via-yellow-400 to-upsa-gold" />
           
           <div className="container relative mx-auto px-4 max-w-5xl">

@@ -97,7 +97,7 @@ export function PollAdminActions({ poll }: PollAdminActionsProps) {
         size="icon"
         asChild
         title="View Live Results"
-        className="text-gray-400 hover:text-upsa-navy"
+        className="text-gray-400 dark:text-slate-500 hover:text-upsa-navy dark:hover:text-upsa-gold hover:bg-gray-100 dark:hover:bg-white/10"
       >
         <Link href={`/polls/${poll.slug}`} target="_blank">
           <BarChart2 className="w-4 h-4" />
@@ -109,7 +109,7 @@ export function PollAdminActions({ poll }: PollAdminActionsProps) {
         size="icon"
         asChild
         title="Edit Poll"
-        className="text-gray-400 hover:text-amber-600"
+        className="text-gray-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-gray-100 dark:hover:bg-white/10"
       >
         <Link href={`/dashboard/admin/polls/${poll.id}/edit`}>
           <Edit className="w-4 h-4" />
@@ -121,35 +121,35 @@ export function PollAdminActions({ poll }: PollAdminActionsProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-400 hover:text-gray-700"
+            className="text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-white/10"
             disabled={isUpdatingStatus}
           >
             {isUpdatingStatus ? (
-              <Loader2 className="w-4 h-4 animate-spin text-upsa-navy" />
+              <Loader2 className="w-4 h-4 animate-spin text-upsa-navy dark:text-upsa-gold" />
             ) : (
               <MoreVertical className="w-4 h-4" />
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48 bg-white">
+        <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10">
           <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer">
-            <Copy className="w-4 h-4 mr-2 text-gray-500" />
+            <Copy className="w-4 h-4 mr-2 text-gray-500 dark:text-slate-400" />
             Copy Public Link
           </DropdownMenuItem>
 
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link href={`/polls/${poll.slug}`} target="_blank">
-              <ExternalLink className="w-4 h-4 mr-2 text-gray-500" />
+              <ExternalLink className="w-4 h-4 mr-2 text-gray-500 dark:text-slate-400" />
               Open Live Page
             </Link>
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className="dark:bg-white/10" />
 
           {poll.status === "draft" && (
             <DropdownMenuItem
               onClick={() => handleStatusChange("published")}
-              className="cursor-pointer text-green-700 focus:text-green-800 focus:bg-green-50"
+              className="cursor-pointer text-green-700 dark:text-green-400 focus:text-green-800 dark:focus:text-green-300 focus:bg-green-50 dark:focus:bg-green-950/30"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Publish Now
@@ -159,7 +159,7 @@ export function PollAdminActions({ poll }: PollAdminActionsProps) {
           {poll.status === "published" && (
             <DropdownMenuItem
               onClick={() => handleStatusChange("closed")}
-              className="cursor-pointer text-amber-700 focus:text-amber-800 focus:bg-amber-50"
+              className="cursor-pointer text-amber-700 dark:text-amber-400 focus:text-amber-800 dark:focus:text-amber-300 focus:bg-amber-50 dark:focus:bg-amber-950/30"
             >
               <XCircle className="w-4 h-4 mr-2" />
               Close Poll
@@ -169,18 +169,18 @@ export function PollAdminActions({ poll }: PollAdminActionsProps) {
           {poll.status === "closed" && (
             <DropdownMenuItem
               onClick={() => handleStatusChange("published")}
-              className="cursor-pointer text-green-700 focus:text-green-800 focus:bg-green-50"
+              className="cursor-pointer text-green-700 dark:text-green-400 focus:text-green-800 dark:focus:text-green-300 focus:bg-green-50 dark:focus:bg-green-950/30"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Re-open Poll
             </DropdownMenuItem>
           )}
 
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className="dark:bg-white/10" />
 
           <DropdownMenuItem
             onClick={() => setDeleteDialogOpen(true)}
-            className="cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
+            className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-300 focus:bg-red-50 dark:focus:bg-red-950/30"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete Poll
@@ -189,20 +189,20 @@ export function PollAdminActions({ poll }: PollAdminActionsProps) {
       </DropdownMenu>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-white">
+        <DialogContent className="sm:max-w-md bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-red-600 flex items-center gap-2">
+            <DialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
               <Trash2 className="w-5 h-5" />
               Delete Campus Poll
             </DialogTitle>
-            <DialogDescription className="text-gray-600 pt-2">
+            <DialogDescription className="text-gray-600 dark:text-slate-300 pt-2">
               Are you sure you want to delete this poll?
               <br />
-              <strong className="text-gray-900 block mt-2 text-sm line-clamp-2">
+              <strong className="text-gray-900 dark:text-white block mt-2 text-sm line-clamp-2">
                 &ldquo;{poll.question}&rdquo;
               </strong>
               {poll.total_votes > 0 && (
-                <span className="block mt-2 text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+                <span className="block mt-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 p-2 rounded border border-amber-200 dark:border-amber-800/40">
                   This poll has recorded {poll.total_votes} {poll.total_votes === 1 ? "vote" : "votes"}.
                   Soft-deleting will remove it from the public listing while preserving audit records.
                 </span>
@@ -213,6 +213,7 @@ export function PollAdminActions({ poll }: PollAdminActionsProps) {
             <Button
               type="button"
               variant="outline"
+              className="border-gray-200 dark:border-white/10 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-white/5"
               onClick={() => setDeleteDialogOpen(false)}
               disabled={isDeleting}
             >
