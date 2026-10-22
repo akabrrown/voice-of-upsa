@@ -39,13 +39,13 @@ export default async function UserHistoryPage() {
         title,
         slug,
         excerpt,
-        featured_image,
+        cover_image_url,
         category_id,
         published_at,
-        reading_time,
+        reading_time_minutes,
         categories (
+          id,
           name,
-          color,
           slug
         )
       )
@@ -89,7 +89,7 @@ export default async function UserHistoryPage() {
               excerpt={article.excerpt}
               category={article.categories?.name || "Uncategorized"}
               date={new Date(article.published_at || article.created_at || Date.now()).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              image={article.featured_image || "/placeholder.jpg"}
+              image={article.cover_image_url || "/campus.png"}
               slug={article.slug}
             />
           ))}

@@ -39,6 +39,8 @@ export interface AdRecord {
   contact_phone?: string | null;
   banner_image_url?: string | null;
   creative_url?: string | null;
+  featured_image?: string | null;
+  image_url?: string | null;
   target_url?: string | null;
   ad_placement?: string | null;
   ad_type?: string | null;
@@ -85,7 +87,7 @@ export function AdDetailModal({ ad, isOpen, onClose }: AdDetailModalProps) {
 
   if (!ad) return null;
 
-  const imageSrc = ad.banner_image_url || ad.creative_url;
+  const imageSrc = ad.banner_image_url || ad.creative_url || ad.featured_image || ad.image_url;
   const safeTargetUrl = isSafeUrl(ad.target_url) ? ad.target_url!.trim() : null;
   const placementName = ad.ad_placement || ad.ad_type || "Campus Spotlight";
   const tierName = ad.ad_tier || ad.package_tier || "Featured Partner";

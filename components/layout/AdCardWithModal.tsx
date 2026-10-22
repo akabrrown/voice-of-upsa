@@ -14,7 +14,7 @@ interface AdCardWithModalProps {
 export function AdCardWithModal({ ad, type, className }: AdCardWithModalProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const imageToDisplay = ad.banner_image_url || ad.creative_url;
+  const imageToDisplay = ad.banner_image_url || ad.creative_url || ad.featured_image || ad.image_url;
   if (!imageToDisplay) return null;
 
   const aspectRatios = {

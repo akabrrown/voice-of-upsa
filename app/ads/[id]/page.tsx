@@ -18,6 +18,7 @@ import {
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getSiteUrl } from "@/lib/auth/urls";
+import { getOptimizedOgImage } from "@/lib/utils/og-image";
 import { AdShareSection } from "@/components/ads/AdShareSection";
 import { format } from "date-fns";
 
@@ -35,20 +36,6 @@ function isSafeUrl(url?: string | null): boolean {
   } catch {
     return false;
   }
-}
-
-function getAbsoluteImageUrl(rawImage?: string | null, siteUrl: string = ""): string {
-  if (!rawImage || typeof rawImage !== "string") {
-    return `${siteUrl}/images/default-og.png`;
-  }
-  const trimmed = rawImage.trim();
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed;
-  }
-  if (trimmed.startsWith("/")) {
-    return `${siteUrl}${trimmed}`;
-  }
-  return `${siteUrl}/images/default-og.png`;
 }
 
 function formatDateSafe(dateStr?: string | null): string | null {
@@ -86,8 +73,8 @@ export async function generateMetadata({ params }: AdDetailsProps): Promise<Meta
     ad.product_description?.trim() ||
     `Official campus advertisement from ${ad.company_name} on Voice of UPSA. Discover student offers, discounts, and verified campus partner services.`;
   
-  const rawImage = ad.banner_image_url || ad.creative_url;
-  const ogImage = getAbsoluteImageUrl(rawImage, siteUrl);
+  const rawImage = ad.banner_image_url || ad.creative_url || (ad as any).featured_image || (ad as any).image_url;
+  const ogImage = getOptimizedOgImage(rawImage, title, siteUrl);
 
   return {
     title: `${title} - ${ad.company_name} | Voice of UPSA`,
@@ -104,10 +91,12 @@ export async function generateMetadata({ params }: AdDetailsProps): Promise<Meta
       type: "website",
       images: [
         {
-          url: ogImage,
-          width: 1200,
-          height: 630,
+          url: ogImage.url,
+          secureUrl: ogImage.secureUrl,
+          width: ogImage.width,
+          height: ogImage.height,
           alt: `${title} - ${ad.company_name}`,
+          type: ogImage.type,
         },
       ],
     },
@@ -115,9 +104,15 @@ export async function generateMetadata({ params }: AdDetailsProps): Promise<Meta
       card: "summary_large_image",
       title: `${title} - ${ad.company_name}`,
       description,
-      images: [ogImage],
+      images: [ogImage.url],
       site: "@voiceofupsa",
       creator: "@voiceofupsa",
+    },
+    other: {
+      "og:image:secure_url": ogImage.secureUrl,
+      "og:image:type": ogImage.type,
+      "og:image:width": String(ogImage.width),
+      "og:image:height": String(ogImage.height),
     },
   };
 }
@@ -155,7 +150,7 @@ export default async function AdDetailsPage({ params }: AdDetailsProps) {
   }
 
   const safeTargetUrl = isSafeUrl(ad.target_url) ? ad.target_url.trim() : null;
-  const imageToDisplay = ad.banner_image_url || ad.creative_url;
+  const imageToDisplay = ad.banner_image_url || ad.creative_url || (ad as any).featured_image || (ad as any).image_url;
   const title = ad.product_name || ad.company_name;
   const placementName = ad.ad_placement || ad.ad_type || "Campus Spotlight";
   const siteUrl = getSiteUrl();

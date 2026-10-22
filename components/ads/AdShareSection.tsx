@@ -46,11 +46,11 @@ export function AdShareSection({
     ? `${cleanDescription.slice(0, 177)}...`
     : cleanDescription;
 
-  const fullShareText = `📢 ${title} (${companyName})\n\n${descriptionSnippet ? `${descriptionSnippet}\n\n` : ""}🔗 Check it out on Voice of UPSA: ${resolvedUrl}`;
+  const fullShareText = `📢 ${title} (${companyName})\n\n${descriptionSnippet ? `${descriptionSnippet}\n\n` : ""}${resolvedUrl}`;
 
   const encodedUrl = encodeURIComponent(resolvedUrl);
   const encodedWhatsappText = encodeURIComponent(
-    `*${title}* (${companyName})\n\n${descriptionSnippet ? `${descriptionSnippet}\n\n` : ""}👉 ${resolvedUrl}`
+    `*${title}* (${companyName})\n\n${descriptionSnippet ? `${descriptionSnippet}\n\n` : ""}${resolvedUrl}`
   );
   const encodedTwitterText = encodeURIComponent(
     `${title} by ${companyName} on @voiceofupsa ${descriptionSnippet ? `— ${descriptionSnippet.slice(0, 90)}...` : ""}`
