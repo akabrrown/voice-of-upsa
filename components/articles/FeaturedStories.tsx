@@ -110,10 +110,14 @@ export async function FeaturedStories() {
                 {mainArticle.excerpt}
               </p>
               
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs md:text-sm font-medium text-gray-300">
-                <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-upsa-gold" /> {mainArticle.date}</span>
-
-                <span className="flex items-center gap-2 text-white border-l border-white/20 pl-6">By {mainArticle.author}</span>
+              <div className="flex flex-wrap items-center justify-between gap-y-4 pt-4 border-t border-white/10">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs md:text-sm font-medium text-slate-200">
+                  <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-upsa-gold" /> {mainArticle.date}</span>
+                  <span className="flex items-center gap-2 text-white border-l border-white/20 pl-6">By {mainArticle.author}</span>
+                </div>
+                <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-upsa-gold text-upsa-navy text-xs md:text-sm font-black uppercase tracking-wider group-hover:bg-white transition-all shadow-md">
+                  Read Feature <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </span>
               </div>
             </div>
           </Link>
@@ -139,18 +143,21 @@ export async function FeaturedStories() {
                   <div className="absolute inset-0 ring-1 ring-inset ring-black/10 dark:ring-white/10 rounded-2xl pointer-events-none" />
                 </div>
                 
-                <div className="flex flex-col justify-center py-1">
+                <div className="flex flex-col justify-center py-1 flex-1 min-w-0">
                   <span className="text-[11px] font-bold text-upsa-gold uppercase tracking-widest mb-1">
                     {art.category}
                   </span>
-                  <h4 className="text-base md:text-lg font-bold text-upsa-navy dark:text-white leading-tight group-hover:text-upsa-gold transition-colors duration-200 line-clamp-3 mb-3">
+                  <h4 className="text-base md:text-lg font-bold text-upsa-navy dark:text-white leading-tight group-hover:text-upsa-gold transition-colors duration-200 line-clamp-2 mb-2">
                     {art.title}
                   </h4>
                   
-                  <div className="flex items-center gap-4 text-xs font-semibold text-gray-400 dark:text-gray-400">
-                    <span>{art.date}</span>
-                    <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-white/20"></span>
-
+                  <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      {art.date}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-upsa-gold group-hover:translate-x-1 transition-transform">
+                      Read <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
                   </div>
                 </div>
               </Link>

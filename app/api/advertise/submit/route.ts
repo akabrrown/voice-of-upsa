@@ -12,20 +12,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const { data: ad, error } = await supabase
+    const basePayload: Record<string, any> = {
+      company_name,
+      contact_name: company_name,
+      contact_email,
+      contact_phone: contact_phone || null,
+      target_url: target_url || null,
+      package_tier: ad_tier,
+      ad_type: ad_placement,
+      ad_placement,
+      creative_url: banner_image_url || null,
+      status: "pending"
+    };
+
+    let { data: ad, error } = await supabase
       .from("advertisements")
       .insert({
-        company_name,
-        contact_email,
-        contact_phone,
+        ...basePayload,
         ad_tier,
-        ad_placement,
-        target_url,
-        banner_image_url,
-        status: "pending"
+        banner_image_url: banner_image_url || null,
       })
       .select()
       .single();
+
+    if (error && (error.message?.includes("ad_tier") || error.message?.includes("banner_image_url") || (error as any).code === "PGRST204")) {
+      const fallback = await supabase
+        .from("advertisements")
+        .insert(basePayload)
+        .select()
+        .single();
+      ad = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) throw error;
 

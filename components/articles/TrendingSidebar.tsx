@@ -34,7 +34,7 @@ export async function TrendingSidebar() {
           {trendingArticles && trendingArticles.length > 0 ? (
             trendingArticles.map((article, index) => (
               <div key={article.id} className="flex space-x-4 items-start group">
-                <span className="text-3xl font-black text-gray-200 dark:text-gray-700 group-hover:text-upsa-gold dark:group-hover:text-upsa-gold transition-colors leading-none">
+                <span className="text-3xl font-black text-slate-300 dark:text-slate-700 group-hover:text-upsa-gold dark:group-hover:text-upsa-gold transition-colors leading-none select-none">
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 <div className="space-y-1">
@@ -46,24 +46,24 @@ export async function TrendingSidebar() {
                       {article.title}
                     </h3>
                   </Link>
-                  <div className="flex items-center text-[10px] text-gray-400 font-medium">
-                    <Eye className="h-3 w-3 mr-1" />
+                  <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    <Eye className="h-3.5 w-3.5 mr-1" />
                     {article.view_count || 0} views
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-gray-400 italic text-sm">No trending articles yet.</p>
+            <p className="text-slate-500 dark:text-slate-400 italic text-sm">No trending articles yet.</p>
           )}
         </div>
       </div>
 
       {/* Newsletter Signup */}
-      <div className="bg-upsa-navy dark:bg-[#0A1628] rounded-xl p-6 text-white overflow-hidden relative shadow-lg border border-transparent dark:border-white/10">
-        <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-upsa-gold rounded-full opacity-10" />
-        <h3 className="text-lg font-bold mb-1 relative z-10">Stay In The Loop!</h3>
-        <p className="text-xs text-gray-300 mb-4 relative z-10 leading-relaxed">Subscribe to the official Voice of UPSA weekly digest for academics, SRC news, and campus events.</p>
+      <div className="bg-upsa-navy dark:bg-[#0A1628] rounded-2xl p-6 text-white overflow-hidden relative shadow-lg border border-white/10">
+        <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-upsa-gold rounded-full opacity-10 pointer-events-none" />
+        <h3 className="text-lg font-bold mb-1 relative z-10 text-white">Stay In The Loop!</h3>
+        <p className="text-xs text-slate-300 mb-4 relative z-10 leading-relaxed">Subscribe to the official Voice of UPSA weekly digest for academics, SRC news, and campus events.</p>
         <NewsletterForm />
       </div>
     </aside>

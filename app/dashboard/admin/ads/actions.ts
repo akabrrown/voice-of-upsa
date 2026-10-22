@@ -28,10 +28,19 @@ export async function updateAdStatus(adId: string, newStatus: "pending" | "appro
     updateData.admin_notes = adminNotes;
   }
 
-  const { error } = await supabase
+  let { error } = await supabase
     .from("advertisements")
     .update(updateData)
     .eq("id", adId);
+
+  // If admin_notes is not yet in the schema cache, fallback to updating status only
+  if (error && (error.message?.includes("admin_notes") || (error as any).code === "PGRST204")) {
+    const fallback = await supabase
+      .from("advertisements")
+      .update({ status: newStatus })
+      .eq("id", adId);
+    error = fallback.error;
+  }
 
   if (error) {
     return { error: error.message };

@@ -15,15 +15,20 @@ interface Advertisement {
   id: string;
   company_name: string;
   contact_email: string;
-  contact_phone: string | null;
-  ad_tier: string;
-  ad_placement: string;
-  banner_image_url: string | null;
-  target_url: string | null;
-  status: "pending" | "approved" | "rejected" | "active" | "completed";
-  start_date: string | null;
-  end_date: string | null;
-  admin_notes: string | null;
+  contact_phone?: string | null;
+  ad_tier?: string | null;
+  package_tier?: string | null;
+  ad_placement?: string;
+  ad_type?: string;
+  banner_image_url?: string | null;
+  creative_url?: string | null;
+  target_url?: string | null;
+  status: "pending" | "approved" | "rejected" | "active" | "completed" | "expired";
+  start_date?: string | null;
+  starts_at?: string | null;
+  end_date?: string | null;
+  ends_at?: string | null;
+  admin_notes?: string | null;
   created_at: string;
 }
 
@@ -158,7 +163,7 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                         </div>
                         <div>
                           <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Placement</span>
-                          <span className="capitalize">{ad.ad_placement}</span>
+                          <span className="capitalize">{ad.ad_placement || ad.ad_type || "Sidebar"}</span>
                         </div>
                         <div>
                           <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Submitted</span>

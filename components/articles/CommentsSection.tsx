@@ -404,13 +404,14 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                 placeholder="What are your thoughts on this story? Share your perspective..."
                 value={newCommentText}
                 onChange={(e) => setNewCommentText(e.target.value)}
-                className="w-full min-h-[100px] rounded-2xl border-gray-200 dark:border-white/10 bg-white dark:bg-[#080F1E] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-upsa-navy dark:focus:border-upsa-gold focus:ring-1 focus:ring-upsa-navy/20 dark:focus:ring-upsa-gold/20 p-4 text-sm"
+                aria-label="Write your comment on this story"
+                className="w-full min-h-[100px] rounded-2xl border-gray-200 dark:border-white/10 bg-white dark:bg-[#080F1E] text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-upsa-navy dark:focus:border-upsa-gold focus:ring-1 focus:ring-upsa-navy/20 dark:focus:ring-upsa-gold/20 p-4 text-sm"
               />
               <div className="flex justify-end">
                 <Button
                   onClick={() => handlePostComment(null)}
                   disabled={isPosting || !newCommentText.trim()}
-                  className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-white font-bold rounded-xl px-6 py-2 transition-all duration-300 shadow-sm"
+                  className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-white font-bold rounded-xl px-6 h-11 transition-all duration-300 shadow-sm"
                 >
                   {isPosting ? "Posting..." : "Post Comment"}
                 </Button>
@@ -431,7 +432,7 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Commenting as</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">Commenting as</span>
                       <span className="text-sm font-bold text-upsa-navy dark:text-white">
                         {guestProfile.guestName}
                       </span>
@@ -442,7 +443,7 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                         {guestProfile.guestBadge}
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                       <Lock className="h-3 w-3 text-emerald-600 dark:text-emerald-400 inline" /> Device locked
                       (recognized automatically on return)
                     </p>
@@ -455,7 +456,7 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                     setIsEditingGuestName(true);
                     setGuestNameInput(guestProfile.guestName);
                   }}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-upsa-navy dark:text-gray-400 dark:hover:text-upsa-gold px-2.5 py-1 rounded-lg hover:bg-gray-200/50 dark:hover:bg-white/5 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-upsa-navy dark:text-slate-300 dark:hover:text-upsa-gold px-3 py-1.5 rounded-lg hover:bg-gray-200/50 dark:hover:bg-white/5 transition-colors"
                 >
                   <Edit2 className="h-3.5 w-3.5" /> Edit Name
                 </button>
@@ -464,12 +465,12 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
               /* First time or editing name */
               <div className="space-y-3 pb-3 border-b border-gray-200/60 dark:border-white/5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-upsa-navy dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
+                  <label htmlFor="guest-display-name" className="text-xs font-bold text-upsa-navy dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
                     <User className="h-3.5 w-3.5 text-upsa-gold" />
                     {guestProfile ? "Update Your Display Name" : "Enter Your Display Name"}
                   </label>
                   {previewColor && (
-                    <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                       Your Discriminator:{" "}
                       <strong className="text-amber-600 dark:text-amber-400">
                         {previewDiscriminator}
@@ -481,12 +482,14 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
                     <Input
+                      id="guest-display-name"
                       type="text"
                       placeholder="e.g., Kofi Mensah or Akua"
                       maxLength={50}
                       value={guestNameInput}
                       onChange={(e) => setGuestNameInput(e.target.value)}
-                      className="rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm h-10 px-3"
+                      aria-label="Your display name for comments"
+                      className="rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm h-11 px-3.5"
                     />
                   </div>
                   {guestProfile && (
@@ -495,7 +498,7 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                         type="button"
                         size="sm"
                         onClick={handleSaveGuestName}
-                        className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy font-bold rounded-xl h-10 px-4 text-xs"
+                        className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy font-bold rounded-xl h-11 px-4 text-xs"
                       >
                         <Check className="h-3.5 w-3.5 mr-1" /> Save
                       </Button>
@@ -504,7 +507,8 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                         variant="ghost"
                         size="sm"
                         onClick={() => setIsEditingGuestName(false)}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-xl h-10 px-3 text-xs"
+                        className="text-slate-500 hover:text-slate-700 dark:hover:text-white rounded-xl h-11 px-3 text-xs"
+                        aria-label="Cancel editing display name"
                       >
                         <X className="h-3.5 w-3.5" />
                       </Button>
@@ -512,13 +516,13 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                   )}
                 </div>
 
-                <p className="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-upsa-gold shrink-0 inline" />
                   No sign-up required. Your device is saved with a unique tag (e.g.{" "}
                   <code className="text-amber-600 dark:text-amber-400 font-mono">
                     {previewDiscriminator}
                   </code>
-                  ) so you won&apos;t have to type your name again.
+                  ) so you won&apos;t have to retype your name next time.
                 </p>
               </div>
             )}
@@ -529,10 +533,11 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                 placeholder="What are your thoughts on this story? Share your perspective..."
                 value={newCommentText}
                 onChange={(e) => setNewCommentText(e.target.value)}
-                className="w-full min-h-[90px] rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-upsa-navy dark:focus:border-upsa-gold p-3.5 text-sm"
+                aria-label="Write your comment or perspective on this article"
+                className="w-full min-h-[90px] rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-[#060D1A] text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-upsa-navy dark:focus:border-upsa-gold p-3.5 text-sm"
               />
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="text-[11px] text-gray-400 dark:text-gray-500">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   Respect campus community guidelines. Keep discussions polite and constructive.
                 </span>
                 <Button
@@ -542,7 +547,7 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                     !newCommentText.trim() ||
                     (!guestProfile && !guestNameInput.trim())
                   }
-                  className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-white font-bold rounded-xl px-6 py-2 transition-all duration-300 shadow-sm"
+                  className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-white font-bold rounded-xl px-6 h-11 transition-all duration-300 shadow-sm"
                 >
                   {isPosting ? "Posting..." : "Post Comment"}
                 </Button>
@@ -619,31 +624,33 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                           </span>
                         )}
 
-                        <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                           {formatRelativeTime(comment.created_at)}
                         </span>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-1 sm:gap-2">
                         <button
                           onClick={() => {
                             setReplyToId(replyToId === comment.id ? null : comment.id);
                             setReplyText("");
                           }}
-                          className="p-1.5 text-gray-400 hover:text-upsa-navy dark:text-gray-400 dark:hover:text-upsa-gold rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-xs font-bold flex items-center gap-1"
+                          className="px-3 py-2 text-slate-600 hover:text-upsa-navy dark:text-slate-300 dark:hover:text-upsa-gold rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-xs font-bold flex items-center gap-1.5"
                           title="Reply to comment"
+                          aria-label={`Reply to comment by ${comment.user?.full_name || "reader"}`}
                         >
-                          <Reply className="h-3.5 w-3.5" /> Reply
+                          <Reply className="h-3.5 w-3.5" aria-hidden="true" /> Reply
                         </button>
 
                         {(isOwner || isAdmin) && (
                           <button
                             onClick={() => handleDeleteComment(comment.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                            className="w-9 h-9 flex items-center justify-center text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
                             title="Delete comment"
+                            aria-label="Delete your comment"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </button>
                         )}
                       </div>
@@ -751,7 +758,7 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                                   </span>
                                 )}
 
-                                <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                                   {formatRelativeTime(reply.created_at)}
                                 </span>
                               </div>
@@ -759,10 +766,11 @@ export function CommentsSection({ articleId, allowComments = true }: CommentsSec
                               {(isReplyOwner || isAdmin) && (
                                 <button
                                   onClick={() => handleDeleteComment(reply.id)}
-                                  className="p-1 text-gray-400 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
                                   title="Delete reply"
+                                  aria-label="Delete this reply"
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                                 </button>
                               )}
                             </div>

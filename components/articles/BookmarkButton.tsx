@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Bookmark } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 interface BookmarkButtonProps {
   articleId: string;
@@ -84,10 +84,16 @@ export function BookmarkButton({ articleId, initialIsBookmarked = false }: Bookm
       size="icon"
       onClick={toggleBookmark}
       disabled={isLoading}
-      className={`transition-colors ${isBookmarked ? "text-upsa-gold hover:text-upsa-navy" : "text-gray-400 hover:text-upsa-gold"}`}
+      aria-label={isBookmarked ? "Remove article from saved bookmarks" : "Save article for later reading"}
+      aria-pressed={isBookmarked}
+      className={`h-10 w-10 rounded-full transition-all duration-200 ${
+        isBookmarked 
+          ? "text-upsa-gold bg-upsa-gold/10 hover:bg-upsa-gold/20 hover:text-upsa-gold" 
+          : "text-slate-600 dark:text-slate-300 hover:text-upsa-gold hover:bg-slate-100 dark:hover:bg-white/10"
+      }`}
       title={isBookmarked ? "Remove bookmark" : "Save for later"}
     >
-      <Bookmark className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`} />
+      <Bookmark className={`h-4.5 w-4.5 ${isBookmarked ? "fill-current" : ""}`} aria-hidden="true" />
     </Button>
   );
 }

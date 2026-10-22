@@ -96,13 +96,14 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
   };
 
   return (
-    <div className="flex items-center space-x-2 sm:space-x-3">
+    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
       {/* Native Web Share button (Mobile & supported browsers) */}
       {canNativeShare && (
         <button
           onClick={handleNativeShare}
-          className="p-2 hover:bg-blue-50 dark:hover:bg-white/10 rounded-full text-gray-400 dark:text-gray-400 hover:text-upsa-blue dark:hover:text-upsa-gold transition-all duration-200 hover:scale-110 active:scale-95 flex items-center gap-1.5"
+          className="w-10 h-10 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 hover:text-upsa-blue dark:hover:text-upsa-gold transition-all duration-200 hover:scale-105 active:scale-95"
           title="Share article"
+          aria-label="Share article via device options"
         >
           <Share2 className="h-4 w-4" />
         </button>
@@ -111,10 +112,11 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on WhatsApp */}
       <button
         onClick={() => handleSocialClick(shareLinks.whatsapp)}
-        className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-500/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-[#25D366] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="w-10 h-10 flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-500/20 rounded-full text-slate-600 dark:text-slate-300 hover:text-[#25D366] transition-all duration-200 hover:scale-105 active:scale-95"
         title="Share on WhatsApp"
+        aria-label="Share this story on WhatsApp"
       >
-        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
         </svg>
       </button>
@@ -122,10 +124,11 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on Facebook */}
       <button
         onClick={() => handleSocialClick(shareLinks.facebook)}
-        className="p-2 hover:bg-blue-50 dark:hover:bg-blue-600/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-[#1877F2] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="w-10 h-10 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-600/20 rounded-full text-slate-600 dark:text-slate-300 hover:text-[#1877F2] transition-all duration-200 hover:scale-105 active:scale-95"
         title="Share on Facebook"
+        aria-label="Share this story on Facebook"
       >
-        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M9 8H7v3h2v9h4v-9h3.6l.4-3H13V6c0-.5.5-1 1-1h2V1H13c-3 0-5 2-5 5v2z" />
         </svg>
       </button>
@@ -133,10 +136,11 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on X */}
       <button
         onClick={() => handleSocialClick(shareLinks.twitter)}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 dark:text-gray-400 hover:text-black dark:hover:text-white transition-all duration-200 hover:scale-110 active:scale-95"
+        className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 hover:text-black dark:hover:text-white transition-all duration-200 hover:scale-105 active:scale-95"
         title="Share on X"
+        aria-label="Share this story on X (Twitter)"
       >
-        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M18.2 2.4h3.3L14.3 11l8.5 11.3h-6.7L10.8 15.4l-6 6.9H1.5l7.6-8.7L1 2.4h6.9l4.7 6.2 5.6-6.2zm-1.2 17.6h1.8L7.1 4.3H5.2l11.8 15.7z" />
         </svg>
       </button>
@@ -144,10 +148,11 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on LinkedIn */}
       <button
         onClick={() => handleSocialClick(shareLinks.linkedin)}
-        className="p-2 hover:bg-blue-50 dark:hover:bg-blue-600/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-[#0A66C2] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="w-10 h-10 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-600/20 rounded-full text-slate-600 dark:text-slate-300 hover:text-[#0A66C2] transition-all duration-200 hover:scale-105 active:scale-95"
         title="Share on LinkedIn"
+        aria-label="Share this story on LinkedIn"
       >
-        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M19 0h-14c-2.8 0-5 2.2-5 5v14c0 2.8 2.2 5 5 5h14c2.8 0 5-2.2 5-5v-14c0-2.8-2.2-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.3c-.9 0-1.7-.8-1.7-1.7s.8-1.7 1.7-1.7 1.7.8 1.7 1.7-.8 1.7-1.7 1.7zm13.5 12.3h-3v-5.6c0-3.4-4-3.1-4 0v5.6h-3v-11h3v1.8c1.4-2.6 7-2.8 7 2.5v6.7z" />
         </svg>
       </button>
@@ -155,42 +160,45 @@ export function ArticleActions({ slug, title, articleId }: ArticleActionsProps) 
       {/* Share on Telegram */}
       <button
         onClick={() => handleSocialClick(shareLinks.telegram)}
-        className="p-2 hover:bg-sky-50 dark:hover:bg-sky-500/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-[#229ED9] transition-all duration-200 hover:scale-110 active:scale-95"
+        className="w-10 h-10 flex items-center justify-center hover:bg-sky-50 dark:hover:bg-sky-500/20 rounded-full text-slate-600 dark:text-slate-300 hover:text-[#229ED9] transition-all duration-200 hover:scale-105 active:scale-95"
         title="Share on Telegram"
+        aria-label="Share this story on Telegram"
       >
-        <Send className="h-4 w-4" />
+        <Send className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {/* Copy Link Button */}
       <button
         onClick={handleCopyLink}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 dark:text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold transition-all duration-200 hover:scale-110 active:scale-95"
+        className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 hover:text-upsa-navy dark:hover:text-upsa-gold transition-all duration-200 hover:scale-105 active:scale-95"
         title="Copy article link"
+        aria-label="Copy article link to clipboard"
       >
         {copied ? (
-          <Check className="h-4 w-4 text-green-500" />
+          <Check className="h-4 w-4 text-emerald-500" aria-hidden="true" />
         ) : (
-          <Copy className="h-4 w-4" />
+          <Copy className="h-4 w-4" aria-hidden="true" />
         )}
       </button>
 
       {/* Print Button */}
       <button
         onClick={handlePrint}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 dark:text-gray-400 hover:text-upsa-navy dark:hover:text-upsa-gold transition-all duration-200 hover:scale-110 active:scale-95"
+        className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-slate-600 dark:text-slate-300 hover:text-upsa-navy dark:hover:text-upsa-gold transition-all duration-200 hover:scale-105 active:scale-95"
         title="Print article"
+        aria-label="Print this article"
       >
-        <Printer className="h-4 w-4" />
+        <Printer className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {/* Report Article Button */}
       <button
         onClick={() => setIsReportOpen(true)}
-        className="p-2 hover:bg-red-50 dark:hover:bg-red-500/20 rounded-full text-gray-400 dark:text-gray-400 hover:text-red-500 transition-all duration-200 hover:scale-110 active:scale-95"
+        className="w-10 h-10 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-500/20 rounded-full text-slate-600 dark:text-slate-300 hover:text-red-500 transition-all duration-200 hover:scale-105 active:scale-95"
         title="Report story"
-        aria-label="Report story"
+        aria-label="Report this story to moderators"
       >
-        <Flag className="h-4 w-4" />
+        <Flag className="h-4 w-4" aria-hidden="true" />
       </button>
 
       <ReportModal

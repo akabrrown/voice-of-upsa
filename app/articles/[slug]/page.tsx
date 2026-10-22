@@ -14,6 +14,7 @@ import { ArticleCard } from "@/components/articles/ArticleCard";
 import { ArticleActions } from "@/components/articles/ArticleActions";
 import { ViewTracker } from "@/components/articles/ViewTracker";
 import { ArticleReactions } from "@/components/articles/ArticleReactions";
+import { ArticleEndSubscription } from "@/components/articles/ArticleEndSubscription";
 import { CommentsSection } from "@/components/articles/CommentsSection";
 import { TrendingSidebar } from "@/components/articles/TrendingSidebar";
 import { createClient } from "@/lib/supabase/server";
@@ -258,7 +259,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               <div className="lg:col-span-8 space-y-8">
                 {/* Header: Breadcrumbs, Badge, Title & Meta */}
                 <div className="space-y-4 text-left">
-                  <nav className="flex items-center justify-start space-x-2 text-sm text-gray-400">
+                  <nav className="flex items-center justify-start space-x-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
                     <Link href="/" className="hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors">Home</Link>
                     <span>/</span>
                     <Link href={`/categories/${article.categorySlug}`} className="hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors">{article.category}</Link>
@@ -272,7 +273,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     {article.title}
                   </h1>
 
-                  <div className="flex flex-wrap items-center justify-start gap-4 sm:gap-6 pt-2 text-sm text-gray-500 dark:text-gray-400 pb-2">
+                  <div className="flex flex-wrap items-center justify-start gap-4 sm:gap-6 pt-2 text-sm text-slate-600 dark:text-slate-300 pb-2">
                     <div className="flex items-center">
                       <UserAvatar
                         src={article.author.avatar}
@@ -282,11 +283,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                       />
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-gray-400">By</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">By</span>
                           <span className="font-bold text-upsa-navy dark:text-white">{article.author.name}</span>
                         </div>
                         {article.author.role && (
-                          <span className="text-[11px] text-gray-400 block">
+                          <span className="text-xs text-slate-500 dark:text-slate-400 block font-medium">
                             {article.author.role}
                           </span>
                         )}
@@ -295,8 +296,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     <span className="flex items-center"><Calendar className="h-4 w-4 mr-1.5 text-upsa-gold" /> {article.date}</span>
 
                     {article.publisherName && article.publisherName !== article.author.name && (
-                      <span className="hidden sm:inline-flex items-center text-xs text-gray-400">
-                        Published by <span className="font-medium text-gray-600 dark:text-gray-300 ml-1">{article.publisherName}</span>
+                      <span className="hidden sm:inline-flex items-center text-xs text-slate-500 dark:text-slate-400">
+                        Published by <span className="font-semibold text-slate-700 dark:text-slate-200 ml-1">{article.publisherName}</span>
                       </span>
                     )}
                     <div className="flex-1 hidden md:block" />
@@ -320,10 +321,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
                 {/* Article Reactions */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 py-6 border-y border-gray-100 dark:border-white/10 mt-8">
-                  <ArticleReactions articleId={dbArticle.id} />
+                  <ArticleReactions articleId={dbArticle.id} className="w-full sm:flex-1" />
                   
-                  <div className="flex flex-col sm:items-end gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Share this story</span>
+                  <div className="flex flex-col sm:items-end gap-2 shrink-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Share this story</span>
                     <ShareButtons 
                       url={`${siteUrl}/articles/${slug}`} 
                       title={article.title} 
@@ -339,24 +340,27 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
                     className="shrink-0 border-4 border-white dark:border-[#060D1A] shadow-md"
                   />
                   <div className="text-center md:text-left w-full">
-                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                    <span className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                       About the Author
                     </span>
                     <h4 className="text-lg font-bold text-upsa-navy dark:text-white mb-1">{article.author.name}</h4>
                     <p className="text-xs uppercase tracking-widest text-upsa-gold font-bold mb-2">
                       {article.author.role}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-300 leading-relaxed">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                       {article.author.bio}
                     </p>
                     
                     {article.publisherName && article.publisherName !== article.author.name && (
-                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-center md:justify-start gap-2 text-[11px] text-gray-400">
-                        <span className="font-semibold text-gray-500 dark:text-gray-300">Published to Voice of UPSA by:</span> {article.publisherName}
+                      <div className="mt-4 pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-center md:justify-start gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <span className="font-semibold text-slate-700 dark:text-slate-200">Published to Voice of UPSA by:</span> {article.publisherName}
                       </div>
                     )}
                   </div>
                 </div>
+
+                {/* In-Article Reading-to-Subscribe Conversion Card */}
+                <ArticleEndSubscription categoryName={article.category} />
 
                 {/* Comments Section */}
                 <CommentsSection

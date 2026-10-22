@@ -72,27 +72,45 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Insert advertisement into database
-    const { data: adData, error: adError } = await supabaseAdmin
+    // 3. Insert advertisement into database with schema-adaptive fallback
+    const basePayload: Record<string, any> = {
+      company_name: company_name.trim(),
+      contact_name: contact_name.trim(),
+      contact_email: contact_email.trim(),
+      contact_phone: contact_phone?.trim() || null,
+      product_name: product_name?.trim() || company_name.trim(),
+      product_description: product_description?.trim() || "",
+      ad_type: ad_type || "sidebar",
+      ad_placement: ad_type || "sidebar",
+      target_url: target_url.trim(),
+      package_tier: package_tier || "standard",
+      creative_url: creative_url.trim(),
+      submitted_by: user.id,
+      status: "pending",
+    };
+
+    // First try full payload with both ad_tier and banner_image_url
+    let { data: adData, error: adError } = await supabaseAdmin
       .from("advertisements")
       .insert({
-        company_name: company_name.trim(),
-        contact_name: contact_name.trim(),
-        contact_email: contact_email.trim(),
-        contact_phone: contact_phone?.trim() || null,
-        product_name: product_name?.trim() || company_name.trim(),
-        product_description: product_description?.trim() || "",
-        ad_type: ad_type || "sidebar",
-        ad_placement: ad_type || "sidebar",
-        target_url: target_url.trim(),
-        package_tier: package_tier || "standard",
+        ...basePayload,
         ad_tier: package_tier || "standard",
-        creative_url: creative_url.trim(),
-        submitted_by: user.id,
-        status: "pending",
+        banner_image_url: creative_url.trim(),
       })
       .select()
       .single();
+
+    // If PostgREST schema cache does not have ad_tier or banner_image_url yet, fallback to base columns
+    if (adError && (adError.message?.includes("ad_tier") || adError.message?.includes("banner_image_url") || (adError as any).code === "PGRST204")) {
+      console.warn("[Ads Submit] Retrying insert with legacy advertisements columns...");
+      const fallback = await supabaseAdmin
+        .from("advertisements")
+        .insert(basePayload)
+        .select()
+        .single();
+      adData = fallback.data;
+      adError = fallback.error;
+    }
 
     if (adError) {
       console.error("[Ads Submit] Insert error:", adError);

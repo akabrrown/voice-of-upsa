@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Share2, Check, Copy, ExternalLink } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { Calendar, Clock, Share2, Check, Copy, ExternalLink, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,45 +96,57 @@ export function ArticleCard({ title, excerpt, category, date, image, slug, autho
   };
 
   return (
-    <article className="group flex flex-col bg-white dark:bg-[#0C1729] rounded-xl overflow-hidden border border-gray-100 dark:border-white/10 hover:border-upsa-gold/30 hover:shadow-xl transition-all duration-300">
-      <Link href={`/articles/${slug}`} className="relative h-48 overflow-hidden">
+    <article className="group flex flex-col bg-white dark:bg-[#0C1729] rounded-2xl overflow-hidden border border-gray-200/80 dark:border-white/10 hover:border-upsa-gold/50 dark:hover:border-upsa-gold/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+      <Link href={`/articles/${slug}`} className="relative h-48 sm:h-52 overflow-hidden block">
         <Image
           src={image}
           alt={title}
-          fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute top-4 left-4">
-          <Badge className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute top-3.5 left-3.5">
+          <Badge className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy font-bold text-xs shadow-md border border-white/10">
             {category}
           </Badge>
         </div>
       </Link>
       
-      <div className="p-5 flex-1 flex flex-col">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-400 mb-3 font-bold">
-          <span className="flex items-center"><Calendar className="h-3 w-3 mr-1" /> {date}</span>
-
-          {author && <span className="flex items-center normal-case">By {author}</span>}
+      <div className="p-5 sm:p-6 flex-1 flex flex-col">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mb-2.5 font-medium">
+          <span className="inline-flex items-center gap-1 font-semibold text-slate-600 dark:text-slate-300">
+            <Calendar className="h-3.5 w-3.5 text-upsa-gold" aria-hidden="true" />
+            {date}
+          </span>
+          {author && (
+            <>
+              <span className="text-slate-300 dark:text-white/20" aria-hidden="true">•</span>
+              <span className="truncate max-w-[160px]">
+                By <strong className="font-semibold text-slate-700 dark:text-slate-200">{author}</strong>
+              </span>
+            </>
+          )}
         </div>
         
-        <Link href={`/articles/${slug}`}>
-          <h3 className="text-xl font-bold text-upsa-navy dark:text-white mb-2 line-clamp-2 hover:text-upsa-gold dark:hover:text-upsa-gold transition-colors">
+        <Link href={`/articles/${slug}`} className="block group-hover:text-upsa-gold transition-colors">
+          <h3 className="text-lg sm:text-xl font-bold text-upsa-navy dark:text-white mb-2.5 line-clamp-2 leading-snug">
             {title}
           </h3>
         </Link>
         
-        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 mb-6 flex-1">
+        <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed mb-6 flex-1 font-normal">
           {excerpt}
         </p>
         
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-white/10">
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-white/10 mt-auto">
           <Link 
             href={`/articles/${slug}`} 
-            className="text-sm font-bold text-upsa-navy dark:text-upsa-gold hover:text-upsa-gold dark:hover:text-white flex items-center transition-colors"
-            aria-label={`Read more about ${title}`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black uppercase tracking-wider bg-upsa-navy/5 dark:bg-white/5 text-upsa-navy dark:text-white hover:bg-upsa-gold hover:text-upsa-navy dark:hover:bg-upsa-gold dark:hover:text-upsa-navy transition-all duration-300 group/cta shadow-xs"
+            aria-label={`Read full story: ${title}`}
           >
-            Read More
+            <span>Read Story</span>
+            <ArrowRight className="h-3.5 w-3.5 text-upsa-gold group-hover/cta:text-upsa-navy dark:group-hover/cta:text-upsa-navy group-hover/cta:translate-x-0.5 transition-all duration-300" aria-hidden="true" />
           </Link>
           
           <DropdownMenu>
@@ -142,14 +154,14 @@ export function ArticleCard({ title, excerpt, category, date, image, slug, autho
               <button 
                 type="button"
                 onClick={(e) => e.stopPropagation()}
-                aria-label={`Share ${title}`}
+                aria-label={`Share options for ${title}`}
                 title="Share article"
-                className="text-gray-400 hover:text-upsa-navy dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/10 p-1.5 rounded-full transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-upsa-gold/40"
+                className="h-10 w-10 flex items-center justify-center text-slate-500 hover:text-upsa-navy dark:text-slate-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-upsa-gold/40 cursor-pointer"
               >
                 {copied ? (
-                  <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                 ) : (
-                  <Share2 className="h-4 w-4" />
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
                 )}
               </button>
             </DropdownMenuTrigger>

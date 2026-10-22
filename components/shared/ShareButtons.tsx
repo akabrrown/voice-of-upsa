@@ -79,7 +79,7 @@ export function ShareButtons({ url, title, className, orientation = "horizontal"
   ];
 
   return (
-    <div className={cn("flex gap-2", orientation === "vertical" ? "flex-col" : "flex-row", className)}>
+    <div className={cn("flex flex-wrap items-center gap-2", orientation === "vertical" ? "flex-col" : "flex-row", className)}>
       {platforms.map((p) => {
         const Icon = p.icon;
         return (
@@ -87,11 +87,12 @@ export function ShareButtons({ url, title, className, orientation = "horizontal"
             key={p.id}
             size="icon"
             variant="ghost"
-            className={cn("rounded-full shadow-sm transition-all hover:scale-110", p.color)}
+            aria-label={`Share story on ${p.name}`}
+            className={cn("h-10 w-10 rounded-full shadow-sm transition-all hover:scale-105 active:scale-95", p.color)}
             onClick={() => handleShare(p.id, p.url)}
             title={`Share on ${p.name}`}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-4 h-4" aria-hidden="true" />
           </Button>
         );
       })}
@@ -99,11 +100,16 @@ export function ShareButtons({ url, title, className, orientation = "horizontal"
       <Button
         size="icon"
         variant="outline"
-        className="rounded-full shadow-sm transition-all hover:scale-110 bg-white dark:bg-[#0C1729] hover:bg-gray-50 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-white/10"
+        aria-label="Copy story link to clipboard"
+        className="h-10 w-10 rounded-full shadow-sm transition-all hover:scale-105 active:scale-95 bg-white dark:bg-[#0C1729] hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10"
         onClick={() => handleShare("copy", "")}
         title="Copy link"
       >
-        {copied ? <Check className="w-4 h-4 text-green-500" /> : <LinkIcon className="w-4 h-4" />}
+        {copied ? (
+          <Check className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+        ) : (
+          <LinkIcon className="w-4 h-4" aria-hidden="true" />
+        )}
       </Button>
     </div>
   );
