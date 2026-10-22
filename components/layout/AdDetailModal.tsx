@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { AdShareSection } from "@/components/ads/AdShareSection";
 
 export interface AdRecord {
   id?: string;
@@ -92,6 +93,7 @@ export function AdDetailModal({ ad, isOpen, onClose }: AdDetailModalProps) {
 
   const startDateFormatted = formatDateSafe(ad.start_date || ad.starts_at);
   const endDateFormatted = formatDateSafe(ad.end_date || ad.ends_at);
+  const adShareUrl = ad.id ? `/ads/${ad.id}` : (safeTargetUrl || "");
 
   const handleCopyEmail = async () => {
     if (!ad.contact_email) return;
@@ -265,6 +267,16 @@ export function AdDetailModal({ ad, isOpen, onClose }: AdDetailModalProps) {
               )}
             </div>
           </div>
+
+          {/* Social Sharing Section with OpenGraph, Description & Link */}
+          {adShareUrl && (
+            <AdShareSection
+              title={title}
+              companyName={ad.company_name}
+              description={ad.product_description}
+              adUrl={adShareUrl}
+            />
+          )}
 
           {/* Action CTAs */}
           <div className="pt-2 flex flex-col sm:flex-row gap-3">
