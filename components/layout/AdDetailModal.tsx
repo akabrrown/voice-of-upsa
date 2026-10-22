@@ -47,6 +47,7 @@ export interface AdRecord {
   starts_at?: string | null;
   end_date?: string | null;
   ends_at?: string | null;
+  admin_notes?: string | null;
   created_at?: string | null;
 }
 

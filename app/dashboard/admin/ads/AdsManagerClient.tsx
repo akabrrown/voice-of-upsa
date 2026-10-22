@@ -5,16 +5,32 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, XCircle, Clock, Check, Loader2, PlayCircle, ExternalLink, AlertTriangle, AlertCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Check,
+  Loader2,
+  PlayCircle,
+  ExternalLink,
+  AlertTriangle,
+  AlertCircle,
+  Eye,
+  Settings2,
+  Sparkles,
+  Info,
+} from "lucide-react";
 import { updateAdStatus } from "./actions";
+import { AdPreviewConfigModal, type AdminAdItem } from "./AdPreviewConfigModal";
 import { toast } from "sonner";
 
-interface Advertisement {
+export interface Advertisement {
   id: string;
   company_name: string;
-  contact_email: string;
+  product_name?: string | null;
+  product_description?: string | null;
+  contact_name?: string | null;
+  contact_email?: string | null;
   contact_phone?: string | null;
   ad_tier?: string | null;
   package_tier?: string | null;
@@ -36,6 +52,9 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
   const [ads, setAds] = useState<Advertisement[]>(initialAds);
   const [filter, setFilter] = useState<"all" | "pending" | "active" | "approved" | "completed" | "rejected">("pending");
   const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  // Preview & Configure Modal State
+  const [configuringAd, setConfiguringAd] = useState<Advertisement | null>(null);
 
   // Structured Rejection Modal State
   const [rejectingAd, setRejectingAd] = useState<{ id: string; companyName: string } | null>(null);
@@ -65,6 +84,12 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
     } finally {
       setLoadingId(null);
     }
+  };
+
+  const handleAdConfigUpdated = (updatedAd: AdminAdItem) => {
+    setAds((prev) =>
+      prev.map((ad) => (ad.id === updatedAd.id ? ({ ...ad, ...updatedAd } as Advertisement) : ad))
+    );
   };
 
   const handleConfirmRejection = async () => {
@@ -126,29 +151,47 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
           </div>
         ) : (
           filteredAds.map((ad) => (
-            <Card key={ad.id} className="overflow-hidden bg-white dark:bg-[#0C1729] border border-gray-100 dark:border-white/10">
+            <Card key={ad.id} className="overflow-hidden bg-white dark:bg-[#0C1729] border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row border-b border-gray-100 dark:border-white/10">
-                  {/* Image Section */}
-                  <div className="w-full md:w-64 h-40 md:h-auto bg-gray-50 dark:bg-white/[0.02] relative border-r border-gray-100 dark:border-white/10 flex items-center justify-center p-4">
-                    {ad.banner_image_url || (ad as any).creative_url ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img 
-                        src={ad.banner_image_url || (ad as any).creative_url} 
-                        alt={ad.company_name} 
-                        className="max-h-full max-w-full object-contain rounded-md"
-                      />
+                  {/* Image Section - Interactive Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => setConfiguringAd(ad)}
+                    className="w-full md:w-64 h-48 md:h-auto bg-gray-50 dark:bg-white/[0.02] relative border-b md:border-b-0 md:border-r border-gray-100 dark:border-white/10 flex items-center justify-center p-4 group cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-upsa-gold"
+                    title="Click to preview and configure this ad"
+                  >
+                    {ad.banner_image_url || ad.creative_url ? (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={ad.banner_image_url || ad.creative_url || ""} 
+                          alt={ad.company_name} 
+                          className="max-h-full max-w-full object-contain rounded-md group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white font-bold text-xs backdrop-blur-xs">
+                          <Eye className="h-4 w-4 text-upsa-gold" />
+                          <span>Preview & Configure</span>
+                        </div>
+                      </>
                     ) : (
                       <span className="text-sm text-gray-400 dark:text-slate-500">No Image</span>
                     )}
-                  </div>
+                  </button>
 
                   {/* Details Section */}
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="text-xl font-bold text-upsa-navy dark:text-white">{ad.company_name}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-upsa-navy dark:text-white">{ad.company_name}</h3>
+                            {ad.product_name && (
+                              <span className="text-xs bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded font-medium">
+                                {ad.product_name}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-sm text-gray-500 dark:text-slate-400 mb-2">
                             {ad.contact_email} {ad.contact_phone && `• ${ad.contact_phone}`}
                           </p>
@@ -159,7 +202,7 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                       <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-slate-300 mb-4">
                         <div>
                           <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Tier</span>
-                          <span className="capitalize">{ad.ad_tier || (ad as any).package_tier || "Standard"}</span>
+                          <span className="capitalize">{ad.ad_tier || ad.package_tier || "Standard"}</span>
                         </div>
                         <div>
                           <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Placement</span>
@@ -171,16 +214,25 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                         </div>
                         {ad.target_url && (
                           <div>
-                            <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Target URL</span>
-                            <a href={ad.target_url} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center">
-                              Link <ExternalLink className="w-3 h-3 ml-1" />
+                            <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Destination</span>
+                            <a href={ad.target_url} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center text-xs">
+                              Test Link <ExternalLink className="w-3 h-3 ml-1" />
                             </a>
+                          </div>
+                        )}
+                        {(ad.start_date || ad.starts_at) && (
+                          <div>
+                            <span className="font-semibold text-gray-900 dark:text-slate-200 block text-xs uppercase tracking-wider mb-1">Schedule</span>
+                            <span className="text-xs">
+                              {format(new Date(ad.start_date || ad.starts_at!), "MMM d")} 
+                              {ad.end_date || ad.ends_at ? ` to ${format(new Date(ad.end_date || ad.ends_at!), "MMM d, yyyy")}` : ""}
+                            </span>
                           </div>
                         )}
                       </div>
 
                       {ad.admin_notes && (
-                        <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/10 flex items-start gap-2">
+                        <div className="mt-3 p-3 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 flex items-start gap-2">
                           <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                           <div className="text-xs">
                             <span className="font-bold text-gray-700 dark:text-slate-200">Moderator Note: </span>
@@ -191,7 +243,17 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-gray-50 dark:border-white/10">
+                    <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-white/10">
+                      {/* Preview & Configure Primary Action */}
+                      <Button
+                        onClick={() => setConfiguringAd(ad)}
+                        variant="outline"
+                        className="border-upsa-navy text-upsa-navy hover:bg-upsa-navy hover:text-white dark:border-upsa-gold dark:text-upsa-gold dark:hover:bg-upsa-gold dark:hover:text-upsa-navy font-bold transition-all shadow-sm"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Preview & Configure
+                      </Button>
+
                       {ad.status === "pending" && (
                         <>
                           <Button 
@@ -200,7 +262,7 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
                             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                           >
                             {loadingId === ad.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                            Approve
+                            Quick Approve
                           </Button>
                           <Button 
                             onClick={() => {
@@ -246,6 +308,14 @@ export default function AdsManagerClient({ initialAds }: { initialAds: Advertise
           ))
         )}
       </div>
+
+      {/* Admin Preview & Configuration Modal */}
+      <AdPreviewConfigModal
+        ad={configuringAd as any}
+        isOpen={Boolean(configuringAd)}
+        onClose={() => setConfiguringAd(null)}
+        onAdUpdated={handleAdConfigUpdated}
+      />
 
       {/* Structured Ad Rejection Modal */}
       {rejectingAd && (
