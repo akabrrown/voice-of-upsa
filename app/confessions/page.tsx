@@ -11,6 +11,7 @@ import { MessageSquare, ThumbsUp, Heart, Laugh, Flag, Loader2, Plus, Filter, Shi
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ReportModal } from "@/components/common/ReportModal";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export default function ConfessionsFeedPage() {
   const [posts, setPosts] = useState<any[]>([]);
@@ -44,6 +45,7 @@ export default function ConfessionsFeedPage() {
   return (
     <>
       <Navbar />
+      <PageStatusGate pageKey="confessions" fallbackTitle="Campus Confessions">
       <main className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A] pt-8 pb-20 transition-colors duration-300">
         <div className="container max-w-4xl mx-auto px-4">
           
@@ -128,6 +130,7 @@ export default function ConfessionsFeedPage() {
           </div>
         </div>
       </main>
+      </PageStatusGate>
       <Footer />
     </>
   );

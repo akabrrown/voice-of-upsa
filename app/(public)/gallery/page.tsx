@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ImageOff, Calendar, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export const metadata: Metadata = {
   title: "Campus Gallery | Voice of UPSA",
@@ -30,7 +31,8 @@ export default async function GalleryPage({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <PageStatusGate pageKey="gallery" fallbackTitle="Campus Gallery">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
           <h1 className="text-4xl font-extrabold text-[#1B2A4A] dark:text-white mb-2 tracking-tight">Campus Gallery</h1>
@@ -132,5 +134,6 @@ export default async function GalleryPage({
         </div>
       )}
     </div>
+    </PageStatusGate>
   );
 }

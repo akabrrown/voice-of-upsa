@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,7 +47,7 @@ export default function ContactPage() {
   };
 
   return (
-    <>
+    <PageStatusGate pageKey="contact" fallbackTitle="Contact Us">
       <main className="flex-1 bg-white dark:bg-[#060D1A] transition-colors">
         <section className="py-20">
           <div className="container mx-auto px-4">
@@ -152,6 +153,6 @@ export default function ContactPage() {
           </div>
         </section>
       </main>
-    </>
+    </PageStatusGate>
   );
 }

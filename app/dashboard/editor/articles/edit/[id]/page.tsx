@@ -256,6 +256,31 @@ export default function EditArticlePage({ params }: EditArticleProps) {
     }
   }, [watchedValues, id, isLoading, isSubmitted]);
 
+  const handleDeleteArticle = async () => {
+    if (!confirm("Are you sure you want to delete this article? This action cannot be undone.")) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("articles")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(`vou_draft_edit_${id}`);
+      }
+
+      toast.success("Article deleted successfully!");
+      router.push("/dashboard/editor/articles");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete article";
+      toast.error(errorMessage);
+      setIsSaving(false);
+    }
+  };
+
   const handleRevertChanges = () => {
     if (confirm("Are you sure you want to revert all changes? This will restore the article back to its original database values.")) {
       if (originalArticle) {
@@ -567,6 +592,15 @@ export default function EditArticlePage({ params }: EditArticleProps) {
           <p className="text-gray-500 dark:text-slate-400">Modify and update your story details</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <Button 
+            variant="ghost" 
+            type="button"
+            className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300 font-bold"
+            onClick={handleDeleteArticle}
+            disabled={isSaving}
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Delete Article
+          </Button>
           <Button 
             variant="ghost" 
             type="button"

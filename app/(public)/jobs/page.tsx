@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import JobsClient from "./JobsClient";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export const metadata = {
   title: "Job & Internship Board | Voice of UPSA",
@@ -77,8 +78,10 @@ export default async function JobsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A]">
-      <JobsClient initialJobs={jobs} />
-    </main>
+    <PageStatusGate pageKey="jobs" fallbackTitle="Jobs Board">
+      <main className="min-h-screen bg-gray-50/50 dark:bg-[#060D1A]">
+        <JobsClient initialJobs={jobs} />
+      </main>
+    </PageStatusGate>
   );
 }

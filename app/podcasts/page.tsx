@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Mic, Headphones, Rss } from "lucide-react";
 import Link from "next/link";
 import { StatsShadowLoader } from "@/components/ui/shadow-loaders";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 import Image from "next/image";
 
 interface Show {
@@ -38,6 +39,7 @@ export default function PodcastsPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-[#060D1A] transition-colors duration-300">
       <Navbar />
+      <PageStatusGate pageKey="podcasts" fallbackTitle="Podcasts">
       <main className="flex-grow container mx-auto px-4 py-12 max-w-6xl">
         <div className="text-center mb-12">
         <div className="inline-flex items-center justify-center p-3 bg-upsa-gold/20 rounded-full mb-4">
@@ -111,6 +113,7 @@ export default function PodcastsPage() {
         </div>
       )}
       </main>
+      </PageStatusGate>
       <Footer />
     </div>
   );

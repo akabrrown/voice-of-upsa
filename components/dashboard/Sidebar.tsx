@@ -28,6 +28,7 @@ import {
   Camera,
   Briefcase,
   Star,
+  Globe,
 } from "lucide-react";
 
 type NavLink = { name: string; href: string; icon: any; badge?: "ads" | "inbox" };
@@ -54,6 +55,7 @@ const adminGroups: AdminGroup[] = [
     links: [
       { name: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
       { name: "Analytics", href: "/dashboard/admin/analytics", icon: BarChart3 },
+      { name: "Pages & Nav", href: "/dashboard/admin/navigation", icon: Globe },
       { name: "Site Settings", href: "/dashboard/admin/settings", icon: Settings },
     ],
   },

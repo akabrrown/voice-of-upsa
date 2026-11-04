@@ -1,3 +1,6 @@
+"use client";
+
+import { useSitePages } from "@/hooks/useSitePages";
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, Phone, MapPin, Newspaper } from "lucide-react";
@@ -6,6 +9,7 @@ import { NewsletterForm } from "@/components/newsletter/NewsletterForm";
 import { ShareButtons } from "@/components/shared/ShareButtons";
 
 export function Footer() {
+  const { isPageActive } = useSitePages();
   return (
     <footer className="bg-upsa-navy dark:bg-[#040810] border-t border-transparent dark:border-white/10 text-white pt-16 pb-8 relative overflow-hidden transition-colors duration-300">
       {/* Decorative ambient background elements */}
@@ -71,9 +75,15 @@ export function Footer() {
             <h3 className="text-lg font-bold text-upsa-gold uppercase tracking-wider">Quick Links</h3>
             <ul className="space-y-2">
               <li><Link href="/categories/all" className="text-sm text-gray-300 hover:text-white transition-colors">All Articles</Link></li>
-              <li><Link href="/advertise" className="text-sm text-gray-300 hover:text-white transition-colors">Advertise with Us</Link></li>
-              <li><Link href="/about" className="text-sm text-gray-300 hover:text-white transition-colors">About Voice of UPSA</Link></li>
-              <li><Link href="/contact" className="text-sm text-gray-300 hover:text-white transition-colors">Contact Us</Link></li>
+              {isPageActive("advertise") && (
+                <li><Link href="/advertise" className="text-sm text-gray-300 hover:text-white transition-colors">Advertise with Us</Link></li>
+              )}
+              {isPageActive("about") && (
+                <li><Link href="/about" className="text-sm text-gray-300 hover:text-white transition-colors">About Voice of UPSA</Link></li>
+              )}
+              {isPageActive("contact") && (
+                <li><Link href="/contact" className="text-sm text-gray-300 hover:text-white transition-colors">Contact Us</Link></li>
+              )}
               <li><Link href="/auth/login" className="text-sm text-gray-300 hover:text-white transition-colors">Login / Register</Link></li>
             </ul>
           </div>

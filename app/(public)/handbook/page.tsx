@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Download, ExternalLink, BookOpen, GraduationCap, Award, ShieldAlert, FileText, CheckCircle2 } from "lucide-react";
 import HandbookViewerWrapper from "./HandbookViewerWrapper";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export const metadata: Metadata = {
   title: "Undergraduate Students' Handbook | Voice of UPSA",
@@ -34,6 +35,7 @@ export default function HandbookPage() {
 
   return (
     <>
+    <PageStatusGate pageKey="handbook" fallbackTitle="Student Handbook">
       <main className="bg-white dark:bg-[#060D1A] min-h-screen pt-4 pb-16 flex-1 transition-colors">
         <div className="container mx-auto px-4 max-w-[1400px]">
           {/* Header & Quick Action Bar */}
@@ -139,6 +141,7 @@ export default function HandbookPage() {
           </div>
         </div>
       </main>
+    </PageStatusGate>
     </>
   );
 }

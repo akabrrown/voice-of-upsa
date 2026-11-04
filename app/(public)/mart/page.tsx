@@ -5,6 +5,7 @@ import { ShoppingBag, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/mart/product-card";
 import { Product } from "@/lib/marketplace/types";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 // Force dynamic since marketplace products update frequently
 export const dynamic = 'force-dynamic';
@@ -34,7 +35,8 @@ export default async function CampusMartHomePage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#F9FAFB] dark:bg-[#060D1A] transition-colors duration-300">
+    <PageStatusGate pageKey="mart" fallbackTitle="Campus Mart">
+      <div className="flex min-h-[100dvh] flex-col bg-[#F9FAFB] dark:bg-[#060D1A] transition-colors duration-300">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(martJsonLd) }}
@@ -77,5 +79,6 @@ export default async function CampusMartHomePage() {
         </div>
       </section>
     </div>
+    </PageStatusGate>
   );
 }

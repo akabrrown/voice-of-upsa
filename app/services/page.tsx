@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getServiceCategories, getActiveServices } from "@/lib/services/queries";
 import { ServiceListClient } from "@/components/services/ServiceListClient";
 import { CategoryChips } from "@/components/services/CategoryChips";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export const metadata: Metadata = {
   title: "Student Services Directory",
@@ -17,13 +18,15 @@ export default async function ServicesDirectoryPage() {
   // Only display categories that actually have active services associated with them
   const activeCategories = categories.filter(category => 
     allServices.some(service => service.category_id === category.id)
+
   );
 
   const featuredServices = allServices.filter(s => s.is_featured);
   const otherServices = allServices.filter(s => !s.is_featured);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <PageStatusGate pageKey="services" fallbackTitle="Student Services">
+      <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-upsa-navy dark:text-white mb-3">Student Services Directory</h1>
         <p className="text-gray-600 dark:text-gray-300 max-w-2xl">
@@ -39,5 +42,7 @@ export default async function ServicesDirectoryPage() {
         featuredServices={featuredServices as any} 
       />
     </div>
+    </PageStatusGate>
+
   );
 }

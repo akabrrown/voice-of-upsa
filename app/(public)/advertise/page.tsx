@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Star, Target, Rocket } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export const metadata: Metadata = {
   title: "Advertise with Us | Voice of UPSA",
@@ -132,7 +133,7 @@ export default async function AdvertisePage() {
       }));
 
   return (
-    <>
+    <PageStatusGate pageKey="advertise" fallbackTitle="Advertise">
       <main className="flex-1 bg-white dark:bg-[#060D1A] pb-20 transition-colors">
         <section className="py-20 bg-gray-50 dark:bg-[#0C1729] border-b border-gray-100 dark:border-white/10">
           <div className="container mx-auto px-4 text-center">
@@ -234,6 +235,6 @@ export default async function AdvertisePage() {
           </div>
         </section>
       </main>
-    </>
+    </PageStatusGate>
   );
 }

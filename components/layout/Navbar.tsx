@@ -22,6 +22,7 @@ import { InstallPWA } from "./InstallPWA";
 import { NotificationBell } from "./NotificationBell";
 import GlobalSearch from "./GlobalSearch";
 import { ThemeToggle } from "./ThemeToggle";
+import { useSitePages } from "@/hooks/useSitePages";
 
 interface AuthenticatedUser extends User {
   role?: string;
@@ -66,9 +67,9 @@ export function Navbar() {
   const supabase = createClient();
   const router = useRouter();
 
-  const isDev = process.env.NODE_ENV === "development";
-  const visibleCampusLife = campusLifeFeatures.filter(f => isDev || f.completed);
-  const visibleCommunity = communityMediaFeatures.filter(f => isDev || f.completed);
+  const { campusLifeNav: visibleCampusLife, communityNav: visibleCommunity, isPageActive } = useSitePages();
+
+
 
   React.useEffect(() => {
     const fetchUserRole = async (user: User | null) => {
@@ -195,7 +196,8 @@ export function Navbar() {
                 </NavigationMenuContent>
               </NavigationMenuItem>
 
-              <NavigationMenuItem>
+              {visibleCampusLife.length > 0 && (
+                <NavigationMenuItem>
                 <NavigationMenuTrigger className="bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold data-[state=open]:bg-gray-100 dark:data-[state=open]:bg-white/10 data-[state=open]:text-upsa-navy dark:data-[state=open]:text-upsa-gold font-semibold transition-colors">
                   Campus Life
                 </NavigationMenuTrigger>
@@ -232,6 +234,7 @@ export function Navbar() {
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
+              )}
 
               {visibleCommunity.length > 0 && (
                 <NavigationMenuItem>
@@ -273,38 +276,44 @@ export function Navbar() {
                 </NavigationMenuItem>
               )}
 
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
-                  <Link href="/advertise">
-                    <div className="flex items-center gap-1.5">
-                      <Megaphone className="h-4 w-4" />
-                      Advertise
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+              {isPageActive("advertise") && (
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
+                    <Link href="/advertise">
+                      <div className="flex items-center gap-1.5">
+                        <Megaphone className="h-4 w-4" />
+                        Advertise
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              )}
 
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
-                  <Link href="/about">
-                    <div className="flex items-center gap-1.5">
-                      <Info className="h-4 w-4" />
-                      About
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+              {isPageActive("about") && (
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
+                    <Link href="/about">
+                      <div className="flex items-center gap-1.5">
+                        <Info className="h-4 w-4" />
+                        About
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              )}
 
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
-                  <Link href="/contact">
-                    <div className="flex items-center gap-1.5">
-                      <PhoneCall className="h-4 w-4" />
-                      Contact
-                    </div>
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+              {isPageActive("contact") && (
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className={cn(navigationMenuTriggerStyle(), "bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-upsa-navy dark:hover:text-upsa-gold font-semibold transition-colors")}>
+                    <Link href="/contact">
+                      <div className="flex items-center gap-1.5">
+                        <PhoneCall className="h-4 w-4" />
+                        Contact
+                      </div>
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              )}
             </NavigationMenuList>
           </NavigationMenu>
         </div>
@@ -413,32 +422,34 @@ export function Navbar() {
               )}
             </div>
 
-            <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-white/10">
-              <button 
-                onClick={() => setMobileCampusLifeOpen(!mobileCampusLifeOpen)}
-                className="w-full flex items-center justify-between text-gray-700 dark:text-gray-200 py-2 hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Campus Life</span>
-                </div>
-                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCampusLifeOpen ? "rotate-180" : "")} />
-              </button>
-              {mobileCampusLifeOpen && (
-                <div className="grid grid-cols-2 gap-2 pt-1 pl-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                  {visibleCampusLife.map((feature) => (
-                    <Link
-                      key={feature.title}
-                      href={feature.href}
-                      className="text-gray-600 dark:text-gray-300 hover:text-upsa-gold dark:hover:text-upsa-gold text-sm py-1.5 transition-colors font-medium"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {feature.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            {visibleCampusLife.length > 0 && (
+              <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-white/10">
+                <button 
+                  onClick={() => setMobileCampusLifeOpen(!mobileCampusLifeOpen)}
+                  className="w-full flex items-center justify-between text-gray-700 dark:text-gray-200 py-2 hover:text-upsa-navy dark:hover:text-upsa-gold transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Campus Life</span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", mobileCampusLifeOpen ? "rotate-180" : "")} />
+                </button>
+                {mobileCampusLifeOpen && (
+                  <div className="grid grid-cols-2 gap-2 pt-1 pl-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {visibleCampusLife.map((feature) => (
+                      <Link
+                        key={feature.title}
+                        href={feature.href}
+                        className="text-gray-600 dark:text-gray-300 hover:text-upsa-gold dark:hover:text-upsa-gold text-sm py-1.5 transition-colors font-medium"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {feature.title}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {visibleCommunity.length > 0 && (
               <div className="space-y-1 pt-2 border-t border-gray-100 dark:border-white/10">
@@ -468,30 +479,36 @@ export function Navbar() {
                 )}
               </div>
             )}
-            <Link 
-              href="/advertise" 
-              className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Megaphone className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
-              Advertise
-            </Link>
-            <Link 
-              href="/about" 
-              className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Info className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
-              About
-            </Link>
-            <Link 
-              href="/contact" 
-              className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <PhoneCall className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
-              Contact
-            </Link>
+            {isPageActive("advertise") && (
+              <Link 
+                href="/advertise" 
+                className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Megaphone className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
+                Advertise
+              </Link>
+            )}
+            {isPageActive("about") && (
+              <Link 
+                href="/about" 
+                className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Info className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
+                About
+              </Link>
+            )}
+            {isPageActive("contact") && (
+              <Link 
+                href="/contact" 
+                className="flex items-center gap-2 text-upsa-navy dark:text-gray-200 hover:text-upsa-gold dark:hover:text-upsa-gold py-2 font-bold transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <PhoneCall className="h-5 w-5 text-upsa-navy dark:text-upsa-gold" />
+                Contact
+              </Link>
+            )}
           </nav>
 
           {/* User Auth controls inside mobile menu */}

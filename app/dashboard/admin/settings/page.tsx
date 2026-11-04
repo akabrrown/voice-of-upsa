@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,28 @@ export default function SettingsPage() {
         <h1 className="text-3xl font-black text-upsa-navy dark:text-white tracking-tight">Site Settings</h1>
         <p className="text-gray-500 dark:text-slate-400">Configure global settings, identity, and moderation preferences</p>
       </div>
+
+      {/* Pages & Navigation Quick Access Card */}
+      <Card className="border border-upsa-gold/30 bg-gradient-to-r from-upsa-navy/5 via-upsa-gold/10 to-transparent dark:from-[#0C1729] dark:to-[#081224] dark:border-upsa-gold/20 shadow-md max-w-4xl">
+        <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="p-2 rounded-xl bg-upsa-gold/20 text-upsa-navy dark:text-upsa-gold">
+                <Globe className="h-5 w-5" />
+              </span>
+              <h3 className="text-lg font-black text-upsa-navy dark:text-white">Pages & Navigation Manager</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-slate-400 max-w-xl">
+              Turn pages active or inactive, hide empty feature buttons from the navbar and footer, and configure visitor maintenance notices.
+            </p>
+          </div>
+          <Button asChild className="bg-upsa-navy text-white hover:bg-upsa-gold hover:text-upsa-navy dark:bg-upsa-gold dark:text-upsa-navy dark:hover:bg-amber-400 font-bold shrink-0">
+            <Link href="/dashboard/admin/navigation">
+              Manage Pages & Nav &rarr;
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <form onSubmit={handleSave} className="space-y-8 max-w-4xl">
         {/* Site Identity */}

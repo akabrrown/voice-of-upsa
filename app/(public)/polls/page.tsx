@@ -3,6 +3,7 @@ import { PollCard } from "@/components/polls/PollCard";
 import { PollCategory } from "@/lib/polls/types";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export const metadata = {
   title: "Campus Polls | Voice of UPSA",
@@ -30,7 +31,8 @@ export default async function PollsPage(
   ];
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
+    <PageStatusGate pageKey="polls" fallbackTitle="Campus Polls">
+      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-black text-upsa-navy dark:text-white mb-4 tracking-tight">Campus Polls</h1>
         <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
@@ -71,6 +73,7 @@ export default async function PollsPage(
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </PageStatusGate>
   );
 }

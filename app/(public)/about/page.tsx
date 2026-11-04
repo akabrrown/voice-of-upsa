@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Users, Target, ShieldCheck, Award, FileText, Download } from "lucide-react";
 import { AboutSlideshow } from "@/components/about/AboutSlideshow";
 import { createClient } from "@/lib/supabase/server";
+import { PageStatusGate } from "@/components/shared/PageStatusGate";
 
 export const metadata: Metadata = {
   title: "About Us | Voice of UPSA",
@@ -35,7 +36,7 @@ export default async function AboutPage() {
   ]);
 
   return (
-    <>
+    <PageStatusGate pageKey="about" fallbackTitle="About Voice of UPSA">
       <main className="flex-1 bg-white dark:bg-[#060D1A] transition-colors">
         {/* Hero Section */}
         <section className="relative py-20 bg-upsa-navy dark:bg-[#0C1729] text-white overflow-hidden border-b border-upsa-navy/10 dark:border-white/10">
@@ -175,6 +176,6 @@ export default async function AboutPage() {
         </section>
 
       </main>
-    </>
+    </PageStatusGate>
   );
 }
