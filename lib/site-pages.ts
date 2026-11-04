@@ -3,7 +3,7 @@ import {
   BookOpen,
   Users,
   Store,
-  Map,
+  Map as MapIcon,
   Mic,
   Camera,
   EyeOff,
@@ -46,7 +46,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   BookOpen,
   Users,
   Store,
-  Map,
+  Map: MapIcon,
   Mic,
   Camera,
   EyeOff,
@@ -273,7 +273,7 @@ export function mergeWithDefaults(dbPages?: Partial<SitePageConfig>[] | null): S
     return DEFAULT_SITE_PAGES;
   }
 
-  const dbMap = new Map<string, Partial<SitePageConfig>>();
+  const dbMap = new globalThis.Map<string, Partial<SitePageConfig>>();
   dbPages.forEach((p) => {
     if (p.id) dbMap.set(p.id, p);
     if (p.href) dbMap.set(p.href, p);
