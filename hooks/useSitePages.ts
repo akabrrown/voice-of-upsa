@@ -1,54 +1,143 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSyncExternalStore, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { SitePageConfig, DEFAULT_SITE_PAGES, mergeWithDefaults, getPageIcon } from "@/lib/site-pages";
+import {
+  SitePageConfig,
+  DEFAULT_SITE_PAGES,
+  mergeWithDefaults,
+  getPageIcon,
+} from "@/lib/site-pages";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+
+interface SitePagesState {
+  pages: SitePageConfig[];
+  isLoading: boolean;
+}
+
+// Module-level singleton store so Navbar, Footer, PageStatusGate, and Admin
+// share the same single subscription and in-memory cache without duplicate sockets or channel collision errors.
+let globalState: SitePagesState = {
+  pages: DEFAULT_SITE_PAGES,
+  isLoading: true,
+};
+
+const listeners = new Set<() => void>();
+let activeChannel: RealtimeChannel | null = null;
+let isFetching = false;
+let hasInitiatedFetch = false;
+
+function emitChange() {
+  listeners.forEach((listener) => {
+    try {
+      listener();
+    } catch (e) {
+      console.error("Error in site_pages listener:", e);
+    }
+  });
+}
+
+export async function fetchSitePages(): Promise<SitePageConfig[]> {
+  if (typeof window === "undefined") {
+    return DEFAULT_SITE_PAGES;
+  }
+  if (isFetching) {
+    return globalState.pages;
+  }
+  isFetching = true;
+
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("site_pages")
+      .select("*")
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      // Table may not exist yet or connection error; fallback cleanly to defaults
+      globalState = {
+        pages: DEFAULT_SITE_PAGES,
+        isLoading: false,
+      };
+    } else if (data) {
+      globalState = {
+        pages: mergeWithDefaults(data),
+        isLoading: false,
+      };
+    }
+  } catch (err) {
+    console.warn("Failed to fetch site_pages, using defaults:", err);
+    globalState = {
+      pages: DEFAULT_SITE_PAGES,
+      isLoading: false,
+    };
+  } finally {
+    isFetching = false;
+    emitChange();
+  }
+
+  return globalState.pages;
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+
+  // If this is the very first subscriber, start the initial fetch and set up realtime
+  if (listeners.size === 1) {
+    if (!hasInitiatedFetch) {
+      hasInitiatedFetch = true;
+      fetchSitePages();
+    }
+
+    try {
+      const supabase = createClient();
+      const channelName = `site_pages_sync_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      activeChannel = supabase
+        .channel(channelName)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "site_pages" },
+          () => {
+            fetchSitePages();
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn("Realtime subscription setup failed:", e);
+    }
+  }
+
+  return () => {
+    listeners.delete(callback);
+    // When all components unmount, safely clean up the single realtime channel
+    if (listeners.size === 0 && activeChannel) {
+      try {
+        const supabase = createClient();
+        supabase.removeChannel(activeChannel);
+      } catch (e) {
+        // ignore cleanup error
+      }
+      activeChannel = null;
+    }
+  };
+}
+
+function getSnapshot(): SitePagesState {
+  return globalState;
+}
+
+const SERVER_SNAPSHOT: SitePagesState = {
+  pages: DEFAULT_SITE_PAGES,
+  isLoading: false,
+};
+
+function getServerSnapshot(): SitePagesState {
+  return SERVER_SNAPSHOT;
+}
 
 export function useSitePages() {
-  const [pages, setPages] = useState<SitePageConfig[]>(DEFAULT_SITE_PAGES);
-  const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
-
-  const fetchPages = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("site_pages")
-        .select("*")
-        .order("sort_order", { ascending: true });
-
-      if (error) {
-        // Table may not exist yet in dev or offline; fallback cleanly
-        setPages(DEFAULT_SITE_PAGES);
-      } else if (data) {
-        setPages(mergeWithDefaults(data));
-      }
-    } catch (err) {
-      console.warn("Failed to fetch site_pages, using defaults:", err);
-      setPages(DEFAULT_SITE_PAGES);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [supabase]);
-
-  useEffect(() => {
-    fetchPages();
-
-    // Subscribe to realtime updates on site_pages
-    const channel = supabase
-      .channel("site_pages_realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "site_pages" },
-        () => {
-          fetchPages();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, fetchPages]);
+  const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const { pages, isLoading } = state;
 
   const campusLifeNav = useMemo(() => {
     return pages
@@ -106,6 +195,10 @@ export function useSitePages() {
     [pages]
   );
 
+  const refresh = useCallback(async () => {
+    await fetchSitePages();
+  }, []);
+
   return {
     pages,
     campusLifeNav,
@@ -115,7 +208,6 @@ export function useSitePages() {
     isPageActive,
     getPageConfig,
     isLoading,
-    refresh: fetchPages,
+    refresh,
   };
 }
-
