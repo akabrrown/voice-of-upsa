@@ -11,13 +11,25 @@ export async function GET(req: Request) {
 
     const supabase = await createClient();
     
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('confession_posts')
       .select(`
         id, type, category, body_text, created_at, status, review_note
       `)
       .eq('author_id', user.id)
       .order('created_at', { ascending: false });
+
+    if (error && (error.message?.includes("review_note") || (error as any).code === "42703" || (error as any).code === "PGRST204")) {
+      const fallback = await supabase
+        .from('confession_posts')
+        .select(`
+          id, type, category, body_text, created_at, status
+        `)
+        .eq('author_id', user.id)
+        .order('created_at', { ascending: false });
+      data = (fallback.data || []).map((p: any) => ({ ...p, review_note: null }));
+      error = fallback.error;
+    }
 
     if (error) throw error;
 

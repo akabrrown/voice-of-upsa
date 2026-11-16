@@ -18,11 +18,12 @@ export async function GET(req: Request) {
     const statusParam = url.searchParams.get("status") || "pending_review";
     
     let data, error;
+    const selectCols = 'id, type, category, body_text, created_at, status, screening_flag, review_note, reviewed_at';
 
     if (statusParam === "removed" || statusParam === "rejected") {
       const res = await supabase
         .from('confession_posts')
-        .select('id, type, category, body_text, created_at, status, screening_flag, review_note, reviewed_at')
+        .select(selectCols)
         .in('status', ['removed', 'rejected'])
         .order('created_at', { ascending: false });
       data = res.data;
@@ -30,7 +31,7 @@ export async function GET(req: Request) {
     } else if (statusParam !== "all") {
       const res = await supabase
         .from('confession_posts')
-        .select('id, type, category, body_text, created_at, status, screening_flag, review_note, reviewed_at')
+        .select(selectCols)
         .eq('status', statusParam)
         .order('created_at', { ascending: false });
       data = res.data;
@@ -38,10 +39,38 @@ export async function GET(req: Request) {
     } else {
       const res = await supabase
         .from('confession_posts')
-        .select('id, type, category, body_text, created_at, status, screening_flag, review_note, reviewed_at')
+        .select(selectCols)
         .order('created_at', { ascending: false });
       data = res.data;
       error = res.error;
+    }
+
+    // Schema-adaptive fallback if review_note column is not yet present in database
+    if (error && (error.message?.includes("review_note") || (error as any).code === "42703" || (error as any).code === "PGRST204")) {
+      const safeCols = 'id, type, category, body_text, created_at, status, screening_flag, reviewed_at';
+      let safeRes;
+
+      if (statusParam === "removed" || statusParam === "rejected") {
+        safeRes = await supabase
+          .from('confession_posts')
+          .select(safeCols)
+          .in('status', ['removed', 'rejected'])
+          .order('created_at', { ascending: false });
+      } else if (statusParam !== "all") {
+        safeRes = await supabase
+          .from('confession_posts')
+          .select(safeCols)
+          .eq('status', statusParam)
+          .order('created_at', { ascending: false });
+      } else {
+        safeRes = await supabase
+          .from('confession_posts')
+          .select(safeCols)
+          .order('created_at', { ascending: false });
+      }
+
+      data = (safeRes.data || []).map((p: any) => ({ ...p, review_note: null }));
+      error = safeRes.error;
     }
 
     if (error) throw error;
@@ -91,7 +120,7 @@ export async function PUT(req: Request) {
       : (post.status === 'published' ? 'removed' : 'rejected');
 
     // Update post status and persist rejection note
-    const { error: updateError } = await supabase
+    let { error: updateError } = await supabase
       .from('confession_posts')
       .update({
         status: newStatus,
@@ -101,6 +130,20 @@ export async function PUT(req: Request) {
         published_at: action === 'approve' ? new Date().toISOString() : null,
       })
       .eq('id', post_id);
+
+    // Schema-adaptive fallback if review_note column is not yet present
+    if (updateError && (updateError.message?.includes("review_note") || (updateError as any).code === "42703" || (updateError as any).code === "PGRST204")) {
+      const fallback = await supabase
+        .from('confession_posts')
+        .update({
+          status: newStatus,
+          reviewed_by: user.id,
+          reviewed_at: new Date().toISOString(),
+          published_at: action === 'approve' ? new Date().toISOString() : null,
+        })
+        .eq('id', post_id);
+      updateError = fallback.error;
+    }
 
     if (updateError) throw updateError;
 

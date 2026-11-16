@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { AdCardWithModal } from "./AdCardWithModal";
 import { AdFallbackCard } from "./AdFallbackCard";
+import { AdLeaderboardCarousel } from "./AdLeaderboardCarousel";
 import type { AdRecord } from "./AdDetailModal";
 
 interface AdZoneProps {
@@ -19,7 +20,8 @@ export async function AdZone({ type, className }: AdZoneProps) {
     const { data: ads, error } = await supabase
       .from("advertisements")
       .select("*")
-      .eq("status", "active");
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
 
     if (!error && ads && ads.length > 0) {
       activeAds = ads.filter((a: any) => {
@@ -36,20 +38,24 @@ export async function AdZone({ type, className }: AdZoneProps) {
   }
 
   if (activeAds.length > 0) {
-    // Placement limits
+    // For leaderboard banners, rotate all active campaigns seamlessly in a single slot
+    if (type === "leaderboard") {
+      return <AdLeaderboardCarousel ads={activeAds} className={className} />;
+    }
+
+    // Placement limits for sidebar and in-feed
     const limits = {
-      leaderboard: 1, // 1 leaderboard banner at the top
-      sidebar: 3,     // Up to 3 stacked sidebar ads
+      sidebar: 4,     // Up to 4 stacked sidebar ads
       "in-feed": 1,   // 1 in-feed ad per placement
     };
 
-    const adsToShow = activeAds.slice(0, limits[type]);
+    const maxToShow = limits[type as "sidebar" | "in-feed"] || 1;
+    const adsToShow = activeAds.slice(0, maxToShow);
 
     return (
       <div 
         className={cn(
           "flex flex-col gap-6 w-full", 
-          type === "leaderboard" && "items-center", 
           className
         )}
       >
