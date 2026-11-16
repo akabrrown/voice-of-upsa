@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { AdCardWithModal } from "./AdCardWithModal";
 import { AdFallbackCard } from "./AdFallbackCard";
-import { AdLeaderboardCarousel } from "./AdLeaderboardCarousel";
+import { AdCarousel } from "./AdCarousel";
 import type { AdRecord } from "./AdDetailModal";
 
 interface AdZoneProps {
@@ -38,34 +38,19 @@ export async function AdZone({ type, className }: AdZoneProps) {
   }
 
   if (activeAds.length > 0) {
-    // For leaderboard banners, rotate all active campaigns seamlessly in a single slot
-    if (type === "leaderboard") {
-      return <AdLeaderboardCarousel ads={activeAds} className={className} />;
-    }
-
-    // Placement limits for sidebar and in-feed
-    const limits = {
-      sidebar: 4,     // Up to 4 stacked sidebar ads
-      "in-feed": 1,   // 1 in-feed ad per placement
-    };
-
-    const maxToShow = limits[type as "sidebar" | "in-feed"] || 1;
-    const adsToShow = activeAds.slice(0, maxToShow);
-
+    // Rotating billboard carousel for leaderboard, sidebar, and in-feed placements
+    // When 1 ad is active: renders as a static banner with zero overhead.
+    // When multiple ads are active (2, 3, 4+): auto-rotates smoothly through all active campaigns.
     return (
       <div 
         className={cn(
-          "flex flex-col gap-6 w-full", 
+          "w-full", 
+          type === "leaderboard" && "flex justify-center", 
+          type === "sidebar" && "flex justify-center",
           className
         )}
       >
-        {adsToShow.map((ad, idx) => (
-          <AdCardWithModal
-            key={ad.id || idx}
-            ad={ad}
-            type={type}
-          />
-        ))}
+        <AdCarousel ads={activeAds} type={type} />
       </div>
     );
   }
