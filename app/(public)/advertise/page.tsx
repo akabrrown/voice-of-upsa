@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Zero-Cost CPU Optimization: Cache media kit & pricing tiers for 1 hour
+export const revalidate = 3600;
+
 const defaultTiers = [
   {
     id: "basic",

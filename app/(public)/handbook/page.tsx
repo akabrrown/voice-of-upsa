@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: "Official UPSA Undergraduate Students' Handbook. Access academic programs, rules, regulations, and resources.",
 };
 
+// Zero-Cost CPU Optimization: Cache static handbook indefinitely / 24 hours
+export const revalidate = 86400;
+
 export default function HandbookPage() {
   const quickTopics = [
     {

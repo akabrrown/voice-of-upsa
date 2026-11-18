@@ -74,6 +74,9 @@ import type { Metadata } from "next";
 import { getSiteUrl } from "@/lib/auth/urls";
 import { getOptimizedOgImage } from "@/lib/utils/og-image";
 
+// Zero-Cost CPU Optimization: Cache category feeds on Edge CDN for 60s
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {
   const { category: categorySlug } = await params;
   const slug = categorySlug.toLowerCase();

@@ -7,7 +7,12 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  // Compress and optimize images into modern AVIF and WebP formats
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days edge cache for remote assets
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: "https",
@@ -15,11 +20,14 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       {
+        protocol: "https",
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
     ],
   },
+  compress: true, // Enable Gzip/Brotli response compression
+  poweredByHeader: false, // Eliminate unnecessary header overhead
   experimental: {
     proxyClientMaxBodySize: "100mb",
   },

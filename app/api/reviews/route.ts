@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
+// Zero-Cost CPU Optimization: Allow Edge CDN caching for reviews feed
+export const revalidate = 120;
 
 export async function GET() {
   try {
@@ -30,7 +31,14 @@ export async function GET() {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, reviews: data });
+    return NextResponse.json(
+      { success: true, reviews: data },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
+        },
+      }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }

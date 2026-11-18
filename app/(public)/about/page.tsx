@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Zero-Cost CPU Optimization: Cache static company/about page for 1 hour
+export const revalidate = 3600;
+
 export default async function AboutPage() {
   const supabase = await createClient();
 

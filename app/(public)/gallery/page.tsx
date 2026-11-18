@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description: "View photo albums from events and campus life.",
 };
 
+// Zero-Cost CPU Optimization: Cache published photo galleries on Edge for 2 minutes
+export const revalidate = 120;
+
 export default async function GalleryPage({
   searchParams,
 }: {

@@ -38,6 +38,9 @@ interface RelatedArticleRaw {
   categories?: { name: string } | null;
 }
 
+// Zero-Cost CPU Optimization: Serve article pages from Edge CDN cache with 2-minute ISR
+export const revalidate = 120;
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const supabase = await createClient();

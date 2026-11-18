@@ -10,6 +10,9 @@ import { ReviewMarquee } from "@/components/reviews/ReviewMarquee";
 import { SubmitReviewModal } from "@/components/reviews/SubmitReviewModal";
 import { getSiteUrl } from "@/lib/auth/urls";
 
+// Zero-Cost CPU Optimization: Serve homepage from Edge CDN cache with 60s ISR
+export const revalidate = 60;
+
 export default function Home() {
   const siteUrl = getSiteUrl();
   const homepageJsonLd = {

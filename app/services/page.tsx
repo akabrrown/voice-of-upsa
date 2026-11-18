@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: "Find critical campus services, contact information, and operating hours.",
 };
 
+// Zero-Cost CPU Optimization: Cache services directory on Edge for 5 minutes
+export const revalidate = 300;
+
 export default async function ServicesDirectoryPage() {
   const [categories, allServices] = await Promise.all([
     getServiceCategories(),

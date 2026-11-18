@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+// Zero-Cost CPU Optimization: Cache podcasts directory for 5 minutes
+export const revalidate = 300;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const showSlug = searchParams.get('show');
@@ -33,7 +36,14 @@ export async function GET(request: Request) {
 
     if (error) throw error;
     
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json(
+      { success: true, data },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Error fetching podcasts:", error);
     return NextResponse.json(
