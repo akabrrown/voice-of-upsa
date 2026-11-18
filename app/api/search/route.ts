@@ -1,23 +1,38 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { searchLimiter, checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { startTelemetryTimer } from "@/lib/telemetry/metrics";
 
 export async function GET(request: Request) {
+  const timer = startTelemetryTimer();
+
+  // Rate limit expensive multi-table search to 30 req/min per IP
+  const clientIp = getClientIp(request);
+  const rateLimit = await checkRateLimit(searchLimiter, `search:${clientIp}`);
+  if (!rateLimit.allowed) {
+    timer.stop({ route: "/api/search", method: "GET", status: 429 });
+    return rateLimit.response!;
+  }
+
   const { searchParams } = new URL(request.url);
   const rawQ = searchParams.get("q");
 
   if (!rawQ || typeof rawQ !== "string") {
-    return NextResponse.json({ success: true, data: [] });
+    const { serverTimingHeader } = timer.stop({ route: "/api/search", method: "GET", status: 200, dbDurationMs: 0 });
+    return NextResponse.json({ success: true, data: [] }, { headers: { "Server-Timing": serverTimingHeader } });
   }
 
   // Strip PostgREST delimiters and control characters to prevent filter tree injection
   const cleanQ = rawQ.replace(/[,()%.*"'`\\]/g, " ").trim().slice(0, 100);
 
   if (!cleanQ) {
-    return NextResponse.json({ success: true, data: [] });
+    const { serverTimingHeader } = timer.stop({ route: "/api/search", method: "GET", status: 200, dbDurationMs: 0 });
+    return NextResponse.json({ success: true, data: [] }, { headers: { "Server-Timing": serverTimingHeader } });
   }
 
   const supabase = await createClient();
 
+  const dbStartTime = performance.now();
   // Run all queries in parallel for maximum performance
   const [articlesRes, documentsRes, albumsRes, marketRes] = await Promise.all([
     supabase
@@ -93,5 +108,20 @@ export async function GET(request: Request) {
   // Sort unified results by date (newest first)
   results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  return NextResponse.json({ success: true, data: results });
+  const dbDurationMs = Math.round(performance.now() - dbStartTime);
+  const { serverTimingHeader } = timer.stop({
+    route: "/api/search",
+    method: "GET",
+    status: 200,
+    dbDurationMs,
+  });
+
+  return NextResponse.json(
+    { success: true, data: results },
+    {
+      headers: {
+        "Server-Timing": serverTimingHeader,
+      },
+    }
+  );
 }

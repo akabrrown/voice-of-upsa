@@ -3,6 +3,8 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { commentSchema } from "@/lib/validations/index";
+import { mutationLimiter, checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { withInFlightLock, DuplicateRequestError } from "@/lib/utils/dedupe";
 import {
   parseCommentContent,
   formatGuestCommentContent,
@@ -110,6 +112,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    const rateLimit = await checkRateLimit(mutationLimiter, `comment:${clientIp}`);
+    if (!rateLimit.allowed) {
+      return rateLimit.response!;
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -126,9 +134,14 @@ export async function POST(request: Request) {
     const { article_id, parent_id, content, author_name, guest_id } = parsedBody.data;
     const cleanContent = content.trim();
 
-    const adminClient = getAdminClient();
+    const dedupeKey = `comment:${user?.id || guest_id || clientIp}:${article_id}:${cleanContent.slice(0, 32)}`;
 
-    // Verify article existence and ensure comments are allowed
+    return await withInFlightLock(
+      dedupeKey,
+      async () => {
+        const adminClient = getAdminClient();
+
+        // Verify article existence and ensure comments are allowed
     const { data: targetArticle, error: articleErr } = await adminClient
       .from("articles")
       .select("id, title, slug, status, allow_comments, author_id")
@@ -319,7 +332,16 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true, data: result.data }, { status: 201 });
+      },
+      { behavior: "reject" }
+    );
   } catch (err: any) {
+    if (err instanceof DuplicateRequestError) {
+      return NextResponse.json(
+        { success: false, error: "Comment submission already in progress. Please wait a moment." },
+        { status: 409 }
+      );
+    }
     console.error("Error in POST /api/comments:", err);
     return NextResponse.json(
       { success: false, error: err?.message || "Internal server error" },

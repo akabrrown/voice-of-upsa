@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/server-auth";
+import { uploadLimiter, checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -20,6 +21,12 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB
 
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request);
+    const rateLimit = await checkRateLimit(uploadLimiter, `upload:${clientIp}`);
+    if (!rateLimit.allowed) {
+      return rateLimit.response!;
+    }
+
     const auth = await requireAuth();
     if (auth.errorResponse) {
       return auth.errorResponse;

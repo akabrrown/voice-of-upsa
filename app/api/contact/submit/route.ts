@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { mutationLimiter, checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rateLimit = await checkRateLimit(mutationLimiter, `contact:${clientIp}`);
+    if (!rateLimit.allowed) {
+      return rateLimit.response!;
+    }
+
     const supabase = await createClient();
     const data = await req.json();
 

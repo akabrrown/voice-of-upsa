@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+import { getAdminClient } from "@/lib/supabase/admin";
+import { mutationLimiter, checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
+import { withInFlightLock, DuplicateRequestError } from "@/lib/utils/dedupe";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
+  // Rate limit newsletter mutations to 15 req/min per IP
+  const clientIp = getClientIp(request);
+  const rateLimit = await checkRateLimit(mutationLimiter, `newsletter:${clientIp}`);
+  if (!rateLimit.allowed) {
+    return rateLimit.response!;
+  }
+
+  const supabaseAdmin = getAdminClient();
+
   try {
     const { email } = await request.json();
 
@@ -21,48 +27,61 @@ export async function POST(request: Request) {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    // Check if already subscribed
-    const { data: existing } = await supabaseAdmin
-      .from("contacts")
-      .select("id")
-      .eq("email", cleanEmail)
-      .eq("subject", "Newsletter")
-      .maybeSingle();
+    // In-flight deduplication lock: prevents concurrent duplicate subscription submissions
+    return await withInFlightLock(
+      `newsletter_sub:${cleanEmail}`,
+      async () => {
+        // Check if already subscribed
+        const { data: existing } = await supabaseAdmin
+          .from("contacts")
+          .select("id")
+          .eq("email", cleanEmail)
+          .eq("subject", "Newsletter")
+          .maybeSingle();
 
-    if (existing) {
-      return NextResponse.json({
-        success: true,
-        alreadySubscribed: true,
-        message: "You are already subscribed to the Voice of UPSA Weekly Digest!",
-      });
-    }
+        if (existing) {
+          return NextResponse.json({
+            success: true,
+            alreadySubscribed: true,
+            message: "You are already subscribed to the Voice of UPSA Weekly Digest!",
+          });
+        }
 
-    // Insert subscriber record
-    const { error: insertError } = await supabaseAdmin
-      .from("contacts")
-      .insert([
-        {
-          name: "Newsletter Subscriber",
-          email: cleanEmail,
-          subject: "Newsletter",
-          message: "Weekly Campus Digest Subscription",
-          status: "unread",
-        },
-      ]);
+        // Insert subscriber record
+        const { error: insertError } = await supabaseAdmin
+          .from("contacts")
+          .insert([
+            {
+              name: "Newsletter Subscriber",
+              email: cleanEmail,
+              subject: "Newsletter",
+              message: "Weekly Campus Digest Subscription",
+              status: "unread",
+            },
+          ]);
 
-    if (insertError) {
-      console.error("Newsletter subscription error:", insertError);
+        if (insertError) {
+          console.error("Newsletter subscription error:", insertError);
+          return NextResponse.json(
+            { success: false, error: "Failed to save subscription. Please try again." },
+            { status: 500 }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: "Thank you for subscribing! You'll receive our weekly campus highlights.",
+        });
+      },
+      { behavior: "reject" }
+    );
+  } catch (err: unknown) {
+    if (err instanceof DuplicateRequestError) {
       return NextResponse.json(
-        { success: false, error: "Failed to save subscription. Please try again." },
-        { status: 500 }
+        { success: false, error: "Subscription already in progress. Please wait a moment." },
+        { status: 409 }
       );
     }
-
-    return NextResponse.json({
-      success: true,
-      message: "Thank you for subscribing! You'll receive our weekly campus highlights.",
-    });
-  } catch (err: any) {
     console.error("Newsletter API unexpected error:", err);
     return NextResponse.json(
       { success: false, error: "An unexpected error occurred." },

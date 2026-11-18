@@ -4,6 +4,9 @@ import { ServiceListClient } from "@/components/services/ServiceListClient";
 import { CategoryChips } from "@/components/services/CategoryChips";
 import { notFound } from "next/navigation";
 
+// Zero-Cost CPU Optimization: Cache service category directory for 5 minutes
+export const revalidate = 300;
+
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }

@@ -11,6 +11,9 @@ interface ServicePageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Zero-Cost CPU Optimization: Cache service details on Edge CDN for 5 minutes
+export const revalidate = 300;
+
 export async function generateMetadata({ params }: ServicePageProps): Promise<Metadata> {
   const { slug } = await params;
   const service = await getServiceBySlug(slug);

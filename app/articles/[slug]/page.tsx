@@ -26,6 +26,7 @@ import { ShareButtons } from "@/components/shared/ShareButtons";
 
 import { getSiteUrl } from "@/lib/auth/urls";
 import { getOptimizedOgImage } from "@/lib/utils/og-image";
+import { dedupeServerQuery } from "@/lib/utils/dedupe";
 
 interface RelatedArticleRaw {
   id: string;
@@ -41,17 +42,34 @@ interface RelatedArticleRaw {
 // Zero-Cost CPU Optimization: Serve article pages from Edge CDN cache with 2-minute ISR
 export const revalidate = 120;
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
+// Request Deduplication (Pillar B): Deduplicate article database queries across generateMetadata and ArticlePage
+const getArticleData = dedupeServerQuery(async (slug: string) => {
   const supabase = await createClient();
 
-  // Defensive query: wildcard select avoids failing if new columns are still propagating
-  const { data: article } = await supabase
+  const { data: withPublisher, error: publisherError } = await supabase
     .from("articles")
-    .select("*, profiles:profiles!author_id(full_name), categories(name)")
+    .select("*, profiles:profiles!author_id(full_name, avatar_url, bio, role), publisher:profiles!publisher_id(full_name), categories(id, name, slug)")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
+
+  if (!publisherError && withPublisher) {
+    return withPublisher;
+  }
+
+  const { data: standardArticle } = await supabase
+    .from("articles")
+    .select("*, profiles:profiles!author_id(full_name, avatar_url, bio, role), categories(id, name, slug)")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+
+  return standardArticle;
+});
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await getArticleData(slug);
 
   if (!article) {
     return {
@@ -117,28 +135,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const supabase = await createClient();
 
-  // Fetch the article details with author and publisher profiles (with zero-downtime fallback)
-  let dbArticle: any = null;
-
-  const { data: withPublisher, error: publisherError } = await supabase
-    .from("articles")
-    .select("*, profiles:profiles!author_id(full_name, avatar_url, bio, role), publisher:profiles!publisher_id(full_name), categories(id, name, slug)")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
-
-  if (!publisherError && withPublisher) {
-    dbArticle = withPublisher;
-  } else {
-    // Graceful fallback: If publisher_id column/relation is not yet present in schema cache, query standard relation
-    const { data: standardArticle } = await supabase
-      .from("articles")
-      .select("*, profiles:profiles!author_id(full_name, avatar_url, bio, role), categories(id, name, slug)")
-      .eq("slug", slug)
-      .eq("status", "published")
-      .maybeSingle();
-    dbArticle = standardArticle;
-  }
+  // Deduplicated article fetch: shares the exact same promise with generateMetadata
+  const dbArticle: any = await getArticleData(slug);
 
   if (!dbArticle) {
     notFound();

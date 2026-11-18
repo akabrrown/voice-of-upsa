@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redis } from "@/lib/upstash";
+import { cache } from "react";
 import type { StudentService, ServiceCategory } from "@/lib/types/services";
 
 export async function getServiceCategories(): Promise<ServiceCategory[]> {
@@ -68,7 +69,7 @@ export async function getActiveServices(): Promise<StudentService[]> {
   return data as StudentService[];
 }
 
-export async function getServiceBySlug(slug: string): Promise<StudentService | null> {
+export const getServiceBySlug = cache(async function (slug: string): Promise<StudentService | null> {
   const cacheKey = `directory:service:${slug}`;
   
   try {
@@ -102,7 +103,7 @@ export async function getServiceBySlug(slug: string): Promise<StudentService | n
   }
 
   return data as StudentService;
-}
+});
 
 export async function getAllServicesForAdmin(): Promise<StudentService[]> {
   const supabase = await createClient();

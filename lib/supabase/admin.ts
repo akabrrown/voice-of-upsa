@@ -1,9 +1,21 @@
 import { createClient as createSupabaseClient, SupabaseClient } from "@supabase/supabase-js";
 
+/**
+ * Database Connection Management (Pillar C)
+ * Reuses Supabase PostgREST client instances across invocations to avoid
+ * re-establishing TCP & TLS connections for every HTTP request.
+ */
+
 let adminClientInstance: SupabaseClient | null = null;
+let publicClientInstance: SupabaseClient | null = null;
+
+const connectionHeaders = {
+  Connection: "keep-alive",
+  "Keep-Alive": "timeout=60, max=1000",
+};
 
 /**
- * Returns a Supabase client with administrative / service-role privileges.
+ * Returns a pooled Supabase client with administrative / service-role privileges.
  * Lazily instantiated to prevent premature module evaluation errors during Next.js builds.
  */
 export function getAdminClient(): SupabaseClient {
@@ -19,8 +31,33 @@ export function getAdminClient(): SupabaseClient {
         autoRefreshToken: false,
         persistSession: false,
       },
+      global: {
+        headers: connectionHeaders,
+      },
     });
   }
 
   return adminClientInstance;
+}
+
+/**
+ * Returns a pooled Supabase client with public anon privileges for server-side read paths.
+ */
+export function getPublicClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-url.supabase.co";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key";
+
+  if (!publicClientInstance) {
+    publicClientInstance = createSupabaseClient(url, key, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      global: {
+        headers: connectionHeaders,
+      },
+    });
+  }
+
+  return publicClientInstance;
 }

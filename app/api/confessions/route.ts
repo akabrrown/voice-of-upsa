@@ -4,9 +4,16 @@ export const dynamic = 'force-dynamic';
 import { createClient } from "@/lib/supabase/server";
 import { screenConfession } from "@/lib/confessions/screening";
 import { getUser } from "@/lib/auth/user";
+import { mutationLimiter, checkRateLimit, getClientIp } from "@/lib/security/rate-limiter";
 
 export async function POST(req: Request) {
   try {
+    const clientIp = getClientIp(req);
+    const rateLimit = await checkRateLimit(mutationLimiter, `confession:${clientIp}`);
+    if (!rateLimit.allowed) {
+      return rateLimit.response!;
+    }
+
     const user = await getUser();
     if (!user) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

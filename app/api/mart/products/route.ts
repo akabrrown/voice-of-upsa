@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// Ensure environment variables are loaded for the route
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { getPublicClient } from "@/lib/supabase/admin";
 
 // Force dynamic if we're reading fresh marketplace data
 export const dynamic = 'force-dynamic';
@@ -15,8 +11,8 @@ export async function GET(request: Request) {
     const store = searchParams.get('store');
     const q = searchParams.get('q'); // Search query
     
-    // We use a regular anon client to fetch public products
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Reuses persistent pooled client connection
+    const supabase = getPublicClient();
 
     let query = supabase
       .from('products')
