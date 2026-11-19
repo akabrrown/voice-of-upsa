@@ -14,6 +14,29 @@ const connectionHeaders = {
   "Keep-Alive": "timeout=60, max=1000",
 };
 
+const safeFetch: typeof fetch = (input, init) => {
+  const urlStr =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+      ? input.toString()
+      : (input as Request).url;
+
+  if (urlStr.includes("placeholder-url.supabase.co")) {
+    return Promise.resolve(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+  }
+
+  return fetch(input, {
+    ...init,
+    signal: init?.signal || AbortSignal.timeout(10000),
+  });
+};
+
 /**
  * Returns a pooled Supabase client with administrative / service-role privileges.
  * Lazily instantiated to prevent premature module evaluation errors during Next.js builds.
@@ -33,6 +56,7 @@ export function getAdminClient(): SupabaseClient {
       },
       global: {
         headers: connectionHeaders,
+        fetch: safeFetch,
       },
     });
   }
@@ -55,6 +79,7 @@ export function getPublicClient(): SupabaseClient {
       },
       global: {
         headers: connectionHeaders,
+        fetch: safeFetch,
       },
     });
   }

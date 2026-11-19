@@ -1,6 +1,29 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+const safeFetch: typeof fetch = (input, init) => {
+  const urlStr =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+      ? input.toString()
+      : (input as Request).url;
+
+  if (urlStr.includes("placeholder-url.supabase.co")) {
+    return Promise.resolve(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+  }
+
+  return fetch(input, {
+    ...init,
+    signal: init?.signal || AbortSignal.timeout(10000),
+  });
+};
+
 export async function createClient() {
   const cookieStore = await cookies();
 
@@ -23,6 +46,9 @@ export async function createClient() {
             // user sessions.
           }
         },
+      },
+      global: {
+        fetch: safeFetch,
       },
     }
   );
