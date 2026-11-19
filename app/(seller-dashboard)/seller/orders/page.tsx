@@ -7,11 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { createClient } from "@/lib/supabase/client";
 
 export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -23,6 +19,7 @@ export default function SellerOrdersPage() {
 
   const fetchOrders = async () => {
     try {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -50,6 +47,7 @@ export default function SellerOrdersPage() {
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     try {
+      const supabase = createClient();
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus })

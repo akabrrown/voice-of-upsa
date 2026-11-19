@@ -8,11 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { createClient } from "@/lib/supabase/client";
 
 export default function SellerProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -24,6 +20,7 @@ export default function SellerProductsPage() {
 
   const fetchProducts = async () => {
     try {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -50,6 +47,7 @@ export default function SellerProductsPage() {
     if (!confirm("Are you sure you want to delete this product?")) return;
     
     try {
+      const supabase = createClient();
       const { error } = await supabase
         .from('products')
         .update({ deleted_at: new Date().toISOString() })
