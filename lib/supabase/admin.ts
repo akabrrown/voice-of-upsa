@@ -9,11 +9,6 @@ import { createClient as createSupabaseClient, SupabaseClient } from "@supabase/
 let adminClientInstance: SupabaseClient | null = null;
 let publicClientInstance: SupabaseClient | null = null;
 
-const connectionHeaders = {
-  Connection: "keep-alive",
-  "Keep-Alive": "timeout=60, max=1000",
-};
-
 const safeFetch: typeof fetch = (input, init) => {
   const urlStr =
     typeof input === "string"
@@ -55,7 +50,6 @@ export function getAdminClient(): SupabaseClient {
         persistSession: false,
       },
       global: {
-        headers: connectionHeaders,
         fetch: safeFetch,
       },
     });
@@ -78,7 +72,6 @@ export function getPublicClient(): SupabaseClient {
         persistSession: false,
       },
       global: {
-        headers: connectionHeaders,
         fetch: safeFetch,
       },
     });
