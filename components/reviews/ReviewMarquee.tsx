@@ -69,36 +69,44 @@ export function ReviewMarquee() {
       `}} />
 
       <div className="flex w-max gap-4 animate-scroll px-4">
-        {displayReviews.map((review, i) => (
-          <div 
-            key={`${review.id}-${i}`} 
-            className="w-[350px] shrink-0 rounded-2xl border border-gray-100 dark:border-white/10 bg-white/60 dark:bg-[#0C1729]/80 backdrop-blur-md p-6 shadow-sm hover:shadow-md hover:bg-white dark:hover:bg-[#0C1729] hover:border-upsa-gold/30 transition-all"
-          >
-            <div className="flex gap-1 mb-3">
-              {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  className={`w-4 h-4 ${i < review.rating ? 'fill-upsa-gold text-upsa-gold' : 'fill-gray-100 dark:fill-white/10 text-gray-200 dark:text-gray-700'}`} 
-                />
-              ))}
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6 line-clamp-4">
-              "{review.content}"
-            </p>
-            <div className="flex items-center gap-3 mt-auto">
-              <Avatar className="h-10 w-10 border border-gray-100 dark:border-white/10">
-                <AvatarImage src={review.profiles.avatar_url || ""} />
-                <AvatarFallback className="bg-upsa-navy/5 dark:bg-white/10 text-upsa-navy dark:text-upsa-gold text-xs font-bold">
-                  {review.profiles.full_name?.substring(0, 2).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">{review.profiles.full_name || "Anonymous User"}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{review.profiles.department || "Student"}</span>
+        {displayReviews.map((review, i) => {
+          const profile = Array.isArray(review.profiles) ? review.profiles[0] : review.profiles;
+          const fullName = profile?.full_name || "Anonymous Reader";
+          const avatarUrl = profile?.avatar_url || "";
+          const department = profile?.department || "Student";
+          const initials = fullName.substring(0, 2).toUpperCase();
+
+          return (
+            <div 
+              key={`${review.id}-${i}`} 
+              className="w-[350px] shrink-0 rounded-2xl border border-gray-100 dark:border-white/10 bg-white/60 dark:bg-[#0C1729]/80 backdrop-blur-md p-6 shadow-sm hover:shadow-md hover:bg-white dark:hover:bg-[#0C1729] hover:border-upsa-gold/30 transition-all"
+            >
+              <div className="flex gap-1 mb-3">
+                {[...Array(5)].map((_, i) => (
+                  <Star 
+                    key={i} 
+                    className={`w-4 h-4 ${i < review.rating ? 'fill-upsa-gold text-upsa-gold' : 'fill-gray-100 dark:fill-white/10 text-gray-200 dark:text-gray-700'}`} 
+                  />
+                ))}
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6 line-clamp-4">
+                "{review.content}"
+              </p>
+              <div className="flex items-center gap-3 mt-auto">
+                <Avatar className="h-10 w-10 border border-gray-100 dark:border-white/10">
+                  <AvatarImage src={avatarUrl} />
+                  <AvatarFallback className="bg-upsa-navy/5 dark:bg-white/10 text-upsa-navy dark:text-upsa-gold text-xs font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{fullName}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{department}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

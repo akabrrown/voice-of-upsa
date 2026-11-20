@@ -13,20 +13,24 @@ export async function LatestArticles() {
     .order("published_at", { ascending: false })
     .limit(6);
 
-  const mappedArticles = articles?.map((art: any) => ({
-    title: art.title,
-    excerpt: art.excerpt || "",
-    category: art.categories?.name || "News",
-    date: art.published_at ? new Date(art.published_at).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    }) : "Recent",
+  const mappedArticles = articles?.map((art: any) => {
+    const categoryName = (Array.isArray(art.categories) ? art.categories[0]?.name : art.categories?.name) || "News";
+    const authorName = art.author_name || (Array.isArray(art.profiles) ? art.profiles[0]?.full_name : art.profiles?.full_name) || "Editorial Team";
 
-    image: art.cover_image_url || "https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?q=80&w=800",
-    slug: art.slug,
-    author: (art as any).author_name || art.profiles?.full_name || "Editorial Team",
-  })) || [];
+    return {
+      title: art.title,
+      excerpt: art.excerpt || "",
+      category: categoryName,
+      date: art.published_at ? new Date(art.published_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }) : "Recent",
+      image: art.cover_image_url || "https://images.unsplash.com/photo-1541339907198-e08759dfc3ef?q=80&w=800",
+      slug: art.slug,
+      author: authorName,
+    };
+  }) || [];
 
   return (
     <section className="py-12">
