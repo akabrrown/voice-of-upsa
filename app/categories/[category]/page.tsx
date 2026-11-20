@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ArticleCard } from "@/components/articles/ArticleCard";
 import { TrendingSidebar } from "@/components/articles/TrendingSidebar";
 import { AdZone } from "@/components/layout/AdZone";
-import { createClient } from "@/lib/supabase/server";
+import { getPublicClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import { Pagination } from "@/components/ui/pagination";
 
@@ -21,8 +21,8 @@ interface ArticleListItem {
   excerpt: string | null;
   cover_image_url: string | null;
   published_at: string | null;
-  categories: { name: string } | null;
-  profiles?: { full_name: string } | null;
+  categories: any;
+  profiles?: any;
   author_name?: string | null;
   reading_time_minutes?: number | null;
 }
@@ -134,7 +134,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
 export default async function CategoryPage({ params, searchParams }: { params: Promise<{ category: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const { category: categorySlug } = await params;
   const searchParamsData = await searchParams;
-  const supabase = await createClient();
+  const supabase = getPublicClient();
   
   const pageStr = searchParamsData.page;
   const currentPage = typeof pageStr === "string" ? parseInt(pageStr, 10) : 1;
@@ -150,12 +150,14 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   let dbCategory: CategoryInfo | null = null;
   let dbArticles: ArticleListItem[] = [];
 
+  const ARTICLE_LIST_COLUMNS = "id, title, slug, excerpt, cover_image_url, published_at, author_name, reading_time_minutes, categories(name), profiles:profiles!author_id(full_name)";
+
   if (slug === "all") {
     dbCategory = config;
 
     const { data, count } = await supabase
       .from("articles")
-      .select("*, categories(name), profiles:profiles!author_id(full_name)", { count: "exact" })
+      .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .range(from, to);
@@ -166,7 +168,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
     const { data, count } = await supabase
       .from("articles")
-      .select("*, categories(name), profiles:profiles!author_id(full_name)", { count: "exact" })
+      .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
       .eq("status", "published")
       .eq("is_featured", true)
       .order("published_at", { ascending: false })
@@ -176,7 +178,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   } else {
     const { data } = await supabase
       .from("categories")
-      .select("*")
+      .select("id, name, slug, description, banner_url")
       .eq("slug", slug)
       .maybeSingle();
     
@@ -198,7 +200,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
 
     const { data: articles, count } = await supabase
       .from("articles")
-      .select("*, categories(name), profiles:profiles!author_id(full_name)", { count: "exact" })
+      .select(ARTICLE_LIST_COLUMNS, { count: "exact" })
       .eq("category_id", dbCategory.id || '')
       .eq("status", "published")
       .order("published_at", { ascending: false })

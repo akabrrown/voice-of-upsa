@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { getPublicClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { sendArticlePushNotification } from "@/lib/onesignal";
+
+export const revalidate = 60;
+
+const ARTICLE_FEED_COLUMNS = "id, title, slug, excerpt, cover_image_url, published_at, is_featured, reading_time_minutes, view_count, author_name, author:profiles!author_id(full_name, avatar_url), publisher:profiles!publisher_id(full_name), category:categories(name, slug)";
+const ARTICLE_FEED_FALLBACK_COLUMNS = "id, title, slug, excerpt, cover_image_url, published_at, is_featured, reading_time_minutes, view_count, author_name, author:profiles!author_id(full_name, avatar_url), category:categories(name, slug)";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,11 +16,11 @@ export async function GET(request: Request) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const supabase = await createClient();
+  const supabase = getPublicClient();
 
   let query = supabase
     .from("articles")
-    .select("*, author:profiles!author_id(full_name, avatar_url), publisher:profiles!publisher_id(full_name), category:categories(name, slug)", { count: "exact" })
+    .select(ARTICLE_FEED_COLUMNS, { count: "exact" })
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .range(from, to);
@@ -23,13 +29,20 @@ export async function GET(request: Request) {
     query = query.eq("category_id", category);
   }
 
-  let { data, count, error } = await query;
+  let data: any = null;
+  let count: number | null = null;
+  let error: any = null;
+
+  const initialResult = await query;
+  data = initialResult.data;
+  count = initialResult.count;
+  error = initialResult.error;
 
   // Fallback for pre-migration schema: fetch without publisher join
   if (error && (error.code === "PGRST200" || error.message?.includes("publisher_id"))) {
     let fallbackQuery = supabase
       .from("articles")
-      .select("*, author:profiles!author_id(full_name, avatar_url), category:categories(name, slug)", { count: "exact" })
+      .select(ARTICLE_FEED_FALLBACK_COLUMNS, { count: "exact" })
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .range(from, to);
@@ -48,16 +61,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({
-    success: true,
-    data,
-    meta: {
-      page,
-      limit,
-      total: count,
-      totalPages: Math.ceil((count || 0) / limit),
+  return NextResponse.json(
+    {
+      success: true,
+      data,
+      meta: {
+        page,
+        limit,
+        total: count,
+        totalPages: Math.ceil((count || 0) / limit),
+      },
     },
-  });
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=600",
+      },
+    }
+  );
 }
 
 export async function POST(request: Request) {

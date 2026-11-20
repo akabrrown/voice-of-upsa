@@ -1,11 +1,13 @@
 import { ArticleCard } from "./ArticleCard";
-import { createClient } from "@/lib/supabase/server";
+import { getPublicClient } from "@/lib/supabase/admin";
+
+const LATEST_COLUMNS = "id, title, slug, excerpt, cover_image_url, published_at, author_name, categories(name), profiles:profiles!author_id(full_name)";
 
 export async function LatestArticles() {
-  const supabase = await createClient();
+  const supabase = getPublicClient();
   const { data: articles } = await supabase
     .from("articles")
-    .select("*, categories(name), profiles:profiles!author_id(full_name)")
+    .select(LATEST_COLUMNS)
     .eq("status", "published")
     .neq("is_featured", true)
     .order("published_at", { ascending: false })

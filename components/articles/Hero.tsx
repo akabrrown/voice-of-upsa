@@ -3,15 +3,17 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getPublicClient } from "@/lib/supabase/admin";
+
+const HERO_COLUMNS = "id, title, slug, excerpt, cover_image_url, published_at, reading_time_minutes, categories(name), profiles(full_name)";
 
 export async function Hero() {
-  const supabase = await createClient();
+  const supabase = getPublicClient();
   
   // Try to find a featured article
   let { data: article } = await supabase
     .from("articles")
-    .select("*, categories(name), profiles(full_name)")
+    .select(HERO_COLUMNS)
     .eq("status", "published")
     .eq("is_featured", true)
     .order("published_at", { ascending: false })
@@ -22,7 +24,7 @@ export async function Hero() {
   if (!article) {
     const { data: latest } = await supabase
       .from("articles")
-      .select("*, categories(name), profiles(full_name)")
+      .select(HERO_COLUMNS)
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .limit(1)
@@ -48,14 +50,16 @@ export async function Hero() {
   }) : "Recent";
   
 
-  const authorName = article.author_name || article.profiles?.full_name || "Editorial Team";
-  const imageUrl = article.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000";
+  const rawArticle: any = article;
+  const authorName = rawArticle.author_name || (Array.isArray(rawArticle.profiles) ? rawArticle.profiles[0]?.full_name : rawArticle.profiles?.full_name) || "Editorial Team";
+  const categoryName = (Array.isArray(rawArticle.categories) ? rawArticle.categories[0]?.name : rawArticle.categories?.name) || "Featured";
+  const imageUrl = rawArticle.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000";
 
   return (
     <section className="relative w-full h-[600px] overflow-hidden">
       <Image
         src={imageUrl}
-        alt={article.title}
+        alt={rawArticle.title}
         fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         className="object-cover brightness-50"
         priority
@@ -65,10 +69,10 @@ export async function Hero() {
       <div className="container relative mx-auto h-full flex flex-col justify-end pb-16 px-4">
         <div className="max-w-3xl space-y-4">
           <Badge className="bg-upsa-gold text-upsa-navy hover:bg-white font-bold px-3 py-1">
-            {article.categories?.name || "Featured"}
+            {categoryName}
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight">
-            {article.title}
+            {rawArticle.title}
           </h1>
           <p className="text-lg text-gray-200 line-clamp-2">
             {article.excerpt}

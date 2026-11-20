@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Eye } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getPublicClient } from "@/lib/supabase/admin";
 import { NewsletterForm } from "./NewsletterForm";
 import { UpcomingHolidayWidget } from "@/components/holidays/UpcomingHolidayWidget";
 
+const TRENDING_COLUMNS = "id, title, slug, view_count, categories(name)";
+
 export async function TrendingSidebar() {
-  const supabase = await createClient();
+  const supabase = getPublicClient();
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   const { data: trendingArticles } = await supabase
     .from("articles")
-    .select("*, categories(name)")
+    .select(TRENDING_COLUMNS)
     .eq("status", "published")
     .gte("created_at", oneWeekAgo.toISOString())
     .order("view_count", { ascending: false })
@@ -39,7 +41,7 @@ export async function TrendingSidebar() {
                 </span>
                 <div className="space-y-1">
                   <Badge variant="outline" className="text-[10px] uppercase h-5 text-upsa-gold border-upsa-gold/30">
-                    {article.categories?.name || "News"}
+                    {(article as any).categories?.name || (Array.isArray((article as any).categories) ? (article as any).categories[0]?.name : null) || "News"}
                   </Badge>
                   <Link href={`/articles/${article.slug}`}>
                     <h3 className="text-sm font-bold text-upsa-navy dark:text-white line-clamp-2 hover:text-upsa-gold dark:hover:text-upsa-gold transition-colors leading-tight">

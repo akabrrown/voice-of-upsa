@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ChevronRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getPublicClient } from "@/lib/supabase/admin";
 
 interface FeaturedArticleRaw {
   id: string;
@@ -16,13 +16,15 @@ interface FeaturedArticleRaw {
   profiles?: { full_name: string } | null;
 }
 
+const FEATURED_COLUMNS = "id, title, slug, excerpt, cover_image_url, reading_time_minutes, published_at, categories(name), profiles:profiles!author_id(full_name)";
+
 export async function FeaturedStories() {
-  const supabase = await createClient();
+  const supabase = getPublicClient();
 
   // Fetch up to 4 featured articles for a perfect bento grid (1 large + 3 small or 1 large + 2 medium)
   let { data: articles } = await supabase
     .from("articles")
-    .select("*, categories(name), profiles:profiles!author_id(full_name)")
+    .select(FEATURED_COLUMNS)
     .eq("status", "published")
     .eq("is_featured", true)
     .order("published_at", { ascending: false })
@@ -32,7 +34,7 @@ export async function FeaturedStories() {
   if (!articles || articles.length === 0) {
     const { data: fallbackArticles } = await supabase
       .from("articles")
-      .select("*, categories(name), profiles:profiles!author_id(full_name)")
+      .select(FEATURED_COLUMNS)
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .limit(4);
@@ -43,21 +45,27 @@ export async function FeaturedStories() {
     return null;
   }
 
-  const formatArticle = (art: FeaturedArticleRaw) => ({
-    id: art.id,
-    title: art.title,
-    excerpt: art.excerpt || "",
-    category: art.categories?.name || "Featured",
-    date: art.published_at ? new Date(art.published_at).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    }) : "Recent",
+  const formatArticle = (art: any) => {
+    const categoryName = Array.isArray(art.categories)
+      ? art.categories[0]?.name
+      : art.categories?.name;
+    const authorName = art.author_name || (Array.isArray(art.profiles) ? art.profiles[0]?.full_name : art.profiles?.full_name) || "Editorial Team";
 
-    image: art.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000",
-    slug: art.slug,
-    author: (art as any).author_name || art.profiles?.full_name || "Editorial Team"
-  });
+    return {
+      id: art.id,
+      title: art.title,
+      excerpt: art.excerpt || "",
+      category: categoryName || "Featured",
+      date: art.published_at ? new Date(art.published_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      }) : "Recent",
+      image: art.cover_image_url || "https://images.unsplash.com/photo-1523050335102-c32509142279?q=80&w=2000",
+      slug: art.slug,
+      author: authorName,
+    };
+  };
 
   const featuredList = articles.map(formatArticle);
   const mainArticle = featuredList[0];

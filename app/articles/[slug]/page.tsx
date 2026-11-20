@@ -17,7 +17,7 @@ import { ArticleReactions } from "@/components/articles/ArticleReactions";
 import { ArticleEndSubscription } from "@/components/articles/ArticleEndSubscription";
 import { CommentsSection } from "@/components/articles/CommentsSection";
 import { TrendingSidebar } from "@/components/articles/TrendingSidebar";
-import { createClient } from "@/lib/supabase/server";
+import { getPublicClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArticleContent } from "@/components/articles/ArticleContent";
@@ -44,7 +44,7 @@ export const revalidate = 120;
 
 // Request Deduplication (Pillar B): Deduplicate article database queries across generateMetadata and ArticlePage
 const getArticleData = dedupeServerQuery(async (slug: string) => {
-  const supabase = await createClient();
+  const supabase = getPublicClient();
 
   const { data: withPublisher, error: publisherError } = await supabase
     .from("articles")
@@ -133,7 +133,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = getPublicClient();
 
   // Deduplicated article fetch: shares the exact same promise with generateMetadata
   const dbArticle: any = await getArticleData(slug);
@@ -144,10 +144,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   // View count increment is now handled asynchronously on the client via ViewTracker
 
+  const RELATED_COLUMNS = "id, title, slug, excerpt, cover_image_url, reading_time_minutes, published_at, categories(name)";
+
   // Fetch related articles from same category (excluding this article)
   let { data: dbRelated } = await supabase
     .from("articles")
-    .select("*, categories(name)")
+    .select(RELATED_COLUMNS)
     .eq("category_id", dbArticle.category_id)
     .eq("status", "published")
     .neq("id", dbArticle.id)
@@ -159,7 +161,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     const existingIds = [dbArticle.id, ...(dbRelated?.map((r: any) => r.id) || [])];
     const { data: extraArticles } = await supabase
       .from("articles")
-      .select("*, categories(name)")
+      .select(RELATED_COLUMNS)
       .eq("status", "published")
       .not("id", "in", `(${existingIds.join(",")})`)
       .order("published_at", { ascending: false })
@@ -201,10 +203,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     content: dbArticle.content,
   };
 
-  const relatedArticles = dbRelated?.map((rel: RelatedArticleRaw) => ({
+  const relatedArticles = dbRelated?.map((rel: any) => ({
     title: rel.title,
     excerpt: rel.excerpt || "",
-    category: rel.categories?.name || "News",
+    category: rel.categories?.name || (Array.isArray(rel.categories) ? rel.categories[0]?.name : null) || "News",
     date: rel.published_at ? new Date(rel.published_at).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",

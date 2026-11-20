@@ -3,7 +3,7 @@ import { getAdminClient } from "@/lib/supabase/admin";
 import { getNextUpcomingHoliday, formatDateISO } from "@/lib/holidays/engine";
 import { DBHolidayWish, UpcomingHolidayResponse } from "@/lib/holidays/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export async function GET(request: Request) {
   try {

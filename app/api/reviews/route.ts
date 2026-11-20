@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getPublicClient } from "@/lib/supabase/admin";
 
 // Zero-Cost CPU Optimization: Allow Edge CDN caching for reviews feed
 export const revalidate = 120;
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = getPublicClient();
     
     // Fetch only approved reviews
     const { data, error } = await supabase
